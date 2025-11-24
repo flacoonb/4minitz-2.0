@@ -66,4 +66,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   session: {
     strategy: 'jwt',
   },
+  // Allow running on HTTP (e.g. private IP) without secure cookies
+  useSecureCookies: process.env.NEXTAUTH_URL?.startsWith('https://'),
+  cookies: {
+    sessionToken: {
+      name: 'next-auth.session-token',
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NEXTAUTH_URL?.startsWith('https://'),
+      },
+    },
+  },
 });
