@@ -11,6 +11,7 @@
     "type-check": "tsc --noEmit",
     "sample-data": "tsx scripts/sample-data.ts",
     "create-demo-user": "tsx scripts/create-demo-user.ts",
+    "create-user": "tsx scripts/create-user.ts",
     "setup": "./setup.sh"
   },
   "dependencies": {

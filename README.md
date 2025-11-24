@@ -54,6 +54,26 @@ npm run dev
 
 Open: http://localhost:3000
 
+## 👤 Admin / First User
+
+### 1. Demo User (if created during setup)
+If you selected "Yes" for the demo user during installation:
+- **Email:** `demo@example.com`
+- **Password:** `demo123`
+
+### 2. Create Admin Manually
+If you skipped the demo user or cannot log in, you must create a new admin user via the command line:
+
+```bash
+# Syntax: npm run create-user -- <email> <password> <Firstname> <Lastname>
+npm run create-user -- admin@example.com mySecretPassword Admin User
+```
+
+## 📁 Project Structure
+```
+
+Open: http://localhost:3000
+
 ## 🔑 User & Admin Management
 
 ### Default Admin User
