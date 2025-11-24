@@ -121,13 +121,19 @@ export async function POST(request: NextRequest) {
       token
     });
 
+    // Determine if we should use secure cookies
+    // In production, we usually want secure cookies, unless we are explicitly running on HTTP (e.g. local network)
+    const isProduction = process.env.NODE_ENV === 'production';
+    const isHttp = process.env.NEXTAUTH_URL?.startsWith('http://');
+    const useSecureCookies = isProduction && !isHttp && process.env.DISABLE_SECURE_COOKIES !== 'true';
+
     // Set secure cookie
     response.cookies.set({
       name: 'auth-token',
       value: token,
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production' && process.env.DISABLE_SECURE_COOKIES !== 'true',
-      sameSite: 'strict',
+      secure: useSecureCookies,
+      sameSite: 'lax', // Changed from strict to lax to be more forgiving
       maxAge: sessionTimeoutMs
     });
 
