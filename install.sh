@@ -29,7 +29,7 @@ apt-get update
 apt-get install -y git curl build-essential
 
 # 3. Check/Install Node.js
-if ! command -v node &> /dev/null; then
+if ! command -v node &> /dev/null || ! command -v npm &> /dev/null; then
     echo -e "${BLUE}📦 Installing Node.js 20...${NC}"
     curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
     apt-get install -y nodejs
@@ -42,6 +42,12 @@ else
     else
         echo -e "${GREEN}✅ Node.js $(node -v) is already installed.${NC}"
     fi
+fi
+
+# Ensure npm is installed (sometimes separate)
+if ! command -v npm &> /dev/null; then
+    echo -e "${BLUE}📦 Installing npm...${NC}"
+    apt-get install -y npm
 fi
 
 # 4. Check/Install Docker
@@ -82,8 +88,8 @@ if [ -n "$SUDO_USER" ]; then
     chmod +x setup.sh
     
     echo -e "${BLUE}👤 Running setup as user $SUDO_USER...${NC}"
-    # We use 'sudo -u' to run as the original user
-    sudo -u "$SUDO_USER" ./setup.sh
+    # We use 'sudo -u' to run as the original user, preserving PATH to find newly installed binaries
+    sudo -u "$SUDO_USER" PATH=$PATH ./setup.sh
 else
     cd "$INSTALL_DIR"
     chmod +x setup.sh
