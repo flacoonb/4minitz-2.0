@@ -19,7 +19,7 @@
 
 Beispiel Connection String:
 ```
-mongodb+srv://username:password@cluster0.xxxxx.mongodb.net/4minitz-next?retryWrites=true&w=majority
+mongodb+srv://<YOUR_USER>:<YOUR_PASSWORD>@<YOUR_CLUSTER>.mongodb.net/4minitz-next?retryWrites=true&w=majority
 ```
 
 ### Schritt 2: SMTP Provider
