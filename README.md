@@ -65,17 +65,8 @@ app/
 components/             # React Components
 models/                 # Mongoose Models
 lib/                    # Utilities (Auth, Email, PDF)
-docs/                   # Documentation
 scripts/                # Helper Scripts
 ```
-
-## 📚 Documentation
-
-- [Database Setup](docs/DATABASE.md)
-- [Local Deployment](docs/DEPLOYMENT_LOCAL.md)
-- [Cloud Deployment](docs/DEPLOYMENT.md)
-- [Security & Secrets](docs/SECURITY.md)
-- [I18N](docs/I18N.md)
 
 ## ✅ Features
 

@@ -48,3 +48,5 @@ next-env.d.ts
 *.log
 /logs
 /tmp/*.log
+docs/
+.setup_token
