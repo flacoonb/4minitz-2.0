@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# 4Minitz 2.0 - One-Line Installer
-# Usage: curl -sL https://raw.githubusercontent.com/flacoonb/4minitz-2.0/main/install.sh | bash
+# 4Minitz 2.0 - Full Installer
+# Usage: curl -sL https://raw.githubusercontent.com/flacoonb/4minitz-2.0/main/install.sh | sudo bash
 
 set -e
 
@@ -17,20 +17,46 @@ NC='\033[0m' # No Color
 echo -e "${BLUE}🚀 4Minitz 2.0 Installer${NC}"
 echo "========================"
 
-# 1. Check Prerequisites
-echo -e "\n${BLUE}🔍 Checking prerequisites...${NC}"
-
-if ! command -v git &> /dev/null; then
-    echo -e "${RED}❌ Git is not installed.${NC} Please install git first."
+# 1. Check Root
+if [ "$EUID" -ne 0 ]; then 
+    echo -e "${RED}❌ Please run this script as root (sudo).${NC}"
     exit 1
 fi
 
+# 2. System Update & Dependencies
+echo -e "\n${BLUE}🔄 Updating system and installing base dependencies...${NC}"
+apt-get update
+apt-get install -y git curl build-essential
+
+# 3. Check/Install Node.js
 if ! command -v node &> /dev/null; then
-    echo -e "${RED}❌ Node.js is not installed.${NC} Please install Node.js 18+."
-    exit 1
+    echo -e "${BLUE}📦 Installing Node.js 20...${NC}"
+    curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+    apt-get install -y nodejs
+else
+    NODE_VERSION=$(node -v | cut -d'v' -f2 | cut -d'.' -f1)
+    if [ "$NODE_VERSION" -lt 18 ]; then
+        echo -e "${BLUE}📦 Updating Node.js to version 20...${NC}"
+        curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+        apt-get install -y nodejs
+    else
+        echo -e "${GREEN}✅ Node.js $(node -v) is already installed.${NC}"
+    fi
 fi
 
-# 2. Clone Repository
+# 4. Check/Install Docker
+if ! command -v docker &> /dev/null; then
+    echo -e "${BLUE}🐳 Installing Docker...${NC}"
+    curl -fsSL https://get.docker.com | sh
+    if [ -n "$SUDO_USER" ]; then
+        usermod -aG docker "$SUDO_USER"
+        echo -e "${GREEN}✅ Added user $SUDO_USER to docker group.${NC}"
+    fi
+else
+    echo -e "${GREEN}✅ Docker is already installed.${NC}"
+fi
+
+# 5. Clone Repository
 if [ -d "$INSTALL_DIR" ]; then
     echo -e "\n${RED}⚠️  Directory '$INSTALL_DIR' already exists.${NC}"
     read -p "Do you want to delete it and reinstall? (y/N) " -n 1 -r
@@ -46,8 +72,20 @@ fi
 echo -e "\n${BLUE}📥 Cloning repository...${NC}"
 git clone "$REPO_URL" "$INSTALL_DIR"
 
-# 3. Run Setup
+# 6. Prepare & Run Setup
 echo -e "\n${BLUE}⚙️  Starting setup...${NC}"
-cd "$INSTALL_DIR"
-chmod +x setup.sh
-./setup.sh
+
+# Fix permissions if running as sudo
+if [ -n "$SUDO_USER" ]; then
+    chown -R "$SUDO_USER:$SUDO_USER" "$INSTALL_DIR"
+    cd "$INSTALL_DIR"
+    chmod +x setup.sh
+    
+    echo -e "${BLUE}👤 Running setup as user $SUDO_USER...${NC}"
+    # We use 'sudo -u' to run as the original user
+    sudo -u "$SUDO_USER" ./setup.sh
+else
+    cd "$INSTALL_DIR"
+    chmod +x setup.sh
+    ./setup.sh
+fi
