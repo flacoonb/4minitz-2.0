@@ -1,32 +1,59 @@
-# 4Minitz Next.js Migration
+# 4Minitz Next.js
 
 ## 🎯 Overview
 
-Migration von **4minitz** von Meteor.js zu **Next.js 15**.
+**4Minitz Next.js** is a modern, web-based application for managing meeting minutes and action items. It is built with the latest web technologies to ensure performance, security, and ease of use.
 
 ### Stack
-- **Framework**: Next.js 15 (App Router)
+- **Framework**: Next.js 16 (App Router)
 - **Language**: TypeScript
-- **Database**: MongoDB mit Mongoose
+- **Database**: MongoDB with Mongoose
 - **Styling**: TailwindCSS
 - **API**: RESTful
 
 ## 🚀 Quick Start
 
+### 1. Prerequisites
+- Node.js 18+
+- Docker (optional, for local MongoDB)
+
+### 2. Automatic Setup
+The easiest way to get started is using the setup script:
+
 ```bash
-# Dependencies installieren
+npm run setup
+```
+
+This script will:
+- ✅ Install dependencies
+- ✅ Start MongoDB (via Docker)
+- ✅ Create `.env.local` configuration
+- ✅ Create a Demo User
+- ✅ Generate Sample Data (optional)
+
+### 3. Manual Setup
+If you prefer manual setup:
+
+```bash
+# Install dependencies
 npm install
 
-# MongoDB starten (optional, falls lokal)
+# Start MongoDB (if using Docker)
 docker run -d -p 27017:27017 --name mongodb mongo
 
-# Development Server starten
+# Start Development Server
 npm run dev
 ```
 
-Öffne: http://localhost:3000
+Open: http://localhost:3000
 
-## 📁 Struktur
+## 🔑 Default Login
+
+If you created the demo user:
+- **Email:** `demo@example.com`
+- **Password:** `demo123`
+
+## 📁 Project Structure
 
 ```
 app/
@@ -38,7 +65,17 @@ app/
 components/             # React Components
 models/                 # Mongoose Models
 lib/                    # Utilities (Auth, Email, PDF)
+docs/                   # Documentation
+scripts/                # Helper Scripts
 ```
+
+## 📚 Documentation
+
+- [Database Setup](docs/DATABASE.md)
+- [Local Deployment](docs/DEPLOYMENT_LOCAL.md)
+- [Cloud Deployment](docs/DEPLOYMENT.md)
+- [Security & Secrets](docs/SECURITY.md)
+- [I18N](docs/I18N.md)
 
 ## ✅ Features
 
@@ -48,25 +85,5 @@ lib/                    # Utilities (Auth, Email, PDF)
 - [x] RESTful API
 - [x] CRUD Operations
 - [x] TypeScript
-- [x] TailwindCSS UI
-- [x] Authentication (JWT, Role-based: Admin, Moderator, User)
-- [x] File Uploads (Drag & Drop, Multi-format)
-- [x] Email Notifications (New Minutes, Action Items)
-- [x] PDF Export (Minutes with Tables)
-- [x] Internationalization (i18n: DE/EN)
-
-## 📊 API Endpoints
-
-```
-GET    /api/meeting-series        List all
-POST   /api/meeting-series        Create new
-GET    /api/meeting-series/[id]   Get one
-PUT    /api/meeting-series/[id]   Update
-DELETE /api/meeting-series/[id]   Delete
-POST   /api/attachments           Upload file
-```
-
-## 🔄 Migration Status
-
-**Phase 1**: Core Features Implemented ✅
-**Phase 2**: Testing & Refinement (In Progress)
+- [x] Internationalization (i18n)
+- [x] PDF Export

@@ -9,8 +9,6 @@
     "lint": "eslint .",
     "test": "echo \"No tests specified yet\" && exit 0",
     "type-check": "tsc --noEmit",
-    "migrate": "tsx scripts/migrate-data.ts",
-    "verify": "tsx scripts/verify-migration.ts",
     "sample-data": "tsx scripts/sample-data.ts",
     "create-demo-user": "tsx scripts/create-demo-user.ts",
     "setup": "./setup.sh"

@@ -1,34 +1,21 @@
-# 4Minitz Next.js - Projekt Status
+# 4Minitz Next.js - Project Status
 
-**Stand:** November 2025  
-**Version:** 1.0.0  
+**Version:** 2.0.0
 **Status:** ✅ Production Ready
 
 ---
 
-## 📊 Migrations-Zusammenfassung
+## 🚀 Technical Stack
 
-### Original (4minitz)
-- **Framework:** Meteor.js 2.16
-- **Frontend:** Blaze Templates + jQuery 3.3.1
-- **Styling:** Bootstrap 3 (EOL 2019)
-- **Datenbank:** MongoDB 4.0.0
-- **Node:** >=14 (EOL 2023)
-- **Letztes Update:** Juni 2024
-- **Dateien:** 387 Dateien, 23MB
-
-### Neu (4minitz-next)
-- **Framework:** Next.js 15 (App Router)
+- **Framework:** Next.js 16 (App Router)
 - **Frontend:** React 19 + TypeScript
 - **Styling:** TailwindCSS
-- **Datenbank:** MongoDB 7.0 + Mongoose
+- **Database:** MongoDB 7.0 + Mongoose
 - **Node:** 20.19.2 LTS
-- **Entwicklungszeit:** ~8 Stunden
-- **Lines of Code:** ~5,000 Zeilen
 
 ---
 
-## ✅ Implementierte Features
+## ✅ Implemented Features
 
 ### Core Funktionalität
 - [x] **Sitzungen (Meeting Series)**
