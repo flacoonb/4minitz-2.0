@@ -95,3 +95,16 @@ else
     chmod +x setup.sh
     ./setup.sh
 fi
+
+# 7. Install Systemd Service (Optional)
+echo -e "\n${BLUE}🚀 Service Installation${NC}"
+read -p "Do you want to install 4Minitz as a systemd service (auto-start on boot)? (y/N) " -n 1 -r
+echo
+if [[ $REPLY =~ ^[Yy]$ ]]; then
+    cd "$INSTALL_DIR"
+    chmod +x install-service.sh
+    ./install-service.sh
+else
+    echo -e "\n${GREEN}✅ Installation complete!${NC}"
+    echo "You can start the app manually with: cd $INSTALL_DIR && npm run dev"
+fi

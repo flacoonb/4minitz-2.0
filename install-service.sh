@@ -6,11 +6,17 @@
 set -e
 
 APP_NAME="4minitz"
-APP_DIR="/home/pi/4minitz-next"
+# Determine directory where script is located
+APP_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 SERVICE_FILE="$APP_DIR/4minitz.service"
 SYSTEMD_DIR="/etc/systemd/system"
 
+# Determine user who owns the directory (to run the service as)
+APP_USER=$(stat -c '%U' "$APP_DIR")
+
 echo "🚀 Installing 4Minitz as a systemd service..."
+echo "   App Directory: $APP_DIR"
+echo "   App User:      $APP_USER"
 
 # Check if running as root or with sudo
 if [[ $EUID -ne 0 ]]; then
@@ -36,12 +42,28 @@ echo "📦 Checking dependencies..."
 cd "$APP_DIR"
 if [[ ! -d "node_modules" ]]; then
     echo "   Installing npm dependencies..."
-    sudo -u pi npm install
+    sudo -u "$APP_USER" npm install
 fi
 
-# Copy service file to systemd directory
+# Build the application if .next doesn't exist
+if [[ ! -d ".next" ]]; then
+    echo "🏗️  Building application..."
+    sudo -u "$APP_USER" npm run build
+fi
+
+# Copy service file to systemd directory and update paths/user
 echo "📋 Installing service file..."
-cp "$SERVICE_FILE" "$SYSTEMD_DIR/${APP_NAME}.service"
+TARGET_SERVICE="$SYSTEMD_DIR/${APP_NAME}.service"
+
+cp "$SERVICE_FILE" "$TARGET_SERVICE"
+
+# Update paths and user in the installed service file
+sed -i "s|User=pi|User=$APP_USER|g" "$TARGET_SERVICE"
+sed -i "s|Group=pi|Group=$(id -gn $APP_USER)|g" "$TARGET_SERVICE"
+sed -i "s|WorkingDirectory=/home/pi/4minitz-next|WorkingDirectory=$APP_DIR|g" "$TARGET_SERVICE"
+sed -i "s|ExecStart=/home/pi/4minitz-next|ExecStart=$APP_DIR|g" "$TARGET_SERVICE"
+
+echo "   Service file configured with User: $APP_USER, Dir: $APP_DIR"
 
 # Reload systemd daemon
 echo "🔄 Reloading systemd daemon..."
