@@ -31,18 +31,26 @@ async function createUser() {
 
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
+    
+    // Generate username from email (part before @)
+    const username = email.split('@')[0];
 
     // Create user
     await User.create({
       email,
+      username,
       password: hashedPassword,
-      name,
+      firstName: firstname,
+      lastName: lastname,
       role: 'admin', // Defaulting to admin for this script
+      isEmailVerified: true,
+      isActive: true
     });
 
     console.log('✅ User created successfully!\n');
     console.log('============================================================');
     console.log(`📧 Email:    ${email}`);
+    console.log(`👤 Username: ${username}`);
     console.log(`🔒 Password: ${password}`);
     console.log(`👤 Name:     ${name}`);
     console.log('🎭 Role:     admin');

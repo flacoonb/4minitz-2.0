@@ -45,7 +45,8 @@ const UserSchema: Schema<IUser> = new Schema(
       trim: true,
       validate: {
         validator: function (email: string) {
-          return /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/.test(email);
+          // Allow longer TLDs (e.g. .info, .host, .local)
+          return /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,})+$/.test(email);
         },
         message: 'Ungültige E-Mail-Adresse'
       }
