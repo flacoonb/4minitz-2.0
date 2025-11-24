@@ -29,17 +29,16 @@ async function createUser() {
       return;
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
-    
     // Generate username from email (part before @)
     const username = email.split('@')[0];
 
     // Create user
+    // Note: We do NOT hash the password here because the User model has a pre-save hook
+    // that hashes the password automatically. If we hash it here, it will be hashed twice!
     await User.create({
       email,
       username,
-      password: hashedPassword,
+      password: password, // Pass plain password, model will hash it
       firstName: firstname,
       lastName: lastname,
       role: 'admin', // Defaulting to admin for this script
