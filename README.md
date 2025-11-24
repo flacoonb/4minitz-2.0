@@ -17,8 +17,15 @@
 - Node.js 18+
 - Docker (optional, for local MongoDB)
 
-### 2. Automatic Setup
-The easiest way to get started is using the setup script:
+### 2. Installation (Recommended)
+Run this command to download and install 4Minitz automatically:
+
+```bash
+curl -sL https://raw.githubusercontent.com/flacoonb/4minitz-2.0/main/install.sh | bash
+```
+
+### 3. Manual Setup (if already cloned)
+If you have already cloned the repository, you can run the setup script directly:
 
 ```bash
 npm run setup
