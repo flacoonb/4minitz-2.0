@@ -1,0 +1,28 @@
+[Unit]
+Description=4Minitz 2.0 Application
+Documentation=https://github.com/flacoonb/4minitz
+After=network.target mongodb.service
+
+[Service]
+Type=simple
+User=pi
+Group=pi
+WorkingDirectory=/home/pi/4minitz-next
+Environment=NODE_ENV=production
+Environment=PORT=3000
+Environment=HOSTNAME=0.0.0.0
+ExecStart=/home/pi/4minitz-next/node_modules/.bin/next start
+ExecReload=/bin/kill -HUP $MAINPID
+KillMode=process
+KillSignal=SIGINT
+TimeoutStartSec=10
+TimeoutStopSec=10
+PrivateTmp=true
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=4minitz
+
+[Install]
+WantedBy=multi-user.target
