@@ -1,4 +1,4 @@
-# 4Minitz Next.js
+# 4minitz 2.0 - Next.js
 
 ## 🎯 Overview
 
@@ -54,11 +54,22 @@ npm run dev
 
 Open: http://localhost:3000
 
-## 🔑 Default Login
+## 🔑 User & Admin Management
 
-If you created the demo user:
+### Default Admin User
+The setup script offers to create a **Demo User**. This user is assigned the **Admin** role automatically.
+
 - **Email:** `demo@example.com`
 - **Password:** `demo123`
+- **Role:** Admin
+
+### Creating Additional Users
+- **Registration:** New users can register via the login page (if enabled).
+- **CLI Creation:** You can use the demo user script as a template to create more admin users via command line:
+  ```bash
+  npm run create-demo-user
+  ```
+  *(Note: You can modify `scripts/create-demo-user.ts` to create different users)*
 
 ## 📁 Project Structure
 

@@ -5,7 +5,7 @@
 
 set -e
 
-APP_NAME="4minitz"
+APP_NAME="4minitz-2.0"
 SYSTEMD_DIR="/etc/systemd/system"
 
 echo "🛑 Uninstalling 4Minitz systemd service..."

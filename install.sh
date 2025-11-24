@@ -101,9 +101,51 @@ echo -e "\n${BLUE}🚀 Service Installation${NC}"
 read -p "Do you want to install 4Minitz as a systemd service (auto-start on boot)? (y/N) " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
-    cd "$INSTALL_DIR"
-    chmod +x install-service.sh
-    ./install-service.sh
+    APP_NAME="4minitz-2.0"
+    APP_DIR=$(pwd)
+    SERVICE_FILE="4minitz-2.0.service"
+    SYSTEMD_DIR="/etc/systemd/system"
+    
+    # Determine user who owns the directory (to run the service as)
+    if [ -n "$SUDO_USER" ]; then
+        APP_USER="$SUDO_USER"
+    else
+        APP_USER=$(stat -c '%U' "$APP_DIR")
+    fi
+
+    echo "   App Directory: $APP_DIR"
+    echo "   App User:      $APP_USER"
+
+    # Build the application if .next doesn't exist
+    if [[ ! -d ".next" ]]; then
+        echo -e "${BLUE}🏗️  Building application (this may take a while)...${NC}"
+        # Run build as the app user to avoid root-owned files in .next
+        sudo -u "$APP_USER" PATH=$PATH npm run build
+    fi
+
+    # Copy service file
+    echo -e "${BLUE}📋 Installing service file...${NC}"
+    TARGET_SERVICE="$SYSTEMD_DIR/${APP_NAME}.service"
+    
+    if [[ -f "$SERVICE_FILE" ]]; then
+        cp "$SERVICE_FILE" "$TARGET_SERVICE"
+        
+        # Update paths and user in the installed service file
+        sed -i "s|User=pi|User=$APP_USER|g" "$TARGET_SERVICE"
+        sed -i "s|Group=pi|Group=$(id -gn $APP_USER)|g" "$TARGET_SERVICE"
+        sed -i "s|WorkingDirectory=/home/pi/4minitz-next|WorkingDirectory=$APP_DIR|g" "$TARGET_SERVICE"
+        sed -i "s|ExecStart=/home/pi/4minitz-next|ExecStart=$APP_DIR|g" "$TARGET_SERVICE"
+        
+        # Reload systemd
+        systemctl daemon-reload
+        systemctl enable ${APP_NAME}.service
+        systemctl start ${APP_NAME}.service
+        
+        echo -e "${GREEN}✅ Service installed and started!${NC}"
+        echo "   Status: sudo systemctl status ${APP_NAME}"
+    else
+        echo -e "${RED}❌ Service file template '$SERVICE_FILE' not found.${NC}"
+    fi
 else
     echo -e "\n${GREEN}✅ Installation complete!${NC}"
     echo "You can start the app manually with: cd $INSTALL_DIR && npm run dev"
