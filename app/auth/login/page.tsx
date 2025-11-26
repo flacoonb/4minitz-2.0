@@ -50,6 +50,7 @@ const LoginPage = () => {
       // Redirect after a short delay
       const redirectUrl = searchParams?.get('redirect') || '/';
       setTimeout(() => {
+        router.refresh(); // Force refresh to pick up new locale cookie
         router.push(redirectUrl);
       }, 1000);
 
