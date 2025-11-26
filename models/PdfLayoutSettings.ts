@@ -4,7 +4,7 @@
  */
 import mongoose, { Schema, Document } from 'mongoose';
 
-interface ILayoutElement {
+export interface ILayoutElement {
   id: string;
   type: 'header' | 'title' | 'info-box' | 'topic-title' | 'item-label' | 'separator' | 'logo';
   label: string;

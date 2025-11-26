@@ -1,11 +1,13 @@
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
+import { UserOptions } from 'jspdf-autotable';
+import { IPdfLayoutSettings, ILayoutElement } from '@/models/PdfLayoutSettings';
 
 // Extend jsPDF type to include autoTable
 declare module 'jspdf' {
   interface jsPDF {
-    autoTable: (options: any) => jsPDF;
-    lastAutoTable?: any;
+    autoTable: (options: UserOptions) => jsPDF;
+    lastAutoTable?: { finalY: number };
   }
 }
 
@@ -156,7 +158,7 @@ export async function generateMinutePdf(
   minute: Minute,
   settings: PdfSettings,
   allUsers: User[],
-  layoutSettings?: any
+  layoutSettings?: IPdfLayoutSettings
 ): Promise<void> {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -422,7 +424,7 @@ export async function generateMinutePdf(
       let estimatedHeight = 0;
       
       // Title bar height
-      const topicTitleElement = layoutSettings?.elements?.find((e: any) => e.id === 'topic-title');
+      const topicTitleElement = layoutSettings?.elements?.find((e) => e.id === 'topic-title');
       const titleBarHeight = topicTitleElement?.size?.height || 10;
       estimatedHeight += titleBarHeight;
       
@@ -456,7 +458,7 @@ export async function generateMinutePdf(
     const sectionNumber = topicIndex + 1;
     
     // Get topic title settings from layout
-    const topicTitleElement = layoutSettings?.elements?.find((e: any) => e.id === 'topic-title');
+    const topicTitleElement = layoutSettings?.elements?.find((e) => e.id === 'topic-title');
     const topicBgColor = topicTitleElement?.style?.backgroundColor || '#F3F4F6';
     const topicFontSize = topicTitleElement?.style?.fontSize || 11;
     const topicBorderWidth = topicTitleElement?.style?.borderWidth || 0.5;
@@ -545,7 +547,7 @@ export async function generateMinutePdf(
         yPosition = itemStartY;
         
         // Label on the LEFT side (outside the main content) with color coding
-        const labelWidth = layoutSettings?.elements?.find((e: any) => e.id === 'item-label')?.size?.width || 12;
+        const labelWidth = layoutSettings?.elements?.find((e) => e.id === 'item-label')?.size?.width || 12;
         const labelX = margin + 2;
         
         // Responsible column on the right
@@ -705,7 +707,7 @@ export async function generateMinutePdf(
         yPosition += 4;
         
         // Get separator settings from layout
-        const separatorElement = layoutSettings?.elements?.find((e: any) => e.id === 'separator');
+        const separatorElement = layoutSettings?.elements?.find((e) => e.id === 'separator');
         const separatorColor = separatorElement?.style?.borderColor || '#E6E6E6';
         const separatorWidth = separatorElement?.style?.borderWidth || 0.3;
         const separatorRgb = hexToRgb(separatorColor);

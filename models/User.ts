@@ -11,7 +11,7 @@ export interface INotificationSettings {
 }
 
 export interface IUser extends Document {
-  _id: string;
+  _id: mongoose.Types.ObjectId;
   email: string;
   username: string;
   password: string;
@@ -63,7 +63,7 @@ const UserSchema: Schema<IUser> = new Schema(
       lowercase: true,
       trim: true,
       validate: {
-        validator: function (email: string) {
+        validator: (email: string) => {
           // Allow longer TLDs (e.g. .info, .host, .local)
           return /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,})+$/.test(email);
         },
@@ -79,7 +79,7 @@ const UserSchema: Schema<IUser> = new Schema(
       minlength: [3, 'Benutzername muss mindestens 3 Zeichen lang sein'],
       maxlength: [30, 'Benutzername darf maximal 30 Zeichen lang sein'],
       validate: {
-        validator: function (username: string) {
+        validator: (username: string) => {
           return /^[a-zA-Z0-9._-]+$/.test(username);
         },
         message: 'Benutzername darf nur Buchstaben, Zahlen, Punkte, Unterstriche und Bindestriche enthalten'
@@ -120,7 +120,7 @@ const UserSchema: Schema<IUser> = new Schema(
       type: String,
       default: null,
       validate: {
-        validator: function (avatar: string) {
+        validator: (avatar: string) => {
           if (!avatar) return true;
           return /^https?:\/\/.+\.(jpg|jpeg|png|gif|webp)$/i.test(avatar);
         },
@@ -191,7 +191,7 @@ const UserSchema: Schema<IUser> = new Schema(
   {
     timestamps: true,
     toJSON: {
-      transform: function (doc: any, ret: any) {
+      transform: function (doc: Document, ret: Record<string, any>) {
         delete ret.password;
         return ret;
       }
@@ -252,3 +252,5 @@ const User: Model<IUser> =
   mongoose.models.User || mongoose.model<IUser>('User', UserSchema);
 
 export default User;
+
+

@@ -3,7 +3,7 @@ import mongoose, { Schema, Document, Model } from 'mongoose';
 export interface IPendingNotification extends Document {
   userId: mongoose.Types.ObjectId;
   type: 'newMinute' | 'actionItemAssigned' | 'actionItemOverdue';
-  data: any; // Flexible payload depending on type (e.g., minuteId, seriesName, etc.)
+  data: Record<string, any>; // Flexible payload depending on type (e.g., minuteId, seriesName, etc.)
   createdAt: Date;
 }
 

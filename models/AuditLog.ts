@@ -9,7 +9,7 @@ export interface IAuditLog extends Document {
   resourceId?: string;
   resourceType?: string;
   timestamp: Date;
-  metadata?: any;
+  metadata?: Record<string, any>;
 }
 
 const AuditLogSchema = new Schema<IAuditLog>(

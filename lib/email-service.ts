@@ -1,9 +1,10 @@
 import nodemailer from 'nodemailer';
-import { IMinutes } from '@/models/Minutes';
+import { IMinutes, ITopic, IInfoItem } from '@/models/Minutes';
 import { IMeetingSeries } from '@/models/MeetingSeries';
 import Settings from '@/models/Settings';
 import User from '@/models/User';
 import PendingNotification from '@/models/PendingNotification';
+import { ITask } from '@/models/Task';
 import { decrypt } from '@/lib/crypto';
 
 // Email Configuration
@@ -53,9 +54,9 @@ export async function getTransporter() {
       console.log('Email notifications are disabled in settings');
       // Return a dummy transporter that does nothing but log
       return {
-        sendMail: async (mailOptions: any) => {
+        sendMail: async (mailOptions: nodemailer.SendMailOptions) => {
           console.log('Email sending skipped (disabled in settings). Would have sent to:', mailOptions.to);
-          return { messageId: 'skipped-disabled' };
+          return { messageId: 'skipped-disabled' } as nodemailer.SentMessageInfo;
         },
         verify: async () => true
       } as any;
@@ -321,8 +322,8 @@ export async function sendNewMinutesNotification(
   const appUrl = await getAppUrl();
   const minuteUrl = `${appUrl}/minutes/${minute._id}`;
 
-  const actionItemsCount = minute.topics?.reduce((count: number, topic: any) => {
-    return count + (topic.infoItems?.filter((item: any) => item.isActionItem).length || 0);
+  const actionItemsCount = minute.topics?.reduce((count: number, topic: ITopic) => {
+    return count + (topic.infoItems?.filter((item: IInfoItem) => item.itemType === 'actionItem' && item.isOpen).length || 0);
   }, 0) || 0;
 
   const htmlContent = `
@@ -378,7 +379,7 @@ export async function sendNewMinutesNotification(
 // Send action item assignment notification
 export async function sendActionItemAssignedNotification(
   minute: IMinutes & { meetingSeries?: IMeetingSeries },
-  actionItem: any,
+  actionItem: IInfoItem,
   locale: 'de' | 'en' = 'de'
 ): Promise<void> {
   const t = translations[locale].actionItemAssigned;
@@ -408,7 +409,7 @@ export async function sendActionItemAssignedNotification(
            project: minute.meetingSeries.project,
            subject: actionItem.subject,
            priority: actionItem.priority,
-           dueDate: actionItem.dueDate
+           dueDate: actionItem.duedate
          }
        }));
     } else {
@@ -449,7 +450,7 @@ export async function sendActionItemAssignedNotification(
         <td style="padding: 16px;">
           <p style="margin: 0 0 8px 0;"><strong>${t.actionItem}</strong> ${actionItem.subject}</p>
           ${actionItem.priority ? `<p style="margin: 0 0 8px 0;"><strong>${t.priority}</strong> ${actionItem.priority}</p>` : ''}
-          ${actionItem.dueDate ? `<p style="margin: 0;"><strong>${t.dueDate}</strong> ${new Date(actionItem.dueDate).toLocaleDateString(locale)}</p>` : ''}
+          ${actionItem.duedate ? `<p style="margin: 0;"><strong>${t.dueDate}</strong> ${new Date(actionItem.duedate).toLocaleDateString(locale)}</p>` : ''}
         </td>
       </tr>
     </table>
