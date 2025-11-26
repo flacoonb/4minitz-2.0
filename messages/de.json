@@ -526,7 +526,7 @@
   },
   "admin": {
     "title": "Admin-Bereich",
-    "subtitle": "Verwaltung und Konfiguration der Protokoll-APP",
+    "subtitle": "Verwaltung und Konfiguration von 4Minitz 2.0",
     "emailConfig": {
       "title": "E-Mail-Konfiguration",
       "description": "SMTP-Server einrichten und E-Mail-Benachrichtigungen testen"
@@ -549,7 +549,7 @@
     },
     "infoBox": {
       "title": "Administrator-Bereich:",
-      "text": "Hier können Sie zentrale Einstellungen der Protokoll-APP vornehmen. Bitte beachten Sie, dass diese Änderungen Auswirkungen auf alle Benutzer haben können."
+      "text": "Hier können Sie zentrale Einstellungen von 4Minitz 2.0 vornehmen. Bitte beachten Sie, dass diese Änderungen Auswirkungen auf alle Benutzer haben können."
     },
     "dashboard": "Admin Dashboard",
     "settings": {

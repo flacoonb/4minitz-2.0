@@ -54,7 +54,7 @@ export async function POST(request: NextRequest) {
       } : undefined,
     });
 
-    const fromEmail = process.env.FROM_EMAIL || 'noreply@protokoll-app.local';
+    const fromEmail = process.env.FROM_EMAIL || 'noreply@4minitz.local';
     const currentDate = new Date().toLocaleString('de-DE', {
       dateStyle: 'full',
       timeStyle: 'short'
@@ -64,10 +64,10 @@ export async function POST(request: NextRequest) {
     const info = await transporter.sendMail({
       from: fromEmail,
       to: toEmail,
-      subject: '✓ Test-Email von Protokoll-APP',
+      subject: '✓ Test-Email von 4Minitz 2.0',
       text: `Hallo,
 
-Dies ist eine Test-Email von der Protokoll-APP.
+Dies ist eine Test-Email von 4Minitz 2.0.
 
 Wenn Sie diese Email erhalten haben, funktioniert die Email-Konfiguration korrekt.
 
@@ -75,7 +75,7 @@ Zeitstempel: ${currentDate}
 
 ---
 © Copyright by Bph
-Protokoll-APP`,
+4Minitz 2.0`,
       html: `
         <!DOCTYPE html>
         <html>
@@ -126,7 +126,7 @@ Protokoll-APP`,
           </head>
           <body>
             <div class="header">
-              <h1 style="margin: 0;">Protokoll-APP</h1>
+              <h1 style="margin: 0;">4Minitz 2.0</h1>
             </div>
             <div class="content">
               <div class="success-icon" style="text-align: center;">✓</div>
@@ -135,7 +135,7 @@ Protokoll-APP`,
               </h2>
               
               <p><strong>Hallo,</strong></p>
-              <p>Dies ist eine Test-Email von der Protokoll-APP.</p>
+              <p>Dies ist eine Test-Email von 4Minitz 2.0.</p>
               
               <div class="info-box">
                 <p style="margin: 0;">
@@ -155,7 +155,7 @@ Protokoll-APP`,
             </div>
             <div class="footer">
               <p style="margin: 0;">© Copyright by Bph</p>
-              <p style="margin: 5px 0 0 0;">Protokoll-APP</p>
+              <p style="margin: 5px 0 0 0;">4Minitz 2.0</p>
             </div>
           </body>
         </html>

@@ -28,7 +28,7 @@ export default function EmailConfigPage() {
     secure: false,
     hasAuth: false,
     user: null,
-    fromEmail: 'noreply@protokoll-app.local',
+    fromEmail: 'noreply@4minitz.local',
   });
   const [isValid, setIsValid] = useState(false);
   const [password, setPassword] = useState('');
