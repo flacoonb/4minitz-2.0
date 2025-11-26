@@ -137,6 +137,19 @@ export async function POST(request: NextRequest) {
       maxAge: sessionTimeoutMs
     });
 
+    // Set locale cookie if user has a preference
+    if (user.preferences && user.preferences.language) {
+      // IMPORTANT: We must set the cookie on the response object that is returned
+      // AND we need to make sure the path is root '/'
+      response.cookies.set('NEXT_LOCALE', user.preferences.language, {
+        path: '/',
+        maxAge: 365 * 24 * 60 * 60, // 1 year
+        sameSite: 'lax',
+        secure: useSecureCookies,
+        httpOnly: false // Allow client-side access if needed
+      });
+    }
+
     return response;
 
   } catch (error: any) {
