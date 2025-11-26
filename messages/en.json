@@ -14,6 +14,7 @@
     "note": "Notes",
     "saving": "Saving...",
     "reset": "Reset",
+    "send": "Send",
     "daily": "Daily",
     "weekly": "Weekly",
     "monthly": "Monthly"
@@ -363,7 +364,13 @@
     "changeStatus": "Change Status",
     "yourComment": "Your Comment / Status Update",
     "commentPlaceholder": "Add your comment here...\n\nExamples:\n• Progress: \"70% done, waiting for feedback\"\n• Obstacles: \"Delay due to missing documents\"\n• Done: \"Completed on 14.11.2025, documentation updated\"",
-    "commentHint": "This comment is saved in addition to the original minute task and is visible to all members."
+    "commentHint": "This comment is saved in addition to the original minute task and is visible to all members.",
+    "moderatorActions": "Moderator Actions",
+    "sendReminders": "Send Reminders",
+    "sendRemindersDesc": "Send email reminders to all members with open tasks in your series.",
+    "confirmSendReminders": "Do you really want to send reminders to all members with open tasks?",
+    "remindersSent": "Reminders sent successfully.",
+    "lastSent": "Last sent"
   },
   "priority": {
     "high": "High",
@@ -406,7 +413,10 @@
     "unknown": "Unknown error",
     "tooManyLoginAttempts": "Too many login attempts. Please try again later.",
     "tooManyRegisterAttempts": "Too many registration attempts. Please try again later.",
-    "tooManyRequests": "Too many requests. Please try again later.",
+        "tooManyRequests": "Too many requests. Please try again later.",
+    "generic": "An error occurred"
+  },
+  "auth": {
     "emailVerificationRequired": "Please verify your email address before logging in.",
     "accountDeactivated": "User account is deactivated",
     "invalidCredentials": "Invalid credentials",

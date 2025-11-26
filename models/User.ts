@@ -1,6 +1,15 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
 import bcrypt from 'bcryptjs';
 
+export interface INotificationSettings {
+  enableEmailNotifications: boolean;
+  enablePushNotifications: boolean;
+  sendMeetingReminders: boolean;
+  reminderHoursBefore: number;
+  enableDigestEmails: boolean;
+  digestFrequency: 'daily' | 'weekly' | 'monthly';
+}
+
 export interface IUser extends Document {
   _id: string;
   email: string;
@@ -15,6 +24,7 @@ export interface IUser extends Document {
   emailVerificationToken?: string;
   emailVerificationExpires?: Date;
   lastLogin?: Date;
+  notificationSettings?: INotificationSettings;
   preferences: {
     language: string;
     timezone: string;
@@ -34,6 +44,15 @@ export interface IUser extends Document {
   canManageUsers(): boolean;
   canModerateMeetings(): boolean;
 }
+
+const NotificationSettingsSchema = new Schema<INotificationSettings>({
+  enableEmailNotifications: { type: Boolean, default: true },
+  enablePushNotifications: { type: Boolean, default: true },
+  sendMeetingReminders: { type: Boolean, default: true },
+  reminderHoursBefore: { type: Number, default: 24 },
+  enableDigestEmails: { type: Boolean, default: false },
+  digestFrequency: { type: String, enum: ['daily', 'weekly', 'monthly'], default: 'daily' }
+}, { _id: false });
 
 const UserSchema: Schema<IUser> = new Schema(
   {
@@ -135,6 +154,8 @@ const UserSchema: Schema<IUser> = new Schema(
       type: Date,
       default: null
     },
+
+    notificationSettings: { type: NotificationSettingsSchema, default: {} },
 
     preferences: {
       language: {

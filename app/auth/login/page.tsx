@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
@@ -19,13 +19,31 @@ const LoginPage = () => {
     username: '',
     password: ''
   });
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [organizationName, setOrganizationName] = useState('4Minitz');
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login } = useAuth();
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const response = await fetch('/api/settings/public');
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.data?.system?.organizationName) {
+            setOrganizationName(data.data.system.organizationName);
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching settings:', error);
+      }
+    };
+    fetchSettings();
+  }, []);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -174,8 +192,9 @@ const LoginPage = () => {
 
         {/* Footer */}
         <div className="mt-8 text-center">
-          <p className="text-xs text-slate-500">
-            © 2024 4Minitz. Alle Rechte vorbehalten.
+          <p className="text-slate-700 font-semibold text-lg">{organizationName}</p>
+          <p className="text-xs text-slate-500 mt-1">
+            © Copyright by Bph
           </p>
         </div>
       </div>

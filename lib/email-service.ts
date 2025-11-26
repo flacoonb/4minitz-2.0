@@ -2,6 +2,8 @@ import nodemailer from 'nodemailer';
 import { IMinutes } from '@/models/Minutes';
 import { IMeetingSeries } from '@/models/MeetingSeries';
 import Settings from '@/models/Settings';
+import User from '@/models/User';
+import PendingNotification from '@/models/PendingNotification';
 import { decrypt } from '@/lib/crypto';
 
 // Email Configuration
@@ -18,7 +20,7 @@ const EMAIL_CONFIG = {
 const FROM_EMAIL = process.env.FROM_EMAIL || 'noreply@4minitz.local';
 // APP_URL is now dynamic via getAppUrl()
 
-async function getAppUrl() {
+export async function getAppUrl() {
   try {
     const settings = await Settings.findOne({}).sort({ version: -1 });
     if (settings && settings.systemSettings && settings.systemSettings.baseUrl) {
@@ -28,10 +30,20 @@ async function getAppUrl() {
   return process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 }
 
+export async function getOrgName() {
+  try {
+    const settings = await Settings.findOne({}).sort({ version: -1 });
+    if (settings && settings.systemSettings && settings.systemSettings.organizationName) {
+      return settings.systemSettings.organizationName;
+    }
+  } catch (e) { }
+  return '4Minitz';
+}
+
 // Create reusable transporter
 let transporter: nodemailer.Transporter | null = null;
 
-async function getTransporter() {
+export async function getTransporter() {
   // Try to get settings from DB first
   try {
     const settings = await Settings.findOne({}).sort({ version: -1 });
@@ -78,7 +90,7 @@ async function getTransporter() {
   return transporter;
 }
 
-async function getFromEmail() {
+export async function getFromEmail() {
   try {
     const settings = await Settings.findOne({}).sort({ version: -1 });
     if (settings && settings.smtpSettings && settings.smtpSettings.from) {
@@ -122,6 +134,13 @@ const translations = {
       subject: (count: number) => `${count} überfällige Aktionspunkte`,
       greeting: 'Hallo',
       intro: (count: number) => `Sie haben ${count} überfällige Aktionspunkte:`,
+      viewButton: 'Dashboard anzeigen',
+      footer: 'Diese E-Mail wurde automatisch von 4Minitz versendet.',
+    },
+    pendingTasksReminder: {
+      subject: (count: number) => `Erinnerung: ${count} offene Aufgaben`,
+      greeting: (name?: string) => name ? `Hallo ${name}` : 'Hallo',
+      intro: (count: number) => `Sie haben ${count} offene Aufgaben, die noch erledigt werden müssen:`,
       viewButton: 'Dashboard anzeigen',
       footer: 'Diese E-Mail wurde automatisch von 4Minitz versendet.',
     },
@@ -170,6 +189,13 @@ const translations = {
       viewButton: 'View Dashboard',
       footer: 'This email was sent automatically by 4Minitz.',
     },
+    pendingTasksReminder: {
+      subject: (count: number) => `Reminder: ${count} Open Tasks`,
+      greeting: (name?: string) => name ? `Hello ${name}` : 'Hello',
+      intro: (count: number) => `You have ${count} open tasks pending:`,
+      viewButton: 'View Dashboard',
+      footer: 'This email was sent automatically by 4Minitz.',
+    },
     welcome: {
       subject: 'Welcome to 4Minitz!',
       greeting: 'Hello',
@@ -189,78 +215,43 @@ const translations = {
 };
 
 // Helper function to generate email HTML
-function generateEmailHTML(content: string): string {
+export async function generateEmailHTML(content: string): Promise<string> {
+  const orgName = await getOrgName();
   return `
-    <!DOCTYPE html>
-    <html>
+    <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+    <html xmlns="http://www.w3.org/1999/xhtml">
       <head>
-        <meta charset="utf-8">
-        <style>
-          body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-          }
-          .header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 30px;
-            text-align: center;
-            border-radius: 10px 10px 0 0;
-          }
-          .content {
-            background: #f9fafb;
-            padding: 30px;
-            border: 1px solid #e5e7eb;
-          }
-          .button {
-            display: inline-block;
-            background: #3b82f6;
-            color: white !important;
-            padding: 12px 24px;
-            text-decoration: none;
-            border-radius: 6px;
-            margin: 20px 0;
-            font-weight: 600;
-          }
-          .footer {
-            text-align: center;
-            padding: 20px;
-            color: #6b7280;
-            font-size: 0.875rem;
-            border-top: 1px solid #e5e7eb;
-          }
-          .info-box {
-            background: white;
-            border-left: 4px solid #3b82f6;
-            padding: 15px;
-            margin: 15px 0;
-            border-radius: 4px;
-          }
-          .priority-high {
-            border-left-color: #ef4444;
-          }
-          .priority-medium {
-            border-left-color: #f59e0b;
-          }
-          .priority-low {
-            border-left-color: #10b981;
-          }
-        </style>
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <title>${orgName}</title>
       </head>
-      <body>
-        <div class="header">
-          <h1 style="margin: 0;">4Minitz</h1>
-        </div>
-        <div class="content">
-          ${content}
-        </div>
-        <div class="footer">
-          ${translations.de.newMinute.footer}
-        </div>
+      <body style="margin: 0; padding: 0; background-color: #f3f4f6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
+        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f3f4f6;">
+          <tr>
+            <td align="center" style="padding: 40px 0;">
+              <table border="0" cellpadding="0" cellspacing="0" width="600" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                <!-- Header -->
+                <tr>
+                  <td align="center" style="background: linear-gradient(135deg, #8b5cf6 0%, #db2777 100%); padding: 30px 0; color: #ffffff;">
+                    <h1 style="margin: 0; font-size: 24px; font-weight: bold; text-shadow: 0 1px 2px rgba(0,0,0,0.1); font-family: 'Segoe UI', sans-serif;">${orgName}</h1>
+                  </td>
+                </tr>
+                <!-- Content -->
+                <tr>
+                  <td style="padding: 40px 30px; color: #333333; font-size: 16px; line-height: 1.6;">
+                    ${content}
+                  </td>
+                </tr>
+                <!-- Footer -->
+                <tr>
+                  <td align="center" style="background-color: #f9fafb; padding: 20px; color: #6b7280; font-size: 12px; border-top: 1px solid #e5e7eb;">
+                    &copy; ${new Date().getFullYear()} ${orgName}
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
       </body>
     </html>
   `;
@@ -277,13 +268,51 @@ export async function sendNewMinutesNotification(
     throw new Error('Meeting series information required');
   }
 
-  const recipients = [
+  const allRecipients = [
     ...(minute.meetingSeries.visibleFor || []),
     ...(minute.participants || []),
   ].filter((email, index, self) => self.indexOf(email) === index); // Remove duplicates
 
-  if (recipients.length === 0) {
+  if (allRecipients.length === 0) {
     console.log('No recipients for minutes notification');
+    return;
+  }
+
+  // Check for digest settings
+  const users = await User.find({ email: { $in: allRecipients } });
+  const userMap = new Map(users.map(u => [u.email, u]));
+  
+  const directRecipients: string[] = [];
+  const digestPromises: Promise<any>[] = [];
+
+  for (const email of allRecipients) {
+    const user = userMap.get(email);
+    // Check if user has digest enabled (and is not null)
+    const digestEnabled = user?.notificationSettings?.enableDigestEmails;
+
+    if (digestEnabled && user) {
+       digestPromises.push(PendingNotification.create({
+         userId: user._id,
+         type: 'newMinute',
+         data: {
+           minuteId: minute._id,
+           seriesName: minute.meetingSeries.name,
+           project: minute.meetingSeries.project,
+           date: minute.date,
+           topicCount: minute.topics?.length || 0
+         }
+       }));
+    } else {
+       directRecipients.push(email);
+    }
+  }
+
+  if (digestPromises.length > 0) {
+    await Promise.all(digestPromises);
+    console.log(`Queued ${digestPromises.length} digest notifications`);
+  }
+
+  if (directRecipients.length === 0) {
     return;
   }
 
@@ -300,38 +329,46 @@ export async function sendNewMinutesNotification(
     <p><strong>${t.greeting},</strong></p>
     <p>${t.intro(seriesName, date)}</p>
     
-    <div class="info-box">
-      <p><strong>${t.topicsCount(minute.topics?.length || 0)}</strong></p>
-      <p><strong>${t.actionItemsCount(actionItemsCount)}</strong></p>
-    </div>
+    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 16px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #3b82f6; border-radius: 4px;">
+      <tr>
+        <td style="padding: 16px;">
+          <p style="margin: 0 0 8px 0;"><strong>${t.topicsCount(minute.topics?.length || 0)}</strong></p>
+          <p style="margin: 0;"><strong>${t.actionItemsCount(actionItemsCount)}</strong></p>
+        </td>
+      </tr>
+    </table>
 
     ${minute.participants && minute.participants.length > 0 ? `
-      <div class="info-box">
-        <p><strong>${t.participantsList}</strong></p>
-        <ul>
-          ${minute.participants.map((p: string) => `<li>${p}</li>`).join('')}
-        </ul>
-      </div>
+      <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 16px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #3b82f6; border-radius: 4px;">
+        <tr>
+          <td style="padding: 16px;">
+            <p style="margin: 0 0 8px 0;"><strong>${t.participantsList}</strong></p>
+            <ul style="padding-left: 20px; margin: 0;">
+              ${minute.participants.map((p: string) => `<li style="margin-bottom: 4px;">${p}</li>`).join('')}
+            </ul>
+          </td>
+        </tr>
+      </table>
     ` : ''}
 
     <center>
-      <a href="${minuteUrl}" class="button">${t.viewButton}</a>
+      <a href="${minuteUrl}" style="display: inline-block; background: linear-gradient(to right, #9333ea, #db2777); color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; margin-top: 24px; text-align: center; box-shadow: 0 4px 6px -1px rgba(147, 51, 234, 0.3); font-family: sans-serif;">${t.viewButton}</a>
     </center>
   `;
 
   const fromEmail = await getFromEmail();
   const mailOptions = {
     from: fromEmail,
-    to: recipients.join(', '),
+    to: directRecipients.join(', '),
     subject: t.subject(seriesName),
     text: `${t.intro(seriesName, date)}\n\n${t.topicsCount(minute.topics?.length || 0)}\n${t.actionItemsCount(actionItemsCount)}\n\n${t.viewButton}: ${minuteUrl}`,
-    html: generateEmailHTML(htmlContent),
+    html: await generateEmailHTML(htmlContent),
   };
 
   try {
     const transport = await getTransporter();
     await transport.sendMail(mailOptions);
-    console.log(`Minutes notification sent to ${recipients.length} recipients`);
+    console.log(`Minutes notification sent to ${directRecipients.length} recipients`);
   } catch (error) {
     console.error('Failed to send minutes notification:', error);
     throw error;
@@ -350,39 +387,91 @@ export async function sendActionItemAssignedNotification(
     return;
   }
 
+  // Check for digest settings
+  const users = await User.find({ email: { $in: actionItem.responsibles } });
+  const userMap = new Map(users.map(u => [u.email, u]));
+  
+  const directRecipients: string[] = [];
+  const digestPromises: Promise<any>[] = [];
+
+  for (const email of actionItem.responsibles) {
+    const user = userMap.get(email);
+    const digestEnabled = user?.notificationSettings?.enableDigestEmails;
+
+    if (digestEnabled && user) {
+       digestPromises.push(PendingNotification.create({
+         userId: user._id,
+         type: 'actionItemAssigned',
+         data: {
+           minuteId: minute._id,
+           seriesName: minute.meetingSeries.name,
+           project: minute.meetingSeries.project,
+           subject: actionItem.subject,
+           priority: actionItem.priority,
+           dueDate: actionItem.dueDate
+         }
+       }));
+    } else {
+       directRecipients.push(email);
+    }
+  }
+
+  if (digestPromises.length > 0) {
+    await Promise.all(digestPromises);
+  }
+
+  if (directRecipients.length === 0) {
+    return;
+  }
+
   const seriesName = `${minute.meetingSeries.project} - ${minute.meetingSeries.name}`;
   const appUrl = await getAppUrl();
   const minuteUrl = `${appUrl}/minutes/${minute._id}`;
-  const priorityClass = `priority-${actionItem.priority || 'medium'}`;
+  const priorityColors = {
+    high: '#ef4444',
+    medium: '#f59e0b',
+    low: '#10b981'
+  };
+  const priorityBg = {
+    high: '#fef2f2',
+    medium: '#fffbeb',
+    low: '#f0fdf4'
+  };
+  const pColor = priorityColors[actionItem.priority as keyof typeof priorityColors] || priorityColors.medium;
+  const pBg = priorityBg[actionItem.priority as keyof typeof priorityBg] || priorityBg.medium;
 
   const htmlContent = `
     <p><strong>${t.greeting},</strong></p>
     <p>${t.intro}</p>
     
-    <div class="info-box ${priorityClass}">
-      <p><strong>${t.actionItem}</strong> ${actionItem.subject}</p>
-      ${actionItem.priority ? `<p><strong>${t.priority}</strong> ${actionItem.priority}</p>` : ''}
-      ${actionItem.dueDate ? `<p><strong>${t.dueDate}</strong> ${new Date(actionItem.dueDate).toLocaleDateString(locale)}</p>` : ''}
-    </div>
+    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 16px; background-color: ${pBg}; border: 1px solid #e2e8f0; border-left: 4px solid ${pColor}; border-radius: 4px;">
+      <tr>
+        <td style="padding: 16px;">
+          <p style="margin: 0 0 8px 0;"><strong>${t.actionItem}</strong> ${actionItem.subject}</p>
+          ${actionItem.priority ? `<p style="margin: 0 0 8px 0;"><strong>${t.priority}</strong> ${actionItem.priority}</p>` : ''}
+          ${actionItem.dueDate ? `<p style="margin: 0;"><strong>${t.dueDate}</strong> ${new Date(actionItem.dueDate).toLocaleDateString(locale)}</p>` : ''}
+        </td>
+      </tr>
+    </table>
 
     <center>
-      <a href="${minuteUrl}" class="button">${t.viewButton}</a>
+      <a href="${minuteUrl}" style="display: inline-block; background: linear-gradient(to right, #9333ea, #db2777); color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; margin-top: 24px; text-align: center; box-shadow: 0 4px 6px -1px rgba(147, 51, 234, 0.3); font-family: sans-serif;">${t.viewButton}</a>
     </center>
   `;
 
   const fromEmail = await getFromEmail();
   const mailOptions = {
     from: fromEmail,
-    to: actionItem.responsibles.join(', '),
+    to: directRecipients.join(', '),
     subject: t.subject(seriesName),
     text: `${t.intro}\n\n${t.actionItem} ${actionItem.subject}\n${t.priority} ${actionItem.priority || 'medium'}\n\n${t.viewButton}: ${minuteUrl}`,
-    html: generateEmailHTML(htmlContent),
+    html: await generateEmailHTML(htmlContent),
   };
 
   try {
     const transport = await getTransporter();
     await transport.sendMail(mailOptions);
-    console.log(`Action item notification sent to ${actionItem.responsibles.length} recipients`);
+    console.log(`Action item notification sent to ${directRecipients.length} recipients`);
   } catch (error) {
     console.error('Failed to send action item notification:', error);
     throw error;
@@ -409,15 +498,19 @@ export async function sendOverdueReminder(
     <p>${t.intro(overdueItems.length)}</p>
     
     ${overdueItems.map(item => `
-      <div class="info-box priority-high">
-        <p><strong>${item.subject}</strong></p>
-        <p>Fällig: ${new Date(item.dueDate).toLocaleDateString(locale)}</p>
-        ${item.meetingSeries ? `<p>Sitzung: ${item.meetingSeries.name}</p>` : ''}
-      </div>
+      <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 16px; background-color: #fef2f2; border: 1px solid #e2e8f0; border-left: 4px solid #ef4444; border-radius: 4px;">
+        <tr>
+          <td style="padding: 16px;">
+            <p style="margin: 0 0 8px 0;"><strong>${item.subject}</strong></p>
+            <p style="margin: 0 0 8px 0;">Fällig: ${new Date(item.dueDate).toLocaleDateString(locale)}</p>
+            ${item.meetingSeries ? `<p style="margin: 0;">Sitzung: ${item.meetingSeries.name}</p>` : ''}
+          </td>
+        </tr>
+      </table>
     `).join('')}
 
     <center>
-      <a href="${dashboardUrl}" class="button">${t.viewButton}</a>
+      <a href="${dashboardUrl}" style="display: inline-block; background: linear-gradient(to right, #9333ea, #db2777); color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; margin-top: 24px; text-align: center; box-shadow: 0 4px 6px -1px rgba(147, 51, 234, 0.3); font-family: sans-serif;">${t.viewButton}</a>
     </center>
   `;
 
@@ -427,7 +520,7 @@ export async function sendOverdueReminder(
     to: userEmail,
     subject: t.subject(overdueItems.length),
     text: `${t.intro(overdueItems.length)}\n\n${overdueItems.map(item => `- ${item.subject} (${new Date(item.dueDate).toLocaleDateString(locale)})`).join('\n')}\n\n${t.viewButton}: ${dashboardUrl}`,
-    html: generateEmailHTML(htmlContent),
+    html: await generateEmailHTML(htmlContent),
   };
 
   try {
@@ -454,7 +547,7 @@ export async function sendWelcomeEmail(
     <p>${t.intro}</p>
     
     <center>
-      <a href="${loginUrl}" class="button">${t.loginButton}</a>
+      <a href="${loginUrl}" style="display: inline-block; background: linear-gradient(to right, #9333ea, #db2777); color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; margin-top: 24px; text-align: center; box-shadow: 0 4px 6px -1px rgba(147, 51, 234, 0.3); font-family: sans-serif;">${t.loginButton}</a>
     </center>
   `;
 
@@ -464,7 +557,7 @@ export async function sendWelcomeEmail(
     to: user.email,
     subject: t.subject,
     text: `${t.intro}\n\n${t.loginButton}: ${loginUrl}`,
-    html: generateEmailHTML(htmlContent),
+    html: await generateEmailHTML(htmlContent),
   };
 
   try {
@@ -492,10 +585,10 @@ export async function sendVerificationEmail(
     <p>${t.intro}</p>
     
     <center>
-      <a href="${verifyUrl}" class="button">${t.verifyButton}</a>
+      <a href="${verifyUrl}" style="display: inline-block; background: linear-gradient(to right, #9333ea, #db2777); color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; margin-top: 24px; text-align: center; box-shadow: 0 4px 6px -1px rgba(147, 51, 234, 0.3); font-family: sans-serif;">${t.verifyButton}</a>
     </center>
     
-    <p style="text-align: center; color: #6b7280; font-size: 0.875rem; margin-top: 20px;">
+    <p style="text-align: center; color: #6b7280; font-size: 14px; margin-top: 20px;">
       ${t.expiryNote}
     </p>
   `;
@@ -506,7 +599,7 @@ export async function sendVerificationEmail(
     to: user.email,
     subject: t.subject,
     text: `${t.intro}\n\n${t.verifyButton}: ${verifyUrl}\n\n${t.expiryNote}`,
-    html: generateEmailHTML(htmlContent),
+    html: await generateEmailHTML(htmlContent),
   };
 
   try {
@@ -516,6 +609,66 @@ export async function sendVerificationEmail(
   } catch (error) {
     console.error('Failed to send verification email:', error);
     throw error; // Throw error so registration can handle it
+  }
+}
+
+// Send pending tasks reminder (manual trigger)
+export async function sendPendingTasksReminder(
+  user: { email: string; firstName?: string; lastName?: string },
+  tasks: any[],
+  locale: 'de' | 'en' = 'de'
+): Promise<void> {
+  const t = translations[locale].pendingTasksReminder;
+
+  if (tasks.length === 0) {
+    return;
+  }
+
+  const appUrl = await getAppUrl();
+  const dashboardUrl = `${appUrl}/dashboard`;
+  const name = user.firstName || '';
+
+  const htmlContent = `
+    <p><strong>${t.greeting(name)},</strong></p>
+    <p>${t.intro(tasks.length)}</p>
+    
+    ${tasks.map(item => {
+      const pColor = item.priority === 'high' ? '#ef4444' : item.priority === 'low' ? '#10b981' : '#f59e0b';
+      const pBg = item.priority === 'high' ? '#fef2f2' : item.priority === 'low' ? '#f0fdf4' : '#fffbeb';
+      return `
+      <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 16px; background-color: ${pBg}; border: 1px solid #e2e8f0; border-left: 4px solid ${pColor}; border-radius: 4px;">
+        <tr>
+          <td style="padding: 16px;">
+            <p style="margin: 0 0 8px 0; font-weight: bold; font-size: 16px;">${item.subject}</p>
+            ${item.dueDate ? `<p style="margin: 0 0 4px 0; font-size: 14px; color: #4b5563;">Fällig: ${new Date(item.dueDate).toLocaleDateString(locale)}</p>` : ''}
+            ${item.meetingSeries ? `<p style="margin: 0; font-size: 14px; color: #4b5563;">Sitzung: ${item.meetingSeries.name}</p>` : ''}
+          </td>
+        </tr>
+      </table>
+      `;
+    }).join('')}
+
+    <center>
+      <a href="${dashboardUrl}" style="display: inline-block; background: linear-gradient(to right, #9333ea, #db2777); color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; margin-top: 24px; text-align: center; box-shadow: 0 4px 6px -1px rgba(147, 51, 234, 0.3); font-family: sans-serif;">${t.viewButton}</a>
+    </center>
+  `;
+
+  const fromEmail = await getFromEmail();
+  const mailOptions = {
+    from: fromEmail,
+    to: user.email,
+    subject: t.subject(tasks.length),
+    text: `${t.intro(tasks.length)}\n\n${tasks.map(item => `- ${item.subject} (${item.dueDate ? new Date(item.dueDate).toLocaleDateString(locale) : 'No Date'})`).join('\n')}\n\n${t.viewButton}: ${dashboardUrl}`,
+    html: await generateEmailHTML(htmlContent),
+  };
+
+  try {
+    const transport = await getTransporter();
+    await transport.sendMail(mailOptions);
+    console.log(`Pending tasks reminder sent to ${user.email}`);
+  } catch (error) {
+    console.error('Failed to send pending tasks reminder:', error);
+    throw error;
   }
 }
 

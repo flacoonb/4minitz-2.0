@@ -14,6 +14,7 @@
     "note": "Notiz",
     "saving": "Speichern...",
     "reset": "Zurücksetzen",
+    "send": "Senden",
     "daily": "Täglich",
     "weekly": "Wöchentlich",
     "monthly": "Monatlich"
@@ -345,7 +346,13 @@
     "changeStatus": "Status ändern",
     "yourComment": "Ihr Kommentar / Status-Update",
     "commentPlaceholder": "Fügen Sie hier Ihren Kommentar hinzu...\n\nBeispiele:\n• Fortschritt: \"70% erledigt, warte auf Rückmeldung\"\n• Hindernisse: \"Verzögerung wegen fehlender Unterlagen\"\n• Erledigt: \"Abgeschlossen am 14.11.2025, Dokumentation aktualisiert\"",
-    "commentHint": "Dieser Kommentar wird zusätzlich zum originalen Protokoll-Auftrag gespeichert und ist für alle Mitglieder sichtbar."
+    "commentHint": "Dieser Kommentar wird zusätzlich zum originalen Protokoll-Auftrag gespeichert und ist für alle Mitglieder sichtbar.",
+    "moderatorActions": "Moderator Aktionen",
+    "sendReminders": "Erinnerungen senden",
+    "sendRemindersDesc": "Sende E-Mail-Erinnerungen an alle Mitglieder mit offenen Aufgaben in Ihren Serien.",
+    "confirmSendReminders": "Möchten Sie wirklich Erinnerungen an alle Mitglieder mit offenen Aufgaben senden?",
+    "remindersSent": "Erinnerungen erfolgreich gesendet.",
+    "lastSent": "Zuletzt gesendet"
   },
   "priority": {
     "high": "Hoch",
@@ -392,7 +399,10 @@
     "unknown": "Unbekannter Fehler",
     "tooManyLoginAttempts": "Zu viele Anmeldeversuche. Bitte versuchen Sie es später erneut.",
     "tooManyRegisterAttempts": "Zu viele Registrierungsversuche. Bitte versuchen Sie es später erneut.",
-    "tooManyRequests": "Zu viele Anfragen. Bitte versuchen Sie es später erneut.",
+        "tooManyRequests": "Zu viele Anfragen. Bitte versuchen Sie es später erneut.",
+    "generic": "Ein Fehler ist aufgetreten"
+  },
+  "auth": {
     "emailVerificationRequired": "Bitte bestätigen Sie Ihre E-Mail-Adresse vor der Anmeldung.",
     "accountDeactivated": "Benutzerkonto ist deaktiviert",
     "invalidCredentials": "Ungültige Anmeldedaten",

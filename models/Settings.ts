@@ -54,6 +54,7 @@ interface ISystemSettings {
   maxFileUploadSize: number; // in MB
   allowedFileTypes: string[];
   baseUrl: string;
+  lastRemindersSentAt?: Date;
 }
 
 // Main settings interface
@@ -179,7 +180,8 @@ const SystemSettingsSchema = new Schema<ISystemSettings>({
   sessionTimeout: { type: Number, default: 480 }, // 8 hours
   maxFileUploadSize: { type: Number, default: 10 }, // 10MB
   allowedFileTypes: { type: [String], default: ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png'] },
-  baseUrl: { type: String, default: 'http://localhost:3000' }
+  baseUrl: { type: String, default: 'http://localhost:3000' },
+  lastRemindersSentAt: { type: Date }
 }, { _id: false });
 
 // Interface for SMTP settings

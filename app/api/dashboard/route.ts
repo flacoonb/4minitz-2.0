@@ -3,6 +3,7 @@ import connectToDatabase from '@/lib/mongodb';
 import Minutes from '@/models/Minutes';
 import MeetingSeries from '@/models/MeetingSeries';
 import Task from '@/models/Task';
+import Settings from '@/models/Settings';
 import { verifyToken } from '@/lib/auth';
 
 /**
@@ -80,6 +81,15 @@ export async function GET(request: NextRequest) {
       .populate('meetingSeries_id', 'project name')
       .lean();
 
+    // Get system settings for last reminder time
+    let lastRemindersSentAt = null;
+    if (authResult.user.role === 'admin' || authResult.user.role === 'moderator') {
+      const settings = await Settings.findOne({}).sort({ version: -1 }).lean() as any;
+      if (settings && settings.systemSettings) {
+        lastRemindersSentAt = settings.systemSettings.lastRemindersSentAt;
+      }
+    }
+
     return NextResponse.json({
       success: true,
       data: {
@@ -96,6 +106,7 @@ export async function GET(request: NextRequest) {
         overdueActionItems,
         upcomingActionItems,
         recentMinutes,
+        lastRemindersSentAt,
       },
     });
   } catch (error) {

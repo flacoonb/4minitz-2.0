@@ -5,6 +5,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
+import ConfirmationModal from '@/components/ConfirmationModal';
 
 // Demo fallback removed; rely on cookie/JWT auth via credentials
 
@@ -22,6 +23,7 @@ interface DashboardData {
   overdueActionItems: any[];
   upcomingActionItems: any[];
   recentMinutes: any[];
+  lastRemindersSentAt?: string;
 }
 
 interface Task {
@@ -65,6 +67,8 @@ export default function DashboardPage() {
   const [taskUpdateStatus, setTaskUpdateStatus] = useState<'open' | 'in-progress' | 'completed' | 'cancelled'>('open');
   const [taskUpdateNotes, setTaskUpdateNotes] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
+  const [sendingReminders, setSendingReminders] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -81,6 +85,30 @@ export default function DashboardPage() {
   useEffect(() => {
     fetchTasks();
   }, [taskFilter]);
+
+  const handleSendReminders = async () => {
+    setIsModalOpen(true);
+  };
+
+  const executeSendReminders = async () => {
+    setSendingReminders(true);
+    try {
+      const response = await fetch('/api/tasks/remind-all', {
+        method: 'POST',
+      });
+
+      if (!response.ok) throw new Error('Failed to send reminders');
+
+      // Refresh dashboard to update "last sent" time
+      fetchDashboard();
+    } catch (error) {
+      console.error('Error sending reminders:', error);
+      alert(t('dashboard.remindersError'));
+    } finally {
+      setSendingReminders(false);
+      setIsModalOpen(false);
+    }
+  };
 
   const fetchDashboard = async () => {
     try {
@@ -297,6 +325,57 @@ export default function DashboardPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Left Column - Tasks */}
         <div className="lg:col-span-2 space-y-6">
+          
+          {/* Moderator Actions */}
+          {(user?.role === 'admin' || user?.role === 'moderator') && (
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg">
+                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+                    </svg>
+                  </div>
+                  <h2 className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">
+                    {t('dashboard.moderatorActions')}
+                  </h2>
+                </div>
+              </div>
+              <p className="text-gray-600 mb-4 text-sm">
+                {t('dashboard.sendRemindersDesc')}
+              </p>
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={handleSendReminders}
+                  disabled={sendingReminders}
+                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {sendingReminders ? (
+                    <>
+                      <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      {t('common.loading')}
+                    </>
+                  ) : (
+                    <>
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                      </svg>
+                      {t('dashboard.sendReminders')}
+                    </>
+                  )}
+                </button>
+                {data?.lastRemindersSentAt && (
+                  <span className="text-sm text-gray-500">
+                    {t('dashboard.lastSent')}: {new Date(data.lastRemindersSentAt).toLocaleString(locale)}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+
           {/* My Tasks Section */}
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all">
             <div className="flex items-center justify-between mb-6">
@@ -653,7 +732,7 @@ export default function DashboardPage() {
                 />
                 <p className="mt-2 text-xs text-gray-500 flex items-start gap-1">
                   <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m-1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
                   <span>{t('dashboard.commentHint')}</span>
                 </p>
@@ -690,6 +769,18 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+
+      <ConfirmationModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onConfirm={executeSendReminders}
+        title={t('dashboard.sendReminders')}
+        message={t('dashboard.confirmSendReminders')}
+        confirmText={t('common.send')}
+        cancelText={t('common.cancel')}
+        isProcessing={sendingReminders}
+        type="info"
+      />
     </div>
   );
 }
