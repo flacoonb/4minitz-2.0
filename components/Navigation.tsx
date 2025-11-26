@@ -129,11 +129,12 @@ export default function Navigation() {
               className="flex items-center gap-3 px-3 py-2 rounded-xl bg-white/80 hover:bg-white transition-all shadow-md hover:shadow-lg"
             >
               <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
-                {currentUser.firstName[0]?.toUpperCase() || currentUser.username[0]?.toUpperCase()}
+                {(currentUser.firstName && currentUser.firstName[0] ? currentUser.firstName[0].toUpperCase() : '') || 
+                 (currentUser.username && currentUser.username[0] ? currentUser.username[0].toUpperCase() : '?')}
               </div>
               <div className="hidden md:block text-left">
                 <div className="text-sm font-semibold text-slate-800">
-                  {currentUser.firstName} {currentUser.lastName}
+                  {currentUser.firstName || ''} {currentUser.lastName || ''}
                 </div>
                 <div className="text-xs text-slate-500">
                   {tRoles(currentUser.role)}
