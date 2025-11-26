@@ -9,6 +9,8 @@
     "lint": "eslint .",
     "test": "echo \"No tests specified yet\" && exit 0",
     "type-check": "tsc --noEmit",
+    "clean": "rm -rf .next",
+    "rebuild": "rm -rf .next && next build",
     "sample-data": "tsx scripts/sample-data.ts",
     "create-demo-user": "tsx scripts/create-demo-user.ts",
     "create-user": "tsx scripts/create-user.ts",
