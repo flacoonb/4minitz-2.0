@@ -92,7 +92,7 @@ export async function GET(request: NextRequest) {
             digestFrequency: 'weekly'
           },
           systemSettings: {
-            organizationName: '4Minitz',
+            organizationName: '4Minitz 2.0',
             organizationLogo: null,
             timezone: 'Europe/Berlin',
             dateFormat: 'DD.MM.YYYY',

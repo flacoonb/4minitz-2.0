@@ -11,7 +11,7 @@ export async function GET() {
     // Create default settings if none exist
     if (!settings) {
       settings = await PdfSettings.create({
-        companyName: '4Minitz',
+        companyName: '4Minitz 2.0',
         headerText: 'Meeting Protokoll',
         footerText: 'Vertraulich',
         isActive: true

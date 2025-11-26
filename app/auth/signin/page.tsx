@@ -47,7 +47,7 @@ export default function SignInPage() {
             <span className="text-white font-bold text-3xl">4M</span>
           </div>
           <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-2">
-            4Minitz Next
+            4Minitz 2.0
           </h1>
           <h2 className="text-2xl font-bold text-gray-900">
             Sign in to your account

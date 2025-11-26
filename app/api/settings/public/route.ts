@@ -14,7 +14,7 @@ export async function GET(request: NextRequest) {
         success: true,
         data: {
           system: {
-            organizationName: '4Minitz',
+            organizationName: '4Minitz 2.0',
             organizationLogo: null
           }
         }
@@ -24,7 +24,7 @@ export async function GET(request: NextRequest) {
     // Return only public settings
     const publicSettings = {
       system: {
-        organizationName: settings.systemSettings?.organizationName || '4Minitz',
+        organizationName: settings.systemSettings?.organizationName || '4Minitz 2.0',
         organizationLogo: settings.systemSettings?.organizationLogo,
         allowRegistration: settings.systemSettings?.allowRegistration,
         theme: settings.systemSettings?.theme,

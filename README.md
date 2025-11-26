@@ -1,8 +1,8 @@
-# 4minitz 2.0 - Next.js
+# 4Minitz 2.0
 
 ## 🎯 Overview
 
-**4Minitz Next.js** is a modern, web-based application for managing meeting minutes and action items. It is built with the latest web technologies to ensure performance, security, and ease of use.
+**4Minitz 2.0** is a modern, web-based application for managing meeting minutes and action items. It is built with the latest web technologies to ensure performance, security, and ease of use.
 
 ### Stack
 - **Framework**: Next.js 16 (App Router)

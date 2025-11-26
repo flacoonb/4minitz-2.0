@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# 4Minitz Next.js - Setup Script
+# 4Minitz 2.0 - Setup Script
 # Dieses Script richtet die komplette Entwicklungsumgebung ein
 
 set -e  # Exit on error
 
-echo "🚀 4Minitz Next.js Setup"
+echo "🚀 4Minitz 2.0 Setup"
 echo "======================="
 echo ""
 

@@ -37,7 +37,7 @@ export async function getOrgName() {
       return settings.systemSettings.organizationName;
     }
   } catch (e) { }
-  return '4Minitz';
+  return '4Minitz 2.0';
 }
 
 // Create reusable transporter
@@ -118,7 +118,7 @@ const translations = {
       topicsCount: (count: number) => `Anzahl Themen: ${count}`,
       actionItemsCount: (count: number) => `Anzahl Aktionspunkte: ${count}`,
       viewButton: 'Protokoll anzeigen',
-      footer: 'Diese E-Mail wurde automatisch von 4Minitz versendet.',
+      footer: 'Diese E-Mail wurde automatisch von 4Minitz 2.0 versendet.',
     },
     actionItemAssigned: {
       subject: (series: string) => `Neuer Aktionspunkt zugewiesen: ${series}`,
@@ -128,28 +128,28 @@ const translations = {
       priority: 'Priorität:',
       dueDate: 'Fällig:',
       viewButton: 'Aktionspunkt anzeigen',
-      footer: 'Diese E-Mail wurde automatisch von 4Minitz versendet.',
+      footer: 'Diese E-Mail wurde automatisch von 4Minitz 2.0 versendet.',
     },
     actionItemOverdue: {
       subject: (count: number) => `${count} überfällige Aktionspunkte`,
       greeting: 'Hallo',
       intro: (count: number) => `Sie haben ${count} überfällige Aktionspunkte:`,
       viewButton: 'Dashboard anzeigen',
-      footer: 'Diese E-Mail wurde automatisch von 4Minitz versendet.',
+      footer: 'Diese E-Mail wurde automatisch von 4Minitz 2.0 versendet.',
     },
     pendingTasksReminder: {
       subject: (count: number) => `Erinnerung: ${count} offene Aufgaben`,
       greeting: (name?: string) => name ? `Hallo ${name}` : 'Hallo',
       intro: (count: number) => `Sie haben ${count} offene Aufgaben, die noch erledigt werden müssen:`,
       viewButton: 'Dashboard anzeigen',
-      footer: 'Diese E-Mail wurde automatisch von 4Minitz versendet.',
+      footer: 'Diese E-Mail wurde automatisch von 4Minitz 2.0 versendet.',
     },
     welcome: {
-      subject: 'Willkommen bei 4Minitz!',
+      subject: 'Willkommen bei 4Minitz 2.0!',
       greeting: 'Hallo',
-      intro: 'Willkommen bei 4Minitz! Ihr Konto wurde erfolgreich erstellt.',
-      loginButton: 'Bei 4Minitz anmelden',
-      footer: 'Diese E-Mail wurde automatisch von 4Minitz versendet.',
+      intro: 'Willkommen bei 4Minitz 2.0! Ihr Konto wurde erfolgreich erstellt.',
+      loginButton: 'Bei 4Minitz 2.0 anmelden',
+      footer: 'Diese E-Mail wurde automatisch von 4Minitz 2.0 versendet.',
     },
     verifyEmail: {
       subject: 'Bestätigen Sie Ihre E-Mail-Adresse',
@@ -157,7 +157,7 @@ const translations = {
       intro: 'Bitte bestätigen Sie Ihre E-Mail-Adresse, um Ihr Konto zu aktivieren.',
       verifyButton: 'E-Mail bestätigen',
       expiryNote: 'Dieser Link ist 24 Stunden gültig.',
-      footer: 'Diese E-Mail wurde automatisch von 4Minitz versendet.',
+      footer: 'Diese E-Mail wurde automatisch von 4Minitz 2.0 versendet.',
     },
   },
   en: {
@@ -170,7 +170,7 @@ const translations = {
       topicsCount: (count: number) => `Number of topics: ${count}`,
       actionItemsCount: (count: number) => `Number of action items: ${count}`,
       viewButton: 'View Minutes',
-      footer: 'This email was sent automatically by 4Minitz.',
+      footer: 'This email was sent automatically by 4Minitz 2.0.',
     },
     actionItemAssigned: {
       subject: (series: string) => `New Action Item Assigned: ${series}`,
@@ -180,28 +180,28 @@ const translations = {
       priority: 'Priority:',
       dueDate: 'Due:',
       viewButton: 'View Action Item',
-      footer: 'This email was sent automatically by 4Minitz.',
+      footer: 'This email was sent automatically by 4Minitz 2.0.',
     },
     actionItemOverdue: {
       subject: (count: number) => `${count} Overdue Action Items`,
       greeting: 'Hello',
       intro: (count: number) => `You have ${count} overdue action items:`,
       viewButton: 'View Dashboard',
-      footer: 'This email was sent automatically by 4Minitz.',
+      footer: 'This email was sent automatically by 4Minitz 2.0.',
     },
     pendingTasksReminder: {
       subject: (count: number) => `Reminder: ${count} Open Tasks`,
       greeting: (name?: string) => name ? `Hello ${name}` : 'Hello',
       intro: (count: number) => `You have ${count} open tasks pending:`,
       viewButton: 'View Dashboard',
-      footer: 'This email was sent automatically by 4Minitz.',
+      footer: 'This email was sent automatically by 4Minitz 2.0.',
     },
     welcome: {
-      subject: 'Welcome to 4Minitz!',
+      subject: 'Welcome to 4Minitz 2.0!',
       greeting: 'Hello',
-      intro: 'Welcome to 4Minitz! Your account has been successfully created.',
-      loginButton: 'Login to 4Minitz',
-      footer: 'This email was sent automatically by 4Minitz.',
+      intro: 'Welcome to 4Minitz 2.0! Your account has been successfully created.',
+      loginButton: 'Login to 4Minitz 2.0',
+      footer: 'This email was sent automatically by 4Minitz 2.0.',
     },
     verifyEmail: {
       subject: 'Verify Your Email Address',
@@ -209,7 +209,7 @@ const translations = {
       intro: 'Please verify your email address to activate your account.',
       verifyButton: 'Verify Email',
       expiryNote: 'This link is valid for 24 hours.',
-      footer: 'This email was sent automatically by 4Minitz.',
+      footer: 'This email was sent automatically by 4Minitz 2.0.',
     },
   },
 };

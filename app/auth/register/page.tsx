@@ -160,7 +160,7 @@ const RegisterPage = () => {
             <UserPlus className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-slate-800 mb-2">Konto erstellen</h1>
-          <p className="text-slate-600">Registrieren Sie sich für 4Minitz</p>
+          <p className="text-slate-600">Registrieren Sie sich für 4Minitz 2.0</p>
         </div>
 
         {/* Registration Form */}
@@ -388,7 +388,7 @@ const RegisterPage = () => {
         {/* Footer */}
         <div className="mt-8 text-center">
           <p className="text-xs text-slate-500">
-            © 2024 4Minitz. Alle Rechte vorbehalten.
+            © 2024 4Minitz 2.0. Alle Rechte vorbehalten.
           </p>
         </div>
       </div>

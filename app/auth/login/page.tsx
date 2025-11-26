@@ -23,7 +23,7 @@ const LoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-  const [organizationName, setOrganizationName] = useState('4Minitz');
+  const [organizationName, setOrganizationName] = useState('4Minitz 2.0');
   const router = useRouter();
   const searchParams = useSearchParams();
   const { login } = useAuth();

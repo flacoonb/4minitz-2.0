@@ -1,14 +1,14 @@
 #!/bin/bash
 
-# 4Minitz Service Uninstallation Script
-# This script removes the 4Minitz systemd service
+# 4Minitz 2.0 Service Uninstallation Script
+# This script removes the 4Minitz 2.0 systemd service
 
 set -e
 
 APP_NAME="4minitz-2.0"
 SYSTEMD_DIR="/etc/systemd/system"
 
-echo "🛑 Uninstalling 4Minitz systemd service..."
+echo "🛑 Uninstalling 4Minitz 2.0 systemd service..."
 
 # Check if running as root or with sudo
 if [[ $EUID -ne 0 ]]; then
