@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useTranslations, useLocale } from 'next-intl';
@@ -84,15 +84,7 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
     getParams();
   }, [params]);
 
-  useEffect(() => {
-    if (minuteId) {
-      fetchMinute();
-      fetchUsers();
-      fetchSettings();
-    }
-  }, [minuteId]);
-
-  const fetchSettings = async () => {
+  const fetchSettings = useCallback(async () => {
     try {
       const response = await fetch('/api/settings/public');
       if (response.ok) {
@@ -104,9 +96,9 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
     } catch (error) {
       console.error('Error fetching settings:', error);
     }
-  };
+  }, []);
 
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       const response = await fetch('/api/users?limit=1000', {
         credentials: 'include'
@@ -118,9 +110,9 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
     } catch (error) {
       console.error('Error fetching users:', error);
     }
-  };
+  }, []);
 
-  const fetchMinute = async () => {
+  const fetchMinute = useCallback(async () => {
     if (!minuteId) return;
     
     try {
@@ -157,7 +149,7 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
     } finally {
       setLoading(false);
     }
-  };
+  }, [minuteId, t]);
 
   const handleFinalize = async () => {
     if (!minute || !minuteId) return;
@@ -244,8 +236,8 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
     
     try {
       // Fetch PDF settings
-      const settingsResponse = await fetch('/api/pdf-settings');
-      const settingsResult = await settingsResponse.json();
+      const response = await fetch('/api/pdf-settings');
+      const settingsResult = await response.json();
       
       if (!settingsResult.success) {
         throw new Error(t('minutes.pdfSettingsError'));
@@ -362,6 +354,14 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
     const hours12 = hours % 12 || 12;
     return `${hours12}:${minutes.toString().padStart(2, '0')} ${period}`;
   };
+
+  useEffect(() => {
+    if (minuteId) {
+      fetchMinute();
+      fetchUsers();
+      fetchSettings();
+    }
+  }, [minuteId, fetchMinute, fetchUsers, fetchSettings]);
 
   if (loading) {
     return (

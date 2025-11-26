@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
-import EnhancedMinutes, { IEnhancedMinutes } from '@/models/EnhancedMinutes';
+import EnhancedMinutes from '@/models/EnhancedMinutes';
 import { verifyToken } from '@/lib/auth';
 
 export async function GET(

@@ -3,9 +3,9 @@ import connectDB from '@/lib/mongodb';
 import Minutes from '@/models/Minutes';
 import Task from '@/models/Task';
 import MeetingSeries from '@/models/MeetingSeries';
-import { verifyToken } from '@/lib/auth';
+// verifyToken removed
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   return new NextResponse(`
     <html>
       <head>
@@ -71,7 +71,7 @@ export async function GET(request: NextRequest) {
   });
 }
 
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
     await connectDB();
 

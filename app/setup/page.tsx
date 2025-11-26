@@ -124,7 +124,7 @@ export default function SetupPage() {
         setMessage('Ersteinrichtung erfolgreich. Bitte anmelden.');
         setNeedsSetup(false);
       }
-    } catch (err) {
+    } catch (_err) {
       setMessage('Serverfehler');
     } finally {
       setLoading(false);

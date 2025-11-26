@@ -82,7 +82,7 @@ export default function NewMeetingSeriesPage() {
     return allUsers.find(u => u._id === userId);
   };
 
-  const getUserDisplayName = (userId: string): string => {
+  const _getUserDisplayName = (userId: string): string => {
     const user = getUserById(userId);
     return user ? `${user.firstName} ${user.lastName}` : userId;
   };

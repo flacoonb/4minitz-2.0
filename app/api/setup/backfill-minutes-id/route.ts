@@ -4,7 +4,7 @@ import Minutes from '@/models/Minutes';
 import Task from '@/models/Task';
 import { verifyToken } from '@/lib/auth';
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   return new NextResponse(`
     <html>
       <head>

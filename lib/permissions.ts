@@ -249,7 +249,7 @@ export async function filterByPermissions<T extends { createdBy?: string; modera
   });
 }
 
-export default {
+const permissions = {
   hasRole,
   hasPermission,
   getUserPermissions,
@@ -259,3 +259,5 @@ export default {
   canModifyResource,
   filterByPermissions
 };
+
+export default permissions;

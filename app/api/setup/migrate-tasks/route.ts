@@ -4,7 +4,7 @@ import Minutes from '@/models/Minutes';
 import Task from '@/models/Task';
 import { verifyToken } from '@/lib/auth';
 
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   return new NextResponse(`
     <html>
       <head>
@@ -135,7 +135,7 @@ export async function POST(request: NextRequest) {
     let createdCount = 0;
     let updatedCount = 0;
 
-    for (const [rootId, chain] of chains) {
+    for (const [_, chain] of chains) {
       // Determine the "latest" state
       // Sort chain by date/finalized
       chain.sort((a, b) => {

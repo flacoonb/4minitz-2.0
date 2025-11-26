@@ -25,7 +25,7 @@ async function createDemoUser() {
     const hashedPassword = await bcrypt.hash('demo123', 10);
 
     // Create demo user
-    const demoUser = await User.create({
+    await User.create({
       email: 'demo@example.com',
       password: hashedPassword,
       name: 'Demo User',

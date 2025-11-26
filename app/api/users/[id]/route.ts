@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
-import { verifyToken, requireRole, requirePermission } from '@/lib/auth';
+import { verifyToken, requirePermission } from '@/lib/auth';
 
 export async function GET(
   request: NextRequest,
@@ -163,7 +163,7 @@ export async function PUT(
     
     // Return user without password
     const userObject = userToUpdate.toObject();
-    const { password, ...userResponse } = userObject;
+    const { password: _password, ...userResponse } = userObject;
 
     return NextResponse.json({
       success: true,

@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState, useCallback } from 'react';
-import Link from 'next/link';
+import Image from 'next/image';
+// import Link from 'next/link';
 
 interface SystemSettings {
   organizationName?: string;
@@ -75,10 +76,13 @@ export default function Header() {
     <div className="flex items-center gap-3">
       <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
         {settings.organizationLogo ? (
-          <img 
+          <Image 
             src={settings.organizationLogo} 
             alt="Logo" 
+            width={32}
+            height={32}
             className="w-8 h-8 object-contain rounded-lg"
+            unoptimized
           />
         ) : (
           <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+// useRouter removed
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 
@@ -18,7 +18,7 @@ interface EmailConfig {
 
 export default function EmailConfigPage() {
   const t = useTranslations('admin.email');
-  const router = useRouter();
+  // router removed
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [testing, setTesting] = useState(false);
@@ -38,27 +38,26 @@ export default function EmailConfigPage() {
   const [sendingTest, setSendingTest] = useState(false);
 
   useEffect(() => {
-    loadConfig();
-  }, []);
+    const loadConfig = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('/api/admin/email-config', { credentials: 'include' });
+        const data = await response.json();
 
-  const loadConfig = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch('/api/admin/email-config', { credentials: 'include' });
-      const data = await response.json();
-
-      if (data.success) {
-        setConfig(data.config);
-        setIsValid(data.isValid);
-      } else {
-        setResult({ success: false, message: data.error || t('messages.loadError') });
+        if (data.success) {
+          setConfig(data.config);
+          setIsValid(data.isValid);
+        } else {
+          setResult({ success: false, message: data.error || t('messages.loadError') });
+        }
+      } catch (_error) {
+        setResult({ success: false, message: t('messages.networkError') });
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      setResult({ success: false, message: t('messages.networkError') });
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
+    loadConfig();
+  }, [t]);
 
   const testConnection = async () => {
     try {
@@ -73,7 +72,7 @@ export default function EmailConfigPage() {
         message: data.success ? t('messages.testSuccess') : data.error || t('messages.testError'),
       });
       setIsValid(data.success);
-    } catch (error) {
+    } catch (_error) {
       setResult({ success: false, message: t('messages.testNetworkError') });
       setIsValid(false);
     } finally {
@@ -112,7 +111,7 @@ export default function EmailConfigPage() {
       if (data.success) {
         setTestEmail('');
       }
-    } catch (error) {
+    } catch (_error) {
       setResult({ success: false, message: t('messages.sendNetworkError') });
     } finally {
       setSendingTest(false);
@@ -159,7 +158,7 @@ export default function EmailConfigPage() {
           message: data.error || t('messages.saveError'),
         });
       }
-    } catch (error) {
+    } catch (_error) {
       setResult({ success: false, message: t('messages.saveNetworkError') });
     } finally {
       setSaving(false);

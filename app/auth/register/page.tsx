@@ -110,7 +110,7 @@ const RegisterPage = () => {
     }
 
     try {
-      const { confirmPassword, ...submitData } = formData;
+      const { confirmPassword: _confirmPassword, ...submitData } = formData;
 
       const response = await fetch('/api/auth/register', {
         method: 'POST',

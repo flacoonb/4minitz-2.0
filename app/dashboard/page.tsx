@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
@@ -77,15 +77,6 @@ export default function DashboardPage() {
     }
   }, [user, authLoading, router]);
 
-  useEffect(() => {
-    fetchDashboard();
-    fetchTasks();
-  }, []);
-
-  useEffect(() => {
-    fetchTasks();
-  }, [taskFilter]);
-
   const handleSendReminders = async () => {
     setIsModalOpen(true);
   };
@@ -110,7 +101,7 @@ export default function DashboardPage() {
     }
   };
 
-  const fetchDashboard = async () => {
+  const fetchDashboard = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch('/api/dashboard', { credentials: 'include' });
@@ -126,9 +117,9 @@ export default function DashboardPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
 
-  const fetchTasks = async () => {
+  const fetchTasks = useCallback(async () => {
     try {
       const params = new URLSearchParams();
       if (taskFilter.status) params.append('status', taskFilter.status);
@@ -147,7 +138,16 @@ export default function DashboardPage() {
     } catch (err) {
       console.error('Error fetching tasks:', err);
     }
-  };
+  }, [taskFilter]);
+
+  useEffect(() => {
+    fetchDashboard();
+    fetchTasks();
+  }, [fetchDashboard, fetchTasks]);
+
+  useEffect(() => {
+    fetchTasks();
+  }, [fetchTasks]);
 
   const openTaskModal = (task: Task, event: React.MouseEvent) => {
     event.preventDefault();

@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { FileText, Image as ImageIcon, Download, Trash2, File } from 'lucide-react';
 
@@ -26,11 +26,7 @@ export default function AttachmentList({ minuteId, onDelete }: AttachmentListPro
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchAttachments();
-  }, [minuteId]);
-
-  const fetchAttachments = async () => {
+  const fetchAttachments = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch(`/api/attachments?minuteId=${minuteId}`);
@@ -41,7 +37,11 @@ export default function AttachmentList({ minuteId, onDelete }: AttachmentListPro
     } finally {
       setLoading(false);
     }
-  };
+  }, [minuteId]);
+
+  useEffect(() => {
+    fetchAttachments();
+  }, [fetchAttachments]);
 
   const handleDelete = async (id: string) => {
     if (!confirm(t('confirmDelete'))) return;
@@ -61,7 +61,7 @@ export default function AttachmentList({ minuteId, onDelete }: AttachmentListPro
 
       setAttachments(attachments.filter(a => a._id !== id));
       onDelete?.();
-    } catch (error) {
+    } catch (_error) {
       alert(t('deleteError'));
     } finally {
       setDeleting(null);

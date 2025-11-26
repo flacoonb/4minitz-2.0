@@ -38,7 +38,7 @@ export default function VerifyEmailPage() {
                     setMessage(data.error || 'Fehler bei der E-Mail-Bestätigung');
                 }
             })
-            .catch(err => {
+            .catch(_err => {
                 setStatus('error');
                 setMessage('Netzwerkfehler bei der E-Mail-Bestätigung');
             });

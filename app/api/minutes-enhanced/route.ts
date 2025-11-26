@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
-import EnhancedMinutes, { IEnhancedMinutes } from '@/models/EnhancedMinutes';
-import Label, { ILabel } from '@/models/Label';
-import MeetingSeries, { IMeetingSeries } from '@/models/MeetingSeries';
+import EnhancedMinutes from '@/models/EnhancedMinutes';
+import Label from '@/models/Label';
+import MeetingSeries from '@/models/MeetingSeries';
 import { verifyToken } from '@/lib/auth';
 
 // GET - Fetch all enhanced minutes

@@ -3,7 +3,7 @@ import connectDB from '@/lib/mongodb';
 import MeetingSeries from '@/models/MeetingSeries';
 import Minutes from '@/models/Minutes';
 import { verifyToken } from '@/lib/auth';
-import { ObjectId } from 'mongodb';
+// ObjectId removed
 
 /**
  * POST /api/admin/fix-user-access-all

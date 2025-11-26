@@ -4,7 +4,7 @@ import connectDB from '@/lib/mongodb';
 import Minutes from '@/models/Minutes';
 
 // Test email configuration
-export async function GET(request: NextRequest) {
+export async function GET(_request: NextRequest) {
   try {
     const isValid = await testEmailConfiguration();
     

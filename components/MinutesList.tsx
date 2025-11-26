@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 
@@ -31,11 +31,7 @@ export default function MinutesList({ meetingSeriesId }: MinutesListProps) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchMinutes();
-  }, [meetingSeriesId]);
-
-  const fetchMinutes = async () => {
+  const fetchMinutes = useCallback(async () => {
     try {
       setLoading(true);
       const url = meetingSeriesId
@@ -54,12 +50,16 @@ export default function MinutesList({ meetingSeriesId }: MinutesListProps) {
 
       const data = await response.json();
       setMinutes(data.data || []);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
+    } catch (_err) {
+      setError('Failed to load minutes');
     } finally {
       setLoading(false);
     }
-  };
+  }, [meetingSeriesId]);
+
+  useEffect(() => {
+    fetchMinutes();
+  }, [fetchMinutes]);
 
   if (loading) {
     return (

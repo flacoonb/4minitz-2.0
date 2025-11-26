@@ -167,8 +167,8 @@ export async function generateMinutePdf(
   // Set font
   doc.setFont(settings.fontFamily);
   
-  const primaryRgb = hexToRgb(settings.primaryColor);
-  const secondaryRgb = hexToRgb(settings.secondaryColor);
+  const _primaryRgb = hexToRgb(settings.primaryColor);
+  const _secondaryRgb = hexToRgb(settings.secondaryColor);
 
   // Add draft watermark if not finalized
   if (!minute.isFinalized) {
@@ -831,7 +831,7 @@ export async function generateMinutePdf(
     // Content padding (top)
     yPosition += 8;
 
-    minute.reopeningHistory.forEach((entry, index) => {
+    minute.reopeningHistory.forEach((entry, _index) => {
       // Check for page break
       if (yPosition > pageHeight - 30) {
         // Close current box

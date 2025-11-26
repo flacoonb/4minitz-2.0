@@ -9,12 +9,7 @@ import {
   UserPlus, 
   Edit3, 
   Trash2, 
-  Shield, 
-  ShieldCheck, 
-  Eye, 
-  EyeOff,
   Search,
-  Filter,
   X,
   AlertCircle,
   CheckCircle2,
@@ -43,7 +38,7 @@ interface User {
 
 const UserManagement = () => {
   const t = useTranslations('admin.users');
-  const tCommon = useTranslations('common');
+  // tCommon removed
   const [users, setUsers] = useState<User[]>([]);
   const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
@@ -147,7 +142,7 @@ const UserManagement = () => {
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [searchTerm, roleFilter, statusFilter]);
+  }, [searchTerm, roleFilter, statusFilter, fetchUsers]);
 
   // Initial load
   useEffect(() => {
@@ -371,6 +366,7 @@ const UserManagement = () => {
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
                             {user.avatar ? (
+                              /* eslint-disable-next-line @next/next/no-img-element */
                               <img 
                                 src={user.avatar} 
                                 alt={`${user.firstName} ${user.lastName}`}

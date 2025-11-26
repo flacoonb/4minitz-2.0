@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
-import { verifyToken, requirePermission } from '@/lib/auth';
+import { verifyToken } from '@/lib/auth';
 
 // GET - Get all users (Admin only)
 export async function GET(request: NextRequest) {

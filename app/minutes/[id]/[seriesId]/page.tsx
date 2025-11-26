@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
 
@@ -41,14 +41,7 @@ export default function SeriesMinutesPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
 
-  useEffect(() => {
-    if (seriesId) {
-      fetchSeriesData();
-      fetchMinutes();
-    }
-  }, [seriesId]);
-
-  const fetchSeriesData = async () => {
+  const fetchSeriesData = useCallback(async () => {
     try {
       const response = await fetch(`/api/meeting-series/${seriesId}`, {
         credentials: 'include'
@@ -61,9 +54,9 @@ export default function SeriesMinutesPage() {
     } catch (err) {
       console.error('Error fetching series data:', err);
     }
-  };
+  }, [seriesId]);
 
-  const fetchMinutes = async () => {
+  const fetchMinutes = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -83,7 +76,14 @@ export default function SeriesMinutesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [seriesId]);
+
+  useEffect(() => {
+    if (seriesId) {
+      fetchSeriesData();
+      fetchMinutes();
+    }
+  }, [seriesId, fetchSeriesData, fetchMinutes]);
 
   const filteredMinutes = minutes.filter(minute => {
     const { isFinalized } = minute;

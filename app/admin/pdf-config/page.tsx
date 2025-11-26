@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 
@@ -160,11 +160,7 @@ export default function PdfConfigPage() {
 
   const [selectedElement, setSelectedElement] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchSettings();
-  }, []);
-
-  const fetchSettings = async () => {
+  const fetchSettings = useCallback(async () => {
     try {
       const [contentResponse, layoutResponse] = await Promise.all([
         fetch('/api/pdf-settings'),
@@ -194,7 +190,11 @@ export default function PdfConfigPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchSettings();
+  }, [fetchSettings]);
 
   const handleLogoUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0) return;
@@ -219,7 +219,7 @@ export default function PdfConfigPage() {
       } else {
         setMessage({ type: 'error', text: result.error || t('messages.uploadFailed') });
       }
-    } catch (error) {
+    } catch (_error) {
       setMessage({ type: 'error', text: t('messages.uploadFailed') });
     } finally {
       setSaving(false);
@@ -235,7 +235,7 @@ export default function PdfConfigPage() {
       const data = activeTab === 'content' ? contentSettings : layoutSettings;
 
       // Remove MongoDB-specific fields
-      const { _id, __v, createdAt, updatedAt, ...cleanData } = data as any;
+      const { _id: _, __v: __, createdAt: ___, updatedAt: ____, ...cleanData } = data as any;
 
       const response = await fetch(endpoint, {
         method: 'PUT',
@@ -258,7 +258,7 @@ export default function PdfConfigPage() {
       } else {
         setMessage({ type: 'error', text: t('messages.saveFailed') });
       }
-    } catch (error) {
+    } catch (_error) {
       setMessage({ type: 'error', text: t('messages.saveFailed') });
     } finally {
       setSaving(false);
@@ -271,28 +271,6 @@ export default function PdfConfigPage() {
       elements: prev.elements.map(el => 
         el.id === id ? { ...el, ...updates } : el
       )
-    }));
-  };
-
-  const updateElementStyle = (id: string, styleUpdates: Partial<LayoutElement['style']>) => {
-    setLayoutSettings(prev => ({
-      ...prev,
-      elements: prev.elements.map(el => 
-        el.id === id ? { ...el, style: { ...el.style, ...styleUpdates } } : el
-      )
-    }));
-  };
-
-  const updateLogo = (updates: Partial<PdfLayoutSettings['logo']>) => {
-    setLayoutSettings(prev => ({
-      ...prev,
-      logo: {
-        enabled: prev.logo?.enabled || false,
-        url: prev.logo?.url || '',
-        position: prev.logo?.position || { x: 25, y: 25 },
-        size: prev.logo?.size || { width: 40, height: 15 },
-        ...updates
-      }
     }));
   };
 
@@ -425,6 +403,7 @@ export default function PdfConfigPage() {
                       </div>
                       {contentSettings.logoUrl && (
                         <div className="mt-4 p-2 border rounded bg-gray-50 inline-block">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img src={contentSettings.logoUrl} alt={t('content.branding.logoPreview')} className="h-16 object-contain" />
                         </div>
                       )}

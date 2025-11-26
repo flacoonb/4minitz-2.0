@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
       user: { id: user._id, username: user.username, role: user.role },
       xUser
     });
-  } catch (err) {
+  } catch (_err) {
     return NextResponse.json({ success: false, error: 'failed' }, { status: 500 });
   }
 }

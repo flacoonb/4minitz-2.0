@@ -19,12 +19,12 @@ function providedTokenMatches(body: any, request: Request | undefined) {
     if (request && typeof (request as any).headers?.get === 'function') {
       provided = (request as any).headers.get('x-setup-token') || '';
     }
-  } catch (e) { }
+  } catch (_e) { }
   if (!provided && body && body.token) provided = body.token;
   try {
     const expected = fs.readFileSync(SETUP_TOKEN_FILE, 'utf8').trim();
     return provided === expected;
-  } catch (e) {
+  } catch (_e) {
     return false;
   }
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
@@ -28,7 +28,7 @@ interface Minute {
 export default function MeetingSeriesPage() {
   const params = useParams() as { id: string };
   const router = useRouter();
-  const { user, loading: authLoading, hasPermission } = useAuth();
+  const { user, loading: _authLoading, hasPermission } = useAuth();
   const t = useTranslations('meetingSeries');
   const tCommon = useTranslations('common');
   const seriesId = params?.id;
@@ -46,13 +46,13 @@ export default function MeetingSeriesPage() {
   const canDeleteSeries = hasPermission('canModerateAllMeetings') || isModerator; // Using moderate permission for delete as well
   const canCreateMinute = hasPermission('canModerateAllMeetings') || isModerator;
 
-  useEffect(() => {
-    if (!seriesId) return;
-    // Don't wait for auth, allow immediate loading with fallback user
-    fetchData();
-  }, [seriesId, user?._id]); // Re-fetch when user changes
+  // useEffect(() => {
+  //   if (!seriesId) return;
+  //   // Don't wait for auth, allow immediate loading with fallback user
+  //   fetchData();
+  // }, [seriesId, user?._id]); // Re-fetch when user changes
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -81,7 +81,13 @@ export default function MeetingSeriesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [seriesId]);
+
+  useEffect(() => {
+    if (!seriesId) return;
+    // Don't wait for auth, allow immediate loading with fallback user
+    fetchData();
+  }, [seriesId, user?._id, fetchData]);
 
   const createNewProtocol = async () => {
     if (!series) return;

@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { 
@@ -24,7 +24,7 @@ const LoginPage = () => {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [organizationName, setOrganizationName] = useState('4Minitz 2.0');
-  const router = useRouter();
+  // const router = useRouter();
   const searchParams = useSearchParams();
   const { login } = useAuth();
 

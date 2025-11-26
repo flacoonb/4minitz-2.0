@@ -6,15 +6,11 @@ import { useTranslations } from 'next-intl';
 import { withAdminAuth } from '@/contexts/AuthContext';
 import { 
   Settings, 
-  Shield, 
   Users, 
-  Globe, 
   Bell, 
   Server,
   Save, 
   RotateCcw,
-  Download,
-  Upload,
   AlertCircle,
   CheckCircle2,
   X,
@@ -23,11 +19,7 @@ import {
   User,
   Lock,
   Unlock,
-  Clock,
-  FileText,
-  Languages,
-  Monitor,
-  Tag
+  Shield,
 } from 'lucide-react';
 
   // Demo fallback removed; use cookie/JWT auth via credentials
@@ -100,15 +92,6 @@ const AdminSettings = () => {
   const [hasChanges, setHasChanges] = useState(false);
   
   const router = useRouter();
-
-  // Available language options
-  const availableLanguages = [
-    { code: 'de', name: 'Deutsch', flag: '🇩🇪' },
-    { code: 'en', name: 'English', flag: '🇺🇸' },
-    { code: 'fr', name: 'Français', flag: '🇫🇷' },
-    { code: 'es', name: 'Español', flag: '🇪🇸' },
-    { code: 'it', name: 'Italiano', flag: '🇮🇹' }
-  ];
 
   // Available timezones
   const availableTimezones = [
@@ -260,19 +243,6 @@ const AdminSettings = () => {
       ...settings,
       memberSettings: {
         ...settings.memberSettings,
-        [key]: value
-      }
-    });
-  };
-
-  // Update language settings
-  const updateLanguageSettings = (key: string, value: any) => {
-    if (!settings) return;
-
-    setSettings({
-      ...settings,
-      languageSettings: {
-        ...settings.languageSettings,
         [key]: value
       }
     });

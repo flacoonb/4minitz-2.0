@@ -3,7 +3,7 @@ import { NextRequest } from 'next/server';
 import User, { IUser } from '@/models/User';
 import Settings from '@/models/Settings';
 import connectDB from '@/lib/mongodb';
-import { Types } from 'mongoose';
+
 
 export interface AuthResult {
   success: boolean;
@@ -16,22 +16,19 @@ export interface RoleResult {
   error?: string;
 }
 
-async function resolveUserFromHeader(identifier: string): Promise<IUser | null> {
-  await connectDB();
-  // Do not special-case 'demo-user' here. Demo fallbacks are controlled
-  // centrally via environment flags in `verifyToken`.
+// async function resolveUserFromHeader(identifier: string): Promise<IUser | null> {
+//   await connectDB();
+//   // Do not special-case 'demo-user' here. Demo fallbacks are controlled
+//   // centrally via environment flags in `verifyToken`.
 
-  // Try to resolve as ObjectId
-  if (Types.ObjectId.isValid(identifier)) {
-    return await User.findOne({ _id: identifier, isActive: true });
-  }
-
-  // Try to resolve as username or email
-  return await User.findOne({
-    $or: [{ username: identifier }, { email: identifier }],
-    isActive: true
-  });
-}
+//   // Try to resolve as ObjectId
+//   if (Types.ObjectId.isValid(identifier)) {
+//     return await User.findById(identifier);
+//   }
+  
+//   // Try to resolve as username
+//   return await User.findOne({ username: identifier });
+// }
 
 export async function verifyToken(request: NextRequest): Promise<AuthResult> {
   try {
@@ -135,7 +132,7 @@ export async function requireModerator(user: IUser): Promise<RoleResult> {
   };
 }
 
-export function getUserFromRequest(request: NextRequest): string | null {
+export function getUserFromRequest(_request: NextRequest): string | null {
   // Legacy helper: do not derive user from headers anymore.
   return null;
 }

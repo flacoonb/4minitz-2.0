@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
@@ -60,14 +60,7 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
     getParams();
   }, [params]);
 
-  useEffect(() => {
-    if (seriesId) {
-      fetchSeries();
-      fetchUsers();
-    }
-  }, [seriesId]);
-
-  const fetchUsers = async () => {
+  const fetchUsers = useCallback(async () => {
     try {
       const response = await fetch('/api/users?limit=1000', {
         credentials: 'include',
@@ -80,9 +73,9 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
     } catch (err) {
       console.error('Fehler beim Laden der Benutzer:', err);
     }
-  };
+  }, []);
 
-  const fetchSeries = async () => {
+  const fetchSeries = useCallback(async () => {
     if (!seriesId) return;
 
     try {
@@ -107,7 +100,14 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
     } finally {
       setLoading(false);
     }
-  };
+  }, [seriesId]);
+
+  useEffect(() => {
+    if (seriesId) {
+      fetchSeries();
+      fetchUsers();
+    }
+  }, [seriesId, fetchSeries, fetchUsers]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

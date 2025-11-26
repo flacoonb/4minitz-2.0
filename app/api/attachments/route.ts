@@ -9,7 +9,7 @@ import Settings from '@/models/Settings';
 import { verifyToken } from '@/lib/auth';
 
 // Default Maximum file size: 10MB
-const DEFAULT_MAX_FILE_SIZE = 10 * 1024 * 1024;
+// const DEFAULT_MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 // Default Allowed file types
 const DEFAULT_ALLOWED_MIME_TYPES = [

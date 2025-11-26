@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
@@ -47,12 +47,12 @@ export default function MinutesPage() {
     }
   }, [user, authLoading, router]);
 
-  useEffect(() => {
-    fetchMinutes();
-    fetchSettings();
-  }, []);
+  // useEffect(() => {
+  //   fetchMinutes();
+  //   fetchSettings();
+  // }, []);
 
-  const fetchSettings = async () => {
+  const fetchSettings = useCallback(async () => {
     try {
       const response = await fetch('/api/settings/public');
       if (response.ok) {
@@ -64,9 +64,9 @@ export default function MinutesPage() {
     } catch (error) {
       console.error('Error fetching settings:', error);
     }
-  };
+  }, []);
 
-  const fetchMinutes = async () => {
+  const fetchMinutes = useCallback(async () => {
     setLoading(true);
     setError(null);
 
@@ -93,7 +93,12 @@ export default function MinutesPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
+
+  useEffect(() => {
+    fetchMinutes();
+    fetchSettings();
+  }, [fetchMinutes, fetchSettings]);
 
   const formatTime = (timeStr?: string) => {
     if (!timeStr) return '';
@@ -204,7 +209,7 @@ export default function MinutesPage() {
       }
     });
     return Array.from(uniqueSeries.values());
-  }, [minutes]);
+  }, [minutes, t]);
 
   if (authLoading || loading) {
     return (

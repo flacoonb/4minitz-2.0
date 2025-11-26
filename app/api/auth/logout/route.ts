@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 // POST - Logout user
-export async function POST(request: NextRequest) {
+export async function POST(_request: NextRequest) {
   try {
     // Create response
     const response = NextResponse.json({

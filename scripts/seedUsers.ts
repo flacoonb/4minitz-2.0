@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
 import User from '../models/User';
 import Settings from '../models/Settings';
-import bcrypt from 'bcryptjs';
+// import bcrypt from 'bcryptjs';
 
 async function seedDatabase() {
   try {

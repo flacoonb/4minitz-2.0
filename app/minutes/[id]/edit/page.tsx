@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useTranslations, useLocale } from 'next-intl';
@@ -51,7 +51,7 @@ function SortableTopic({
 }: SortableTopicProps) {
   const t = useTranslations('minutes');
   const tCommon = useTranslations('common');
-  const locale = useLocale();
+  const _locale = useLocale();
   const {
     attributes,
     listeners,
@@ -77,7 +77,7 @@ function SortableTopic({
   };
 
   // Helper function to format multiple users as initials
-  const formatUsersAsInitials = (userIds: string[]): string => {
+  const _formatUsersAsInitials = (userIds: string[]): string => {
     return userIds.map(id => getUserInitials(id)).join(', ');
   };
 
@@ -976,14 +976,14 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
     topics: [],
     globalNote: ''
   });
-  const [newParticipant, setNewParticipant] = useState('');
-  const [availableUsers, setAvailableUsers] = useState<string[]>([]);
+  const [_newParticipant, _setNewParticipant] = useState('');
+  const [_availableUsers, setAvailableUsers] = useState<string[]>([]);
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [meetingSeriesMembers, setMeetingSeriesMembers] = useState<Member[]>([]);
   const [pendingTasks, setPendingTasks] = useState<any[]>([]);
   const [showPendingTasks, setShowPendingTasks] = useState(false);
   const [loadingPendingTasks, setLoadingPendingTasks] = useState(false);
-  const [importingPendingTasks, setImportingPendingTasks] = useState(false);
+  const [_importingPendingTasks, _setImportingPendingTasks] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [newGuestName, setNewGuestName] = useState('');
   const [showGuestInput, setShowGuestInput] = useState(false);
@@ -1135,14 +1135,49 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
 
       loadData();
     }
-  }, [minuteId]);
+  }, [minuteId, t]);
+
+  const fetchPendingTasks = useCallback(async () => {
+    if (!minute?.meetingSeries_id || !minuteId) return;
+
+    setLoadingPendingTasks(true);
+    try {
+      const seriesId = minute.meetingSeries_id._id || minute.meetingSeries_id;
+      console.log('=== Fetching pending tasks ===');
+      console.log('Series ID:', seriesId);
+      console.log('Current Minute ID:', minuteId);
+
+      // Include minuteId to filter out already imported tasks
+      const url = `/api/meeting-series/${seriesId}/pending-tasks?minuteId=${minuteId}`;
+      console.log('Fetching from URL:', url);
+
+      const response = await fetch(url, {
+        credentials: 'include', // Cookie-based authentication
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log('Pending tasks response:', result);
+        console.log('Tasks count:', result.data?.length || 0);
+        if (result.debug) {
+          console.log('Debug info from API:', result.debug);
+        }
+        setPendingTasks(result.data || []);
+        setShowPendingTasks(true); // Always set to true after loading, regardless of results
+      }
+    } catch (err) {
+      console.error('Error fetching pending tasks:', err);
+    } finally {
+      setLoadingPendingTasks(false);
+    }
+  }, [minute, minuteId]);
 
   // Auto-load pending tasks when minute is loaded
   useEffect(() => {
     if (minute && minuteId && !minute.isFinalized) {
       fetchPendingTasks();
     }
-  }, [minute?._id]); // Run when minute is loaded or changes
+  }, [minute, minuteId, fetchPendingTasks]); // Run when minute is loaded or changes
 
   // Track unsaved changes
   useEffect(() => {
@@ -1178,41 +1213,6 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [hasUnsavedChanges]);
-
-  const fetchPendingTasks = async () => {
-    if (!minute?.meetingSeries_id || !minuteId) return;
-
-    setLoadingPendingTasks(true);
-    try {
-      const seriesId = minute.meetingSeries_id._id || minute.meetingSeries_id;
-      console.log('=== Fetching pending tasks ===');
-      console.log('Series ID:', seriesId);
-      console.log('Current Minute ID:', minuteId);
-
-      // Include minuteId to filter out already imported tasks
-      const url = `/api/meeting-series/${seriesId}/pending-tasks?minuteId=${minuteId}`;
-      console.log('Fetching from URL:', url);
-
-      const response = await fetch(url, {
-        credentials: 'include', // Cookie-based authentication
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        console.log('Pending tasks response:', result);
-        console.log('Tasks count:', result.data?.length || 0);
-        if (result.debug) {
-          console.log('Debug info from API:', result.debug);
-        }
-        setPendingTasks(result.data || []);
-        setShowPendingTasks(true); // Always set to true after loading, regardless of results
-      }
-    } catch (err) {
-      console.error('Error fetching pending tasks:', err);
-    } finally {
-      setLoadingPendingTasks(false);
-    }
-  };
 
   const importPendingTask = (e: React.MouseEvent<HTMLButtonElement>, task: any) => {
     const taskId = task._id || task.id;
@@ -1426,7 +1426,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
       } else {
         setError(result.error || t('saveError'));
       }
-    } catch (error) {
+    } catch (_error) {
       setError(t('saveError'));
     } finally {
       setSaving(false);
@@ -1437,7 +1437,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
     return allUsers.find(u => u._id === userId);
   };
 
-  const getUserDisplayName = (userId: string): string => {
+  const _getUserDisplayName = (userId: string): string => {
     const user = getUserById(userId);
     return user ? `${user.firstName} ${user.lastName}` : userId;
   };

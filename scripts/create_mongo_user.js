@@ -44,7 +44,7 @@ async function main() {
     console.error('Error creating user:', err);
     process.exitCode = 1;
   } finally {
-    try { await client.close(); } catch (e) {}
+    try { await client.close(); } catch (_e) {}
   }
 }
 

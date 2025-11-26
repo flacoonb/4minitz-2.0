@@ -1,5 +1,5 @@
 import mongoose from 'mongoose';
-import bcrypt from 'bcryptjs';
+// import bcrypt from 'bcryptjs';
 import User from '../models/User';
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/4minitz-next';

@@ -39,8 +39,8 @@ export async function POST(request: NextRequest) {
     // Validate allowed file types if configured
     if (settings?.systemSettings?.allowedFileTypes && settings.systemSettings.allowedFileTypes.length > 0) {
       // Extract extension
-      const extension = file.name.split('.').pop()?.toLowerCase();
-      const allowedTypes = settings.systemSettings.allowedFileTypes.map((t: string) => t.toLowerCase().replace('.', ''));
+      // const extension = file.name.split('.').pop()?.toLowerCase();
+      // const allowedTypes = settings.systemSettings.allowedFileTypes.map((t: string) => t.toLowerCase().replace('.', ''));
       
       // For logo upload, we implicitly allow common image formats, but check if restricted
       // This logic might need adjustment if allowedFileTypes is strictly enforced for ALL uploads

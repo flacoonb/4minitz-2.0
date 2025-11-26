@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslations } from 'next-intl';
@@ -15,7 +15,7 @@ import {
 
 export default function Navigation() {
   const pathname = usePathname();
-  const router = useRouter();
+  // const router = useRouter();
   const { user: currentUser, loading, logout, hasPermission } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);

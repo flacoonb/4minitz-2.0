@@ -26,7 +26,7 @@ export async function getAppUrl() {
     if (settings && settings.systemSettings && settings.systemSettings.baseUrl) {
       return settings.systemSettings.baseUrl;
     }
-  } catch (e) { }
+  } catch (_e) { }
   return process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 }
 
@@ -36,7 +36,7 @@ export async function getOrgName() {
     if (settings && settings.systemSettings && settings.systemSettings.organizationName) {
       return settings.systemSettings.organizationName;
     }
-  } catch (e) { }
+  } catch (_e) { }
   return '4Minitz 2.0';
 }
 
@@ -96,7 +96,7 @@ export async function getFromEmail() {
     if (settings && settings.smtpSettings && settings.smtpSettings.from) {
       return settings.smtpSettings.from;
     }
-  } catch (e) { }
+  } catch (_e) { }
   return FROM_EMAIL;
 }
 

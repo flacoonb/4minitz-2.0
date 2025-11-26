@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { useTranslations } from 'next-intl';
-import { Upload, X, FileText, Image, FileArchive } from 'lucide-react';
+import { Upload, X } from 'lucide-react';
 
 interface AttachmentUploadProps {
   minuteId: string;

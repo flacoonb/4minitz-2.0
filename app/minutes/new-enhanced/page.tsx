@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useTranslations, useLocale } from 'next-intl';
@@ -82,7 +82,7 @@ function SortableAgendaItem({
   selectedSeries: MeetingSeries | null;
 }) {
   const t = useTranslations('minutes');
-  const locale = useLocale();
+  const _locale = useLocale();
   const {
     attributes,
     listeners,
@@ -417,7 +417,7 @@ export default function NewMinutePage() {
   
   const [loading, setLoading] = useState(false);
   const [seriesLoading, setSeriesLoading] = useState(true);
-  const [labelsLoading, setLabelsLoading] = useState(true);
+  const [_labelsLoading, setLabelsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
   const [meetingSeries, setMeetingSeries] = useState<MeetingSeries[]>([]);
@@ -432,7 +432,7 @@ export default function NewMinutePage() {
   
   // Draft check
   const [existingDraft, setExistingDraft] = useState<any>(null);
-  const [checkingDraft, setCheckingDraft] = useState(false);
+  const [_checkingDraft, setCheckingDraft] = useState(false);
 
   // Form state
   const [formData, setFormData] = useState({
@@ -455,6 +455,93 @@ export default function NewMinutePage() {
     })
   );
 
+  const checkForExistingDraft = useCallback(async (seriesId: string) => {
+    setCheckingDraft(true);
+    try {
+      const response = await fetch(`/api/meeting-series/${seriesId}/check-draft`, {
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.hasDraft) {
+          setExistingDraft(result.draft);
+        } else {
+          setExistingDraft(null);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to check for existing draft:', err);
+    } finally {
+      setCheckingDraft(false);
+    }
+  }, []);
+
+  const fetchMeetingSeries = useCallback(async () => {
+    setSeriesLoading(true);
+    try {
+      const response = await fetch('/api/meeting-series', {
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setMeetingSeries(result.data || []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch meeting series:', err);
+    } finally {
+      setSeriesLoading(false);
+    }
+  }, []);
+
+  const fetchLabels = useCallback(async () => {
+    setLabelsLoading(true);
+    try {
+      const response = await fetch('/api/settings/labels', {
+        credentials: 'include',
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setLabels(result.data || []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch labels:', err);
+    } finally {
+      setLabelsLoading(false);
+    }
+  }, []);
+
+  const fetchPendingTasks = useCallback(async () => {
+    if (!formData.meetingSeries_id) {
+      alert(t('selectSeriesFirst'));
+      return;
+    }
+
+    setLoadingPendingTasks(true);
+    try {
+      const response = await fetch(`/api/meeting-series/${formData.meetingSeries_id}/pending-tasks`, {
+        credentials: 'include', // Cookie-based authentication
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setPendingTasks(result.data || []);
+        if (result.data && result.data.length > 0) {
+          setShowPendingTasks(true);
+        } else {
+          alert(t('noPendingTasksFound'));
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching pending tasks:', err);
+      alert(t('errorLoadingPendingTasks'));
+    } finally {
+      setLoadingPendingTasks(false);
+    }
+  }, [formData.meetingSeries_id, t]);
+
   // Check permissions
   useEffect(() => {
     if (!authLoading && (!user || user.role === 'user')) {
@@ -468,7 +555,7 @@ export default function NewMinutePage() {
       fetchMeetingSeries();
       fetchLabels();
     }
-  }, [user]);
+  }, [user, fetchMeetingSeries, fetchLabels]);
 
   // Update form when seriesId param changes
   useEffect(() => {
@@ -496,65 +583,7 @@ export default function NewMinutePage() {
         fetchPendingTasks();
       }
     }
-  }, [formData.meetingSeries_id, meetingSeries]);
-
-  const checkForExistingDraft = async (seriesId: string) => {
-    setCheckingDraft(true);
-    try {
-      const response = await fetch(`/api/meeting-series/${seriesId}/check-draft`, {
-        credentials: 'include',
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        if (result.hasDraft) {
-          setExistingDraft(result.draft);
-        } else {
-          setExistingDraft(null);
-        }
-      }
-    } catch (err) {
-      console.error('Failed to check for existing draft:', err);
-    } finally {
-      setCheckingDraft(false);
-    }
-  };
-
-  const fetchMeetingSeries = async () => {
-    setSeriesLoading(true);
-    try {
-      const response = await fetch('/api/meeting-series', {
-        credentials: 'include',
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        setMeetingSeries(result.data || []);
-      }
-    } catch (err) {
-      console.error('Failed to fetch meeting series:', err);
-    } finally {
-      setSeriesLoading(false);
-    }
-  };
-
-  const fetchLabels = async () => {
-    setLabelsLoading(true);
-    try {
-      const response = await fetch('/api/settings/labels', {
-        credentials: 'include',
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        setLabels(result.data || []);
-      }
-    } catch (err) {
-      console.error('Failed to fetch labels:', err);
-    } finally {
-      setLabelsLoading(false);
-    }
-  };
+  }, [formData.meetingSeries_id, meetingSeries, fetchPendingTasks, checkForExistingDraft]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -581,34 +610,6 @@ export default function NewMinutePage() {
     }));
   };
 
-  const fetchPendingTasks = async () => {
-    if (!formData.meetingSeries_id) {
-      alert(t('selectSeriesFirst'));
-      return;
-    }
-
-    setLoadingPendingTasks(true);
-    try {
-      const response = await fetch(`/api/meeting-series/${formData.meetingSeries_id}/pending-tasks`, {
-        credentials: 'include', // Cookie-based authentication
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        setPendingTasks(result.data || []);
-        if (result.data && result.data.length > 0) {
-          setShowPendingTasks(true);
-        } else {
-          alert(t('noPendingTasksFound'));
-        }
-      }
-    } catch (err) {
-      console.error('Error fetching pending tasks:', err);
-      alert(t('errorLoadingPendingTasks'));
-    } finally {
-      setLoadingPendingTasks(false);
-    }
-  };
 
   const importPendingTasks = () => {
     if (pendingTasks.length === 0) {

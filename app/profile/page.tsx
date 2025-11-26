@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import {
@@ -17,8 +18,7 @@ import {
   EyeOff,
   AlertCircle,
   CheckCircle2,
-  Camera,
-  Upload
+  Camera
 } from 'lucide-react';
 
 // Demo fallback removed; use cookie/JWT auth via credentials
@@ -340,10 +340,13 @@ const ProfilePage = () => {
                 {/* Avatar */}
                 <div className="relative inline-block mb-4">
                   {user.avatar ? (
-                    <img
+                    <Image
                       src={user.avatar}
                       alt={`${user.firstName} ${user.lastName}`}
+                      width={96}
+                      height={96}
                       className="w-24 h-24 rounded-full object-cover"
+                      unoptimized
                     />
                   ) : (
                     <div className="w-24 h-24 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-2xl">
