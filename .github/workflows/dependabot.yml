@@ -1,10 +1,13 @@
 version: 2
 updates:
+  # npm dependencies (Next.js, Mongoose, React, etc.)
   - package-ecosystem: "npm"
     directory: "/"
     schedule:
       interval: "weekly"
+    open-pull-requests-limit: 10
 
+  # GitHub Actions updates (checkout, setup-node, CodeQL, etc.)
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
