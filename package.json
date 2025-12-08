@@ -30,7 +30,7 @@
     "jsonwebtoken": "^9.0.2",
     "jspdf": "^3.0.3",
     "jspdf-autotable": "^5.0.2",
-    "lucide-react": "^0.553.0",
+    "lucide-react": "^0.556.0",
     "mongodb": "^7.0.0",
     "mongoose": "^8.19.3",
     "multer": "^2.0.2",
