@@ -405,7 +405,11 @@ const AdminSettings = () => {
                 <button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key as any)}
-                  className={}
+                  className={`flex items-center gap-2 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                    activeTab === tab.key
+                      ? 'border-indigo-500 text-indigo-600 bg-indigo-50/50'
+                      : 'border-transparent text-slate-600 hover:text-slate-800 hover:bg-slate-50/50'
+                  }`}
                 >
                   <tab.icon className="w-4 h-4" />
                   {tab.label}
@@ -429,7 +433,7 @@ const AdminSettings = () => {
                   <div key={role} className="bg-slate-50 rounded-xl p-6 border border-slate-200">
                     <div className="flex items-center gap-3 mb-6">
                       {getRoleIcon(role)}
-                      <div className={}>
+                      <div className={`px-3 py-1 rounded-full text-sm font-semibold border ${getRoleBadgeColor(role)}`}>
                         {role === 'admin' ? t('roles.admin') : 
                          role === 'moderator' ? t('roles.moderator') : t('roles.user')}
                       </div>
@@ -450,7 +454,7 @@ const AdminSettings = () => {
                               <Unlock className="w-4 h-4 text-slate-400" />
                             }
                             <span className="text-sm font-medium text-slate-700">
-                              {t()}
+                              {t(`roles.permissions.${permission}`)}
                             </span>
                           </div>
                         </label>
