@@ -22,8 +22,6 @@ import {
   Shield,
 } from 'lucide-react';
 
-  // Demo fallback removed; use cookie/JWT auth via credentials
-
 interface RolePermissions {
   canCreateMeetings: boolean;
   canModerateAllMeetings: boolean;
@@ -72,7 +70,10 @@ interface SystemSettings {
     dateFormat: string;
     timeFormat: '12h' | '24h';
     enableAuditLog: boolean;
-    sessionTimeout: number;
+    autoLogout: {
+      enabled: boolean;
+      minutes: number;
+    };
     maxFileUploadSize: number;
     allowedFileTypes: string[];
     baseUrl?: string;
@@ -404,11 +405,7 @@ const AdminSettings = () => {
                 <button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key as any)}
-                  className={`flex items-center gap-2 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-                    activeTab === tab.key
-                      ? 'border-indigo-500 text-indigo-600 bg-indigo-50/50'
-                      : 'border-transparent text-slate-600 hover:text-slate-800 hover:bg-slate-50/50'
-                  }`}
+                  className={}
                 >
                   <tab.icon className="w-4 h-4" />
                   {tab.label}
@@ -432,7 +429,7 @@ const AdminSettings = () => {
                   <div key={role} className="bg-slate-50 rounded-xl p-6 border border-slate-200">
                     <div className="flex items-center gap-3 mb-6">
                       {getRoleIcon(role)}
-                      <div className={`px-3 py-1 rounded-full text-sm font-semibold border ${getRoleBadgeColor(role)}`}>
+                      <div className={}>
                         {role === 'admin' ? t('roles.admin') : 
                          role === 'moderator' ? t('roles.moderator') : t('roles.user')}
                       </div>
@@ -453,7 +450,7 @@ const AdminSettings = () => {
                               <Unlock className="w-4 h-4 text-slate-400" />
                             }
                             <span className="text-sm font-medium text-slate-700">
-                              {t(`roles.permissions.${permission}`)}
+                              {t()}
                             </span>
                           </div>
                         </label>
@@ -746,17 +743,40 @@ const AdminSettings = () => {
                     </select>
                   </div>
 
-                  {/* Session Timeout */}
+                  {/* Auto Logout */}
                   <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
-                    <label className="block text-sm font-medium text-slate-700 mb-2">{t('system.sessionTimeout')}</label>
-                    <input
-                      type="number"
-                      min="30"
-                      max="1440"
-                      value={settings.systemSettings.sessionTimeout}
-                      onChange={(e) => updateSystemSettings('sessionTimeout', parseInt(e.target.value))}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    />
+                    <label className="flex items-center gap-3 mb-3">
+                      <input
+                        type="checkbox"
+                        checked={settings.systemSettings.autoLogout?.enabled ?? true}
+                        onChange={(e) => updateSystemSettings('autoLogout', { 
+                          enabled: e.target.checked, 
+                          minutes: settings.systemSettings.autoLogout?.minutes ?? 480 
+                        })}
+                        className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
+                      />
+                      <div>
+                        <span className="text-sm font-medium text-slate-700">{t('system.autoLogout')}</span>
+                        <p className="text-xs text-slate-500">{t('system.autoLogoutDesc')}</p>
+                      </div>
+                    </label>
+
+                    {(settings.systemSettings.autoLogout?.enabled ?? true) && (
+                      <div className="ml-7">
+                        <label className="block text-xs text-slate-600 mb-1">{t('system.autoLogoutMinutes')}</label>
+                        <input
+                          type="number"
+                          min="5"
+                          max="10080"
+                          value={settings.systemSettings.autoLogout?.minutes ?? 480}
+                          onChange={(e) => updateSystemSettings('autoLogout', { 
+                            enabled: true, 
+                            minutes: parseInt(e.target.value) 
+                          })}
+                          className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                        />
+                      </div>
+                    )}
                   </div>
 
                   {/* Max Upload Size */}
@@ -812,4 +832,4 @@ const AdminSettings = () => {
   );
 };
 
-export default withAdminAuth(AdminSettings);
+export default AdminSettings;

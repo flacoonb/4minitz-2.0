@@ -6,6 +6,7 @@
     "cancel": "Cancel",
     "delete": "Delete",
     "edit": "Edit",
+    "update": "Update",
     "create": "Create",
     "search": "Search",
     "noResults": "No results found",
@@ -413,7 +414,7 @@
     "unknown": "Unknown error",
     "tooManyLoginAttempts": "Too many login attempts. Please try again later.",
     "tooManyRegisterAttempts": "Too many registration attempts. Please try again later.",
-        "tooManyRequests": "Too many requests. Please try again later.",
+    "tooManyRequests": "Too many requests. Please try again later.",
     "generic": "An error occurred"
   },
   "auth": {
@@ -628,7 +629,7 @@
         "timezone": "Timezone",
         "dateFormat": "Date Format",
         "timeFormat": "Time Format",
-        "sessionTimeout": "Session Timeout (minutes)",
+        "autoLogout": "Auto Logout", "autoLogoutDesc": "Automatically log out users after inactivity", "autoLogoutMinutes": "Timeout (minutes)",
         "maxFileUploadSize": "Max. Upload Size (MB)",
         "enableAuditLog": "Enable Audit Log",
         "enableAuditLogDesc": "Log all system activities",
@@ -662,6 +663,7 @@
       "actions": {
         "create": "Create User",
         "edit": "Edit",
+        "update": "Update",
         "delete": "Delete",
         "cancel": "Cancel"
       },
@@ -686,6 +688,10 @@
         },
         "edit": {
           "title": "Edit User"
+        },
+        "delete": {
+          "title": "Delete User",
+          "message": "Are you sure you want to delete user <strong>{name}</strong>? This action cannot be undone."
         }
       },
       "fields": {
@@ -948,6 +954,7 @@
     "profileTab": {
       "title": "Profile Information",
       "edit": "Edit",
+      "update": "Update",
       "cancel": "Cancel",
       "save": "Save",
       "saving": "Saving...",

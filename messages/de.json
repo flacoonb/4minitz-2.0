@@ -6,6 +6,7 @@
     "cancel": "Abbrechen",
     "delete": "Löschen",
     "edit": "Bearbeiten",
+    "update": "Aktualisieren",
     "create": "Erstellen",
     "search": "Suchen",
     "noResults": "Keine Ergebnisse gefunden",
@@ -48,7 +49,7 @@
   },
   "meetingSeries": {
     "title": "Sitzungen",
-    "subtitle": "Verwalte deine Meeting-Serien und Protokolle zentral",
+    "subtitle": "Verwalten Sie Ihre Meeting-Serien und Protokolle zentral",
     "createNew": "Neue Sitzung erstellen",
     "searchPlaceholder": "Suche nach Serien-Name oder Projekt...",
     "allProjects": "Alle Projekte",
@@ -399,7 +400,7 @@
     "unknown": "Unbekannter Fehler",
     "tooManyLoginAttempts": "Zu viele Anmeldeversuche. Bitte versuchen Sie es später erneut.",
     "tooManyRegisterAttempts": "Zu viele Registrierungsversuche. Bitte versuchen Sie es später erneut.",
-        "tooManyRequests": "Zu viele Anfragen. Bitte versuchen Sie es später erneut.",
+    "tooManyRequests": "Zu viele Anfragen. Bitte versuchen Sie es später erneut.",
     "generic": "Ein Fehler ist aufgetreten"
   },
   "auth": {
@@ -621,7 +622,7 @@
         "timezone": "Zeitzone",
         "dateFormat": "Datumsformat",
         "timeFormat": "Zeitformat",
-        "sessionTimeout": "Session Timeout (Minuten)",
+        "autoLogout": "Automatischer Logout", "autoLogoutDesc": "Benutzer nach Inaktivität automatisch abmelden", "autoLogoutMinutes": "Zeitlimit (Minuten)",
         "maxFileUploadSize": "Max. Upload-Größe (MB)",
         "enableAuditLog": "Audit-Log aktivieren",
         "enableAuditLogDesc": "Protokollierung aller Systemaktivitäten",
@@ -631,7 +632,7 @@
     },
     "users": {
       "title": "Benutzerverwaltung",
-      "subtitle": "Verwalte Benutzer und ihre Rollen",
+      "subtitle": "Verwalten Sie Benutzer und ihre Rollen",
       "loading": "Benutzer werden geladen...",
       "searchPlaceholder": "Benutzer suchen...",
       "filterRole": "Alle Rollen",
@@ -655,6 +656,7 @@
       "actions": {
         "create": "Benutzer erstellen",
         "edit": "Bearbeiten",
+        "update": "Aktualisieren",
         "delete": "Löschen",
         "cancel": "Abbrechen"
       },
@@ -679,6 +681,10 @@
         },
         "edit": {
           "title": "Benutzer bearbeiten"
+        },
+        "delete": {
+          "title": "Benutzer löschen",
+          "message": "Möchten Sie den Benutzer <strong>{name}</strong> wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden."
         }
       },
       "fields": {
@@ -913,6 +919,7 @@
     "profileTab": {
       "title": "Profil-Informationen",
       "edit": "Bearbeiten",
+      "update": "Aktualisieren",
       "cancel": "Abbrechen",
       "save": "Speichern",
       "saving": "Speichern...",
