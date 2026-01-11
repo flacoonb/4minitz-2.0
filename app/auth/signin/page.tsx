@@ -99,6 +99,15 @@ export default function SignInPage() {
             </div>
           </div>
 
+          <div className="text-right">
+            <Link
+              href="/auth/forgot-password"
+              className="text-sm text-blue-600 hover:text-blue-800"
+            >
+              Forgot password?
+            </Link>
+          </div>
+
           <div>
             <button
               type="submit"
