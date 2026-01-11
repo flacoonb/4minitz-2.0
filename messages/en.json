@@ -415,7 +415,12 @@
     "tooManyLoginAttempts": "Too many login attempts. Please try again later.",
     "tooManyRegisterAttempts": "Too many registration attempts. Please try again later.",
     "tooManyRequests": "Too many requests. Please try again later.",
-    "generic": "An error occurred"
+    "generic": "An error occurred",
+    "missingToken": "Missing token",
+    "invalidOrExpiredToken": "Token is invalid or expired",
+    "passwordResetEmailSent": "If an account exists, a password reset email has been sent.",
+    "passwordResetSuccess": "Password has been reset successfully.",
+    "tooManyPasswordResetAttempts": "Too many password reset requests. Please try again later."
   },
   "auth": {
     "emailVerificationRequired": "Please verify your email address before logging in.",
@@ -629,7 +634,9 @@
         "timezone": "Timezone",
         "dateFormat": "Date Format",
         "timeFormat": "Time Format",
-        "autoLogout": "Auto Logout", "autoLogoutDesc": "Automatically log out users after inactivity", "autoLogoutMinutes": "Timeout (minutes)",
+        "autoLogout": "Auto Logout",
+        "autoLogoutDesc": "Automatically log out users after inactivity",
+        "autoLogoutMinutes": "Timeout (minutes)",
         "maxFileUploadSize": "Max. Upload Size (MB)",
         "enableAuditLog": "Enable Audit Log",
         "enableAuditLogDesc": "Log all system activities",

@@ -401,7 +401,12 @@
     "tooManyLoginAttempts": "Zu viele Anmeldeversuche. Bitte versuchen Sie es später erneut.",
     "tooManyRegisterAttempts": "Zu viele Registrierungsversuche. Bitte versuchen Sie es später erneut.",
     "tooManyRequests": "Zu viele Anfragen. Bitte versuchen Sie es später erneut.",
-    "generic": "Ein Fehler ist aufgetreten"
+    "generic": "Ein Fehler ist aufgetreten",
+    "missingToken": "Token fehlt",
+    "invalidOrExpiredToken": "Token ist ungültig oder abgelaufen",
+    "passwordResetEmailSent": "Wenn ein Konto existiert, wurde eine E-Mail zum Zurücksetzen gesendet.",
+    "passwordResetSuccess": "Passwort wurde erfolgreich zurückgesetzt.",
+    "tooManyPasswordResetAttempts": "Zu viele Anfragen zum Zurücksetzen. Bitte versuchen Sie es später erneut."
   },
   "auth": {
     "emailVerificationRequired": "Bitte bestätigen Sie Ihre E-Mail-Adresse vor der Anmeldung.",
@@ -622,7 +627,9 @@
         "timezone": "Zeitzone",
         "dateFormat": "Datumsformat",
         "timeFormat": "Zeitformat",
-        "autoLogout": "Automatischer Logout", "autoLogoutDesc": "Benutzer nach Inaktivität automatisch abmelden", "autoLogoutMinutes": "Zeitlimit (Minuten)",
+        "autoLogout": "Automatischer Logout",
+        "autoLogoutDesc": "Benutzer nach Inaktivität automatisch abmelden",
+        "autoLogoutMinutes": "Zeitlimit (Minuten)",
         "maxFileUploadSize": "Max. Upload-Größe (MB)",
         "enableAuditLog": "Audit-Log aktivieren",
         "enableAuditLogDesc": "Protokollierung aller Systemaktivitäten",

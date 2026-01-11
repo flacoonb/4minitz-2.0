@@ -23,6 +23,8 @@ export interface IUser extends Document {
   isEmailVerified: boolean;
   emailVerificationToken?: string;
   emailVerificationExpires?: Date;
+  passwordResetTokenHash?: string;
+  passwordResetExpires?: Date;
   lastLogin?: Date;
   notificationSettings?: INotificationSettings;
   preferences: {
