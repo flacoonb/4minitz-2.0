@@ -7,6 +7,7 @@ import connectDB from '@/lib/mongodb';
 import MeetingSeries from '@/models/MeetingSeries';
 import Settings from '@/models/Settings';
 import { verifyToken } from '@/lib/auth';
+import { createMeetingSeriesSchema, validateBody } from '@/lib/validations';
 
 /**
  * GET /api/meeting-series
@@ -32,7 +33,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Build query
-    let query: any = {};
+    let query: Record<string, unknown> = {};
     if (username && userId) {
       if (!canViewAll) {
         query = {
@@ -62,11 +63,13 @@ export async function GET(request: NextRequest) {
     .select('-__v')
     .lean();
     
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       count: series.length,
       data: series,
     });
+    response.headers.set('Cache-Control', 'private, no-cache');
+    return response;
   } catch (error) {
     console.error('Error fetching meeting series:', error);
     return NextResponse.json(
@@ -124,24 +127,23 @@ export async function POST(request: NextRequest) {
     }
     
     // Validation
-    if (!body.project) {
+    const validation = validateBody(createMeetingSeriesSchema, body);
+    if (!validation.success) {
       return NextResponse.json(
-        {
-          success: false,
-          error: 'Session name is required',
-        },
+        { success: false, error: validation.error },
         { status: 400 }
       );
     }
-    
+    const validated = validation.data;
+
     // Create new meeting series
     // Note: moderators, participants, visibleFor should contain usernames, not IDs
     const newSeries = await MeetingSeries.create({
-      project: body.project,
-      name: body.name || '',
-      visibleFor: body.visibleFor || [], // Can be empty for public access
-      moderators: [username, ...(body.moderators || [])].filter((v, i, a) => a.indexOf(v) === i), // Remove duplicates
-      participants: body.participants || [],
+      project: validated.project,
+      name: validated.name || '',
+      visibleFor: validated.visibleFor || [], // Can be empty for public access
+      moderators: [username, ...(validated.moderators || [])].filter((v, i, a) => a.indexOf(v) === i), // Remove duplicates
+      participants: validated.participants || [],
       informedUsers: body.informedUsers || [],
       additionalResponsibles: body.additionalResponsibles || [],
       members: body.members || [],

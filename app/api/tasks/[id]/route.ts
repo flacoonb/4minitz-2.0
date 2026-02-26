@@ -3,6 +3,7 @@ import connectDB from '@/lib/mongodb';
 import Task from '@/models/Task';
 import Minutes from '@/models/Minutes';
 import { verifyToken } from '@/lib/auth';
+import { updateTaskSchema, validateBody } from '@/lib/validations';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -30,13 +31,12 @@ export async function PATCH(
     const { id: taskId } = await context.params;
     const userId = authResult.user._id.toString();
     const body = await request.json();
-    const { status, notes, actualHours } = body;
-
-    // Validate status
-    const validStatuses = ['open', 'in-progress', 'completed', 'cancelled'];
-    if (status && !validStatuses.includes(status)) {
-      return NextResponse.json({ error: 'Invalid status value' }, { status: 400 });
+    const validation = validateBody(updateTaskSchema, body);
+    if (!validation.success) {
+      return NextResponse.json({ error: validation.error }, { status: 400 });
     }
+    const { status, notes } = validation.data;
+    const actualHours = body.actualHours;
 
     // Try to find in Task collection first (preferred path)
     const task = await Task.findById(taskId);

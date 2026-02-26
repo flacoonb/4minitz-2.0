@@ -82,7 +82,7 @@ export async function GET(request: NextRequest) {
       data: enrichedTasks,
     });
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error fetching tasks:', error);
     return NextResponse.json(
       { error: 'Internal server error' },

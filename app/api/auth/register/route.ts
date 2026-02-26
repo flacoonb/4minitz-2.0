@@ -3,6 +3,7 @@ import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
 import Settings from '@/models/Settings';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { registerSchema, validateBody } from '@/lib/validations';
 import { sendWelcomeEmail, sendVerificationEmail } from '@/lib/email-service';
 import crypto from 'crypto';
 import { getTranslations } from 'next-intl/server';
@@ -24,22 +25,15 @@ export async function POST(request: NextRequest) {
     await connectDB();
 
     const body = await request.json();
-    const {
-      email,
-      username,
-      password,
-      firstName,
-      lastName,
-      role = 'user'
-    } = body;
-
-    // Validation
-    if (!email || !username || !password || !firstName || !lastName) {
+    const validation = validateBody(registerSchema, body);
+    if (!validation.success) {
       return NextResponse.json(
-        { error: t('required') },
+        { error: validation.error },
         { status: 400 }
       );
     }
+    const { email, username, password, firstName, lastName } = validation.data;
+    const role = 'user';
 
     // Check if self-registration is allowed
     const settings = await Settings.findOne({}).sort({ version: -1 });

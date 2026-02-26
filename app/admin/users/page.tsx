@@ -273,7 +273,7 @@ const UserManagement = () => {
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3">
             <AlertCircle className="w-5 h-5 text-red-500" />
             <span className="text-red-700">{error}</span>
-            <button onClick={() => setError('')} className="ml-auto text-red-500 hover:text-red-700">
+            <button onClick={() => setError('')} className="ml-auto text-red-500 hover:text-red-700" aria-label="Fehlermeldung schliessen">
               <X className="w-4 h-4" />
             </button>
           </div>
@@ -283,7 +283,7 @@ const UserManagement = () => {
           <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl flex items-center gap-3">
             <CheckCircle2 className="w-5 h-5 text-green-500" />
             <span className="text-green-700">{success}</span>
-            <button onClick={() => setSuccess('')} className="ml-auto text-green-500 hover:text-green-700">
+            <button onClick={() => setSuccess('')} className="ml-auto text-green-500 hover:text-green-700" aria-label="Erfolgsmeldung schliessen">
               <X className="w-4 h-4" />
             </button>
           </div>

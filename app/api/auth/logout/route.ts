@@ -26,7 +26,7 @@ export async function POST(_request: NextRequest) {
 
     return response;
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error logging out user:', error);
     return NextResponse.json(
       { error: 'Fehler bei der Abmeldung' },

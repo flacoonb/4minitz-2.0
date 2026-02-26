@@ -110,7 +110,7 @@ export async function POST(request: NextRequest) {
       }
     });
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error during backfill:', error);
     return NextResponse.json(
       { error: 'Backfill failed' },

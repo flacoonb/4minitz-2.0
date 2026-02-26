@@ -36,7 +36,7 @@ export async function GET(request: NextRequest) {
     const status = url.searchParams.get('status') || '';
 
     // Build filter
-    const filter: any = {};
+    const filter: Record<string, unknown> = {};
     
     if (search) {
       const escapedSearch = search.slice(0, 100).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

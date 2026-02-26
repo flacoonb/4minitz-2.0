@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { forgotPasswordSchema, validateBody } from '@/lib/validations';
 import crypto from 'crypto';
 import { getTranslations } from 'next-intl/server';
 import { sendPasswordResetEmail } from '@/lib/email-service';
@@ -20,16 +21,11 @@ export async function POST(request: NextRequest) {
     await connectDB();
 
     const body = await request.json().catch(() => ({}));
-    const emailRaw = (body?.email || '').toString().trim().toLowerCase();
-
-    if (!emailRaw) {
-      return NextResponse.json({ error: t('required') }, { status: 400 });
-    }
-
-    // Basic email validation
-    if (!/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,})+$/.test(emailRaw)) {
+    const validation = validateBody(forgotPasswordSchema, body);
+    if (!validation.success) {
       return NextResponse.json({ error: t('invalidEmail') }, { status: 400 });
     }
+    const emailRaw = validation.data.email.toLowerCase();
 
     const user = await User.findOne({ email: emailRaw });
 

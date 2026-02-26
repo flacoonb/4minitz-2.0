@@ -11,6 +11,9 @@ export interface ITask extends Document {
   minutesId?: string; // Reference to the minute where it was created/last updated
   topicId?: string; // Reference to the topic
   
+  // Import tracking
+  sourceTaskId?: string; // Original task ID when imported from another series
+
   // Audit
   createdBy?: string;
   createdAt: Date;
@@ -36,6 +39,7 @@ const TaskSchema = new Schema<ITask>(
     meetingSeriesId: { type: String, required: true, index: true },
     minutesId: { type: String, index: true },
     topicId: { type: String }, // ID of the topic containing this task
+    sourceTaskId: { type: String }, // Original task ID when imported from another series
     createdBy: { type: String },
   },
   {

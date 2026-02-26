@@ -57,9 +57,7 @@ export default function MeetingSeriesList() {
     try {
       setLoading(true);
       const response = await fetch('/api/meeting-series', {
-        headers: {
-          'x-user-id': 'demo-user', // TODO: Replace with real auth
-        },
+        credentials: 'include',
       });
       
       if (!response.ok) {

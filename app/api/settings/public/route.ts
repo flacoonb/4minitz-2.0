@@ -36,12 +36,14 @@ export async function GET(_request: NextRequest) {
       }
     };
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       data: publicSettings
     });
+    response.headers.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=600');
+    return response;
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error fetching public settings:', error);
     return NextResponse.json(
       { error: 'Fehler beim Laden der Einstellungen' },

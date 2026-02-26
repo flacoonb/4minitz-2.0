@@ -9,7 +9,9 @@ import connectDB from '@/lib/mongodb';
 export async function GET() {
   try {
     await connectDB();
-    return NextResponse.json({ status: 'ok' });
+    const response = NextResponse.json({ status: 'ok' });
+    response.headers.set('Cache-Control', 'no-cache');
+    return response;
   } catch {
     return NextResponse.json({ status: 'error' }, { status: 503 });
   }

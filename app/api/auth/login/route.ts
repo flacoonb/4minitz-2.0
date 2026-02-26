@@ -5,6 +5,7 @@ import Settings from '@/models/Settings';
 import { generateToken } from '@/lib/auth';
 import { logAction } from '@/lib/audit';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { loginSchema, validateBody } from '@/lib/validations';
 import { getTranslations } from 'next-intl/server';
 
 // POST - Login user
@@ -24,15 +25,14 @@ export async function POST(request: NextRequest) {
     await connectDB();
 
     const body = await request.json();
-    const { username, password } = body;
-
-    // Validation
-    if (!username || !password) {
+    const validation = validateBody(loginSchema, body);
+    if (!validation.success) {
       return NextResponse.json(
         { error: t('missingCredentials') },
         { status: 400 }
       );
     }
+    const { username, password } = validation.data;
 
     // Find user by email or username
     const user = await User.findOne({
@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
 
     // Get session timeout from settings
     // settings already fetched above
-    const sessionTimeoutMinutes = settings?.systemSettings?.sessionTimeout || 480; // Default 8 hours
+    const sessionTimeoutMinutes = settings?.systemSettings?.autoLogout?.minutes || 480; // Default 8 hours
     const sessionTimeoutSeconds = sessionTimeoutMinutes * 60;
 
     // Generate JWT token with settings-based expiry
@@ -141,7 +141,7 @@ export async function POST(request: NextRequest) {
 
     return response;
 
-  } catch (error: any) {
+  } catch (error) {
     return NextResponse.json(
       { error: t('loginError') },
       { status: 500 }

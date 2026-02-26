@@ -41,6 +41,11 @@ export default function NewMeetingSeriesPage() {
   // Existing session names for autocomplete
   const [existingProjectNames, setExistingProjectNames] = useState<string[]>([]);
 
+  // Existing series for task import
+  const [existingSeries, setExistingSeries] = useState<{ _id: string; project: string; name?: string }[]>([]);
+  const [sourceSeriesId, setSourceSeriesId] = useState<string>('');
+  const [importMessage, setImportMessage] = useState<string | null>(null);
+
   // Input states for adding participants/informed users (kept for backward compatibility)
   const [newParticipant, setNewParticipant] = useState('');
   const [newInformedUser, setNewInformedUser] = useState('');
@@ -64,8 +69,10 @@ export default function NewMeetingSeriesPage() {
       const response = await fetch('/api/meeting-series', { credentials: 'include' });
       if (response.ok) {
         const result = await response.json();
-        const names = [...new Set((result.data || []).map((s: { project: string }) => s.project).filter(Boolean))] as string[];
+        const series = (result.data || []) as { _id: string; project: string; name?: string }[];
+        const names = [...new Set(series.map((s) => s.project).filter(Boolean))] as string[];
         setExistingProjectNames(names);
+        setExistingSeries(series);
       }
     } catch {
       // ignore
@@ -176,9 +183,29 @@ export default function NewMeetingSeriesPage() {
       }
 
       const result = await response.json();
-      
-      // Redirect to the new meeting series
-      router.push(`/meeting-series/${result.data._id}`);
+      const newSeriesId = result.data._id;
+
+      // Import tasks from source series if selected
+      if (sourceSeriesId) {
+        try {
+          const importRes = await fetch(`/api/meeting-series/${newSeriesId}/import-tasks`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ sourceSeriesId }),
+          });
+          if (importRes.ok) {
+            const importResult = await importRes.json();
+            if (importResult.imported > 0) {
+              setImportMessage(`${importResult.imported} Aufgaben übernommen`);
+            }
+          }
+        } catch {
+          // Non-critical: series was created, task import failed silently
+        }
+      }
+
+      router.push(`/meeting-series/${newSeriesId}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -287,6 +314,31 @@ export default function NewMeetingSeriesPage() {
               </select>
             </div>
           </div>
+
+          {/* Import Tasks from existing Series */}
+          {existingSeries.length > 0 && (
+            <div>
+              <label htmlFor="sourceSeriesId" className="block text-sm font-medium text-gray-700 mb-2">
+                Pendenzen übernehmen von (optional)
+              </label>
+              <select
+                id="sourceSeriesId"
+                value={sourceSeriesId}
+                onChange={(e) => setSourceSeriesId(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white"
+              >
+                <option value="">– keine Übernahme –</option>
+                {existingSeries.map(s => (
+                  <option key={s._id} value={s._id}>
+                    {s.project}{s.name ? ` – ${s.name}` : ''}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500 mt-1">
+                Offene Aufgaben aus einer bestehenden Sitzungsreihe in die neue Serie übernehmen
+              </p>
+            </div>
+          )}
 
           {/* Description */}
           <div>

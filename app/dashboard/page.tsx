@@ -60,7 +60,7 @@ export default function DashboardPage() {
     status?: string;
     priority?: string;
     overdue?: boolean;
-  }>({ status: 'open' });
+  }>({});
 
   // Task update modal state
   const [editingTask, setEditingTask] = useState<Task | null>(null);
@@ -122,18 +122,22 @@ export default function DashboardPage() {
   const fetchTasks = useCallback(async () => {
     try {
       const params = new URLSearchParams();
-      if (taskFilter.status) params.append('status', taskFilter.status);
+      if (taskFilter.status && taskFilter.status !== 'all') params.append('status', taskFilter.status);
       if (taskFilter.priority) params.append('priority', taskFilter.priority);
       if (taskFilter.overdue !== undefined) params.append('overdue', String(taskFilter.overdue));
 
       const response = await fetch(`/api/tasks?${params.toString()}`, { credentials: 'include' });
       if (response.ok) {
         const result = await response.json();
-        const sanitizedTasks = (result.data || []).map((task: Task) => ({
+        let data = (result.data || []).map((task: Task) => ({
           ...task,
           meetingSeries: task.meetingSeries || null,
         }));
-        setTasks(sanitizedTasks);
+        // Default: show active tasks (open + in-progress) when no specific status filter set
+        if (!taskFilter.status || taskFilter.status === '') {
+          data = data.filter((t: Task) => t.status === 'open' || t.status === 'in-progress');
+        }
+        setTasks(data);
       }
     } catch (err) {
       console.error('Error fetching tasks:', err);
@@ -164,12 +168,12 @@ export default function DashboardPage() {
   };
 
   const updateTaskStatus = async () => {
-    if (!editingTask || !editingTask.topicId) return;
+    if (!editingTask) return;
 
     setIsUpdating(true);
     try {
       const response = await fetch(
-        `/api/tasks/update/${editingTask.minutesId}/${editingTask.topicId}/${editingTask._id}`,
+        `/api/tasks/${editingTask._id}`,
         {
           method: 'PATCH',
           credentials: 'include',
@@ -398,10 +402,11 @@ export default function DashboardPage() {
                 onChange={(e) => setTaskFilter({ ...taskFilter, status: e.target.value || undefined })}
                 className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               >
-                <option value="">{t('dashboard.allStatus')}</option>
+                <option value="">{t('tasks.filterActive')}</option>
                 <option value="open">{t('status.open')}</option>
                 <option value="in-progress">{t('status.inProgress')}</option>
                 <option value="completed">{t('status.completed')}</option>
+                <option value="all">{t('tasks.filterAll')}</option>
               </select>
 
               <select
@@ -624,6 +629,7 @@ export default function DashboardPage() {
                 <button
                   onClick={closeTaskModal}
                   className="text-gray-400 hover:text-gray-600 transition-colors"
+                  aria-label="Dialog schliessen"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

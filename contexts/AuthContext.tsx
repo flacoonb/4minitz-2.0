@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef, useCallback, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 
 interface User {
@@ -42,7 +42,11 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [autoLogoutConfig, setAutoLogoutConfig] = useState<{ enabled: boolean; minutes: number } | null>(null);
   const router = useRouter();
+  const inactivityTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const warningTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [showLogoutWarning, setShowLogoutWarning] = useState(false);
 
   // Role hierarchy for permission checking
   const roleHierarchy = { admin: 3, moderator: 2, user: 1 };
@@ -95,10 +99,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const response = await fetch('/api/auth/me', {
         credentials: 'include',
       });
-      
+
       if (response.ok) {
         const data = await response.json();
         setUser(data.data);
+        if (data.autoLogout) {
+          setAutoLogoutConfig(data.autoLogout);
+        }
       } else {
         setUser(null);
       }
@@ -163,6 +170,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     fetchCurrentUser();
   }, []);
 
+  // Reset inactivity timer on user activity
+  const resetInactivityTimer = useCallback(() => {
+    if (!autoLogoutConfig?.enabled || !user) return;
+
+    // Clear existing timers
+    if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
+    if (warningTimerRef.current) clearTimeout(warningTimerRef.current);
+    setShowLogoutWarning(false);
+
+    const timeoutMs = autoLogoutConfig.minutes * 60 * 1000;
+    // Show warning 2 minutes before logout (or half the time if less than 4 minutes)
+    const warningMs = Math.max(timeoutMs - 2 * 60 * 1000, timeoutMs / 2);
+
+    warningTimerRef.current = setTimeout(() => {
+      setShowLogoutWarning(true);
+    }, warningMs);
+
+    inactivityTimerRef.current = setTimeout(() => {
+      setShowLogoutWarning(false);
+      logout();
+    }, timeoutMs);
+  }, [autoLogoutConfig, user]);
+
+  // Setup activity listeners for auto-logout
+  useEffect(() => {
+    if (!autoLogoutConfig?.enabled || !user) return;
+
+    const activityEvents = ['mousedown', 'keydown', 'scroll', 'touchstart'];
+    const handleActivity = () => resetInactivityTimer();
+
+    activityEvents.forEach(event => {
+      window.addEventListener(event, handleActivity, { passive: true });
+    });
+
+    // Start the initial timer
+    resetInactivityTimer();
+
+    return () => {
+      activityEvents.forEach(event => {
+        window.removeEventListener(event, handleActivity);
+      });
+      if (inactivityTimerRef.current) clearTimeout(inactivityTimerRef.current);
+      if (warningTimerRef.current) clearTimeout(warningTimerRef.current);
+    };
+  }, [autoLogoutConfig, user, resetInactivityTimer]);
+
   const value = {
     user,
     loading,
@@ -177,6 +230,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   return (
     <AuthContext.Provider value={value}>
       {children}
+      {showLogoutWarning && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]">
+          <div className="bg-white rounded-xl shadow-2xl p-6 max-w-sm mx-4 text-center">
+            <div className="bg-amber-100 rounded-full p-3 mx-auto mb-4 w-14 h-14 flex items-center justify-center">
+              <svg className="w-7 h-7 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <h3 className="text-lg font-bold text-gray-900 mb-2">Sitzung läuft ab</h3>
+            <p className="text-gray-600 text-sm mb-4">
+              Sie werden in Kürze wegen Inaktivität automatisch abgemeldet.
+              Bewegen Sie die Maus oder drücken Sie eine Taste, um angemeldet zu bleiben.
+            </p>
+            <button
+              onClick={resetInactivityTimer}
+              className="px-5 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium text-sm"
+            >
+              Angemeldet bleiben
+            </button>
+          </div>
+        </div>
+      )}
     </AuthContext.Provider>
   );
 }

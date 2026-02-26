@@ -39,9 +39,7 @@ export default function MinutesList({ meetingSeriesId }: MinutesListProps) {
         : '/api/minutes';
       
       const response = await fetch(url, {
-        headers: {
-          'x-user-id': 'demo-user',
-        },
+        credentials: 'include',
       });
 
       if (!response.ok) {

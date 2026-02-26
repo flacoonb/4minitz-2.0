@@ -35,7 +35,7 @@ export async function GET(request: NextRequest) {
     const transporter = await getTransporter();
 
     for (const [userId, items] of Object.entries(userNotifications)) {
-      const user = await User.findById(userId);
+      const user = await User.findById(userId).select('-password');
       if (!user || !user.notificationSettings?.enableDigestEmails) {
         // User deleted or disabled digest -> delete notifications
         await PendingNotification.deleteMany({ userId });

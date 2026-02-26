@@ -72,14 +72,18 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({ 
-      success: true, 
+    // Include autoLogout settings for client-side inactivity detection
+    const autoLogout = settings?.systemSettings?.autoLogout ?? { enabled: true, minutes: 480 };
+
+    return NextResponse.json({
+      success: true,
       data: {
         ...user.toJSON(),
         permissions
-      }
+      },
+      autoLogout
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error getting current user:', error);
     return NextResponse.json(
       { error: 'Fehler beim Abrufen der Benutzerdaten' },

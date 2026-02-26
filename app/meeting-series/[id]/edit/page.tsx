@@ -149,7 +149,7 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
       router.push(`/meeting-series/${seriesId}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Fehler beim Speichern');
-      console.error('Save error:', err); // Debug log
+      console.error('Save error:', err);
     } finally {
       setSaving(false);
     }

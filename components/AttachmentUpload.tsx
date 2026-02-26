@@ -63,9 +63,7 @@ export default function AttachmentUpload({
 
       const response = await fetch('/api/attachments', {
         method: 'POST',
-        headers: {
-          'x-user-id': 'demo-user',
-        },
+        credentials: 'include',
         body: formData,
       });
 

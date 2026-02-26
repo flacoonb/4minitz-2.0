@@ -19,14 +19,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: authResult.error || 'Nicht authentifiziert' }, { status: 401 });
     }
 
-    const userId = authResult.user.username;
+    const username = authResult.user.username;
+    const userObjectId = authResult.user._id.toString();
 
-    // Get all meeting series where user has access
+    // Get all meeting series where user has access (uses usernames)
     const meetingSeries = await MeetingSeries.find({
       $or: [
-        { visibleFor: userId },
-        { moderators: userId },
-        { participants: userId },
+        { visibleFor: username },
+        { moderators: username },
+        { participants: username },
       ],
     }).lean();
 
@@ -57,7 +58,8 @@ export async function GET(request: NextRequest) {
     const today = new Date();
 
     // Filter for overdue/upcoming (usually only for tasks assigned to user)
-    const userOpenTasks = openTasks.filter(t => t.responsibles?.includes(userId));
+    // responsibles stores user ObjectIds, not usernames
+    const userOpenTasks = openTasks.filter(t => t.responsibles?.includes(userObjectId));
 
     userOpenTasks.forEach(task => {
       if (task.dueDate) {

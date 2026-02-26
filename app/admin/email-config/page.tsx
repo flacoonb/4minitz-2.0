@@ -148,10 +148,6 @@ export default function EmailConfigPage() {
           success: true,
           message: data.message || t('messages.saveSuccess'),
         });
-        // Show instructions
-        if (data.instructions) {
-          console.log('Configuration Instructions:', data.instructions);
-        }
       } else {
         setResult({
           success: false,

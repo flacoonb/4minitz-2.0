@@ -196,7 +196,7 @@ export async function POST(request: NextRequest) {
         itemsUpdated: updatedCount 
     });
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('Migration error:', error);
     return NextResponse.json({ error: 'Migration failed' }, { status: 500 });
   }

@@ -50,9 +50,7 @@ export default function AttachmentList({ minuteId, onDelete }: AttachmentListPro
       setDeleting(id);
       const response = await fetch(`/api/attachments?id=${id}`, {
         method: 'DELETE',
-        headers: {
-          'x-user-id': 'demo-user',
-        },
+        credentials: 'include',
       });
 
       if (!response.ok) {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import MeetingSeries from '@/models/MeetingSeries';
 import Minutes from '@/models/Minutes';
+import Task from '@/models/Task';
 import { verifyToken } from '@/lib/auth';
 
 /**
@@ -53,14 +54,6 @@ export async function GET(
       .sort({ date: -1 })
       .lean();
 
-    if (!lastMinutes) {
-      return NextResponse.json({
-        success: true,
-        data: [],
-        message: 'No previous minutes found',
-      });
-    }
-
     // If currentMinuteId is provided, get already imported task IDs
     const alreadyImportedTaskIds = new Set<string>();
     if (currentMinuteId) {
@@ -71,52 +64,79 @@ export async function GET(
             if (item.originalTaskId) {
               alreadyImportedTaskIds.add(item.originalTaskId.toString());
             }
+            // Also track externalTaskIds to prevent duplicate import of Task-collection tasks
+            if (item.externalTaskId) {
+              alreadyImportedTaskIds.add(item.externalTaskId.toString());
+            }
           });
         });
       }
     }
 
-    // Extract all open action items (only tasks that are not completed)
     const pendingTasks: any[] = [];
-    
-    lastMinutes.topics?.forEach((topic: any) => {
-      topic.infoItems?.forEach((item: any) => {
-        // Only include action items that are open (not completed)
-        if (item.itemType === 'actionItem' && item.status !== 'completed') {
-          const taskId = item._id.toString();
-          
-          // Skip if this task is already imported in the current minute
-          if (alreadyImportedTaskIds.has(taskId)) {
-            return;
+
+    // 1) Tasks from last finalized minutes (existing carry-over logic)
+    if (lastMinutes) {
+      lastMinutes.topics?.forEach((topic: any) => {
+        topic.infoItems?.forEach((item: any) => {
+          if (item.itemType === 'actionItem' && item.status !== 'completed') {
+            const taskId = item._id.toString();
+            if (alreadyImportedTaskIds.has(taskId)) return;
+
+            pendingTasks.push({
+              _id: item._id,
+              subject: item.subject,
+              details: item.details,
+              priority: item.priority,
+              dueDate: item.dueDate,
+              responsibles: item.responsibles,
+              status: item.status,
+              notes: item.notes,
+              completedAt: item.completedAt,
+              completedBy: item.completedBy,
+              externalTaskId: item.externalTaskId,
+              isImported: true,
+              originalTaskId: taskId,
+            });
           }
-          
-          pendingTasks.push({
-            _id: item._id,
-            subject: item.subject,
-            details: item.details,
-            priority: item.priority,
-            dueDate: item.dueDate,
-            responsibles: item.responsibles,
-            status: item.status,
-            notes: item.notes,
-            completedAt: item.completedAt,
-            completedBy: item.completedBy,
-            externalTaskId: item.externalTaskId, // IMPORTANT: Pass reference to central task
-            isImported: true,
-            originalTaskId: taskId,
-          });
-        }
+        });
       });
-    });
+    }
+
+    // 2) Unbound tasks from Task collection (imported from another series, not yet in any minutes)
+    const unboundTasks = await Task.find({
+      meetingSeriesId: seriesId,
+      status: { $in: ['open', 'in-progress'] },
+      $or: [{ minutesId: null }, { minutesId: { $exists: false } }, { minutesId: '' }],
+    }).lean();
+
+    for (const task of unboundTasks) {
+      const taskId = task._id.toString();
+      if (alreadyImportedTaskIds.has(taskId)) continue;
+
+      pendingTasks.push({
+        _id: task._id,
+        subject: task.subject,
+        details: task.details,
+        priority: task.priority,
+        dueDate: task.dueDate,
+        responsibles: task.responsibles,
+        status: task.status,
+        externalTaskId: taskId,
+        isImported: true,
+        originalTaskId: taskId,
+        isFromTaskRegistry: true, // Flag to distinguish from minutes-based tasks
+      });
+    }
 
     return NextResponse.json({
       success: true,
       data: pendingTasks,
       count: pendingTasks.length,
-      lastMinutesDate: lastMinutes.date
+      lastMinutesDate: lastMinutes?.date || null,
     });
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error fetching pending tasks:', error);
     return NextResponse.json(
       { error: 'Internal server error' },

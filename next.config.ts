@@ -5,6 +5,12 @@ const withNextIntl = createNextIntlPlugin('./i18n.ts');
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
+  serverExternalPackages: [],
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '2mb',
+    },
+  },
   async headers() {
     return [
       {

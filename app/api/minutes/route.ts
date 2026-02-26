@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Build the query with proper filters
-    const query: any = {};
+    const query: Record<string, unknown> = {};
 
     if (meetingSeriesId) {
       query.meetingSeries_id = new mongoose.Types.ObjectId(meetingSeriesId);

@@ -16,6 +16,15 @@ interface MeetingSeries {
   createdAt: string;
 }
 
+interface ImportTask {
+  _id: string;
+  subject: string;
+  status: string;
+  priority: string;
+  dueDate?: string;
+  responsibles: string[];
+}
+
 interface Minute {
   _id: string;
   date: string;
@@ -39,6 +48,16 @@ export default function MeetingSeriesPage() {
   const [error, setError] = useState<string | null>(null);
   const [hasDraft, setHasDraft] = useState(false);
   const [creating, setCreating] = useState(false);
+
+  // Import tasks modal state
+  const [showImportModal, setShowImportModal] = useState(false);
+  const [allSeries, setAllSeries] = useState<{ _id: string; project: string; name?: string }[]>([]);
+  const [importSourceId, setImportSourceId] = useState('');
+  const [importTasks, setImportTasks] = useState<ImportTask[]>([]);
+  const [selectedTaskIds, setSelectedTaskIds] = useState<Set<string>>(new Set());
+  const [loadingImportTasks, setLoadingImportTasks] = useState(false);
+  const [importing, setImporting] = useState(false);
+  const [importResult, setImportResult] = useState<string | null>(null);
 
   // Check permissions
   const isModerator = series?.moderators?.includes(user?.username || '') || false;
@@ -157,6 +176,87 @@ export default function MeetingSeriesPage() {
     }
   };
 
+  const openImportModal = async () => {
+    setShowImportModal(true);
+    setImportSourceId('');
+    setImportTasks([]);
+    setSelectedTaskIds(new Set());
+    setImportResult(null);
+    try {
+      const res = await fetch('/api/meeting-series', { credentials: 'include' });
+      if (res.ok) {
+        const result = await res.json();
+        const others = (result.data || []).filter((s: { _id: string }) => s._id !== seriesId);
+        setAllSeries(others);
+      }
+    } catch { /* ignore */ }
+  };
+
+  const loadSourceTasks = async (sourceId: string) => {
+    setImportSourceId(sourceId);
+    setImportTasks([]);
+    setSelectedTaskIds(new Set());
+    if (!sourceId) return;
+
+    setLoadingImportTasks(true);
+    try {
+      const res = await fetch(`/api/meeting-series/${sourceId}/open-tasks`, { credentials: 'include' });
+      if (res.ok) {
+        const result = await res.json();
+        const tasks = result.data || [];
+        setImportTasks(tasks);
+        setSelectedTaskIds(new Set(tasks.map((t: ImportTask) => t._id)));
+      }
+    } catch { /* ignore */ }
+    finally { setLoadingImportTasks(false); }
+  };
+
+  const toggleTask = (taskId: string) => {
+    setSelectedTaskIds(prev => {
+      const next = new Set(prev);
+      if (next.has(taskId)) next.delete(taskId);
+      else next.add(taskId);
+      return next;
+    });
+  };
+
+  const toggleAllTasks = () => {
+    if (selectedTaskIds.size === importTasks.length) {
+      setSelectedTaskIds(new Set());
+    } else {
+      setSelectedTaskIds(new Set(importTasks.map(t => t._id)));
+    }
+  };
+
+  const executeImport = async () => {
+    if (selectedTaskIds.size === 0) return;
+    setImporting(true);
+    try {
+      const res = await fetch(`/api/meeting-series/${seriesId}/import-tasks`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          sourceSeriesId: importSourceId,
+          taskIds: Array.from(selectedTaskIds),
+        }),
+      });
+      if (res.ok) {
+        const result = await res.json();
+        setImportResult(`${result.imported} Aufgabe(n) erfolgreich übernommen`);
+        setImportTasks([]);
+        setSelectedTaskIds(new Set());
+      } else {
+        const err = await res.json();
+        setImportResult(`Fehler: ${err.error || 'Import fehlgeschlagen'}`);
+      }
+    } catch {
+      setImportResult('Fehler beim Import');
+    } finally {
+      setImporting(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -213,6 +313,17 @@ export default function MeetingSeriesPage() {
               </div>
             </div>
             <div className="flex flex-col items-end gap-3">
+              {canEditSeries && (
+                <button
+                  onClick={openImportModal}
+                  className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  Aufgaben importieren
+                </button>
+              )}
               {canEditSeries && (
                 <Link
                   href={`/meeting-series/${series._id}/edit`}
@@ -317,6 +428,159 @@ export default function MeetingSeriesPage() {
           </div>
         )}
       </div>
+
+      {/* Import Tasks Modal */}
+      {showImportModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <h2 className="text-xl font-bold text-gray-900">Aufgaben importieren</h2>
+                <button
+                  onClick={() => setShowImportModal(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  aria-label="Dialog schliessen"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <p className="text-sm text-gray-600 mt-1">
+                Offene Aufgaben aus einer anderen Sitzungsreihe übernehmen
+              </p>
+            </div>
+
+            <div className="p-6 space-y-4">
+              {/* Source Series Selector */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Quell-Sitzungsreihe
+                </label>
+                <select
+                  value={importSourceId}
+                  onChange={(e) => loadSourceTasks(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                >
+                  <option value="">– Sitzungsreihe wählen –</option>
+                  {allSeries.map(s => (
+                    <option key={s._id} value={s._id}>
+                      {s.project}{s.name ? ` – ${s.name}` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Loading */}
+              {loadingImportTasks && (
+                <div className="flex justify-center py-4">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                </div>
+              )}
+
+              {/* Task List */}
+              {importSourceId && !loadingImportTasks && importTasks.length === 0 && (
+                <div className="text-center py-6 text-gray-500">
+                  Keine offenen Aufgaben in dieser Serie
+                </div>
+              )}
+
+              {importTasks.length > 0 && (
+                <div>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm font-medium text-gray-700">
+                      {selectedTaskIds.size} von {importTasks.length} ausgewählt
+                    </span>
+                    <button
+                      onClick={toggleAllTasks}
+                      className="text-sm text-blue-600 hover:text-blue-800"
+                    >
+                      {selectedTaskIds.size === importTasks.length ? 'Alle abwählen' : 'Alle auswählen'}
+                    </button>
+                  </div>
+
+                  <div className="space-y-2 max-h-[40vh] overflow-y-auto">
+                    {importTasks.map(task => (
+                      <label
+                        key={task._id}
+                        className={`flex items-start gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                          selectedTaskIds.has(task._id)
+                            ? 'border-blue-400 bg-blue-50'
+                            : 'border-gray-200 hover:border-gray-300'
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedTaskIds.has(task._id)}
+                          onChange={() => toggleTask(task._id)}
+                          className="mt-1 h-4 w-4 text-blue-600 rounded"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-gray-900 text-sm">{task.subject}</p>
+                          <div className="flex flex-wrap gap-1.5 mt-1">
+                            <span className={`px-1.5 py-0.5 text-xs rounded ${
+                              task.status === 'in-progress' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'
+                            }`}>
+                              {task.status === 'in-progress' ? 'In Arbeit' : 'Offen'}
+                            </span>
+                            <span className={`px-1.5 py-0.5 text-xs rounded ${
+                              task.priority === 'high' ? 'bg-red-100 text-red-800' :
+                              task.priority === 'medium' ? 'bg-orange-100 text-orange-800' :
+                              'bg-blue-100 text-blue-800'
+                            }`}>
+                              {task.priority === 'high' ? 'Hoch' : task.priority === 'medium' ? 'Mittel' : 'Niedrig'}
+                            </span>
+                            {task.dueDate && (
+                              <span className="px-1.5 py-0.5 text-xs bg-purple-100 text-purple-800 rounded">
+                                Fällig: {new Date(task.dueDate).toLocaleDateString('de-DE')}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Import Result */}
+              {importResult && (
+                <div className={`p-3 rounded-lg text-sm ${
+                  importResult.startsWith('Fehler') ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'
+                }`}>
+                  {importResult}
+                </div>
+              )}
+            </div>
+
+            {/* Actions */}
+            <div className="p-6 border-t border-gray-200 flex justify-end gap-3">
+              <button
+                onClick={() => setShowImportModal(false)}
+                className="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                Schliessen
+              </button>
+              {importTasks.length > 0 && selectedTaskIds.size > 0 && (
+                <button
+                  onClick={executeImport}
+                  disabled={importing}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+                >
+                  {importing ? (
+                    <>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                      Importiere...
+                    </>
+                  ) : (
+                    `${selectedTaskIds.size} Aufgabe(n) importieren`
+                  )}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

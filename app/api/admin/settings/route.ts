@@ -98,7 +98,7 @@ export async function GET(request: NextRequest) {
             dateFormat: 'DD.MM.YYYY',
             timeFormat: '24h',
             enableAuditLog: true,
-            sessionTimeout: 480,
+            autoLogout: { enabled: true, minutes: 480 },
             maxFileUploadSize: 10,
             allowedFileTypes: ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png'],
             baseUrl: 'http://localhost:3000'
@@ -133,7 +133,7 @@ export async function GET(request: NextRequest) {
       data: settings
     });
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error fetching admin settings:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
@@ -200,7 +200,7 @@ export async function PUT(request: NextRequest) {
       data: settings
     });
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error updating admin settings:', error);
     return NextResponse.json(
       { error: 'Internal server error' },

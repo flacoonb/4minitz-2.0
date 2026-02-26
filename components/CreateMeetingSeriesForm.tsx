@@ -30,8 +30,8 @@ export default function CreateMeetingSeriesForm() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': 'demo-user', // TODO: Replace with real auth
         },
+        credentials: 'include',
         body: JSON.stringify({
           project: formData.project,
           name: formData.name,
