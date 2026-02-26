@@ -3,6 +3,7 @@ import { NextRequest } from 'next/server';
 import User, { IUser } from '@/models/User';
 import Settings from '@/models/Settings';
 import connectDB from '@/lib/mongodb';
+import { getJwtSecret } from '@/lib/validateEnv';
 
 
 export interface AuthResult {
@@ -15,20 +16,6 @@ export interface RoleResult {
   success: boolean;
   error?: string;
 }
-
-// async function resolveUserFromHeader(identifier: string): Promise<IUser | null> {
-//   await connectDB();
-//   // Do not special-case 'demo-user' here. Demo fallbacks are controlled
-//   // centrally via environment flags in `verifyToken`.
-
-//   // Try to resolve as ObjectId
-//   if (Types.ObjectId.isValid(identifier)) {
-//     return await User.findById(identifier);
-//   }
-  
-//   // Try to resolve as username
-//   return await User.findOne({ username: identifier });
-// }
 
 export async function verifyToken(request: NextRequest): Promise<AuthResult> {
   try {
@@ -46,7 +33,7 @@ export async function verifyToken(request: NextRequest): Promise<AuthResult> {
     }
 
     // Verify token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback-secret') as any;
+    const decoded = jwt.verify(token, getJwtSecret()) as any;
     
     // Get user
     const user = await User.findById(decoded.userId);
@@ -132,12 +119,7 @@ export async function requireModerator(user: IUser): Promise<RoleResult> {
   };
 }
 
-export function getUserFromRequest(_request: NextRequest): string | null {
-  // Legacy helper: do not derive user from headers anymore.
-  return null;
-}
-
-export function generateToken(user: IUser): string {
+export function generateToken(user: IUser, expiresInSeconds?: number): string {
   return jwt.sign(
     {
       userId: user._id,
@@ -145,8 +127,8 @@ export function generateToken(user: IUser): string {
       username: user.username,
       role: user.role
     },
-    process.env.JWT_SECRET || 'fallback-secret',
-    { expiresIn: '7d' }
+    getJwtSecret(),
+    { expiresIn: expiresInSeconds || 28800 } // Default 8 hours (480 min)
   );
 }
 

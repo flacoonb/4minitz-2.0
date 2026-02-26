@@ -1,10 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import PdfLayoutSettings from '@/models/PdfLayoutSettings';
+import { verifyToken } from '@/lib/auth';
 
 // GET - Retrieve PDF layout settings
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const authResult = await verifyToken(request);
+    if (!authResult.success || !authResult.user) {
+      return NextResponse.json(
+        { success: false, error: authResult.error || 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
     await connectDB();
     
     // Find the most recent settings (there should only be one)
@@ -143,11 +152,25 @@ export async function GET() {
 // PUT - Update or create PDF layout settings
 export async function PUT(request: NextRequest) {
   try {
+    const authResult = await verifyToken(request);
+    if (!authResult.success || !authResult.user) {
+      return NextResponse.json(
+        { success: false, error: authResult.error || 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    if (!['admin', 'moderator'].includes(authResult.user.role)) {
+      return NextResponse.json(
+        { success: false, error: 'Insufficient permissions' },
+        { status: 403 }
+      );
+    }
+
     await connectDB();
-    
+
     const body = await request.json();
-    console.log('PUT body.logo:', JSON.stringify(body.logo, null, 2));
-    
+
     // Find existing settings
     let settings = await PdfLayoutSettings.findOne().sort({ updatedAt: -1 });
     
@@ -206,8 +229,23 @@ export async function PUT(request: NextRequest) {
 }
 
 // DELETE - Reset to default settings
-export async function DELETE() {
+export async function DELETE(request: NextRequest) {
   try {
+    const authResult = await verifyToken(request);
+    if (!authResult.success || !authResult.user) {
+      return NextResponse.json(
+        { success: false, error: authResult.error || 'Unauthorized' },
+        { status: 401 }
+      );
+    }
+
+    if (authResult.user.role !== 'admin') {
+      return NextResponse.json(
+        { success: false, error: 'Admin permissions required' },
+        { status: 403 }
+      );
+    }
+
     await connectDB();
     
     // Delete all settings

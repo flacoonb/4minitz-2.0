@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
+import MeetingSeries from '@/models/MeetingSeries';
 import Minutes from '@/models/Minutes';
 import { verifyToken } from '@/lib/auth';
 
@@ -25,15 +26,25 @@ export async function GET(
     }
 
     const { id: seriesId } = await params;
-    
+
+    // Verify user has access to this series
+    const username = authResult.user.username;
+    const series = await MeetingSeries.findById(seriesId);
+    if (!series) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    }
+    const hasAccess = series.visibleFor?.includes(username) ||
+                      series.moderators?.includes(username) ||
+                      series.participants?.includes(username) ||
+                      authResult.user.role === 'admin';
+    if (!hasAccess) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     // Get the current minute ID from query params (to exclude already imported tasks)
     const { searchParams } = new URL(request.url);
     const currentMinuteId = searchParams.get('minuteId');
     
-    console.log('=== Fetching pending tasks ===');
-    console.log('Series ID:', seriesId);
-    console.log('Current Minute ID:', currentMinuteId);
-
     // Find the last finalized minutes for this series
     const lastMinutes = await Minutes.findOne({
       meetingSeries_id: seriesId,
@@ -54,22 +65,15 @@ export async function GET(
     const alreadyImportedTaskIds = new Set<string>();
     if (currentMinuteId) {
       const currentMinute = await Minutes.findById(currentMinuteId).lean();
-      console.log('Current minute found:', !!currentMinute);
       if (currentMinute) {
-        console.log('Current minute topics count:', currentMinute.topics?.length || 0);
         currentMinute.topics?.forEach((topic: any) => {
           topic.infoItems?.forEach((item: any) => {
-            // Check if this item was imported (has originalTaskId)
             if (item.originalTaskId) {
               alreadyImportedTaskIds.add(item.originalTaskId.toString());
-              console.log('Found imported task:', item.originalTaskId.toString(), '-', item.subject);
             }
           });
         });
-        console.log('Already imported task IDs:', Array.from(alreadyImportedTaskIds));
       }
-    } else {
-      console.log('No currentMinuteId provided - will not filter imported tasks');
     }
 
     // Extract all open action items (only tasks that are not completed)
@@ -83,7 +87,6 @@ export async function GET(
           
           // Skip if this task is already imported in the current minute
           if (alreadyImportedTaskIds.has(taskId)) {
-            console.log('Skipping already imported task:', taskId, item.subject);
             return;
           }
           
@@ -92,7 +95,7 @@ export async function GET(
             subject: item.subject,
             details: item.details,
             priority: item.priority,
-            duedate: item.duedate,
+            dueDate: item.dueDate,
             responsibles: item.responsibles,
             status: item.status,
             notes: item.notes,
@@ -110,12 +113,7 @@ export async function GET(
       success: true,
       data: pendingTasks,
       count: pendingTasks.length,
-      lastMinutesDate: lastMinutes.date,
-      debug: {
-        currentMinuteId,
-        alreadyImportedCount: alreadyImportedTaskIds.size,
-        alreadyImportedIds: Array.from(alreadyImportedTaskIds),
-      }
+      lastMinutesDate: lastMinutes.date
     });
 
   } catch (error: any) {

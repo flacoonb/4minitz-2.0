@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
+import connectDB from '@/lib/mongodb';
 import { testEmailConfiguration } from '@/lib/email-service';
 import Settings from '@/models/Settings';
 import { encrypt } from '@/lib/crypto';
@@ -26,8 +27,10 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    await connectDB();
+
     // Test configuration
-    const isValid = await testEmailConfiguration();
+    const testResult = await testEmailConfiguration();
 
     // Fetch settings from DB
     const settings = await Settings.findOne({}).sort({ version: -1 });
@@ -55,15 +58,12 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({
       success: true,
       config,
-      isValid,
+      isValid: testResult.success,
+      connectionError: testResult.error || null,
     });
-  } catch (error) {
-    console.error('Email config error:', error);
+  } catch {
     return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
-      },
+      { success: false, error: 'Internal server error' },
       { status: 500 }
     );
   }
@@ -90,6 +90,8 @@ export async function PUT(request: NextRequest) {
         { status: 403 }
       );
     }
+
+    await connectDB();
 
     const { host, port, secure, user, password, fromEmail } = await request.json();
 
@@ -118,11 +120,6 @@ export async function PUT(request: NextRequest) {
         roles: { /* defaults will be used */ }
       });
     }
-
-
-
-    // ... (inside PUT handler)
-
     // Update SMTP settings
     settings.smtpSettings = {
       host,
@@ -139,23 +136,20 @@ export async function PUT(request: NextRequest) {
     await settings.save();
 
     // Test the new configuration
-    const isValid = await testEmailConfiguration();
+    const testResult = await testEmailConfiguration();
 
     return NextResponse.json({
       success: true,
-      message: isValid
+      message: testResult.success
         ? 'Email configuration saved and verified successfully.'
-        : 'Configuration saved but connection test failed. Please check your settings.',
-      isValid
+        : `Configuration saved but connection test failed: ${testResult.error}`,
+      isValid: testResult.success,
+      connectionError: testResult.error || null,
     });
 
-  } catch (error) {
-    console.error('Email config update error:', error);
+  } catch {
     return NextResponse.json(
-      {
-        success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
-      },
+      { success: false, error: 'Internal server error' },
       { status: 500 }
     );
   }

@@ -38,6 +38,9 @@ export default function NewMeetingSeriesPage() {
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<string>('');
   
+  // Existing session names for autocomplete
+  const [existingProjectNames, setExistingProjectNames] = useState<string[]>([]);
+
   // Input states for adding participants/informed users (kept for backward compatibility)
   const [newParticipant, setNewParticipant] = useState('');
   const [newInformedUser, setNewInformedUser] = useState('');
@@ -52,8 +55,22 @@ export default function NewMeetingSeriesPage() {
   useEffect(() => {
     if (user && user.role !== 'user') {
       fetchUsers();
+      fetchExistingNames();
     }
   }, [user]);
+
+  const fetchExistingNames = async () => {
+    try {
+      const response = await fetch('/api/meeting-series', { credentials: 'include' });
+      if (response.ok) {
+        const result = await response.json();
+        const names = [...new Set((result.data || []).map((s: { project: string }) => s.project).filter(Boolean))] as string[];
+        setExistingProjectNames(names);
+      }
+    } catch {
+      // ignore
+    }
+  };
 
   const fetchUsers = async () => {
     try {
@@ -70,7 +87,7 @@ export default function NewMeetingSeriesPage() {
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -231,34 +248,43 @@ export default function NewMeetingSeriesPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label htmlFor="project" className="block text-sm font-medium text-gray-700 mb-2">
-                Projekt *
+                Sitzungsname *
               </label>
               <input
                 type="text"
                 id="project"
                 name="project"
+                list="existing-session-names"
                 value={formData.project}
                 onChange={handleInputChange}
                 required
+                autoComplete="off"
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                placeholder="z.B. IT-Projekt Alpha"
+                placeholder="z.B. Vorstandssitzungen"
               />
+              <datalist id="existing-session-names">
+                {existingProjectNames.map(name => (
+                  <option key={name} value={name} />
+                ))}
+              </datalist>
             </div>
 
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                Serie Name *
+                Jahr (optional)
               </label>
-              <input
-                type="text"
+              <select
                 id="name"
                 name="name"
                 value={formData.name}
                 onChange={handleInputChange}
-                required
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                placeholder="z.B. Wöchentliches Standup"
-              />
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white"
+              >
+                <option value="">– kein Jahr –</option>
+                {Array.from({ length: 7 }, (_, i) => new Date().getFullYear() - 2 + i).map(year => (
+                  <option key={year} value={String(year)}>{year}</option>
+                ))}
+              </select>
             </div>
           </div>
 
@@ -456,7 +482,7 @@ export default function NewMeetingSeriesPage() {
           <div className="flex items-center gap-4 pt-6 border-t">
             <button
               type="submit"
-              disabled={loading || !formData.project || !formData.name}
+              disabled={loading || !formData.project}
               className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
               {loading ? (

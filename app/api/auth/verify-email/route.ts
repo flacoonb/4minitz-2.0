@@ -4,6 +4,7 @@ import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { getTranslations } from 'next-intl/server';
+import crypto from 'crypto';
 
 // GET /api/auth/verify-email?token=...
 export async function GET(request: NextRequest) {
@@ -28,9 +29,10 @@ export async function GET(request: NextRequest) {
             return NextResponse.json({ error: t('missingToken') }, { status: 400 });
         }
 
-        // Find user with this token and check expiry
+        // Hash the token and find user (tokens are stored hashed)
+        const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
         const user = await User.findOne({
-            emailVerificationToken: token,
+            emailVerificationToken: tokenHash,
             emailVerificationExpires: { $gt: Date.now() }
         });
 
@@ -50,8 +52,7 @@ export async function GET(request: NextRequest) {
 
         return NextResponse.redirect(loginUrl);
 
-    } catch (error) {
-        console.error('Error verifying email:', error);
+    } catch {
         return NextResponse.json({ error: t('serverError') }, { status: 500 });
     }
 }

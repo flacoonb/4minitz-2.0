@@ -27,12 +27,15 @@ export async function GET(_request: NextRequest) {
             const out = document.getElementById('output');
             btn.disabled = true;
             btn.innerText = 'Processing...';
-            out.innerHTML = 'Running backfill...';
-            
+            out.textContent = 'Running backfill...';
+
             try {
               const res = await fetch('/api/setup/backfill-minutes-id', { method: 'POST' });
               const data = await res.json();
-              out.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+              const pre = document.createElement('pre');
+              pre.textContent = JSON.stringify(data, null, 2);
+              out.textContent = '';
+              out.appendChild(pre);
             } catch (e) {
               out.innerText = 'Error: ' + e.message;
             } finally {
@@ -54,10 +57,12 @@ export async function POST(request: NextRequest) {
   try {
     await connectDB();
 
-    // Security: Only allow authenticated users
     const authResult = await verifyToken(request);
-    if (!authResult.success) {
+    if (!authResult.success || !authResult.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (authResult.user.role !== 'admin') {
+      return NextResponse.json({ error: 'Admin only' }, { status: 403 });
     }
 
     // 1. Fetch all minutes with action items, sorted by date (oldest first)
@@ -65,7 +70,6 @@ export async function POST(request: NextRequest) {
       'topics.infoItems.itemType': 'actionItem',
     }).sort({ date: 1 });
 
-    console.log(`[Backfill] Found ${minutes.length} minutes to process.`);
 
     let updatedCount = 0;
     let errors = 0;
@@ -109,7 +113,7 @@ export async function POST(request: NextRequest) {
   } catch (error: any) {
     console.error('Error during backfill:', error);
     return NextResponse.json(
-      { error: error.message || 'Internal server error' },
+      { error: 'Backfill failed' },
       { status: 500 }
     );
   }

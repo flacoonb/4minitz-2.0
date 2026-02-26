@@ -56,6 +56,16 @@ export interface ISettings extends Document {
     allowedFileTypes: string[];
     baseUrl?: string;
   };
+  smtpSettings?: {
+    host: string;
+    port: number;
+    secure: boolean;
+    auth: {
+      user: string;
+      pass: string; // encrypted
+    };
+    from: string;
+  };
   updatedAt: Date;
   updatedBy: string;
 }
@@ -115,6 +125,16 @@ const SettingsSchema = new Schema<ISettings>({
     maxFileUploadSize: { type: Number, default: 10 },
     allowedFileTypes: { type: [String], default: ['pdf', 'doc', 'docx', 'jpg', 'png'] },
     baseUrl: { type: String }
+  },
+  smtpSettings: {
+    host: { type: String },
+    port: { type: Number, default: 587 },
+    secure: { type: Boolean, default: false },
+    auth: {
+      user: { type: String },
+      pass: { type: String }, // encrypted via lib/crypto
+    },
+    from: { type: String },
   },
   updatedBy: { type: String }
 }, {

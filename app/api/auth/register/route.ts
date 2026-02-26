@@ -83,36 +83,38 @@ export async function POST(request: NextRequest) {
 
     // Check if email verification is required
     // settings is already fetched above
-    const requireEmailVerification = settings?.requireEmailVerification ?? true;
+    const requireEmailVerification = settings?.memberSettings?.requireEmailVerification ?? true;
 
     if (requireEmailVerification) {
       // Generate verification token (valid for 24 hours)
       const verificationToken = crypto.randomBytes(32).toString('hex');
+      const tokenHash = crypto.createHash('sha256').update(verificationToken).digest('hex');
       const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
 
-      newUser.emailVerificationToken = verificationToken;
+      newUser.emailVerificationToken = tokenHash;
       newUser.emailVerificationExpires = verificationExpires;
       await newUser.save();
 
       // Send verification email
+      let emailSent = false;
       try {
         await sendVerificationEmail({
           email: newUser.email,
           firstName: newUser.firstName,
           lastName: newUser.lastName
         }, verificationToken);
-        console.log('Verification email sent to:', newUser.email);
-      } catch (emailError) {
-        console.error('Failed to send verification email:', emailError);
+        emailSent = true;
+      } catch {
         // Continue registration even if email fails
       }
+      (newUser as any)._emailSent = emailSent;
     } else {
       // If verification not required, send welcome email instead
       sendWelcomeEmail({
         email: newUser.email,
         firstName: newUser.firstName,
         lastName: newUser.lastName
-      }).catch(err => console.error('Failed to send welcome email:', err));
+      }).catch(() => {});
     }
 
     // Return user without password
@@ -124,17 +126,15 @@ export async function POST(request: NextRequest) {
         ? t('registrationSuccessVerify')
         : t('registrationSuccess'),
       data: userResponse,
-      requiresVerification: requireEmailVerification
+      requiresVerification: requireEmailVerification,
+      emailSent: (newUser as any)._emailSent !== false,
     }, { status: 201 });
 
   } catch (error: any) {
-    console.error('Error registering user:', error);
-
     // Handle validation errors
     if (error.name === 'ValidationError') {
-      const validationErrors = Object.values(error.errors).map((err: any) => err.message);
       return NextResponse.json(
-        { error: `Validierungsfehler: ${validationErrors.join(', ')}` },
+        { error: t('validationError') },
         { status: 400 }
       );
     }

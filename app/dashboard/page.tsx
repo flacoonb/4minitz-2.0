@@ -450,7 +450,7 @@ export default function DashboardPage() {
               ) : (
                 tasks.map((task) => {
                   const isOverdue = task.dueDate && new Date(task.dueDate) < new Date() && task.status !== 'completed';
-                  const seriesName = task.meetingSeries?.name || t('dashboard.noSeries');
+                  const seriesName = task.meetingSeries?.project || t('dashboard.noSeries');
                   const seriesProject = task.meetingSeries?.project || '';
 
                   return (
@@ -617,8 +617,8 @@ export default function DashboardPage() {
                 <div>
                   <h2 className="text-2xl font-bold text-gray-900">{t('dashboard.editTask')}</h2>
                   <p className="text-sm text-gray-600 mt-1">
-                    {editingTask.meetingSeries?.project ? `${editingTask.meetingSeries.project} • ` : ''}
-                    {(editingTask.meetingSeries?.name || t('dashboard.noSeries'))} • {editingTask.topicSubject}
+                    {(editingTask.meetingSeries?.project || t('dashboard.noSeries'))}
+                    {editingTask.meetingSeries?.name ? ` – ${editingTask.meetingSeries.name}` : ''} • {editingTask.topicSubject}
                   </p>
                 </div>
                 <button

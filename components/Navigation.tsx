@@ -41,8 +41,8 @@ export default function Navigation() {
 
   const navItems = [
     { href: '/dashboard', label: t('dashboard'), icon: 'dashboard' },
-    ...(hasPermission('canCreateMeetings') ? [{ href: '/meeting-series', label: t('meetingSeries'), icon: 'series' }] : []),
-    { href: '/minutes', label: t('minutes'), icon: 'minutes' },
+    { href: '/meeting-series', label: t('meetingSeries'), icon: 'series' },
+    { href: '/tasks', label: t('tasks'), icon: 'tasks' },
   ];
 
   const adminItems = [
@@ -51,6 +51,7 @@ export default function Navigation() {
 
   const isActive = (href: string) => {
     if (href === '/') return pathname === '/';
+    if (href === '/meeting-series') return pathname.startsWith('/meeting-series') || pathname.startsWith('/minutes');
     return pathname.startsWith(href);
   };
 

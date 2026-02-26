@@ -33,8 +33,10 @@ export async function GET(request: NextRequest) {
       responsibles: userId
     };
 
-    if (status) query.status = status;
-    if (priority) query.priority = priority;
+    const validStatuses = ['open', 'in-progress', 'completed', 'cancelled'];
+    const validPriorities = ['high', 'medium', 'low'];
+    if (status && validStatuses.includes(status)) query.status = status;
+    if (priority && validPriorities.includes(priority)) query.priority = priority;
     if (overdue === 'true') {
       query.dueDate = { $lt: new Date() };
       // Only consider open tasks as overdue
@@ -70,9 +72,7 @@ export async function GET(request: NextRequest) {
     const enrichedTasks = tasks.map(task => ({
       ...task,
       meetingSeries: seriesMap.get(task.meetingSeriesId) || null,
-      // Map fields to match frontend expectations
-      duedate: task.dueDate, 
-      minutesId: task.minutesId || 'central', 
+      minutesId: task.minutesId || 'central',
       topicSubject: (task.topicId && topicMap.get(task.topicId)) || 'Task', 
     }));
 

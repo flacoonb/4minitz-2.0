@@ -27,10 +27,10 @@ export interface IInfoItem {
   _id?: string;
   subject: string;
   details?: string; // Detailed description from protocol
-  isOpen: boolean;
+  isOpen?: boolean; // Legacy field, use status instead
   itemType: 'actionItem' | 'infoItem';
   priority?: 'high' | 'medium' | 'low';
-  duedate?: Date;
+  dueDate?: Date;
   responsibles: string[];
   labels?: string[];
   // Extended fields for task management
@@ -110,7 +110,7 @@ const InfoItemSchema = new Schema<IInfoItem>({
     enum: ['high', 'medium', 'low'],
     default: 'medium',
   },
-  duedate: {
+  dueDate: {
     type: Date,
   },
   responsibles: [{
@@ -306,7 +306,7 @@ MinutesSchema.index({ createdAt: -1 });
 MinutesSchema.virtual('openActionItemsCount').get(function () {
   return this.topics.reduce((count, topic) => {
     return count + (topic.infoItems?.filter(item =>
-      item.itemType === 'actionItem' && item.isOpen
+      item.itemType === 'actionItem' && item.status !== 'completed' && item.status !== 'cancelled'
     ).length || 0);
   }, 0);
 });

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
 import Settings from '@/models/Settings';
-import jwt from 'jsonwebtoken';
+import { generateToken } from '@/lib/auth';
 import { logAction } from '@/lib/audit';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { getTranslations } from 'next-intl/server';
@@ -96,19 +96,9 @@ export async function POST(request: NextRequest) {
     // settings already fetched above
     const sessionTimeoutMinutes = settings?.systemSettings?.sessionTimeout || 480; // Default 8 hours
     const sessionTimeoutSeconds = sessionTimeoutMinutes * 60;
-    const sessionTimeoutMs = sessionTimeoutSeconds * 1000;
 
-    // Generate JWT token
-    const token = jwt.sign(
-      {
-        userId: user._id,
-        email: user.email,
-        username: user.username,
-        role: user.role
-      },
-      process.env.JWT_SECRET || 'fallback-secret',
-      { expiresIn: sessionTimeoutSeconds }
-    );
+    // Generate JWT token with settings-based expiry
+    const token = generateToken(user, sessionTimeoutSeconds);
 
     // Create response with user data
     const userResponse = user.toJSON();
@@ -118,13 +108,12 @@ export async function POST(request: NextRequest) {
       success: true,
       message: t('loginSuccess'),
       user: userResponse,
-      token
     });
 
     // Determine if we should use secure cookies
     // In production, we usually want secure cookies, unless we are explicitly running on HTTP (e.g. local network)
     const isProduction = process.env.NODE_ENV === 'production';
-    const isHttp = process.env.NEXTAUTH_URL?.startsWith('http://');
+    const isHttp = process.env.APP_URL?.startsWith('http://');
     const useSecureCookies = isProduction && !isHttp && process.env.DISABLE_SECURE_COOKIES !== 'true';
 
     // Set secure cookie
@@ -134,7 +123,7 @@ export async function POST(request: NextRequest) {
       httpOnly: true,
       secure: useSecureCookies,
       sameSite: 'lax', // Changed from strict to lax to be more forgiving
-      maxAge: sessionTimeoutMs
+      maxAge: sessionTimeoutSeconds
     });
 
     // Set locale cookie if user has a preference
@@ -153,7 +142,6 @@ export async function POST(request: NextRequest) {
     return response;
 
   } catch (error: any) {
-    console.error('Error logging in user:', error);
     return NextResponse.json(
       { error: t('loginError') },
       { status: 500 }

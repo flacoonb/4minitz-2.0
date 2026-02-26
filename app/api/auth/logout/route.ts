@@ -11,7 +11,7 @@ export async function POST(_request: NextRequest) {
 
     // Determine if we should use secure cookies
     const isProduction = process.env.NODE_ENV === 'production';
-    const isHttp = process.env.NEXTAUTH_URL?.startsWith('http://');
+    const isHttp = process.env.APP_URL?.startsWith('http://');
     const useSecureCookies = isProduction && !isHttp && process.env.DISABLE_SECURE_COOKIES !== 'true';
 
     // Clear auth cookie

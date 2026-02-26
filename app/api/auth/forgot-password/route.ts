@@ -4,7 +4,7 @@ import User from '@/models/User';
 import { checkRateLimit } from '@/lib/rate-limit';
 import crypto from 'crypto';
 import { getTranslations } from 'next-intl/server';
-import { sendPasswordResetEmail } from '@/lib/emailService';
+import { sendPasswordResetEmail } from '@/lib/email-service';
 
 // POST /api/auth/forgot-password
 export async function POST(request: NextRequest) {
@@ -51,8 +51,8 @@ export async function POST(request: NextRequest) {
           token,
           locale
         );
-      } catch (emailError) {
-        console.error('Failed to send password reset email:', emailError);
+      } catch {
+        // Continue even if email fails — don't leak timing info
       }
     }
 
@@ -60,8 +60,7 @@ export async function POST(request: NextRequest) {
       success: true,
       message: t('passwordResetEmailSent'),
     });
-  } catch (error) {
-    console.error('Error requesting password reset:', error);
+  } catch {
     return NextResponse.json({ error: t('serverError') }, { status: 500 });
   }
 }

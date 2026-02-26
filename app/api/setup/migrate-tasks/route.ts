@@ -27,12 +27,15 @@ export async function GET(_request: NextRequest) {
             const out = document.getElementById('output');
             btn.disabled = true;
             btn.innerText = 'Migrating...';
-            out.innerHTML = 'Running migration...';
-            
+            out.textContent = 'Running migration...';
+
             try {
               const res = await fetch('/api/setup/migrate-tasks', { method: 'POST' });
               const data = await res.json();
-              out.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+              const pre = document.createElement('pre');
+              pre.textContent = JSON.stringify(data, null, 2);
+              out.textContent = '';
+              out.appendChild(pre);
             } catch (e) {
               out.innerText = 'Error: ' + e.message;
             } finally {
@@ -54,18 +57,19 @@ export async function POST(request: NextRequest) {
   try {
     await connectDB();
 
-    // Security: Only allow authenticated users
     const authResult = await verifyToken(request);
-    if (!authResult.success) {
+    if (!authResult.success || !authResult.user) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (authResult.user.role !== 'admin') {
+      return NextResponse.json({ error: 'Admin only' }, { status: 403 });
     }
 
     // 1. Fetch all minutes with action items
     const minutes = await Minutes.find({
       'topics.infoItems.itemType': 'actionItem',
-    }).sort({ date: 1 }); // Process oldest to newest
+    }).sort({ date: 1 });
 
-    console.log(`[Migration] Found ${minutes.length} minutes to process.`);
 
     // 2. Extract all action items
     const allItems: any[] = [];
@@ -129,8 +133,6 @@ export async function POST(request: NextRequest) {
       chains.get(rootId)!.push(entry);
     });
 
-    console.log(`[Migration] Identified ${chains.size} unique task chains.`);
-
     // 4. Process chains
     let createdCount = 0;
     let updatedCount = 0;
@@ -160,7 +162,7 @@ export async function POST(request: NextRequest) {
           details: latestItem.details,
           status: latestItem.status || 'open',
           priority: latestItem.priority || 'medium',
-          dueDate: latestItem.duedate,
+          dueDate: latestItem.dueDate,
           responsibles: latestItem.responsibles || [],
           meetingSeriesId: latestEntry.meetingSeriesId,
           createdBy: 'migration', 
@@ -196,6 +198,6 @@ export async function POST(request: NextRequest) {
 
   } catch (error: any) {
     console.error('Migration error:', error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Migration failed' }, { status: 500 });
   }
 }

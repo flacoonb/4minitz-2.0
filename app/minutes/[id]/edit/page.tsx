@@ -886,9 +886,6 @@ interface InfoItem {
   subject: string;
   details?: string;
   itemType: 'actionItem' | 'infoItem';
-  isComplete?: boolean;
-  isOpen?: boolean;
-  // Task management fields
   status?: 'open' | 'in-progress' | 'completed' | 'cancelled';
   priority?: 'high' | 'medium' | 'low';
   dueDate?: string;
@@ -960,6 +957,7 @@ interface FormData {
 export default function EditMinutePage({ params }: { params: Promise<{ id: string }> }) {
   const t = useTranslations('minutes');
   const tCommon = useTranslations('common');
+  const tNav = useTranslations('nav');
   const locale = useLocale();
   const router = useRouter();
   const [minute, setMinute] = useState<Minute | null>(null);
@@ -1033,20 +1031,6 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
           const result = await response.json();
           const minuteData = result.data;
 
-          // Convert duedate to dueDate for all infoItems
-          if (minuteData.topics) {
-            minuteData.topics = minuteData.topics.map((topic: any) => ({
-              ...topic,
-              infoItems: topic.infoItems?.map((item: any) => {
-                const updatedItem = { ...item };
-                if (item.duedate !== undefined) {
-                  updatedItem.dueDate = item.duedate;
-                  delete updatedItem.duedate;
-                }
-                return updatedItem;
-              })
-            }));
-          }
 
           setMinute(minuteData);
 
@@ -1143,13 +1127,9 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
     setLoadingPendingTasks(true);
     try {
       const seriesId = minute.meetingSeries_id._id || minute.meetingSeries_id;
-      console.log('=== Fetching pending tasks ===');
-      console.log('Series ID:', seriesId);
-      console.log('Current Minute ID:', minuteId);
 
       // Include minuteId to filter out already imported tasks
       const url = `/api/meeting-series/${seriesId}/pending-tasks?minuteId=${minuteId}`;
-      console.log('Fetching from URL:', url);
 
       const response = await fetch(url, {
         credentials: 'include', // Cookie-based authentication
@@ -1157,10 +1137,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
 
       if (response.ok) {
         const result = await response.json();
-        console.log('Pending tasks response:', result);
-        console.log('Tasks count:', result.data?.length || 0);
         if (result.debug) {
-          console.log('Debug info from API:', result.debug);
         }
         setPendingTasks(result.data || []);
         setShowPendingTasks(true); // Always set to true after loading, regardless of results
@@ -1197,7 +1174,6 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
 
     if (importedIds.size > 0) {
       importedTaskIdsRef.current = importedIds;
-      console.log('Initialized importedTaskIdsRef with existing imports:', Array.from(importedIds));
     }
   }, [formData.topics]); // Re-run when topics change
 
@@ -1217,55 +1193,33 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
   const importPendingTask = (e: React.MouseEvent<HTMLButtonElement>, task: any) => {
     const taskId = task._id || task.id;
 
-    console.log('=== importPendingTask called ===');
-    console.log('Task ID:', taskId);
-
     // ULTRA-FAST GUARD: Check if this exact task is CURRENTLY being processed in this very moment
     if (currentlyProcessingTaskIdRef.current === taskId) {
-      console.log('🚫 ULTRA-FAST BLOCK: This task is being processed RIGHT NOW!');
-      console.log('Currently processing:', currentlyProcessingTaskIdRef.current);
       return; // Silent block - no alert needed
     }
 
     // Set as currently processing IMMEDIATELY
     currentlyProcessingTaskIdRef.current = taskId;
-    console.log('🔒 Locked task for processing:', taskId);
-
-    console.log('Task ID type:', typeof taskId);
-    console.log('Task ID length:', taskId?.length);
-    console.log('Task._id:', task._id, 'type:', typeof task._id);
-    console.log('Task.id:', task.id, 'type:', typeof task.id);
 
     // FIRST GUARD: Check if this specific task is already being imported or was imported
     const hasTask = importedTaskIdsRef.current.has(taskId);
-    console.log('Has task in Set?', hasTask);
-    console.log('Set contents:', Array.from(importedTaskIdsRef.current));
-    console.log('Set size:', importedTaskIdsRef.current.size);
 
     if (hasTask) {
-      console.log('⚠️ BLOCKED: Task already imported:', taskId);
       currentlyProcessingTaskIdRef.current = null; // Release ultra-fast lock
       return;
     }
 
     // Add to imported set IMMEDIATELY - this is our PRIMARY guard
     importedTaskIdsRef.current.add(taskId);
-    console.log('✓ Added task to importedTaskIdsRef:', taskId);
-    console.log('Set after add:', Array.from(importedTaskIdsRef.current));
-    console.log('Set size after add:', importedTaskIdsRef.current.size);
 
     // SECOND GUARD: Check if ANY import is in progress
     if (importInProgressRef.current) {
-      console.log('⚠️ BLOCKED: Another import is already in progress');
       // Don't remove from imported set - we want to keep it marked as imported
       return;
     }
 
     // Set import in progress flag
     importInProgressRef.current = true;
-    console.log('✓ Import lock acquired');
-
-    console.log('Task to import:', task);
 
     // Also check formData state as backup
     const existingIds: string[] = [];
@@ -1273,34 +1227,25 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
       topic.infoItems?.forEach((item, itemIndex) => {
         if (item.originalTaskId) {
           existingIds.push(item.originalTaskId);
-          console.log(`Found existing import in state: Topic ${topicIndex}, Item ${itemIndex}, ID: ${item.originalTaskId}`);
         }
       });
     });
-    console.log('Already imported task IDs (from state):', existingIds);
 
     const isAlreadyImportedInState = formData.topics.some(topic =>
       topic.infoItems?.some(item => item.originalTaskId === taskId)
     );
 
-    console.log('Is already imported in state?', isAlreadyImportedInState);
-
     if (isAlreadyImportedInState) {
-      console.log('=== importPendingTask aborted (duplicate in state) ===');
       // Remove from ref since state already has it
       importedTaskIdsRef.current.delete(taskId);
       importInProgressRef.current = false; // Release lock
       currentlyProcessingTaskIdRef.current = null; // Release ultra-fast lock
-      console.log('✓ Import lock released (duplicate in state)');
       return;
     }
 
     // Remove task from pending list IMMEDIATELY to prevent double clicks
-    console.log('Removing task from pending list (immediate)');
     setPendingTasks(prev => {
       const filtered = prev.filter(t => (t._id || t.id) !== taskId);
-      console.log('Pending tasks before removal:', prev.length);
-      console.log('Pending tasks after removal:', filtered.length);
       return filtered;
     });
 
@@ -1310,19 +1255,16 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
       details: task.details,
       itemType: 'actionItem',
       priority: task.priority || 'medium',
-      dueDate: task.duedate ? new Date(task.duedate).toISOString().split('T')[0] : undefined,
+      dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : undefined,
       responsibles: task.responsibles || [],
       status: task.status || 'open',
       notes: task.notes,
-      isOpen: true,
       parentMinutesId: task.parentMinutesId,
       parentItemId: task.parentItemId || taskId, // Link to parent (root) or previous task
       isImported: true, // Mark as imported
       originalTaskId: taskId, // Store original task ID
       externalTaskId: task.externalTaskId, // Link to Central Task Registry
     };
-
-    console.log('Creating new InfoItem with originalTaskId:', newInfoItem.originalTaskId);
 
     setFormData(prev => {
       const topics = [...prev.topics];
@@ -1333,7 +1275,6 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
       );
 
       if (alreadyExists) {
-        console.log('⚠️ Task already exists in formData - skipping add (StrictMode protection)');
         return prev; // Return unchanged state
       }
 
@@ -1341,7 +1282,6 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
       const pendenzenIndex = topics.findIndex(t => t.subject === 'Pendenzen aus letztem Protokoll');
 
       if (pendenzenIndex === -1) {
-        console.log('Creating new "Pendenzen aus letztem Protokoll" topic');
         // Create new topic at the beginning
         topics.unshift({
           subject: 'Pendenzen aus letztem Protokoll',
@@ -1349,13 +1289,11 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
           infoItems: [newInfoItem],
         });
       } else {
-        console.log('Adding to existing "Pendenzen aus letztem Protokoll" topic at index:', pendenzenIndex);
         // Add to existing topic
         if (!topics[pendenzenIndex].infoItems) {
           topics[pendenzenIndex].infoItems = [];
         }
         topics[pendenzenIndex].infoItems!.push(newInfoItem);
-        console.log('Total items in topic now:', topics[pendenzenIndex].infoItems!.length);
       }
 
       return { ...prev, topics };
@@ -1365,11 +1303,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
     setTimeout(() => {
       importInProgressRef.current = false;
       currentlyProcessingTaskIdRef.current = null; // Release ultra-fast lock
-      console.log('✓ Import lock released (successful import)');
-      console.log('✓ Ultra-fast lock released');
     }, 100);
-
-    console.log('=== importPendingTask completed successfully ===');
   };
 
   const addGuest = () => {
@@ -1471,7 +1405,6 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
                 subject: '',
                 details: '',
                 itemType: 'infoItem' as const,
-                isComplete: false,
                 status: 'open',
                 priority: 'medium',
                 responsibles: []
@@ -1575,7 +1508,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
         <div className="text-center">
           <h1 className="text-2xl font-bold text-red-600 mb-4">{tCommon('error')}</h1>
           <p className="text-gray-600">{error || t('notFound')}</p>
-          <Link href="/minutes" className="text-blue-600 hover:text-blue-800 mt-4 inline-block">
+          <Link href="/meeting-series" className="text-blue-600 hover:text-blue-800 mt-4 inline-block">
             {t('backToOverview')}
           </Link>
         </div>
@@ -1588,14 +1521,29 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
       <div className="max-w-6xl mx-auto space-y-8">
         {/* Header */}
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-gray-100">
-          <div className="flex items-center gap-4 mb-6">
-            <Link href={`/minutes/${minuteId}`} className="text-blue-600 hover:text-blue-800 transition-colors">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
+          {/* Breadcrumb */}
+          <nav className="flex items-center gap-2 text-sm text-gray-500 mb-3 flex-wrap">
+            <Link href="/meeting-series" className="hover:text-blue-600 transition-colors">
+              {tNav('meetingSeries')}
             </Link>
-            <h1 className="text-3xl font-bold text-gray-900">{t('editMinute')}</h1>
-          </div>
+            {minute?.meetingSeries_id?._id && (
+              <>
+                <span className="text-gray-400">›</span>
+                <Link href={`/meeting-series/${minute.meetingSeries_id._id}`} className="hover:text-blue-600 transition-colors">
+                  {minute.meetingSeries_id.project && minute.meetingSeries_id.name
+                    ? `${minute.meetingSeries_id.project} – ${minute.meetingSeries_id.name}`
+                    : minute.meetingSeries_id.name || minute.meetingSeries_id.project || 'Series'}
+                </Link>
+              </>
+            )}
+            <span className="text-gray-400">›</span>
+            <Link href={`/minutes/${minuteId}`} className="hover:text-blue-600 transition-colors">
+              {minute?.date ? new Date(minute.date).toLocaleDateString() : 'Protokoll'}
+            </Link>
+            <span className="text-gray-400">›</span>
+            <span className="text-gray-900 font-medium">{tCommon('edit')}</span>
+          </nav>
+          <h1 className="text-3xl font-bold text-gray-900 mb-6">{t('editMinute')}</h1>
         </div>
 
         {/* Sticky Save Button */}
@@ -1884,8 +1832,8 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
 
                                 <div className="flex flex-wrap gap-2 text-xs text-gray-600 mb-2">
                                   <span>📋 {t('topicLabel')} {task.topicSubject}</span>
-                                  {task.duedate && (
-                                    <span>• ⏰ {t('dueLabel')} {new Date(task.duedate).toLocaleDateString(locale)}</span>
+                                  {task.dueDate && (
+                                    <span>• ⏰ {t('dueLabel')} {new Date(task.dueDate).toLocaleDateString(locale)}</span>
                                   )}
                                   {task.responsibles && task.responsibles.length > 0 && (
                                     <span>• 👤 {task.responsibles.length} {t('responsibles')}</span>

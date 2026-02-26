@@ -20,6 +20,28 @@ interface MeetingSeries {
   createdAt: string;
 }
 
+const YEAR_COLORS = [
+  { bg: '#3b82f6', text: '#ffffff' }, // blue
+  { bg: '#10b981', text: '#ffffff' }, // emerald
+  { bg: '#8b5cf6', text: '#ffffff' }, // purple
+  { bg: '#f59e0b', text: '#ffffff' }, // amber
+  { bg: '#f43f5e', text: '#ffffff' }, // rose
+  { bg: '#06b6d4', text: '#ffffff' }, // cyan
+  { bg: '#f97316', text: '#ffffff' }, // orange
+];
+
+function getYearColor(name: string): { bg: string; text: string } {
+  const year = parseInt(name, 10);
+  if (!isNaN(year)) {
+    return YEAR_COLORS[year % YEAR_COLORS.length];
+  }
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return YEAR_COLORS[Math.abs(hash) % YEAR_COLORS.length];
+}
+
 export default function MeetingSeriesList() {
   const t = useTranslations();
   const { hasPermission } = useAuth();
@@ -148,14 +170,19 @@ export default function MeetingSeriesList() {
             href={`/meeting-series/${item._id}`}
             className="group block p-6 bg-white/80 backdrop-blur-sm border border-gray-200 rounded-2xl shadow-lg hover:shadow-2xl hover:border-blue-300 hover:scale-[1.02] transition-all duration-300"
           >
-            <div className="mb-3">
-              <span className="text-xs font-semibold text-blue-600 bg-gradient-to-r from-blue-50 to-indigo-50 px-3 py-1.5 rounded-lg">
-                {item.project}
-              </span>
-            </div>
-            
+            {item.name && (
+              <div className="mb-3">
+                <span
+                  className="text-xs font-semibold px-3 py-1.5 rounded-lg"
+                  style={{ backgroundColor: getYearColor(item.name).bg, color: getYearColor(item.name).text }}
+                >
+                  {item.name}
+                </span>
+              </div>
+            )}
+
             <h3 className="text-lg font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors">
-              {item.name}
+              {item.project}
             </h3>
             
             <div className="space-y-2 text-sm text-gray-600">

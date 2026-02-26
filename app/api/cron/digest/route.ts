@@ -6,16 +6,16 @@ import { getTransporter, generateEmailHTML, getFromEmail, getAppUrl } from '@/li
 
 export async function GET(request: NextRequest) {
   try {
-    // Security check (optional secret)
+    // Security check (mandatory secret)
     const cronSecret = request.headers.get('x-cron-secret');
-    if (process.env.CRON_SECRET && cronSecret !== process.env.CRON_SECRET) {
+    if (!process.env.CRON_SECRET || cronSecret !== process.env.CRON_SECRET) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
     await connectDB();
 
-    // Get all pending notifications
-    const notifications = await PendingNotification.find({}).sort({ createdAt: 1 });
+    // Get pending notifications (limit to prevent memory exhaustion)
+    const notifications = await PendingNotification.find({}).sort({ createdAt: 1 }).limit(5000);
     
     if (notifications.length === 0) {
       return NextResponse.json({ message: 'No pending notifications' });

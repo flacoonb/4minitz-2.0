@@ -19,7 +19,7 @@ export async function GET(
 
     const { id } = await params;
 
-    const minutes = await EnhancedMinutes.findOne({ _id: id, userId })
+    const minutes = await EnhancedMinutes.findOne({ _id: id, visibleFor: userId })
       .populate('meetingSeries_id', 'project name participants')
       .lean();
 
@@ -61,10 +61,12 @@ export async function PUT(
     const { id } = await params;
     const updates = await request.json();
 
-    // Remove userId and meetingSeries_id from updates for security
-    delete updates.userId;
+    // Remove protected fields from updates for security
+    delete updates.visibleFor;
     delete updates.meetingSeries_id;
     delete updates._id;
+    delete updates.isFinalized;
+    delete updates.createdBy;
 
     // Process agenda items to maintain numbering
     if (updates.agendaItems) {
@@ -81,7 +83,7 @@ export async function PUT(
     }
 
     const updatedMinutes = await EnhancedMinutes.findOneAndUpdate(
-      { _id: id, userId },
+      { _id: id, visibleFor: userId },
       { 
         ...updates,
         updatedAt: new Date()
@@ -137,7 +139,7 @@ export async function DELETE(
 
     const deletedMinutes = await EnhancedMinutes.findOneAndDelete({
       _id: id,
-      userId
+      visibleFor: userId
     });
 
     if (!deletedMinutes) {

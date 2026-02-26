@@ -3,28 +3,33 @@ import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
 import Settings from '@/models/Settings';
 import { encrypt } from '@/lib/crypto';
-import fs from 'fs';
+import fs from 'fs/promises';
 import path from 'path';
 
 const SETUP_TOKEN_FILE = path.resolve(process.cwd(), '.setup_token');
 
-function isTokenRequired() {
-  return fs.existsSync(SETUP_TOKEN_FILE);
+async function isTokenRequired() {
+  try {
+    await fs.access(SETUP_TOKEN_FILE);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
-function providedTokenMatches(body: any, request: Request | undefined) {
-  if (!isTokenRequired()) return true;
+async function providedTokenMatches(body: any, request: Request | undefined) {
+  if (!(await isTokenRequired())) return true;
   let provided = '';
   try {
     if (request && typeof (request as any).headers?.get === 'function') {
       provided = (request as any).headers.get('x-setup-token') || '';
     }
-  } catch (_e) { }
+  } catch { /* ignore */ }
   if (!provided && body && body.token) provided = body.token;
   try {
-    const expected = fs.readFileSync(SETUP_TOKEN_FILE, 'utf8').trim();
+    const expected = (await fs.readFile(SETUP_TOKEN_FILE, 'utf8')).trim();
     return provided === expected;
-  } catch (_e) {
+  } catch {
     return false;
   }
 }
@@ -34,9 +39,8 @@ export async function GET() {
     await connectDB();
     const count = await User.countDocuments({});
     return NextResponse.json({ success: true, needsSetup: count === 0 });
-  } catch (err) {
-    console.error('Setup GET error', err);
-    return NextResponse.json({ success: false, error: (err as any).message || String(err), stack: (err as any).stack }, { status: 500 });
+  } catch {
+    return NextResponse.json({ success: false, error: 'Setup check failed' }, { status: 500 });
   }
 }
 
@@ -45,7 +49,7 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
 
     // If a setup token exists, require it for web-setup POST
-    if (!providedTokenMatches(body, request as unknown as Request)) {
+    if (!(await providedTokenMatches(body, request as unknown as Request))) {
       return NextResponse.json({ success: false, error: 'Invalid or missing setup token' }, { status: 403 });
     }
 
@@ -126,40 +130,31 @@ export async function POST(request: NextRequest) {
     try {
       const envPath = path.resolve(process.cwd(), '.env.local');
       let envContent = '';
-      if (fs.existsSync(envPath)) {
-        envContent = fs.readFileSync(envPath, 'utf8');
-      }
+      try {
+        envContent = await fs.readFile(envPath, 'utf8');
+      } catch { /* file doesn't exist yet */ }
 
       if (!envContent.includes(`MONGODB_URI=${mongoUri}`)) {
-        // Remove existing MONGODB_URI if present
         envContent = envContent.replace(/^MONGODB_URI=.*$/m, '');
-        // Append new URI
         envContent += `\nMONGODB_URI=${mongoUri}\n`;
-        fs.writeFileSync(envPath, envContent.trim() + '\n');
-        console.log('Updated .env.local with new MONGODB_URI');
+        await fs.writeFile(envPath, envContent.trim() + '\n');
       }
-    } catch (e) {
-      console.error('Failed to write .env.local', e);
-      // Don't fail the request, just log warning. User might need to set it manually.
+    } catch {
+      // Non-critical: user may need to set MONGODB_URI manually
     }
 
     // Delete setup token file to prevent reuse
     try {
-      if (fs.existsSync(SETUP_TOKEN_FILE)) {
-        fs.unlinkSync(SETUP_TOKEN_FILE);
-        console.log('Deleted setup token file');
-      }
-    } catch (e) {
-      console.error('Failed to delete setup token file', e);
-      // Non-critical error, but should be logged
+      await fs.unlink(SETUP_TOKEN_FILE);
+    } catch {
+      // Non-critical: token file cleanup failed
     }
 
-    return NextResponse.json({ success: true, message: 'Initial admin created', user: { id: user._id, email: user.email, username: user.username } });
+    return NextResponse.json({ success: true, message: 'Initial admin created' });
   } catch (err: any) {
-    console.error('Setup POST error', err);
     if (err.code === 11000) {
       return NextResponse.json({ success: false, error: 'User with this email or username already exists' }, { status: 400 });
     }
-    return NextResponse.json({ success: false, error: err.message || 'Server error' }, { status: 500 });
+    return NextResponse.json({ success: false, error: 'Server error' }, { status: 500 });
   }
 }

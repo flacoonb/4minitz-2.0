@@ -3,8 +3,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
 
-const DEMO_USER_HEADER = process.env.NEXT_PUBLIC_DEMO_USER_HEADER || 'demo-user';
-
 interface User {
   _id: string;
   username: string;
@@ -96,9 +94,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(true);
       const response = await fetch('/api/auth/me', {
         credentials: 'include',
-        headers: {
-          'x-user-id': DEMO_USER_HEADER
-        }
       });
       
       if (response.ok) {

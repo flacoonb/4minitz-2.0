@@ -21,6 +21,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    if (authResult.user.role !== 'admin') {
+      return NextResponse.json(
+        { success: false, error: 'Admin only' },
+        { status: 403 }
+      );
+    }
+
     const userId = authResult.user.username;
 
     // Add user to all meeting series where they don't have access yet
@@ -60,8 +67,7 @@ export async function POST(request: NextRequest) {
       minutesModified: minutesResult.modifiedCount
     });
     
-  } catch (error) {
-    console.error('Error fixing user access:', error);
+  } catch {
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }

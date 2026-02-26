@@ -23,7 +23,7 @@ export interface IMember {
 // Interface for MeetingSeries document
 export interface IMeetingSeries extends Document {
   project: string;
-  name: string;
+  name?: string;
   createdAt: Date;
   updatedAt: Date;
   
@@ -90,9 +90,9 @@ const MeetingSeriesSchema = new Schema<IMeetingSeries>(
     },
     name: {
       type: String,
-      required: [true, 'Meeting series name is required'],
       trim: true,
       maxlength: [200, 'Name cannot exceed 200 characters'],
+      default: '',
     },
     
     // Access Control

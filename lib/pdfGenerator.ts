@@ -248,9 +248,9 @@ export async function generateMinutePdf(
   }
   
   // Meeting series and protocol name below "Protokoll" (left-aligned)
-  const seriesName = minute.meetingSeries_id?.name || '';
-  const projectName = minute.meetingSeries_id?.project || '';
-  const protocolName = projectName ? `${projectName} - ${seriesName}` : seriesName;
+  const sessionName = minute.meetingSeries_id?.project || '';
+  const yearName = minute.meetingSeries_id?.name || '';
+  const protocolName = yearName ? `${sessionName} – ${yearName}` : sessionName;
   
   if (protocolName) {
     doc.setFontSize(11);

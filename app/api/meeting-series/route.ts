@@ -73,7 +73,6 @@ export async function GET(request: NextRequest) {
       { 
         success: false, 
         error: 'Failed to fetch meeting series',
-        message: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );
@@ -125,11 +124,11 @@ export async function POST(request: NextRequest) {
     }
     
     // Validation
-    if (!body.project || !body.name) {
+    if (!body.project) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Project and name are required',
+        {
+          success: false,
+          error: 'Session name is required',
         },
         { status: 400 }
       );
@@ -139,7 +138,7 @@ export async function POST(request: NextRequest) {
     // Note: moderators, participants, visibleFor should contain usernames, not IDs
     const newSeries = await MeetingSeries.create({
       project: body.project,
-      name: body.name,
+      name: body.name || '',
       visibleFor: body.visibleFor || [], // Can be empty for public access
       moderators: [username, ...(body.moderators || [])].filter((v, i, a) => a.indexOf(v) === i), // Remove duplicates
       participants: body.participants || [],
@@ -167,7 +166,6 @@ export async function POST(request: NextRequest) {
       { 
         success: false, 
         error: 'Failed to create meeting series',
-        message: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );

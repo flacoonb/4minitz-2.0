@@ -29,8 +29,8 @@ export async function GET(request: NextRequest) {
     // }
 
     const url = new URL(request.url);
-    const page = parseInt(url.searchParams.get('page') || '1');
-    const limit = parseInt(url.searchParams.get('limit') || '20');
+    const page = Math.max(parseInt(url.searchParams.get('page') || '1') || 1, 1);
+    const limit = Math.min(Math.max(parseInt(url.searchParams.get('limit') || '20') || 20, 1), 100);
     const search = url.searchParams.get('search') || '';
     const role = url.searchParams.get('role') || '';
     const status = url.searchParams.get('status') || '';
@@ -39,11 +39,12 @@ export async function GET(request: NextRequest) {
     const filter: any = {};
     
     if (search) {
+      const escapedSearch = search.slice(0, 100).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       filter.$or = [
-        { firstName: { $regex: search, $options: 'i' } },
-        { lastName: { $regex: search, $options: 'i' } },
-        { email: { $regex: search, $options: 'i' } },
-        { username: { $regex: search, $options: 'i' } }
+        { firstName: { $regex: escapedSearch, $options: 'i' } },
+        { lastName: { $regex: escapedSearch, $options: 'i' } },
+        { email: { $regex: escapedSearch, $options: 'i' } },
+        { username: { $regex: escapedSearch, $options: 'i' } }
       ];
     }
     

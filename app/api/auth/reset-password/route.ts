@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
 
     // Force logout on password reset
     const isProduction = process.env.NODE_ENV === 'production';
-    const isHttp = process.env.NEXTAUTH_URL?.startsWith('http://');
+    const isHttp = process.env.APP_URL?.startsWith('http://');
     const useSecureCookies = isProduction && !isHttp && process.env.DISABLE_SECURE_COOKIES !== 'true';
 
     response.cookies.set({

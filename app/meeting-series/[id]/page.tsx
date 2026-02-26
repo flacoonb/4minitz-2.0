@@ -203,9 +203,8 @@ export default function MeetingSeriesPage() {
               </div>
               <div>
                 <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-                  {series.name}
+                  {series.project}{series.name ? ` – ${series.name}` : ''}
                 </h1>
-                <p className="text-lg text-blue-700 font-medium mt-1">{series.project}</p>
                 {series.description && (
                   <p className="mt-3 text-gray-700 max-w-2xl leading-relaxed">
                     {series.description}
@@ -271,7 +270,7 @@ export default function MeetingSeriesPage() {
                         {minute.title ? (
                           <span>{minute.title} <span className="text-gray-500 font-normal text-sm">({new Date(minute.date).toLocaleDateString('de-DE')})</span></span>
                         ) : (
-                          `${series.name} - ${new Date(minute.date).toLocaleDateString('de-DE')}`
+                          `${series.project}${series.name ? ` – ${series.name}` : ''} – ${new Date(minute.date).toLocaleDateString('de-DE')}`
                         )}
                       </h3>
                       <p className="text-sm text-gray-500">

@@ -19,11 +19,11 @@ export async function GET(request: NextRequest) {
 
     const url = new URL(request.url);
     const seriesId = url.searchParams.get('seriesId');
-    const limit = parseInt(url.searchParams.get('limit') || '50');
-    const skip = parseInt(url.searchParams.get('skip') || '0');
+    const limit = Math.min(Math.max(parseInt(url.searchParams.get('limit') || '50') || 50, 1), 200);
+    const skip = Math.max(parseInt(url.searchParams.get('skip') || '0') || 0, 0);
     
-    // Build filter
-    const filter: any = { userId };
+    // Build filter - use visibleFor for access control
+    const filter: any = { visibleFor: userId };
     if (seriesId) {
       filter.meetingSeries_id = seriesId;
     }
@@ -90,10 +90,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Verify meeting series exists and belongs to user
+    // Verify meeting series exists and user has access
     const meetingSeries = await MeetingSeries.findOne({
       _id: meetingSeries_id,
-      userId
+      $or: [{ moderators: userId }, { participants: userId }]
     });
 
     if (!meetingSeries) {
@@ -113,7 +113,7 @@ export async function POST(request: NextRequest) {
       if (labelIds.length > 0) {
         const existingLabels = await Label.find({
           _id: { $in: labelIds },
-          $or: [{ userId }, { isSystemLabel: true }]
+          $or: [{ createdBy: userId }, { isSystemLabel: true }]
         });
 
         const existingLabelIds = existingLabels.map((l: any) => l._id.toString());
@@ -142,9 +142,13 @@ export async function POST(request: NextRequest) {
       id: item.id || Date.now().toString() + Math.random().toString(36).substr(2, 9)
     }));
 
+    // Derive visibility from meeting series members
+    const visibleFor = [
+      ...new Set([...meetingSeries.moderators, ...meetingSeries.participants])
+    ];
+
     // Create the enhanced minutes
     const newMinutes = new EnhancedMinutes({
-      userId,
       meetingSeries_id,
       date: new Date(date),
       title: title || '',
@@ -155,6 +159,7 @@ export async function POST(request: NextRequest) {
       startTime: startTime || '',
       endTime: endTime || '',
       isFinalized: false,
+      visibleFor,
     });
 
     await newMinutes.save();

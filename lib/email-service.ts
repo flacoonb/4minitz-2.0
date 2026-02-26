@@ -41,54 +41,51 @@ export async function getOrgName() {
   return '4Minitz 2.0';
 }
 
-// Create reusable transporter
-let transporter: nodemailer.Transporter | null = null;
-
 export async function getTransporter() {
   // Try to get settings from DB first
   try {
     const settings = await Settings.findOne({}).sort({ version: -1 });
 
     // Check if email notifications are enabled globally
-    if (settings && settings.notificationSettings && settings.notificationSettings.enableEmailNotifications === false) {
-      console.log('Email notifications are disabled in settings');
-      // Return a dummy transporter that does nothing but log
+    if (settings?.notificationSettings?.enableEmailNotifications === false) {
       return {
-        sendMail: async (mailOptions: nodemailer.SendMailOptions) => {
-          console.log('Email sending skipped (disabled in settings). Would have sent to:', mailOptions.to);
+        sendMail: async () => {
           return { messageId: 'skipped-disabled' } as nodemailer.SentMessageInfo;
         },
         verify: async () => true
       } as any;
     }
 
-
-
-    // ... (inside getTransporter function)
-
-    if (settings && settings.smtpSettings && settings.smtpSettings.host) {
-      const { host, port, secure, auth } = settings.smtpSettings;
+    if (settings?.smtpSettings?.host) {
+      const { host, port: rawPort, secure, auth } = settings.smtpSettings;
+      const port = rawPort || 587;
 
       // Decrypt password if present
-      const decryptedPass = auth.pass ? decrypt(auth.pass) : '';
+      let decryptedPass = '';
+      try {
+        decryptedPass = auth?.pass ? decrypt(auth.pass) : '';
+      } catch {
+        // Decryption failed — password may be stored unencrypted or corrupted
+        decryptedPass = auth?.pass || '';
+      }
 
-      console.log('Creating transporter with DB settings:', { host, port, secure, hasAuth: !!auth.user });
-      transporter = nodemailer.createTransport({
+      // Port 465 = direct TLS (secure: true)
+      // Port 587/25 = STARTTLS (secure: false, TLS upgraded automatically)
+      const useSecure = port === 465 ? true : (secure && port !== 587 && port !== 25);
+
+      return nodemailer.createTransport({
         host,
         port,
-        secure,
-        auth: auth.user && decryptedPass ? { user: auth.user, pass: decryptedPass } : undefined
+        secure: useSecure,
+        auth: auth?.user && decryptedPass ? { user: auth.user, pass: decryptedPass } : undefined,
       });
-      return transporter;
     }
-  } catch (e) {
-    console.warn('Failed to fetch settings from DB, falling back to env vars', e);
+  } catch {
+    // Fall back to env vars if DB settings unavailable
   }
 
   // Fallback to env vars
-  console.log('Creating transporter with env vars:', EMAIL_CONFIG);
-  transporter = nodemailer.createTransport(EMAIL_CONFIG);
-  return transporter;
+  return nodemailer.createTransport(EMAIL_CONFIG);
 }
 
 export async function getFromEmail() {
@@ -275,7 +272,6 @@ export async function sendNewMinutesNotification(
   ].filter((email, index, self) => self.indexOf(email) === index); // Remove duplicates
 
   if (allRecipients.length === 0) {
-    console.log('No recipients for minutes notification');
     return;
   }
 
@@ -310,20 +306,20 @@ export async function sendNewMinutesNotification(
 
   if (digestPromises.length > 0) {
     await Promise.all(digestPromises);
-    console.log(`Queued ${digestPromises.length} digest notifications`);
+
   }
 
   if (directRecipients.length === 0) {
     return;
   }
 
-  const seriesName = `${minute.meetingSeries.project} - ${minute.meetingSeries.name}`;
+  const seriesName = minute.meetingSeries.name ? `${minute.meetingSeries.project} – ${minute.meetingSeries.name}` : minute.meetingSeries.project;
   const date = new Date(minute.date).toLocaleDateString(locale);
   const appUrl = await getAppUrl();
   const minuteUrl = `${appUrl}/minutes/${minute._id}`;
 
   const actionItemsCount = minute.topics?.reduce((count: number, topic: ITopic) => {
-    return count + (topic.infoItems?.filter((item: IInfoItem) => item.itemType === 'actionItem' && item.isOpen).length || 0);
+    return count + (topic.infoItems?.filter((item: IInfoItem) => item.itemType === 'actionItem' && item.status !== 'completed' && item.status !== 'cancelled').length || 0);
   }, 0) || 0;
 
   const htmlContent = `
@@ -369,7 +365,6 @@ export async function sendNewMinutesNotification(
   try {
     const transport = await getTransporter();
     await transport.sendMail(mailOptions);
-    console.log(`Minutes notification sent to ${directRecipients.length} recipients`);
   } catch (error) {
     console.error('Failed to send minutes notification:', error);
     throw error;
@@ -409,7 +404,7 @@ export async function sendActionItemAssignedNotification(
            project: minute.meetingSeries.project,
            subject: actionItem.subject,
            priority: actionItem.priority,
-           dueDate: actionItem.duedate
+           dueDate: actionItem.dueDate
          }
        }));
     } else {
@@ -425,7 +420,7 @@ export async function sendActionItemAssignedNotification(
     return;
   }
 
-  const seriesName = `${minute.meetingSeries.project} - ${minute.meetingSeries.name}`;
+  const seriesName = minute.meetingSeries.name ? `${minute.meetingSeries.project} – ${minute.meetingSeries.name}` : minute.meetingSeries.project;
   const appUrl = await getAppUrl();
   const minuteUrl = `${appUrl}/minutes/${minute._id}`;
   const priorityColors = {
@@ -450,7 +445,7 @@ export async function sendActionItemAssignedNotification(
         <td style="padding: 16px;">
           <p style="margin: 0 0 8px 0;"><strong>${t.actionItem}</strong> ${actionItem.subject}</p>
           ${actionItem.priority ? `<p style="margin: 0 0 8px 0;"><strong>${t.priority}</strong> ${actionItem.priority}</p>` : ''}
-          ${actionItem.duedate ? `<p style="margin: 0;"><strong>${t.dueDate}</strong> ${new Date(actionItem.duedate).toLocaleDateString(locale)}</p>` : ''}
+          ${actionItem.dueDate ? `<p style="margin: 0;"><strong>${t.dueDate}</strong> ${new Date(actionItem.dueDate).toLocaleDateString(locale)}</p>` : ''}
         </td>
       </tr>
     </table>
@@ -472,7 +467,6 @@ export async function sendActionItemAssignedNotification(
   try {
     const transport = await getTransporter();
     await transport.sendMail(mailOptions);
-    console.log(`Action item notification sent to ${directRecipients.length} recipients`);
   } catch (error) {
     console.error('Failed to send action item notification:', error);
     throw error;
@@ -527,7 +521,6 @@ export async function sendOverdueReminder(
   try {
     const transport = await getTransporter();
     await transport.sendMail(mailOptions);
-    console.log(`Overdue reminder sent to ${userEmail}`);
   } catch (error) {
     console.error('Failed to send overdue reminder:', error);
     throw error;
@@ -564,7 +557,6 @@ export async function sendWelcomeEmail(
   try {
     const transport = await getTransporter();
     await transport.sendMail(mailOptions);
-    console.log(`Welcome email sent to ${user.email}`);
   } catch (error) {
     console.error('Failed to send welcome email:', error);
     // Don't throw error here to prevent registration failure
@@ -606,7 +598,6 @@ export async function sendVerificationEmail(
   try {
     const transport = await getTransporter();
     await transport.sendMail(mailOptions);
-    console.log(`Verification email sent to ${user.email}`);
   } catch (error) {
     console.error('Failed to send verification email:', error);
     throw error; // Throw error so registration can handle it
@@ -666,7 +657,6 @@ export async function sendPendingTasksReminder(
   try {
     const transport = await getTransporter();
     await transport.sendMail(mailOptions);
-    console.log(`Pending tasks reminder sent to ${user.email}`);
   } catch (error) {
     console.error('Failed to send pending tasks reminder:', error);
     throw error;
@@ -674,20 +664,83 @@ export async function sendPendingTasksReminder(
 }
 
 // Test email configuration
-export async function testEmailConfiguration(): Promise<boolean> {
+export async function testEmailConfiguration(): Promise<{ success: boolean; error?: string }> {
   try {
-    console.log('Testing email configuration...');
     const transport = await getTransporter();
-    console.log('Transporter created, verifying connection...');
     await transport.verify();
-    console.log('Email configuration is valid');
-    return true;
-  } catch (error: any) {
-    console.error('Email configuration test failed:');
-    console.error('Error name:', error.name);
-    console.error('Error message:', error.message);
-    console.error('Error code:', error.code);
-    console.error('Full error:', error);
-    return false;
+    return { success: true };
+  } catch (err: unknown) {
+    const message = err instanceof Error ? err.message : 'Unknown error';
+    return { success: false, error: message };
   }
+}
+
+// Password reset email
+type Locale = 'de' | 'en';
+
+const resetTranslations: Record<Locale, {
+  subject: string;
+  greeting: (name?: string) => string;
+  intro: string;
+  resetButton: string;
+  expiryNote: string;
+}> = {
+  de: {
+    subject: 'Passwort zurücksetzen',
+    greeting: (name?: string) => (name ? `Hallo ${name}` : 'Hallo'),
+    intro:
+      'Sie haben eine Anfrage zum Zurücksetzen Ihres Passworts gestellt. Klicken Sie auf den Button, um ein neues Passwort zu setzen.',
+    resetButton: 'Passwort zurücksetzen',
+    expiryNote:
+      'Dieser Link ist 1 Stunde gültig. Wenn Sie diese Anfrage nicht gestellt haben, können Sie diese E-Mail ignorieren.',
+  },
+  en: {
+    subject: 'Reset your password',
+    greeting: (name?: string) => (name ? `Hello ${name}` : 'Hello'),
+    intro:
+      'You requested a password reset. Click the button below to set a new password.',
+    resetButton: 'Reset password',
+    expiryNote:
+      'This link is valid for 1 hour. If you did not request this, you can ignore this email.',
+  },
+};
+
+export async function sendPasswordResetEmail(
+  user: { email: string; firstName?: string; lastName?: string },
+  token: string,
+  locale: Locale = 'de'
+): Promise<void> {
+  const t = resetTranslations[locale];
+  const appUrl = await getAppUrl();
+  const resetUrl = `${appUrl}/auth/reset-password?token=${token}`;
+
+  const fullName = [user.firstName, user.lastName]
+    .filter(Boolean)
+    .join(' ')
+    .trim();
+
+  const htmlContent = `
+    <p><strong>${t.greeting(fullName)},</strong></p>
+    <p>${t.intro}</p>
+
+    <center>
+      <a href="${resetUrl}" style="display: inline-block; background: linear-gradient(to right, #9333ea, #db2777); color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; margin-top: 24px; text-align: center; box-shadow: 0 4px 6px -1px rgba(147, 51, 234, 0.3); font-family: sans-serif;">${t.resetButton}</a>
+    </center>
+
+    <p style="text-align: center; color: #6b7280; font-size: 14px; margin-top: 20px;">
+      ${t.expiryNote}
+    </p>
+  `;
+
+  const fromEmail = await getFromEmail();
+  const mailOptions = {
+    from: fromEmail,
+    to: user.email,
+    subject: t.subject,
+    text: `${t.intro}\n\n${t.resetButton}: ${resetUrl}\n\n${t.expiryNote}`,
+    html: await generateEmailHTML(htmlContent),
+  };
+
+  const transport = await getTransporter();
+  await transport.sendMail(mailOptions);
 }

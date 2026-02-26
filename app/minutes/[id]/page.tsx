@@ -37,8 +37,6 @@ interface InfoItem {
   subject: string;
   details?: string;
   itemType: 'actionItem' | 'infoItem';
-  isComplete?: boolean;
-  // Task management fields
   status?: 'open' | 'in-progress' | 'completed' | 'cancelled';
   priority?: 'high' | 'medium' | 'low';
   dueDate?: string;
@@ -127,21 +125,6 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
 
       const result = await response.json();
       const minuteData = result.data;
-      
-      // Convert duedate to dueDate for display
-      if (minuteData.topics) {
-        minuteData.topics = minuteData.topics.map((topic: any) => ({
-          ...topic,
-          infoItems: topic.infoItems?.map((item: any) => {
-            const updatedItem = { ...item };
-            if (item.duedate !== undefined) {
-              updatedItem.dueDate = item.duedate;
-              delete updatedItem.duedate;
-            }
-            return updatedItem;
-          })
-        }));
-      }
       
       setMinute(minuteData);
     } catch (err) {
@@ -261,27 +244,10 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
       const layoutResult = await layoutResponse.json();
       const layoutSettings = layoutResult.success ? layoutResult.data : null;
       
-      // Convert duedate to dueDate for PDF generation
-      const minuteForPdf = {
-        ...minute,
-        topics: minute.topics.map(topic => ({
-          ...topic,
-          infoItems: topic.infoItems?.map(item => {
-            const updatedItem = { ...item } as any;
-            if ((item as any).duedate !== undefined) {
-              updatedItem.dueDate = (item as any).duedate;
-              delete updatedItem.duedate;
-            }
-            return updatedItem;
-          })
-        }))
-      };
-      
       // Dynamically import PDF generator (client-side only)
       const { generateMinutePdf } = await import('@/lib/pdfGenerator');
-      
-      // Generate PDF with converted data
-      await generateMinutePdf(minuteForPdf, settingsResult.data, allUsers, layoutSettings);
+
+      await generateMinutePdf(minute, settingsResult.data, allUsers, layoutSettings);
     } catch (error) {
       console.error('Error generating PDF:', error);
       alert(t('minutes.pdfGenerationError'));
@@ -312,7 +278,8 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
       });
 
       if (response.ok) {
-        router.push('/minutes');
+        const seriesId = minute?.meetingSeries_id?._id;
+        router.push(seriesId ? `/meeting-series/${seriesId}` : '/meeting-series');
       } else {
         const errorData = await response.json();
         setErrorMessage(`${t('minutes.deleteError')}: ${errorData.error || 'Unbekannter Fehler'}`);
@@ -377,7 +344,7 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
         <div className="text-center">
           <h1 className="text-2xl font-bold text-red-600 mb-4">{t('common.error')}</h1>
           <p className="text-gray-600">{error || t('minutes.notFound')}</p>
-          <Link href="/minutes" className="text-blue-600 hover:text-blue-800 mt-4 inline-block">
+          <Link href="/meeting-series" className="text-blue-600 hover:text-blue-800 mt-4 inline-block">
             {t('minutes.backToOverview')}
           </Link>
         </div>
@@ -392,14 +359,27 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-gray-100">
           <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
             <div className="flex-1">
-              <div className="flex items-center gap-4 mb-4">
-                <Link href="/minutes" className="text-blue-600 hover:text-blue-800 transition-colors">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
+              {/* Breadcrumb */}
+              <nav className="flex items-center gap-2 text-sm text-gray-500 mb-3 flex-wrap">
+                <Link href="/meeting-series" className="hover:text-blue-600 transition-colors">
+                  {t('nav.meetingSeries')}
                 </Link>
-                <h1 className="text-3xl font-bold text-gray-900">{t('minutes.details')}</h1>
-              </div>
+                {minute.meetingSeries_id?._id && (
+                  <>
+                    <span className="text-gray-400">›</span>
+                    <Link href={`/meeting-series/${minute.meetingSeries_id._id}`} className="hover:text-blue-600 transition-colors">
+                      {minute.meetingSeries_id.project && minute.meetingSeries_id.name
+                        ? `${minute.meetingSeries_id.project} – ${minute.meetingSeries_id.name}`
+                        : minute.meetingSeries_id.name || minute.meetingSeries_id.project || 'Series'}
+                    </Link>
+                  </>
+                )}
+                <span className="text-gray-400">›</span>
+                <span className="text-gray-900 font-medium">
+                  {new Date(minute.date).toLocaleDateString(locale)}
+                </span>
+              </nav>
+              <h1 className="text-3xl font-bold text-gray-900 mb-4">{t('minutes.details')}</h1>
               
               <div className="space-y-3">
                 <div className="flex items-center gap-3 text-gray-700">

@@ -100,19 +100,11 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const fs = require('fs');
-  const logFile = '/tmp/api-debug.log';
-  
   try {
     await connectToDatabase();
-    
+
     const { id } = await params;
     const body = await request.json();
-
-    fs.appendFileSync(logFile, `\n[${new Date().toISOString()}] API PUT called for ${id}\n`);
-    fs.appendFileSync(logFile, `Body time: ${body.time}\n`);
-    fs.appendFileSync(logFile, `Body location: ${body.location}\n`);
-    fs.appendFileSync(logFile, `Body keys: ${Object.keys(body).join(', ')}\n`);
 
     // Verify authentication
     const authResult = await verifyToken(request);
@@ -153,9 +145,8 @@ export async function PUT(
       }
     }
 
-    // Convert dueDate to duedate for all infoItems AND sync with Task collection
+    // Sync infoItems with Central Task Registry
     if (body.topics) {
-      // We need to process topics sequentially to handle async Task operations
       for (const topic of body.topics) {
         // Ensure topic has an ID for linking tasks
         if (!topic._id) {
@@ -165,23 +156,15 @@ export async function PUT(
         if (topic.infoItems) {
           for (let i = 0; i < topic.infoItems.length; i++) {
             const item = topic.infoItems[i];
-            
-            // 1. Fix dueDate naming
-            if (item.dueDate !== undefined) {
-              item.duedate = item.dueDate;
-              delete item.dueDate;
-            }
 
-            // 2. Sync Action Items with Central Task Registry
             if (item.itemType === 'actionItem') {
               try {
-                // Prepare task data
                 const taskData = {
                   subject: item.subject,
                   details: item.details,
                   status: item.status || 'open',
                   priority: item.priority || 'medium',
-                  dueDate: item.duedate,
+                  dueDate: item.dueDate,
                   responsibles: item.responsibles || [],
                   meetingSeriesId: minute.meetingSeries_id.toString(),
                   minutesId: id,
@@ -192,21 +175,26 @@ export async function PUT(
                 let taskId = item.externalTaskId;
 
                 if (taskId) {
-                  // Update existing task
                   await Task.findByIdAndUpdate(taskId, taskData);
                 } else {
-                  // Create new task
                   const newTask = await Task.create({
                     ...taskData,
                     createdBy: userId,
                     createdAt: new Date()
                   });
                   taskId = newTask._id;
-                  // Update the item with the new externalTaskId
                   item.externalTaskId = taskId;
                 }
-              } catch (err) {
-                console.error('Error syncing task:', err);
+              } catch {
+                // Task sync failure is non-fatal — minute save continues
+              }
+            } else if (item.itemType === 'infoItem' && item.externalTaskId) {
+              // Item was changed from actionItem to infoItem — clean up orphaned task
+              try {
+                await Task.findByIdAndDelete(item.externalTaskId);
+                item.externalTaskId = undefined;
+              } catch {
+                // Cleanup failure is non-fatal
               }
             }
           }
@@ -267,23 +255,24 @@ export async function PUT(
           });
 
           if (importedTaskIds.length > 0) {
-            // We need to update nested arrays, so we use arrayFilters
+            // Close original tasks by finding and updating them directly
             for (const originalId of importedTaskIds) {
-              await Minutes.updateMany(
-                { "topics.infoItems._id": originalId },
-                { 
-                  $set: { 
-                    "topics.$[t].infoItems.$[i].isOpen": false,
-                    "topics.$[t].infoItems.$[i].status": "completed"
-                  } 
-                },
-                {
-                  arrayFilters: [
-                    { "t.infoItems._id": originalId },
-                    { "i._id": originalId }
-                  ]
+              const sourceMinute = await Minutes.findOne({ "topics.infoItems._id": originalId });
+              if (sourceMinute) {
+                let modified = false;
+                for (const topic of sourceMinute.topics) {
+                  if (!topic.infoItems) continue;
+                  for (const item of topic.infoItems) {
+                    if (item._id?.toString() === originalId) {
+                      item.status = 'completed';
+                      modified = true;
+                    }
+                  }
                 }
-              );
+                if (modified) {
+                  await sourceMinute.save();
+                }
+              }
             }
           }
         }
@@ -360,12 +349,52 @@ export async function DELETE(
     }
 
     const minute = await Minutes.findById(id);
-    
+
     if (!minute) {
       return NextResponse.json(
         { error: 'Minute not found' },
         { status: 404 }
       );
+    }
+
+    // Clean up associated tasks — only delete if not referenced elsewhere
+    const taskIds: string[] = [];
+    minute.topics?.forEach((topic: any) => {
+      topic.infoItems?.forEach((item: any) => {
+        if (item.externalTaskId) taskIds.push(item.externalTaskId.toString());
+      });
+    });
+    if (taskIds.length > 0) {
+      // Check if any of these tasks are referenced in other minutes
+      const otherMinutes = await Minutes.find({
+        _id: { $ne: id },
+        'topics.infoItems.externalTaskId': { $in: taskIds },
+      }).select('_id topics.infoItems.externalTaskId').lean();
+
+      const referencedElsewhere = new Set<string>();
+      otherMinutes.forEach((m: any) => {
+        m.topics?.forEach((t: any) => {
+          t.infoItems?.forEach((i: any) => {
+            if (i.externalTaskId) referencedElsewhere.add(i.externalTaskId.toString());
+          });
+        });
+      });
+
+      const toDelete = taskIds.filter(tid => !referencedElsewhere.has(tid));
+      const toReassign = taskIds.filter(tid => referencedElsewhere.has(tid));
+
+      if (toDelete.length > 0) {
+        await Task.deleteMany({ _id: { $in: toDelete } });
+      }
+      // Reassign tasks that are still referenced to keep them accessible
+      for (const tid of toReassign) {
+        const refMinute = otherMinutes.find((m: any) =>
+          m.topics?.some((t: any) => t.infoItems?.some((i: any) => i.externalTaskId?.toString() === tid))
+        );
+        if (refMinute) {
+          await Task.findByIdAndUpdate(tid, { minutesId: refMinute._id.toString() });
+        }
+      }
     }
 
     await Minutes.findByIdAndDelete(id);

@@ -18,8 +18,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const meetingSeriesId = searchParams.get('meetingSeriesId');
     const isFinalized = searchParams.get('isFinalized');
-    const limit = parseInt(searchParams.get('limit') || '50');
-    const page = parseInt(searchParams.get('page') || '1');
+    const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '50') || 50, 1), 200);
+    const page = Math.max(parseInt(searchParams.get('page') || '1') || 1, 1);
 
     // Determine requesting user (if any) using verifyToken. If unauthenticated
     // allow only public minutes (visibleFor empty). If authenticated, use
@@ -190,7 +190,7 @@ export async function POST(request: NextRequest) {
           subject: entry.subject,
           details: entry.content,
           itemType: 'infoItem',
-          isComplete: entry.isCompleted || false
+          status: entry.isCompleted ? 'completed' : 'open'
         })) : []
       }));
     }
@@ -216,13 +216,17 @@ export async function POST(request: NextRequest) {
       const isParticipant = meetingSeries.participants.includes(username);
 
       if (!isModerator && !isParticipant) {
-        console.log('Auth failed:', { username, role: userRole, moderators: meetingSeries.moderators, participants: meetingSeries.participants });
         return NextResponse.json(
           { error: 'Forbidden: You must be a moderator or participant of this meeting series' },
           { status: 403 }
         );
       }
     }
+
+    // Derive visibility from meeting series members
+    const visibleFor = [
+      ...new Set([...meetingSeries.moderators, ...meetingSeries.participants])
+    ];
 
     // Create new minute
     const minute = await Minutes.create({
@@ -233,6 +237,7 @@ export async function POST(request: NextRequest) {
       globalNote: globalNote || '',
       isFinalized: false,
       createdBy: userId,
+      visibleFor,
     });
 
     // Populate meetingSeries for email

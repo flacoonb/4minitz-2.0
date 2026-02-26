@@ -51,6 +51,7 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
   
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<string>('');
+  const [existingProjectNames, setExistingProjectNames] = useState<string[]>([]);
 
   useEffect(() => {
     const getParams = async () => {
@@ -102,18 +103,30 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
     }
   }, [seriesId]);
 
+  const fetchExistingNames = useCallback(async () => {
+    try {
+      const response = await fetch('/api/meeting-series', { credentials: 'include' });
+      if (response.ok) {
+        const result = await response.json();
+        const names = [...new Set((result.data || []).map((s: { project: string }) => s.project).filter(Boolean))] as string[];
+        setExistingProjectNames(names);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
+
   useEffect(() => {
     if (seriesId) {
       fetchSeries();
       fetchUsers();
+      fetchExistingNames();
     }
-  }, [seriesId, fetchSeries, fetchUsers]);
+  }, [seriesId, fetchSeries, fetchUsers, fetchExistingNames]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!seriesId) return;
-
-    console.log('Saving formData:', formData); // Debug log
 
     setSaving(true);
     try {
@@ -131,8 +144,7 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
         throw new Error(errorData.error || 'Fehler beim Speichern');
       }
 
-      const result = await response.json();
-      console.log('Save result:', result); // Debug log
+      await response.json();
 
       router.push(`/meeting-series/${seriesId}`);
     } catch (err) {
@@ -244,23 +256,32 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
                 <label className="block text-sm font-medium text-gray-700 mb-2">{t('projectRequired')}</label>
                 <input
                   type="text"
+                  list="existing-session-names"
                   value={formData.project}
                   onChange={(e) => setFormData(prev => ({ ...prev, project: e.target.value }))}
                   placeholder={t('projectPlaceholder')}
+                  autoComplete="off"
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required
                 />
+                <datalist id="existing-session-names">
+                  {existingProjectNames.map(name => (
+                    <option key={name} value={name} />
+                  ))}
+                </datalist>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">{t('nameRequired')}</label>
-                <input
-                  type="text"
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('yearOptional')}</label>
+                <select
                   value={formData.name}
                   onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder={t('namePlaceholder')}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                />
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                >
+                  <option value="">– kein Jahr –</option>
+                  {Array.from({ length: 7 }, (_, i) => new Date().getFullYear() - 2 + i).map(year => (
+                    <option key={year} value={String(year)}>{year}</option>
+                  ))}
+                </select>
               </div>
             </div>
           </div>

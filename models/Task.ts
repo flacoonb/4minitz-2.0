@@ -47,6 +47,8 @@ const TaskSchema = new Schema<ITask>(
 // Indexes
 TaskSchema.index({ responsibles: 1 });
 TaskSchema.index({ status: 1 });
+TaskSchema.index({ dueDate: 1 });
+TaskSchema.index({ meetingSeriesId: 1, status: 1 });
 
 const Task: Model<ITask> = mongoose.models.Task || mongoose.model<ITask>('Task', TaskSchema);
 

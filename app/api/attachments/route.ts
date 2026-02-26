@@ -7,6 +7,7 @@ import Attachment from '@/models/Attachment';
 import Minutes from '@/models/Minutes';
 import Settings from '@/models/Settings';
 import { verifyToken } from '@/lib/auth';
+import { safePath } from '@/lib/file-security';
 
 // Default Maximum file size: 10MB
 // const DEFAULT_MAX_FILE_SIZE = 10 * 1024 * 1024;
@@ -34,6 +35,11 @@ const UPLOAD_DIR = path.join(process.cwd(), 'uploads');
  */
 export async function GET(request: NextRequest) {
   try {
+    const authResult = await verifyToken(request);
+    if (!authResult.success || !authResult.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
     const { searchParams } = new URL(request.url);
     const minuteId = searchParams.get('minuteId');
 
@@ -46,6 +52,23 @@ export async function GET(request: NextRequest) {
 
     await connectDB();
 
+    // Verify user has access to the minute's meeting series
+    const minute = await Minutes.findById(minuteId).populate('meetingSeries_id');
+    if (!minute) {
+      return NextResponse.json({ error: 'Minute not found' }, { status: 404 });
+    }
+
+    const username = authResult.user.username;
+    const series = minute.meetingSeries_id as any;
+    const hasAccess = series?.visibleFor?.includes(username) ||
+                      series?.moderators?.includes(username) ||
+                      series?.participants?.includes(username) ||
+                      authResult.user.role === 'admin';
+
+    if (!hasAccess) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
     const attachments = await Attachment.find({ minuteId })
       .sort({ uploadedAt: -1 })
       .lean();
@@ -55,8 +78,7 @@ export async function GET(request: NextRequest) {
       count: attachments.length,
       data: attachments,
     });
-  } catch (error) {
-    console.error('Error fetching attachments:', error);
+  } catch {
     return NextResponse.json(
       { error: 'Failed to fetch attachments' },
       { status: 500 }
@@ -168,11 +190,20 @@ export async function POST(request: NextRequest) {
       await mkdir(UPLOAD_DIR, { recursive: true });
     }
 
-    // Generate unique filename
+    // Generate unique filename (strip dots except for extension to prevent traversal)
     const timestamp = Date.now();
-    const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
-    const fileName = `${timestamp}-${sanitizedName}`;
-    const filePath = path.join(UPLOAD_DIR, fileName);
+    const ext = path.extname(file.name).replace(/[^a-zA-Z0-9.]/g, '');
+    const baseName = path.basename(file.name, path.extname(file.name)).replace(/[^a-zA-Z0-9_-]/g, '_');
+    const fileName = `${timestamp}-${baseName}${ext}`;
+
+    // Path traversal protection
+    const filePath = safePath(UPLOAD_DIR, fileName);
+    if (!filePath) {
+      return NextResponse.json(
+        { error: 'Invalid file name' },
+        { status: 400 }
+      );
+    }
 
     // Write file to disk
     const bytes = await file.arrayBuffer();
@@ -198,8 +229,7 @@ export async function POST(request: NextRequest) {
       },
       { status: 201 }
     );
-  } catch (error) {
-    console.error('Error uploading attachment:', error);
+  } catch {
     return NextResponse.json(
       { error: 'Failed to upload attachment' },
       { status: 500 }
@@ -260,14 +290,15 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Delete file from disk
-    const filePath = path.join(UPLOAD_DIR, attachment.fileName);
-    try {
-      const { unlink } = await import('fs/promises');
-      await unlink(filePath);
-    } catch (err) {
-      console.error('Error deleting file from disk:', err);
-      // Continue with database deletion even if file deletion fails
+    // Delete file from disk (with path traversal protection)
+    const filePath = safePath(UPLOAD_DIR, attachment.fileName);
+    if (filePath) {
+      try {
+        const { unlink } = await import('fs/promises');
+        await unlink(filePath);
+      } catch {
+        // Continue with database deletion even if file deletion fails
+      }
     }
 
     // Delete from database
@@ -277,8 +308,7 @@ export async function DELETE(request: NextRequest) {
       success: true,
       message: 'Attachment deleted successfully',
     });
-  } catch (error) {
-    console.error('Error deleting attachment:', error);
+  } catch {
     return NextResponse.json(
       { error: 'Failed to delete attachment' },
       { status: 500 }

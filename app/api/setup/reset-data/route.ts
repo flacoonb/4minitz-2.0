@@ -3,7 +3,7 @@ import connectDB from '@/lib/mongodb';
 import Minutes from '@/models/Minutes';
 import Task from '@/models/Task';
 import MeetingSeries from '@/models/MeetingSeries';
-// verifyToken removed
+import { verifyToken } from '@/lib/auth';
 
 export async function GET(_request: NextRequest) {
   return new NextResponse(`
@@ -48,12 +48,15 @@ export async function GET(_request: NextRequest) {
             const out = document.getElementById('output');
             btn.disabled = true;
             btn.innerText = 'Deleting...';
-            out.innerHTML = 'Processing...';
-            
+            out.textContent = 'Processing...';
+
             try {
               const res = await fetch('/api/setup/reset-data', { method: 'POST' });
               const data = await res.json();
-              out.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+              const pre = document.createElement('pre');
+              pre.textContent = JSON.stringify(data, null, 2);
+              out.textContent = '';
+              out.appendChild(pre);
               if (data.success) {
                 btn.innerText = 'DONE - System Clean';
                 btn.style.background = '#2e7d32';
@@ -71,9 +74,17 @@ export async function GET(_request: NextRequest) {
   });
 }
 
-export async function POST(_request: NextRequest) {
+export async function POST(request: NextRequest) {
   try {
     await connectDB();
+
+    const authResult = await verifyToken(request);
+    if (!authResult.success || !authResult.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (authResult.user.role !== 'admin') {
+      return NextResponse.json({ error: 'Admin only' }, { status: 403 });
+    }
 
     // 1. Delete all Minutes
     const minResult = await Minutes.deleteMany({});
@@ -99,6 +110,6 @@ export async function POST(_request: NextRequest) {
     });
 
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: 'Reset failed' }, { status: 500 });
   }
 }

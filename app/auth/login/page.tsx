@@ -65,8 +65,9 @@ const LoginPage = () => {
       
       setSuccess('Erfolgreich angemeldet! Sie werden weitergeleitet...');
       
-      // Redirect after a short delay
-      const redirectUrl = searchParams?.get('redirect') || '/';
+      // Redirect after a short delay (only allow relative paths to prevent open redirect)
+      const rawRedirect = searchParams?.get('redirect') || '/';
+      const redirectUrl = rawRedirect.startsWith('/') && !rawRedirect.startsWith('//') ? rawRedirect : '/';
       setTimeout(() => {
         // Force a hard reload to ensure all cookies (including locale) are picked up correctly by the server
         window.location.href = redirectUrl;
