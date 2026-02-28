@@ -34,8 +34,13 @@ export async function GET(request: NextRequest) {
     const fromEmail = await getFromEmail();
     const transporter = await getTransporter();
 
+    // Bulk-fetch all relevant users (avoid N+1 queries)
+    const userIds = Object.keys(userNotifications);
+    const users = await User.find({ _id: { $in: userIds } }).select('-password');
+    const userMap = new Map(users.map(u => [u._id.toString(), u]));
+
     for (const [userId, items] of Object.entries(userNotifications)) {
-      const user = await User.findById(userId).select('-password');
+      const user = userMap.get(userId);
       if (!user || !user.notificationSettings?.enableDigestEmails) {
         // User deleted or disabled digest -> delete notifications
         await PendingNotification.deleteMany({ userId });
@@ -106,7 +111,7 @@ export async function GET(request: NextRequest) {
           from: fromEmail,
           to: user.email,
           subject: t.subject,
-          html: generateEmailHTML(htmlBody)
+          html: await generateEmailHTML(htmlBody)
         });
         
         // Delete processed notifications

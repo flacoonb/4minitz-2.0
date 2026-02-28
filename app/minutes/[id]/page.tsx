@@ -221,36 +221,41 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
       // Fetch PDF settings
       const response = await fetch('/api/pdf-settings');
       const settingsResult = await response.json();
-      
+
       if (!settingsResult.success) {
         throw new Error(t('minutes.pdfSettingsError'));
       }
 
-      // Fetch global settings for date format
+      // Fetch global settings for locale
       try {
         const globalSettingsResponse = await fetch('/api/settings/public');
         const globalSettingsResult = await globalSettingsResponse.json();
-        
+
         if (globalSettingsResult.success && globalSettingsResult.data) {
-           settingsResult.data.dateFormat = globalSettingsResult.data.system?.dateFormat;
            settingsResult.data.locale = globalSettingsResult.data.language?.defaultLanguage;
         }
       } catch (e) {
         console.warn('Could not fetch global settings for PDF export', e);
       }
-      
+
       // Fetch PDF layout settings
-      const layoutResponse = await fetch('/api/pdf-layout-settings');
-      const layoutResult = await layoutResponse.json();
-      const layoutSettings = layoutResult.success ? layoutResult.data : null;
-      
+      let layoutSettings = null;
+      try {
+        const layoutResponse = await fetch('/api/pdf-layout-settings');
+        const layoutResult = await layoutResponse.json();
+        layoutSettings = layoutResult.success ? layoutResult.data : null;
+      } catch (e) {
+        console.warn('Could not fetch PDF layout settings', e);
+      }
+
       // Dynamically import PDF generator (client-side only)
       const { generateMinutePdf } = await import('@/lib/pdfGenerator');
 
       await generateMinutePdf(minute, settingsResult.data, allUsers, layoutSettings);
     } catch (error) {
       console.error('Error generating PDF:', error);
-      alert(t('minutes.pdfGenerationError'));
+      const errorMsg = error instanceof Error ? error.message : t('minutes.pdfGenerationError');
+      alert(errorMsg);
     } finally {
       setExportingPdf(false);
     }

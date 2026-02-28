@@ -7,7 +7,7 @@ export async function GET(_request: NextRequest) {
     await connectDB();
 
     // Get current settings (no authentication required for public settings)
-    const settings = await Settings.findOne({}).sort({ version: -1 });
+    const settings = await Settings.findOne({}).sort({ updatedAt: -1 });
 
     if (!settings) {
       return NextResponse.json({
@@ -21,13 +21,12 @@ export async function GET(_request: NextRequest) {
       });
     }
 
-    // Return only public settings
+    // Return only public settings (no sensitive data)
     const publicSettings = {
       system: {
         organizationName: settings.systemSettings?.organizationName || '4Minitz 2.0',
         organizationLogo: settings.systemSettings?.organizationLogo,
-        allowRegistration: settings.systemSettings?.allowRegistration,
-        theme: settings.systemSettings?.theme,
+        allowRegistration: settings.memberSettings?.allowSelfRegistration ?? false,
         dateFormat: settings.systemSettings?.dateFormat || 'DD.MM.YYYY',
         timeFormat: settings.systemSettings?.timeFormat || '24h'
       },

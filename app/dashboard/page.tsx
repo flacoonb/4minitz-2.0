@@ -86,6 +86,7 @@ export default function DashboardPage() {
     try {
       const response = await fetch('/api/tasks/remind-all', {
         method: 'POST',
+        credentials: 'include',
       });
 
       if (!response.ok) throw new Error('Failed to send reminders');

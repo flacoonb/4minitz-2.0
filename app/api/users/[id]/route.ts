@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
+import MeetingSeries from '@/models/MeetingSeries';
+import Task from '@/models/Task';
 import { verifyToken, requirePermission } from '@/lib/auth';
 
 export async function GET(
@@ -97,7 +99,12 @@ export async function PUT(
     // Update fields
     if (body.firstName) userToUpdate.firstName = body.firstName;
     if (body.lastName) userToUpdate.lastName = body.lastName;
-    if (body.email) userToUpdate.email = body.email;
+    if (body.email && body.email !== userToUpdate.email) {
+      userToUpdate.email = body.email;
+      if (isOwnProfile) {
+        userToUpdate.isEmailVerified = false;
+      }
+    }
     if (body.username) userToUpdate.username = body.username;
     if (body.avatar !== undefined) userToUpdate.avatar = body.avatar;
 
@@ -130,7 +137,16 @@ export async function PUT(
 
     // Only admins can update role and status
     if (!isOwnProfile) {
-      // We already checked permission above
+      // Protect last admin from demotion or deactivation
+      if (userToUpdate.role === 'admin' && (body.role && body.role !== 'admin' || body.isActive === false)) {
+        const adminCount = await User.countDocuments({ role: 'admin', isActive: true });
+        if (adminCount <= 1) {
+          return NextResponse.json(
+            { error: 'Der letzte aktive Admin kann nicht herabgestuft oder deaktiviert werden' },
+            { status: 400 }
+          );
+        }
+      }
       if (body.role) userToUpdate.role = body.role;
       if (body.isActive !== undefined) userToUpdate.isActive = body.isActive;
       if (body.isEmailVerified !== undefined) userToUpdate.isEmailVerified = body.isEmailVerified;
@@ -161,9 +177,8 @@ export async function PUT(
     // Update user
     await userToUpdate.save();
     
-    // Return user without password
-    const userObject = userToUpdate.toObject();
-    const { password: _password, ...userResponse } = userObject;
+    // Return user without sensitive fields (toJSON strips password, tokens, etc.)
+    const userResponse = userToUpdate.toJSON();
 
     return NextResponse.json({
       success: true,
@@ -231,6 +246,39 @@ export async function DELETE(
         { status: 400 }
       );
     }
+
+    // Protect last admin from deletion
+    const userToDelete = await User.findById(id);
+    if (!userToDelete) {
+      return NextResponse.json(
+        { error: 'Benutzer nicht gefunden' },
+        { status: 404 }
+      );
+    }
+
+    if (userToDelete.role === 'admin') {
+      const adminCount = await User.countDocuments({ role: 'admin', isActive: true });
+      if (adminCount <= 1) {
+        return NextResponse.json(
+          { error: 'Der letzte Admin kann nicht gelöscht werden' },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Cascade cleanup: remove user from meeting series
+    const username = userToDelete.username;
+    const userId = userToDelete._id.toString();
+    await MeetingSeries.updateMany(
+      { $or: [{ visibleFor: username }, { moderators: username }, { participants: username }] },
+      { $pull: { visibleFor: username, moderators: username, participants: username, members: { userId } } }
+    );
+
+    // Remove user from task responsibles
+    await Task.updateMany(
+      { responsibles: userId },
+      { $pull: { responsibles: userId } }
+    );
 
     const deletedUser = await User.findByIdAndDelete(id);
     if (!deletedUser) {

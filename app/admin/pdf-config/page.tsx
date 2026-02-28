@@ -18,8 +18,6 @@ interface PdfSettings {
   showFooter: boolean;
   primaryColor: string;
   secondaryColor: string;
-  includeTableOfContents: boolean;
-  includeParticipants: boolean;
   includeResponsibles: boolean;
   includeStatusBadges: boolean;
   includePriorityBadges: boolean;
@@ -83,8 +81,6 @@ export default function PdfConfigPage() {
     showFooter: true,
     primaryColor: '#3B82F6',
     secondaryColor: '#6B7280',
-    includeTableOfContents: false,
-    includeParticipants: true,
     includeResponsibles: true,
     includeStatusBadges: true,
     includePriorityBadges: true,
@@ -412,9 +408,15 @@ export default function PdfConfigPage() {
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">{t('content.branding.logoUrl')}</label>
                       <input
-                        type="text"
+                        type="url"
                         value={contentSettings.logoUrl}
-                        onChange={(e) => setContentSettings({ ...contentSettings, logoUrl: e.target.value })}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          // Only accept empty or valid http(s) URLs
+                          if (!val || val.startsWith('http://') || val.startsWith('https://') || val.startsWith('/')) {
+                            setContentSettings({ ...contentSettings, logoUrl: val });
+                          }
+                        }}
                         placeholder="https://..."
                         className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                       />
@@ -534,26 +536,6 @@ export default function PdfConfigPage() {
               </h2>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                  <input
-                    type="checkbox"
-                    checked={contentSettings.includeTableOfContents}
-                    onChange={(e) => setContentSettings({ ...contentSettings, includeTableOfContents: e.target.checked })}
-                    className="w-4 h-4 text-blue-600 rounded"
-                  />
-                  {t('content.options.toc')}
-                </label>
-                
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
-                  <input
-                    type="checkbox"
-                    checked={contentSettings.includeParticipants}
-                    onChange={(e) => setContentSettings({ ...contentSettings, includeParticipants: e.target.checked })}
-                    className="w-4 h-4 text-blue-600 rounded"
-                  />
-                  {t('content.options.participants')}
-                </label>
-                
                 <label className="flex items-center gap-2 text-sm font-medium text-gray-700">
                   <input
                     type="checkbox"

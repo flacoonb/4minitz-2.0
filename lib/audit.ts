@@ -18,7 +18,7 @@ export async function logAction(entry: AuditLogEntry) {
     await connectDB();
     
     // Check if audit logging is enabled
-    const settings = await Settings.findOne({}).sort({ version: -1 });
+    const settings = await Settings.findOne({}).sort({ updatedAt: -1 });
     if (!settings?.systemSettings?.enableAuditLog) {
       return;
     }

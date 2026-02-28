@@ -51,7 +51,6 @@ function SortableTopic({
 }: SortableTopicProps) {
   const t = useTranslations('minutes');
   const tCommon = useTranslations('common');
-  const _locale = useLocale();
   const {
     attributes,
     listeners,
@@ -77,10 +76,6 @@ function SortableTopic({
   };
 
   // Helper function to format multiple users as initials
-  const _formatUsersAsInitials = (userIds: string[]): string => {
-    return userIds.map(id => getUserInitials(id)).join(', ');
-  };
-
   return (
     <div ref={setNodeRef} style={style} className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-gray-100">
       <div className="flex justify-between items-start mb-4">
@@ -100,7 +95,7 @@ function SortableTopic({
 
           <div className="flex-1">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              {t('topic')} {topicIndex + 1}
+              {t('topic')} {topicIndex + 1} *
             </label>
             <input
               type="text"
@@ -985,6 +980,10 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [newGuestName, setNewGuestName] = useState('');
   const [showGuestInput, setShowGuestInput] = useState(false);
+  const [confirmDialog, setConfirmDialog] = useState<{
+    message: string;
+    onConfirm: () => void;
+  } | null>(null);
 
   // Use a ref to track imported task IDs to prevent duplicates
   const importedTaskIdsRef = useRef<Set<string>>(new Set());
@@ -1137,8 +1136,6 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
 
       if (response.ok) {
         const result = await response.json();
-        if (result.debug) {
-        }
         setPendingTasks(result.data || []);
         setShowPendingTasks(true); // Always set to true after loading, regardless of results
       }
@@ -1156,8 +1153,13 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
     }
   }, [minute, minuteId, fetchPendingTasks]); // Run when minute is loaded or changes
 
-  // Track unsaved changes
+  // Track unsaved changes (skip the initial load)
+  const isInitialLoad = useRef(true);
   useEffect(() => {
+    if (isInitialLoad.current) {
+      isInitialLoad.current = false;
+      return;
+    }
     setHasUnsavedChanges(true);
   }, [formData]);
 
@@ -1371,11 +1373,6 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
     return allUsers.find(u => u._id === userId);
   };
 
-  const _getUserDisplayName = (userId: string): string => {
-    const user = getUserById(userId);
-    return user ? `${user.firstName} ${user.lastName}` : userId;
-  };
-
   const addTopic = () => {
     setFormData(prev => ({
       ...prev,
@@ -1470,28 +1467,36 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
   };
 
   const deleteTopic = (topicIndex: number) => {
-    if (confirm(t('confirmDeleteTopic'))) {
-      setFormData(prev => ({
-        ...prev,
-        topics: prev.topics.filter((_, i) => i !== topicIndex)
-      }));
-    }
+    setConfirmDialog({
+      message: t('confirmDeleteTopic'),
+      onConfirm: () => {
+        setFormData(prev => ({
+          ...prev,
+          topics: prev.topics.filter((_, i) => i !== topicIndex)
+        }));
+        setConfirmDialog(null);
+      },
+    });
   };
 
   const deleteInfoItem = (topicIndex: number, itemIndex: number) => {
-    if (confirm(t('confirmDeleteInfoItem'))) {
-      setFormData(prev => ({
-        ...prev,
-        topics: prev.topics.map((topic, i) =>
-          i === topicIndex
-            ? {
-              ...topic,
-              infoItems: topic.infoItems?.filter((_, j) => j !== itemIndex) || []
-            }
-            : topic
-        )
-      }));
-    }
+    setConfirmDialog({
+      message: t('confirmDeleteInfoItem'),
+      onConfirm: () => {
+        setFormData(prev => ({
+          ...prev,
+          topics: prev.topics.map((topic, i) =>
+            i === topicIndex
+              ? {
+                ...topic,
+                infoItems: topic.infoItems?.filter((_, j) => j !== itemIndex) || []
+              }
+              : topic
+          )
+        }));
+        setConfirmDialog(null);
+      },
+    });
   };
 
   if (loading) {
@@ -1584,7 +1589,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-100">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">{t('date')}</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('date')} *</label>
                 <input
                   type="date"
                   value={formData.date}
@@ -1972,6 +1977,39 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
             />
           </div>
         </form>
+
+        {/* Confirm Dialog Modal */}
+        {confirmDialog && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999]">
+            <div className="bg-white rounded-xl shadow-2xl p-6 max-w-sm mx-4">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="bg-red-100 rounded-full p-2">
+                  <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-bold text-gray-900">{t('confirmTitle') || 'Bestätigung'}</h3>
+              </div>
+              <p className="text-gray-600 text-sm mb-6">{confirmDialog.message}</p>
+              <div className="flex gap-3 justify-end">
+                <button
+                  type="button"
+                  onClick={() => setConfirmDialog(null)}
+                  className="px-5 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-medium text-sm"
+                >
+                  {t('cancel') || 'Abbrechen'}
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmDialog.onConfirm}
+                  className="px-5 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium text-sm"
+                >
+                  {t('delete') || 'Löschen'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

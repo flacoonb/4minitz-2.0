@@ -36,7 +36,7 @@ export async function POST(request: NextRequest) {
     const role = 'user';
 
     // Check if self-registration is allowed
-    const settings = await Settings.findOne({}).sort({ version: -1 });
+    const settings = await Settings.findOne({}).sort({ updatedAt: -1 });
     if (settings && settings.memberSettings && settings.memberSettings.allowSelfRegistration === false) {
       // Allow registration only if no users exist (first run / setup)
       const userCount = await User.countDocuments();
@@ -61,8 +61,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create new user
-    const newUser = new User({
+    // Check if email verification is required
+    const requireEmailVerification = settings?.memberSettings?.requireEmailVerification ?? true;
+
+    // Generate verification token before save to avoid half-initialized user in DB
+    let verificationToken: string | null = null;
+    const userFields: Record<string, unknown> = {
       email,
       username,
       password, // Will be hashed by pre-save middleware
@@ -71,24 +75,20 @@ export async function POST(request: NextRequest) {
       role,
       isActive: true,
       isEmailVerified: false
-    });
-
-    await newUser.save();
-
-    // Check if email verification is required
-    // settings is already fetched above
-    const requireEmailVerification = settings?.memberSettings?.requireEmailVerification ?? true;
+    };
 
     if (requireEmailVerification) {
-      // Generate verification token (valid for 24 hours)
-      const verificationToken = crypto.randomBytes(32).toString('hex');
+      verificationToken = crypto.randomBytes(32).toString('hex');
       const tokenHash = crypto.createHash('sha256').update(verificationToken).digest('hex');
-      const verificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+      userFields.emailVerificationToken = tokenHash;
+      userFields.emailVerificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+    }
 
-      newUser.emailVerificationToken = tokenHash;
-      newUser.emailVerificationExpires = verificationExpires;
-      await newUser.save();
+    // Create and save user (single save with all fields)
+    const newUser = new User(userFields);
+    await newUser.save();
 
+    if (requireEmailVerification && verificationToken) {
       // Send verification email
       let emailSent = false;
       try {

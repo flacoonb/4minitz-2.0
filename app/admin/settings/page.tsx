@@ -508,62 +508,7 @@ const AdminSettings = () => {
                     </label>
                   </div>
 
-                  {/* Guest Access */}
-                  <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
-                    <label className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        checked={settings.memberSettings.enableGuestAccess}
-                        onChange={(e) => updateMemberSettings('enableGuestAccess', e.target.checked)}
-                        className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
-                      />
-                      <div>
-                        <span className="text-sm font-medium text-slate-700">{t('members.enableGuestAccess')}</span>
-                        <p className="text-xs text-slate-500">{t('members.enableGuestAccessDesc')}</p>
-                      </div>
-                    </label>
-                  </div>
-
-                  {/* Default Role */}
-                  <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
-                    <label className="block text-sm font-medium text-slate-700 mb-2">{t('members.defaultRole')}</label>
-                    <select
-                      value={settings.memberSettings.defaultRole}
-                      onChange={(e) => updateMemberSettings('defaultRole', e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    >
-                      <option value="user">{t('roles.user')}</option>
-                      <option value="moderator">{t('roles.moderator')}</option>
-                    </select>
-                    <p className="text-xs text-slate-500 mt-1">{t('members.defaultRoleDesc')}</p>
-                  </div>
-
-                  {/* Max Members Per Meeting */}
-                  <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
-                    <label className="block text-sm font-medium text-slate-700 mb-2">{t('members.maxMembersPerMeeting')}</label>
-                    <input
-                      type="number"
-                      min="1"
-                      max="1000"
-                      value={settings.memberSettings.maxMembersPerMeeting}
-                      onChange={(e) => updateMemberSettings('maxMembersPerMeeting', parseInt(e.target.value))}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    />
-                  </div>
-
-                  {/* Guest Link Expiry */}
-                  <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
-                    <label className="block text-sm font-medium text-slate-700 mb-2">{t('members.guestLinkExpiryDays')}</label>
-                    <input
-                      type="number"
-                      min="1"
-                      max="365"
-                      value={settings.memberSettings.guestLinkExpiryDays}
-                      onChange={(e) => updateMemberSettings('guestLinkExpiryDays', parseInt(e.target.value))}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                      disabled={!settings.memberSettings.enableGuestAccess}
-                    />
-                  </div>
+                  {/* Guest Access, Default Role, Max Members, Guest Link Expiry removed — not yet implemented */}
                 </div>
               </div>
             )}
@@ -621,51 +566,7 @@ const AdminSettings = () => {
                     )}
                   </div>
 
-                  {/* Push Notifications */}
-                  <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
-                    <label className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        checked={settings.notificationSettings.enablePushNotifications}
-                        onChange={(e) => updateNotificationSettings('enablePushNotifications', e.target.checked)}
-                        className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
-                      />
-                      <div>
-                        <span className="text-sm font-medium text-slate-700">{t('notifications.enablePushNotifications')}</span>
-                        <p className="text-xs text-slate-500">{t('notifications.enablePushNotificationsDesc')}</p>
-                      </div>
-                    </label>
-                  </div>
-
-                  {/* Meeting Reminders */}
-                  <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
-                    <label className="flex items-center gap-3 mb-3">
-                      <input
-                        type="checkbox"
-                        checked={settings.notificationSettings.sendMeetingReminders}
-                        onChange={(e) => updateNotificationSettings('sendMeetingReminders', e.target.checked)}
-                        className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
-                      />
-                      <div>
-                        <span className="text-sm font-medium text-slate-700">{t('notifications.sendMeetingReminders')}</span>
-                        <p className="text-xs text-slate-500">{t('notifications.sendMeetingRemindersDesc')}</p>
-                      </div>
-                    </label>
-
-                    {settings.notificationSettings.sendMeetingReminders && (
-                      <div className="ml-7">
-                        <label className="block text-xs text-slate-600 mb-1">{t('notifications.reminderHoursBefore')}</label>
-                        <input
-                          type="number"
-                          min="1"
-                          max="168"
-                          value={settings.notificationSettings.reminderHoursBefore}
-                          onChange={(e) => updateNotificationSettings('reminderHoursBefore', parseInt(e.target.value))}
-                          className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                        />
-                      </div>
-                    )}
-                  </div>
+                  {/* Push Notifications and Meeting Reminders removed — not yet implemented */}
                 </div>
               </div>
             )}

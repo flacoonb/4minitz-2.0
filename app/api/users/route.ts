@@ -2,8 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
 import { verifyToken } from '@/lib/auth';
+import { requirePermission } from '@/lib/permissions';
 
-// GET - Get all users (Admin only)
+// GET - Get all users
 export async function GET(request: NextRequest) {
   try {
     await connectDB();
@@ -17,27 +18,25 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    // Allow access if user has 'canManageUsers' OR if it's a simple lookup (e.g. for autocomplete)
-    // For now, we relax this to allow authenticated users to see the user list (needed for assigning tasks/participants)
-    // Ideally, we should have a separate endpoint for "search users" vs "manage users"
-    // const permResult = await requirePermission(authResult.user!, 'canManageUsers');
-    // if (!permResult.success) {
-    //   return NextResponse.json(
-    //     { error: permResult.error },
-    //     { status: 403 }
-    //   );
-    // }
+    // Check if user can manage users (admin) — affects which fields are returned
+    const permResult = await requirePermission(authResult.user!, 'canManageUsers');
+    const isManager = permResult.success;
 
     const url = new URL(request.url);
     const page = Math.max(parseInt(url.searchParams.get('page') || '1') || 1, 1);
-    const limit = Math.min(Math.max(parseInt(url.searchParams.get('limit') || '20') || 20, 1), 100);
+    const limit = Math.min(Math.max(parseInt(url.searchParams.get('limit') || '20') || 20, 1), 500);
     const search = url.searchParams.get('search') || '';
     const role = url.searchParams.get('role') || '';
     const status = url.searchParams.get('status') || '';
 
     // Build filter
     const filter: Record<string, unknown> = {};
-    
+
+    // Non-managers only see active users
+    if (!isManager) {
+      filter.isActive = true;
+    }
+
     if (search) {
       const escapedSearch = search.slice(0, 100).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       filter.$or = [
@@ -47,23 +46,30 @@ export async function GET(request: NextRequest) {
         { username: { $regex: escapedSearch, $options: 'i' } }
       ];
     }
-    
-    if (role && ['user', 'moderator', 'admin'].includes(role)) {
+
+    if (isManager && role && ['user', 'moderator', 'admin'].includes(role)) {
       filter.role = role;
     }
-    
-    if (status === 'active') {
-      filter.isActive = true;
-    } else if (status === 'inactive') {
-      filter.isActive = false;
+
+    if (isManager) {
+      if (status === 'active') {
+        filter.isActive = true;
+      } else if (status === 'inactive') {
+        filter.isActive = false;
+      }
     }
+
+    // Non-managers get limited fields (for autocomplete/participant selection)
+    const selectFields = isManager
+      ? '-password'
+      : '_id firstName lastName email username role';
 
     // Get total count
     const total = await User.countDocuments(filter);
 
     // Get users with pagination
     const users = await User.find(filter)
-      .select('-password')
+      .select(selectFields)
       .sort({ createdAt: -1 })
       .limit(limit)
       .skip((page - 1) * limit);
@@ -75,7 +81,7 @@ export async function GET(request: NextRequest) {
         page,
         limit,
         total,
-        pages: Math.ceil(total / limit),
+        totalPages: Math.ceil(total / limit),
         hasNext: page < Math.ceil(total / limit),
         hasPrev: page > 1
       }
@@ -104,9 +110,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (authResult.user!.role !== 'admin') {
+    const createPermResult = await requirePermission(authResult.user!, 'canManageUsers');
+    if (!createPermResult.success) {
       return NextResponse.json(
-        { error: 'Nur Administratoren haben Zugriff auf diese Ressource' },
+        { error: createPermResult.error },
         { status: 403 }
       );
     }

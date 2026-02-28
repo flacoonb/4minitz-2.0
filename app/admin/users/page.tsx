@@ -33,17 +33,18 @@ interface User {
   isEmailVerified: boolean;
   avatar?: string;
   createdAt: string;
-  lastLoginAt?: string;
+  lastLogin?: string;
 }
 
 const UserManagement = () => {
   const t = useTranslations('admin.users');
   // tCommon removed
   const [users, setUsers] = useState<User[]>([]);
-  const [filteredUsers, setFilteredUsers] = useState<User[]>([]);
+  // users removed — server-side search handles filtering
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [saving, setSaving] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -87,10 +88,7 @@ const UserManagement = () => {
         page: page.toString(),
         limit: pagination.limit.toString(),
         ...(roleFilter !== 'all' && { role: roleFilter }),
-        ...(statusFilter !== 'all' && { 
-          ...(statusFilter === 'active' && { active: 'true' }),
-          ...(statusFilter === 'inactive' && { active: 'false' })
-        }),
+        ...(statusFilter !== 'all' && { status: statusFilter }),
         ...(searchTerm && { search: searchTerm })
       });
 
@@ -120,22 +118,7 @@ const UserManagement = () => {
     }
   }, [pagination.limit, roleFilter, statusFilter, searchTerm, router]);
 
-  // Filter users locally for instant feedback
-  useEffect(() => {
-    let filtered = users;
-
-    if (searchTerm) {
-      filtered = filtered.filter(user => 
-        user.username.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        `${user.firstName} ${user.lastName}`.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    setFilteredUsers(filtered);
-  }, [users, searchTerm]);
-
-  // Debounced search
+  // Debounced server-side search
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchUsers(1);
@@ -152,6 +135,8 @@ const UserManagement = () => {
   // Create user
   const handleCreateUser = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+    setSaving(true);
     try {
       const response = await fetch('/api/users', {
         method: 'POST',
@@ -173,6 +158,8 @@ const UserManagement = () => {
       fetchUsers(pagination.page);
     } catch (err: any) {
       setError(err.message);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -180,6 +167,8 @@ const UserManagement = () => {
   const handleUpdateUser = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedUser) return;
+    setError('');
+    setSaving(true);
 
     try {
       const response = await fetch(`/api/users/${selectedUser._id}`, {
@@ -202,12 +191,16 @@ const UserManagement = () => {
       fetchUsers(pagination.page);
     } catch (err: any) {
       setError(err.message);
+    } finally {
+      setSaving(false);
     }
   };
 
   // Delete user
   const handleDeleteUser = async () => {
     if (!selectedUser) return;
+    setError('');
+    setSaving(true);
 
     try {
       const response = await fetch(`/api/users/${selectedUser._id}`, {
@@ -226,6 +219,8 @@ const UserManagement = () => {
       fetchUsers(pagination.page);
     } catch (err: any) {
       setError(err.message);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -361,7 +356,7 @@ const UserManagement = () => {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200">
-                    {filteredUsers.map((user) => (
+                    {users.map((user) => (
                       <tr key={user._id} className="hover:bg-slate-50/50 transition-colors">
                         <td className="px-6 py-4">
                           <div className="flex items-center gap-3">
@@ -500,6 +495,7 @@ const UserManagement = () => {
                 <h2 className="text-xl font-semibold text-slate-800">{t('modals.create.title')}</h2>
               </div>
               <form onSubmit={handleCreateUser} className="p-6 space-y-4">
+                <p className="text-xs text-slate-500 mb-2">Alle Felder sind Pflichtfelder.</p>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">{t('fields.username')}</label>
                   <input
@@ -575,9 +571,10 @@ const UserManagement = () => {
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg hover:from-indigo-600 hover:to-purple-700 transition-all"
+                    disabled={saving}
+                    className="flex-1 px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg hover:from-indigo-600 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {t('actions.create')}
+                    {saving ? 'Erstelle…' : t('actions.create')}
                   </button>
                 </div>
               </form>
@@ -677,9 +674,10 @@ const UserManagement = () => {
                   </button>
                   <button
                     type="submit"
-                    className="flex-1 px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg hover:from-indigo-600 hover:to-purple-700 transition-all"
+                    disabled={saving}
+                    className="flex-1 px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg hover:from-indigo-600 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {t('actions.update')}
+                    {saving ? 'Speichere…' : t('actions.update')}
                   </button>
                 </div>
               </form>
@@ -710,9 +708,10 @@ const UserManagement = () => {
                   </button>
                   <button
                     onClick={handleDeleteUser}
-                    className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                    disabled={saving}
+                    className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {t('actions.delete')}
+                    {saving ? 'Lösche…' : t('actions.delete')}
                   </button>
                 </div>
               </div>

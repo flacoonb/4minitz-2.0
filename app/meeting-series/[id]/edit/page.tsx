@@ -232,7 +232,7 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
             type="submit"
             form="edit-form"
             disabled={saving}
-            className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed border-2 border-white"
+            className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed border-2 border-white"
           >
             <div className="flex items-center gap-2">
               {saving ? (

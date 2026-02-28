@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     const testResult = await testEmailConfiguration();
 
     // Fetch settings from DB
-    const settings = await Settings.findOne({}).sort({ version: -1 });
+    const settings = await Settings.findOne({}).sort({ updatedAt: -1 });
     const smtpSettings = settings?.smtpSettings;
 
     // Determine config source (DB or Env)
@@ -113,10 +113,10 @@ export async function PUT(request: NextRequest) {
     }
 
     // Update Settings in Database
-    let settings = await Settings.findOne({}).sort({ version: -1 });
+    let settings = await Settings.findOne({}).sort({ updatedAt: -1 });
     if (!settings) {
       settings = new Settings({
-        lastModifiedBy: authResult.user._id,
+        updatedBy: authResult.user._id.toString(),
         roles: { /* defaults will be used */ }
       });
     }
@@ -132,7 +132,7 @@ export async function PUT(request: NextRequest) {
       from: fromEmail
     };
 
-    settings.lastModifiedBy = authResult.user._id;
+    settings.updatedBy = authResult.user._id.toString();
     await settings.save();
 
     // Test the new configuration

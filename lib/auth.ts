@@ -1,7 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { NextRequest } from 'next/server';
 import User, { IUser } from '@/models/User';
-import Settings from '@/models/Settings';
 import connectDB from '@/lib/mongodb';
 import { getJwtSecret } from '@/lib/validateEnv';
 
@@ -132,36 +131,6 @@ export function generateToken(user: IUser, expiresInSeconds?: number): string {
   );
 }
 
-export async function requirePermission(user: IUser, permission: string): Promise<RoleResult> {
-  try {
-    await connectDB();
-    const settings = await Settings.findOne({}).sort({ version: -1 });
-    
-    let hasPermission = false;
-    
-    if (settings && settings.roles && settings.roles[user.role]) {
-      hasPermission = !!settings.roles[user.role][permission];
-    } else {
-      // Fallback defaults if no settings found
-      if (user.role === 'admin') {
-        hasPermission = true;
-      } else if (user.role === 'moderator') {
-        // Hardcoded defaults for moderator
-        const modDefaults = ['canCreateMeetings', 'canViewAllMeetings', 'canEditAllMinutes'];
-        hasPermission = modDefaults.includes(permission);
-      }
-    }
-
-    if (!hasPermission) {
-      return {
-        success: false,
-        error: `Fehlende Berechtigung: ${permission}`
-      };
-    }
-
-    return { success: true };
-  } catch (error) {
-    console.error('Error checking permission:', error);
-    return { success: false, error: 'Fehler bei der Berechtigungsprüfung' };
-  }
-}
+// requirePermission is now consolidated in lib/permissions.ts
+// Re-export for backward compatibility
+export { requirePermission } from '@/lib/permissions';

@@ -69,11 +69,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     
     // Fallback to role-based defaults if permissions not loaded
+    // Must match getDefaultPermissions() in lib/permissions.ts
     const defaultPermissions: Record<string, string[]> = {
       admin: [
         'canCreateMeetings',
         'canModerateAllMeetings',
         'canViewAllMeetings',
+        'canViewAllMinutes',
         'canEditAllMinutes',
         'canDeleteMinutes',
         'canManageUsers',
@@ -83,6 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       ],
       moderator: [
         'canCreateMeetings',
+        'canViewAllMeetings',
         'canExportData'
       ],
       user: []

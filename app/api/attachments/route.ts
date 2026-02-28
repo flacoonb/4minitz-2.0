@@ -114,7 +114,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get settings
-    const settings = await Settings.findOne({}).sort({ version: -1 });
+    const settings = await Settings.findOne({}).sort({ updatedAt: -1 });
     
     // Determine max file size
     const maxFileSizeMB = settings?.systemSettings?.maxFileUploadSize || 10;

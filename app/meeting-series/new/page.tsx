@@ -106,11 +106,6 @@ export default function NewMeetingSeriesPage() {
     return allUsers.find(u => u._id === userId);
   };
 
-  const _getUserDisplayName = (userId: string): string => {
-    const user = getUserById(userId);
-    return user ? `${user.firstName} ${user.lastName}` : userId;
-  };
-
   const addMember = () => {
     if (selectedUserId && !formData.members.some(m => m.userId === selectedUserId)) {
       setFormData(prev => ({
@@ -431,16 +426,17 @@ export default function NewMeetingSeriesPage() {
 
           {/* Participants */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Teilnehmer
             </label>
+            <p className="text-xs text-gray-500 mb-2">Aktive Sitzungsteilnehmer — können Protokolle bearbeiten und Aufgaben zugewiesen bekommen.</p>
             <div className="space-y-3">
               <div className="flex gap-2">
                 <input
                   type="text"
                   value={newParticipant}
                   onChange={(e) => setNewParticipant(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addParticipant())}
+                  onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addParticipant())}
                   className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                   placeholder="E-Mail oder Name des Teilnehmers"
                 />
@@ -481,24 +477,24 @@ export default function NewMeetingSeriesPage() {
 
           {/* Informed Users */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label className="block text-sm font-medium text-gray-700 mb-1">
               Informierte Benutzer
-              <span className="text-gray-500 text-xs ml-2">(erhalten Benachrichtigungen)</span>
             </label>
+            <p className="text-xs text-gray-500 mb-2">Erhalten Protokolle und Benachrichtigungen, nehmen aber nicht aktiv an Sitzungen teil.</p>
             <div className="space-y-3">
               <div className="flex gap-2">
                 <input
                   type="text"
                   value={newInformedUser}
                   onChange={(e) => setNewInformedUser(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addInformedUser())}
+                  onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addInformedUser())}
                   className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                   placeholder="E-Mail oder Name"
                 />
                 <button
                   type="button"
                   onClick={addInformedUser}
-                  className="px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors"
+                  className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -535,7 +531,7 @@ export default function NewMeetingSeriesPage() {
             <button
               type="submit"
               disabled={loading || !formData.project}
-              className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              className="px-8 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
               {loading ? (
                 <div className="flex items-center gap-2">

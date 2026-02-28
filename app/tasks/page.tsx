@@ -15,6 +15,7 @@ interface Task {
   responsibles: string[];
   meetingSeriesId: string;
   minutesId?: string;
+  minutesDate?: string;
   topicId?: string;
   topicSubject?: string;
   notes?: string;
@@ -48,6 +49,12 @@ export default function TasksPage() {
   const [filterPriority, setFilterPriority] = useState<string>('');
   const [filterOverdue, setFilterOverdue] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Task edit modal state
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [taskUpdateStatus, setTaskUpdateStatus] = useState<'open' | 'in-progress' | 'completed' | 'cancelled'>('open');
+  const [taskUpdateNotes, setTaskUpdateNotes] = useState('');
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const fetchTasks = useCallback(async () => {
     try {
@@ -106,6 +113,52 @@ export default function TasksPage() {
     if (!task.meetingSeries) return '';
     const { project, name } = task.meetingSeries;
     return name ? `${project} – ${name}` : project;
+  };
+
+  // Task edit modal handlers
+  const openTaskModal = (task: Task) => {
+    setEditingTask(task);
+    setTaskUpdateStatus(task.status);
+    setTaskUpdateNotes(task.notes || '');
+  };
+
+  const closeTaskModal = () => {
+    setEditingTask(null);
+    setTaskUpdateStatus('open');
+    setTaskUpdateNotes('');
+  };
+
+  const updateTaskStatus = async () => {
+    if (!editingTask) return;
+
+    setIsUpdating(true);
+    try {
+      const response = await fetch(
+        `/api/tasks/${editingTask._id}`,
+        {
+          method: 'PATCH',
+          credentials: 'include',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            status: taskUpdateStatus,
+            notes: taskUpdateNotes,
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || t('errors.updateTaskFailed'));
+      }
+
+      await fetchTasks();
+      closeTaskModal();
+    } catch (err) {
+      console.error('Error updating task:', err);
+      alert(t('errors.updateTaskFailed') + ': ' + (err instanceof Error ? err.message : t('errors.unknown')));
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   const stats = {
@@ -263,6 +316,17 @@ export default function TasksPage() {
                       <p className="mt-2 text-sm text-gray-600 line-clamp-2">{task.notes}</p>
                     )}
                   </div>
+
+                  {/* Edit Button */}
+                  <button
+                    onClick={() => openTaskModal(task)}
+                    className="shrink-0 px-3 py-1.5 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-1"
+                  >
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                    </svg>
+                    {t('common.edit')}
+                  </button>
                 </div>
               </div>
             ))
@@ -276,6 +340,171 @@ export default function TasksPage() {
           </div>
         )}
       </div>
+
+      {/* Task Edit Modal */}
+      {editingTask && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">{t('dashboard.editTask')}</h2>
+                  <p className="text-sm text-gray-600 mt-1">
+                    {editingTask.meetingSeries?.project || t('dashboard.noSeries')}
+                    {editingTask.meetingSeries?.name ? ` – ${editingTask.meetingSeries.name}` : ''}{editingTask.topicSubject ? ` • ${editingTask.topicSubject}` : ''}
+                  </p>
+                </div>
+                <button
+                  onClick={closeTaskModal}
+                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  aria-label="Dialog schliessen"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+
+            <div className="p-6 space-y-6">
+              {/* Original Task Description (Read-only) */}
+              <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
+                <div className="flex items-start gap-2 mb-2">
+                  <svg className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <div className="flex-1">
+                    <h3 className="text-sm font-bold text-blue-900 mb-1">{t('dashboard.originalTask')}</h3>
+                    <p className="text-base text-blue-800 font-medium">{editingTask.subject}</p>
+                    {editingTask.details && (
+                      <p className="text-sm text-blue-700 mt-2 whitespace-pre-wrap">{editingTask.details}</p>
+                    )}
+                  </div>
+                </div>
+                <div className="mt-3 pt-3 border-t border-blue-300 flex flex-wrap gap-2 text-xs">
+                  {editingTask.minutesDate && (
+                    <span className="text-blue-700">
+                      📅 {t('dashboard.minuteLabel')} {new Date(editingTask.minutesDate).toLocaleDateString(locale)}
+                    </span>
+                  )}
+                  {editingTask.dueDate && (
+                    <span className="text-blue-700">
+                      {editingTask.minutesDate ? '• ' : ''}⏰ {t('dashboard.dueLabel')} {new Date(editingTask.dueDate).toLocaleDateString(locale)}
+                    </span>
+                  )}
+                  {editingTask.priority && (
+                    <span className="text-blue-700">
+                      • {editingTask.priority === 'high' ? `🔴 ${t('priority.high')}` :
+                        editingTask.priority === 'medium' ? `🟡 ${t('priority.medium')}` : `🔵 ${t('priority.low')}`}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Status Selection */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {t('dashboard.changeStatus')}
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    onClick={() => setTaskUpdateStatus('open')}
+                    className={`p-4 rounded-lg border-2 transition-all ${taskUpdateStatus === 'open'
+                      ? 'border-red-500 bg-red-50 text-red-900'
+                      : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                  >
+                    <div className="text-2xl mb-1">○</div>
+                    <div className="font-medium">{t('status.open')}</div>
+                  </button>
+
+                  <button
+                    onClick={() => setTaskUpdateStatus('in-progress')}
+                    className={`p-4 rounded-lg border-2 transition-all ${taskUpdateStatus === 'in-progress'
+                      ? 'border-yellow-500 bg-yellow-50 text-yellow-900'
+                      : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                  >
+                    <div className="text-2xl mb-1">⏳</div>
+                    <div className="font-medium">{t('status.inProgress')}</div>
+                  </button>
+
+                  <button
+                    onClick={() => setTaskUpdateStatus('completed')}
+                    className={`p-4 rounded-lg border-2 transition-all ${taskUpdateStatus === 'completed'
+                      ? 'border-green-500 bg-green-50 text-green-900'
+                      : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                  >
+                    <div className="text-2xl mb-1">✓</div>
+                    <div className="font-medium">{t('status.completed')}</div>
+                  </button>
+
+                  <button
+                    onClick={() => setTaskUpdateStatus('cancelled')}
+                    className={`p-4 rounded-lg border-2 transition-all ${taskUpdateStatus === 'cancelled'
+                      ? 'border-gray-500 bg-gray-50 text-gray-900'
+                      : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                  >
+                    <div className="text-2xl mb-1">✕</div>
+                    <div className="font-medium">{t('status.cancelled')}</div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Additional Notes (Editable) */}
+              <div>
+                <label htmlFor="task-notes" className="block text-sm font-medium text-gray-700 mb-2">
+                  💬 {t('dashboard.yourComment')}
+                </label>
+                <textarea
+                  id="task-notes"
+                  value={taskUpdateNotes}
+                  onChange={(e) => setTaskUpdateNotes(e.target.value)}
+                  rows={5}
+                  placeholder={t('dashboard.commentPlaceholder')}
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                />
+                <p className="mt-2 text-xs text-gray-500 flex items-start gap-1">
+                  <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m-1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span>{t('dashboard.commentHint')}</span>
+                </p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
+                <button
+                  onClick={closeTaskModal}
+                  disabled={isUpdating}
+                  className="px-6 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
+                >
+                  {t('common.cancel')}
+                </button>
+                <button
+                  onClick={updateTaskStatus}
+                  disabled={isUpdating}
+                  className="px-6 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+                >
+                  {isUpdating ? (
+                    <>
+                      <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      {t('common.saving')}
+                    </>
+                  ) : (
+                    t('common.save')
+                  )}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

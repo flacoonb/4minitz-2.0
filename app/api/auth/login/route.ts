@@ -58,7 +58,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Check if email verification is required
-    const settings = await Settings.findOne({}).sort({ version: -1 });
+    const settings = await Settings.findOne({}).sort({ updatedAt: -1 });
     const requireEmailVerification = settings?.memberSettings?.requireEmailVerification ?? true;
 
     if (requireEmailVerification && !user.isEmailVerified && user.role !== 'admin') {
@@ -93,8 +93,10 @@ export async function POST(request: NextRequest) {
     });
 
     // Get session timeout from settings
-    // settings already fetched above
-    const sessionTimeoutMinutes = settings?.systemSettings?.autoLogout?.minutes || 480; // Default 8 hours
+    const autoLogoutEnabled = settings?.systemSettings?.autoLogout?.enabled ?? true;
+    const sessionTimeoutMinutes = autoLogoutEnabled
+      ? (settings?.systemSettings?.autoLogout?.minutes || 480)
+      : 43200; // 30 days if auto-logout disabled
     const sessionTimeoutSeconds = sessionTimeoutMinutes * 60;
 
     // Generate JWT token with settings-based expiry

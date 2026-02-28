@@ -124,9 +124,10 @@ const UserSchema: Schema<IUser> = new Schema(
       validate: {
         validator: (avatar: string) => {
           if (!avatar) return true;
-          return /^https?:\/\/.+\.(jpg|jpeg|png|gif|webp)$/i.test(avatar);
+          // Accept any https URL (CDN URLs often don't end with file extensions)
+          return /^https?:\/\/.+/i.test(avatar);
         },
-        message: 'Avatar muss eine gültige Bild-URL sein'
+        message: 'Avatar muss eine gültige URL sein'
       }
     },
 
@@ -148,6 +149,16 @@ const UserSchema: Schema<IUser> = new Schema(
     },
 
     emailVerificationExpires: {
+      type: Date,
+      default: null
+    },
+
+    passwordResetTokenHash: {
+      type: String,
+      default: null
+    },
+
+    passwordResetExpires: {
       type: Date,
       default: null
     },
@@ -195,6 +206,10 @@ const UserSchema: Schema<IUser> = new Schema(
     toJSON: {
       transform: function (doc: Document, ret: Record<string, any>) {
         delete ret.password;
+        delete ret.passwordResetTokenHash;
+        delete ret.passwordResetExpires;
+        delete ret.emailVerificationToken;
+        delete ret.emailVerificationExpires;
         return ret;
       }
     }

@@ -3,7 +3,7 @@
 import React, { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
-import { Lock, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Lock, AlertCircle, CheckCircle2, Check } from 'lucide-react';
 
 export default function ResetPasswordPage() {
   const searchParams = useSearchParams();
@@ -14,6 +14,22 @@ export default function ResetPasswordPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [passwordStrength, setPasswordStrength] = useState({
+    length: false, uppercase: false, lowercase: false, number: false, special: false,
+  });
+
+  const updatePasswordStrength = (pw: string) => {
+    setPasswordStrength({
+      length: pw.length >= 8,
+      uppercase: /[A-Z]/.test(pw),
+      lowercase: /[a-z]/.test(pw),
+      number: /[0-9]/.test(pw),
+      special: /[!@#$%^&*(),.?":{}|<>]/.test(pw),
+    });
+  };
+
+  const strengthScore = Object.values(passwordStrength).filter(Boolean).length;
+  const strengthColor = strengthScore <= 1 ? 'bg-red-500' : strengthScore <= 2 ? 'bg-orange-500' : strengthScore <= 3 ? 'bg-yellow-500' : strengthScore <= 4 ? 'bg-lime-500' : 'bg-green-500';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -102,12 +118,42 @@ export default function ResetPasswordPage() {
                 type="password"
                 id="password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onChange={(e) => { setPassword(e.target.value); updatePasswordStrength(e.target.value); }}
                 className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white/50"
                 placeholder="Mindestens 8 Zeichen"
                 required
                 disabled={!token}
               />
+              {password && (
+                <div className="mt-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="flex-1 bg-slate-200 rounded-full h-2">
+                      <div
+                        className={`h-2 rounded-full transition-all ${strengthColor}`}
+                        style={{ width: `${(strengthScore / 5) * 100}%` }}
+                      ></div>
+                    </div>
+                    <span className="text-xs text-slate-600">{strengthScore}/5</span>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className={`flex items-center gap-1 ${passwordStrength.length ? 'text-green-600' : 'text-slate-400'}`}>
+                      <Check className="w-3 h-3" /> 8+ Zeichen
+                    </div>
+                    <div className={`flex items-center gap-1 ${passwordStrength.uppercase ? 'text-green-600' : 'text-slate-400'}`}>
+                      <Check className="w-3 h-3" /> Grossbuchstabe
+                    </div>
+                    <div className={`flex items-center gap-1 ${passwordStrength.lowercase ? 'text-green-600' : 'text-slate-400'}`}>
+                      <Check className="w-3 h-3" /> Kleinbuchstabe
+                    </div>
+                    <div className={`flex items-center gap-1 ${passwordStrength.number ? 'text-green-600' : 'text-slate-400'}`}>
+                      <Check className="w-3 h-3" /> Zahl
+                    </div>
+                    <div className={`flex items-center gap-1 ${passwordStrength.special ? 'text-green-600' : 'text-slate-400'} col-span-2`}>
+                      <Check className="w-3 h-3" /> Sonderzeichen (!@#$%^&*)
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
 
             <div>
@@ -119,11 +165,14 @@ export default function ResetPasswordPage() {
                 id="confirmPassword"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white/50"
+                className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white/50 ${confirmPassword && confirmPassword !== password ? 'border-red-300' : 'border-slate-200'}`}
                 placeholder="Nochmals eingeben"
                 required
                 disabled={!token}
               />
+              {confirmPassword && confirmPassword !== password && (
+                <p className="text-xs text-red-500 mt-1">Passwörter stimmen nicht überein</p>
+              )}
             </div>
 
             <button

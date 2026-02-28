@@ -97,9 +97,9 @@ export async function POST(request: NextRequest) {
     await user.save();
 
     // Update settings (create default settings if missing)
-    let settings = await Settings.findOne({}).sort({ version: -1 });
+    let settings = await Settings.findOne({}).sort({ updatedAt: -1 });
     if (!settings) {
-      settings = new Settings({ lastModifiedBy: user._id });
+      settings = new Settings({ updatedBy: user._id.toString() });
     }
     if (systemSettings.organizationName) {
       settings.systemSettings.organizationName = systemSettings.organizationName;
@@ -123,7 +123,7 @@ export async function POST(request: NextRequest) {
       };
     }
 
-    settings.lastModifiedBy = user._id as any;
+    settings.updatedBy = user._id.toString();
     await settings.save();
 
     // Write MONGODB_URI to .env.local if it's different or new

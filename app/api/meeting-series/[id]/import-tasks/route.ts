@@ -33,16 +33,31 @@ export async function POST(request: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: 'Source and target series must differ' }, { status: 400 });
     }
 
-    // Verify target series exists
+    // Verify target series exists and user has access
     const targetSeries = await MeetingSeries.findById(targetSeriesId);
     if (!targetSeries) {
       return NextResponse.json({ error: 'Target series not found' }, { status: 404 });
     }
 
-    // Verify source series exists
+    const username = authResult.user.username;
+    const hasTargetAccess = targetSeries.visibleFor?.includes(username) ||
+      targetSeries.moderators?.includes(username) ||
+      authResult.user.role === 'admin';
+    if (!hasTargetAccess) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+
+    // Verify source series exists and user has access
     const sourceSeries = await MeetingSeries.findById(sourceSeriesId);
     if (!sourceSeries) {
       return NextResponse.json({ error: 'Source series not found' }, { status: 404 });
+    }
+
+    const hasSourceAccess = sourceSeries.visibleFor?.includes(username) ||
+      sourceSeries.moderators?.includes(username) ||
+      authResult.user.role === 'admin';
+    if (!hasSourceAccess) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
     // Get open/in-progress tasks from source series

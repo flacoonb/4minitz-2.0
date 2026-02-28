@@ -22,7 +22,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   // Fetch settings for organization name
   await connectDB();
-  const settings = await Settings.findOne({}).sort({ version: -1 });
+  const settings = await Settings.findOne({}).sort({ updatedAt: -1 });
   const organizationName = settings?.systemSettings?.organizationName || 'Protokoll-APP';
 
   return (

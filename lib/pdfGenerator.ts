@@ -23,15 +23,12 @@ interface PdfSettings {
   showFooter: boolean;
   primaryColor: string;
   secondaryColor: string;
-  includeTableOfContents: boolean;
-  includeParticipants: boolean;
   includeResponsibles: boolean;
   includeStatusBadges: boolean;
   includePriorityBadges: boolean;
   includeNotes: boolean;
   fontSize: number;
   fontFamily: 'helvetica' | 'times' | 'courier';
-  dateFormat?: string;
   locale?: string;
 }
 
@@ -122,8 +119,44 @@ function formatUsersAsInitials(userIds: string[], allUsers: User[]): string {
   return userIds.map(id => getUserInitials(id, allUsers)).join(', ');
 }
 
+// i18n labels for PDF content
+function getLabels(locale: string) {
+  const isEn = locale.startsWith('en');
+  return {
+    draft: isEn ? 'DRAFT' : 'ENTWURF',
+    protocol: isEn ? 'Protocol' : 'Protokoll',
+    attendance: isEn ? 'Board Attendance' : 'Anwesenheit des Vorstandes',
+    present: isEn ? 'p' : 'a',
+    excused: isEn ? 'e' : 'e',
+    absent: isEn ? 'ne' : 'ne',
+    legendPresent: isEn ? 'p: present' : 'a: anwesend',
+    legendExcused: isEn ? 'e: excused' : 'e: entschuldigt',
+    legendAbsent: isEn ? 'ne: not excused' : 'ne: nicht entschuldigt',
+    location: isEn ? 'Location:' : 'Ort:',
+    date: isEn ? 'Date:' : 'Datum:',
+    time: isEn ? 'Time:' : 'Zeit:',
+    notSpecified: isEn ? 'Not specified' : 'Nicht angegeben',
+    guests: isEn ? 'Guests:' : 'Gäste:',
+    more: isEn ? 'more' : 'weitere',
+    noEntries: isEn ? 'No entries' : 'Keine Einträge',
+    generalNotes: isEn ? 'General Notes' : 'Allgemeine Notizen',
+    reopeningHistory: isEn ? 'Reopening History' : 'Wiedereröffnungs-Historie',
+    confidential: isEn ? 'Confidential' : 'Vertraulich',
+    pageOf: isEn ? (i: number, n: number) => `Page ${i} of ${n}` : (i: number, n: number) => `Seite ${i} von ${n}`,
+    due: isEn ? 'Due:' : 'Fällig:',
+    note: isEn ? 'Note:' : 'Notiz:',
+    noNote: isEn ? 'Note: none' : 'Notiz: keine',
+    statusLabels: isEn
+      ? { open: 'Open', 'in-progress': 'In Progress', completed: 'Completed', cancelled: 'Cancelled' } as Record<string, string>
+      : { open: 'Offen', 'in-progress': 'In Arbeit', completed: 'Erledigt', cancelled: 'Abgebrochen' } as Record<string, string>,
+    priorityLabels: isEn
+      ? { high: 'High', medium: 'Medium', low: 'Low' } as Record<string, string>
+      : { high: 'Hoch', medium: 'Mittel', low: 'Niedrig' } as Record<string, string>,
+  };
+}
+
 // Helper to add draft watermark
-function addDraftWatermark(doc: jsPDF): void {
+function addDraftWatermark(doc: jsPDF, draftText: string): void {
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
   
@@ -143,7 +176,7 @@ function addDraftWatermark(doc: jsPDF): void {
   // Add watermark at 45-degree angle with reduced opacity
   const angle = -45;
   
-  doc.text('ENTWURF', centerX, centerY, {
+  doc.text(draftText, centerX, centerY, {
     align: 'center',
     angle: angle,
   });
@@ -168,13 +201,17 @@ export async function generateMinutePdf(
 
   // Set font
   doc.setFont(settings.fontFamily);
-  
-  const _primaryRgb = hexToRgb(settings.primaryColor);
-  const _secondaryRgb = hexToRgb(settings.secondaryColor);
+
+  // Base font size from settings (used for body text)
+  const baseFontSize = settings.fontSize || 10;
+
+  // i18n labels
+  const locale = settings.locale || 'de-DE';
+  const labels = getLabels(locale);
 
   // Add draft watermark if not finalized
   if (!minute.isFinalized) {
-    addDraftWatermark(doc);
+    addDraftWatermark(doc, labels.draft);
   }
 
   // ===== HEADER SECTION WITH BORDER =====
@@ -192,15 +229,14 @@ export async function generateMinutePdf(
   // Left section - Logo and Protocol info
   const leftSectionWidth = pageWidth - 2 * margin - attendanceWidth;
   
-  // Calculate logo dimensions (1/2 der Breite, 2/3 der Höhe)
-  const logoAreaWidth = leftSectionWidth / 2;
-  const logoWidth = logoAreaWidth - 10; // 5mm padding links und rechts
-  const logoHeight = (headerHeight * 2 / 3) - 10; // 2/3 der Höhe minus padding
-  
+  // Logo area constraints (max half the left section width, 2/3 of header height)
+  const logoMaxWidth = (leftSectionWidth / 2) - 10;
+  const logoMaxHeight = (headerHeight * 2 / 3) - 10;
+
   // Add logo
   // Priority: 1. Content Settings (if showLogo is true), 2. Layout Settings (legacy)
   let logoUrlToAdd = '';
-  
+
   if (settings.showLogo && settings.logoUrl) {
     logoUrlToAdd = settings.logoUrl;
   } else if (layoutSettings?.logo?.enabled && layoutSettings.logo.url) {
@@ -209,20 +245,53 @@ export async function generateMinutePdf(
 
   if (logoUrlToAdd) {
     try {
+      // Load image to get natural dimensions and preserve aspect ratio
+      const img = await new Promise<HTMLImageElement>((resolve, reject) => {
+        const image = new Image();
+        image.crossOrigin = 'anonymous';
+        image.onload = () => resolve(image);
+        image.onerror = () => reject(new Error('Failed to load logo image'));
+        image.src = logoUrlToAdd;
+      });
+
+      const naturalWidth = img.naturalWidth;
+      const naturalHeight = img.naturalHeight;
+
+      // Scale to fit within max bounds while preserving aspect ratio
+      let logoWidth = logoMaxWidth;
+      let logoHeight = logoMaxHeight;
+
+      if (naturalWidth > 0 && naturalHeight > 0) {
+        const aspectRatio = naturalWidth / naturalHeight;
+        const maxAspect = logoMaxWidth / logoMaxHeight;
+
+        if (aspectRatio > maxAspect) {
+          // Image is wider — constrain by width
+          logoWidth = logoMaxWidth;
+          logoHeight = logoMaxWidth / aspectRatio;
+        } else {
+          // Image is taller — constrain by height
+          logoHeight = logoMaxHeight;
+          logoWidth = logoMaxHeight * aspectRatio;
+        }
+      }
+
+      // Calculate X position based on setting
       let logoX = margin + 5;
-      
-      // Respect logo position setting
       if (settings.logoPosition === 'center') {
         logoX = margin + (leftSectionWidth - logoWidth) / 2;
       } else if (settings.logoPosition === 'right') {
         logoX = margin + leftSectionWidth - logoWidth - 5;
       }
 
+      // Center vertically within the logo area
+      const logoY = yPosition + 5 + (logoMaxHeight - logoHeight) / 2;
+
       doc.addImage(
-        logoUrlToAdd,
+        img,
         'PNG',
         logoX,
-        yPosition + 5,
+        logoY,
         logoWidth,
         logoHeight
       );
@@ -236,7 +305,7 @@ export async function generateMinutePdf(
   doc.setFont(settings.fontFamily, 'bold');
   doc.setTextColor(0, 0, 0);
   
-  const titleText = (settings.showHeader && settings.headerText) ? settings.headerText : 'Protokoll';
+  const titleText = (settings.showHeader && settings.headerText) ? settings.headerText : labels.protocol;
   doc.text(titleText, margin + 5, yPosition + 55);
   
   // Company Name (if set)
@@ -263,7 +332,7 @@ export async function generateMinutePdf(
   doc.setFontSize(9);
   doc.setFont(settings.fontFamily, 'bold');
   doc.setTextColor(0, 0, 0);
-  doc.text('Anwesenheit des Vorstandes', pageWidth - margin - attendanceWidth + 5, yPosition + 8);
+  doc.text(labels.attendance, pageWidth - margin - attendanceWidth + 5, yPosition + 8);
   
   // Attendance columns with better formatting
   const colAX = pageWidth - margin - 32;
@@ -275,14 +344,10 @@ export async function generateMinutePdf(
   doc.setFont(settings.fontFamily, 'bold');
   const headerY = yPosition + 14;
   
-  // Column "anwesend"
-  doc.text('a', colAX - 0.5, headerY);
-  
-  // Column "entschuldigt"  
-  doc.text('e', colEX - 0.5, headerY);
-  
-  // Column "nicht entschuldigt"
-  doc.text('ne', colNeX - 1.5, headerY);
+  // Column headers
+  doc.text(labels.present, colAX - 0.5, headerY);
+  doc.text(labels.excused, colEX - 0.5, headerY);
+  doc.text(labels.absent, colNeX - 1.5, headerY);
   
   // List participants with checkboxes
   doc.setFont(settings.fontFamily, 'normal');
@@ -346,7 +411,7 @@ export async function generateMinutePdf(
   
   if (participantsList.length > maxParticipants) {
     doc.setFontSize(7);
-    doc.text(`+${participantsList.length - maxParticipants} weitere`, pageWidth - margin - attendanceWidth + 5, attendanceY);
+    doc.text(`+${participantsList.length - maxParticipants} ${labels.more}`, pageWidth - margin - attendanceWidth + 5, attendanceY);
     attendanceY += 5;
   }
 
@@ -355,7 +420,7 @@ export async function generateMinutePdf(
     attendanceY += 1;
     doc.setFontSize(8);
     doc.setFont(settings.fontFamily, 'bold');
-    doc.text('Gäste:', pageWidth - margin - attendanceWidth + 5, attendanceY);
+    doc.text(labels.guests, pageWidth - margin - attendanceWidth + 5, attendanceY);
     attendanceY += 4;
     
     doc.setFont(settings.fontFamily, 'normal');
@@ -373,7 +438,7 @@ export async function generateMinutePdf(
   // Legend at bottom of attendance
   doc.setFontSize(6);
   doc.setTextColor(100, 100, 100);
-  const legendText = 'a: anwesend; e: entschuldigt; ne: nicht entschuldigt';
+  const legendText = `${labels.legendPresent}; ${labels.legendExcused}; ${labels.legendAbsent}`;
   const legendLines = doc.splitTextToSize(legendText, attendanceWidth - 10);
   doc.text(legendLines, pageWidth - margin - attendanceWidth + 5, yPosition + headerHeight - 5);
   
@@ -392,19 +457,18 @@ export async function generateMinutePdf(
   doc.line(col2X, yPosition, col2X, yPosition + infoBoxHeight);
   doc.line(col3X, yPosition, col3X, yPosition + infoBoxHeight);
   
-  doc.setFontSize(10);
+  doc.setFontSize(baseFontSize);
   doc.setFont(settings.fontFamily, 'bold');
-  doc.text('Ort:', col1X + 2, yPosition + 6);
-  doc.text('Datum:', col2X + 2, yPosition + 6);
-  doc.text('Zeit:', col3X + 2, yPosition + 6);
-  
+  doc.text(labels.location, col1X + 2, yPosition + 6);
+  doc.text(labels.date, col2X + 2, yPosition + 6);
+  doc.text(labels.time, col3X + 2, yPosition + 6);
+
   doc.setFont(settings.fontFamily, 'normal');
-  const locationText = minute.location || 
-    (minute.meetingSeries_id?.location) || 
-    'Nicht angegeben';
+  const locationText = minute.location ||
+    (minute.meetingSeries_id?.location) ||
+    labels.notSpecified;
   doc.text(locationText, col1X + 2, yPosition + 11);
-  
-  const locale = settings.locale || 'de-DE';
+
   const dateStr = new Date(minute.date).toLocaleDateString(locale, {
     day: '2-digit',
     month: '2-digit',
@@ -412,7 +476,7 @@ export async function generateMinutePdf(
   });
   doc.text(dateStr, col2X + 2, yPosition + 11);
   
-  const timeText = minute.time || 'Nicht angegeben';
+  const timeText = minute.time || labels.notSpecified;
   doc.text(timeText, col3X + 2, yPosition + 11);
   
   yPosition += infoBoxHeight + (layoutSettings?.sectionSpacing || 5);
@@ -450,7 +514,7 @@ export async function generateMinutePdf(
       
       // Add draft watermark on new page
       if (!minute.isFinalized) {
-        addDraftWatermark(doc);
+        addDraftWatermark(doc, labels.draft);
       }
     }
 
@@ -536,7 +600,7 @@ export async function generateMinutePdf(
           
           // Add draft watermark on new page
           if (!minute.isFinalized) {
-            addDraftWatermark(doc);
+            addDraftWatermark(doc, labels.draft);
           }
           
           // Continue border on new page without repeating the title
@@ -586,7 +650,7 @@ export async function generateMinutePdf(
         }
         
         // Subject - bold and prominent (without type label)
-        doc.setFontSize(10);
+        doc.setFontSize(baseFontSize);
         doc.setFont(settings.fontFamily, 'bold');
         doc.setTextColor(0, 0, 0);
         
@@ -609,13 +673,12 @@ export async function generateMinutePdf(
           doc.setFontSize(8);
           doc.setFont(settings.fontFamily, 'normal');
           doc.setTextColor(220, 38, 38); // Red color for due date
-          const locale = settings.locale || 'de-DE';
           const dueDate = new Date(item.dueDate).toLocaleDateString(locale, {
             day: '2-digit',
             month: '2-digit',
             year: 'numeric'
           });
-          doc.text(`Fällig: ${dueDate}`, contentX, yPosition);
+          doc.text(`${labels.due} ${dueDate}`, contentX, yPosition);
           yPosition += 5;
         }
 
@@ -638,7 +701,7 @@ export async function generateMinutePdf(
         // Details
         if (item.details) {
           doc.setTextColor(0, 0, 0);
-          doc.setFontSize(9);
+          doc.setFontSize(baseFontSize - 1);
           doc.setFont(settings.fontFamily, 'normal');
           
           const detailLines = doc.splitTextToSize(item.details, contentWidth);
@@ -658,22 +721,12 @@ export async function generateMinutePdf(
           const taskInfo: string[] = [];
           
           if (settings.includeStatusBadges && item.status) {
-            const statusLabels: Record<string, string> = {
-              'open': 'Offen',
-              'in-progress': 'In Arbeit',
-              'completed': 'Erledigt',
-              'cancelled': 'Abgebrochen'
-            };
-            taskInfo.push(`Status: ${statusLabels[item.status]}`);
+            taskInfo.push(`Status: ${labels.statusLabels[item.status]}`);
           }
-          
+
           if (settings.includePriorityBadges && item.priority) {
-            const priorityLabels: Record<string, string> = {
-              'high': 'Hoch',
-              'medium': 'Mittel',
-              'low': 'Niedrig'
-            };
-            taskInfo.push(`Priorität: ${priorityLabels[item.priority]}`);
+            const prioLabel = locale.startsWith('en') ? 'Priority' : 'Priorität';
+            taskInfo.push(`${prioLabel}: ${labels.priorityLabels[item.priority]}`);
           }
           
           if (taskInfo.length > 0) {
@@ -689,7 +742,7 @@ export async function generateMinutePdf(
           doc.setFont(settings.fontFamily, 'italic');
           doc.setTextColor(120, 120, 120);
           
-          const noteLines = doc.splitTextToSize(`Notiz: ${item.notes}`, contentWidth);
+          const noteLines = doc.splitTextToSize(`${labels.note} ${item.notes}`, contentWidth);
           noteLines.forEach((line: string) => {
             doc.text(line, contentX, yPosition);
             yPosition += 4;
@@ -699,7 +752,7 @@ export async function generateMinutePdf(
           doc.setFontSize(8);
           doc.setFont(settings.fontFamily, 'italic');
           doc.setTextColor(120, 120, 120);
-          doc.text('Notiz: keine', contentX, yPosition);
+          doc.text(labels.noNote, contentX, yPosition);
           yPosition += 4;
         }
 
@@ -723,7 +776,7 @@ export async function generateMinutePdf(
       doc.setFontSize(9);
       doc.setFont(settings.fontFamily, 'italic');
       doc.setTextColor(150, 150, 150);
-      doc.text('Keine Einträge', margin + 4, yPosition);
+      doc.text(labels.noEntries, margin + 4, yPosition);
       yPosition += 5;
     }
 
@@ -751,7 +804,7 @@ export async function generateMinutePdf(
       
       // Add draft watermark on new page
       if (!minute.isFinalized) {
-        addDraftWatermark(doc);
+        addDraftWatermark(doc, labels.draft);
       }
     }
 
@@ -765,13 +818,13 @@ export async function generateMinutePdf(
     doc.setFontSize(11);
     doc.setFont(settings.fontFamily, 'bold');
     doc.setTextColor(0, 0, 0);
-    doc.text('Allgemeine Notizen', margin + 2, yPosition + 7);
+    doc.text(labels.generalNotes, margin + 2, yPosition + 7);
     
     yPosition += titleBarHeight;
     const notesStartY = yPosition;
 
     yPosition += 3;
-    doc.setFontSize(9);
+    doc.setFontSize(baseFontSize - 1);
     doc.setFont(settings.fontFamily, 'normal');
     const splitNote = doc.splitTextToSize(cleanGlobalNote, pageWidth - 2 * margin - 8);
     splitNote.forEach((line: string) => {
@@ -782,7 +835,7 @@ export async function generateMinutePdf(
         
         // Add draft watermark on new page
         if (!minute.isFinalized) {
-          addDraftWatermark(doc);
+          addDraftWatermark(doc, labels.draft);
         }
       }
       doc.text(line, margin + 4, yPosition);
@@ -801,7 +854,7 @@ export async function generateMinutePdf(
       
       // Add draft watermark on new page
       if (!minute.isFinalized) {
-        addDraftWatermark(doc);
+        addDraftWatermark(doc, labels.draft);
       }
     }
 
@@ -825,7 +878,7 @@ export async function generateMinutePdf(
     doc.setFontSize(9);
     doc.setFont(settings.fontFamily, 'bold');
     doc.setTextColor(amber900[0], amber900[1], amber900[2]);
-    doc.text('Wiedereröffnungs-Historie', margin + 3, yPosition + 5);
+    doc.text(labels.reopeningHistory, margin + 3, yPosition + 5);
     
     yPosition += titleBarHeight;
     const contentStartY = yPosition;
@@ -845,14 +898,14 @@ export async function generateMinutePdf(
         
         // Add draft watermark on new page
         if (!minute.isFinalized) {
-          addDraftWatermark(doc);
+          addDraftWatermark(doc, labels.draft);
         }
         
         // Restart content box on new page
         // For simplicity, just continue the box
       }
 
-      const date = new Date(entry.reopenedAt).toLocaleString('de-DE', {
+      const date = new Date(entry.reopenedAt).toLocaleString(locale, {
         day: '2-digit',
         month: '2-digit',
         year: 'numeric',
@@ -907,10 +960,10 @@ export async function generateMinutePdf(
       doc.setLineWidth(0.2);
       doc.line(margin, pageHeight - 15, pageWidth - margin, pageHeight - 15);
       
-      // "Vertraulich" on the left
+      // "Confidential" on the left
       doc.setFontSize(8);
       doc.setTextColor(150, 150, 150);
-      doc.text('Vertraulich', margin, pageHeight - 10);
+      doc.text(labels.confidential, margin, pageHeight - 10);
       
       // Custom footer text in center if provided
       if (settings.footerText) {
@@ -921,7 +974,7 @@ export async function generateMinutePdf(
       
       // Page numbers on the right
       if (settings.showPageNumbers) {
-        const pageText = `Seite ${i} von ${pageCount}`;
+        const pageText = labels.pageOf(i, pageCount);
         const textWidth = doc.getTextWidth(pageText);
         doc.setTextColor(80, 80, 80);
         doc.text(pageText, pageWidth - margin - textWidth, pageHeight - 10);

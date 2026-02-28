@@ -8,8 +8,8 @@ import MeetingSeries from '@/models/MeetingSeries';
 import Minutes from '@/models/Minutes';
 import Task from '@/models/Task';
 import Attachment from '@/models/Attachment';
-import Settings from '@/models/Settings';
 import { verifyToken } from '@/lib/auth';
+import { hasPermission } from '@/lib/permissions';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -48,16 +48,9 @@ export async function GET(
     const participants = series.participants || [];
 
     // Check global permission
-    const settings = await Settings.findOne({}).sort({ version: -1 });
-    let canViewAll = false;
-    if (authResult.user) {
-      const userRole = authResult.user.role;
-      if (settings && settings.roles && (settings.roles as any)[userRole]) {
-        canViewAll = (settings.roles as any)[userRole].canViewAllMeetings;
-      } else if (userRole === 'admin') {
-        canViewAll = true;
-      }
-    }
+    const canViewAll = authResult.user
+      ? await hasPermission(authResult.user, 'canViewAllMeetings')
+      : false;
 
     if (!username) {
       return NextResponse.json(
@@ -133,13 +126,7 @@ export async function PUT(
     }
 
     // Check permissions
-    const settings = await Settings.findOne({}).sort({ version: -1 });
-    let canModerateAll = false;
-    if (settings && settings.roles && settings.roles[authResult.user.role]) {
-      canModerateAll = settings.roles[authResult.user.role].canModerateAllMeetings;
-    } else if (authResult.user.role === 'admin') {
-      canModerateAll = true;
-    }
+    const canModerateAll = await hasPermission(authResult.user, 'canModerateAllMeetings');
 
     if (!series.moderators.includes(username) && !canModerateAll) {
       return NextResponse.json(
@@ -252,8 +239,9 @@ export async function DELETE(
       );
     }
 
-    // Check if user is a moderator or admin
-    if (!series.moderators.includes(username) && authResult.user.role !== 'admin') {
+    // Check if user is a moderator of this series or has global moderator permission
+    const canModerateAll = await hasPermission(authResult.user, 'canModerateAllMeetings');
+    if (!series.moderators.includes(username) && !canModerateAll) {
       return NextResponse.json(
         { success: false, error: 'Not authorized to delete this series' },
         { status: 403 }

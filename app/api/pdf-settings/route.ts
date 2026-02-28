@@ -57,6 +57,38 @@ export async function PUT(request: NextRequest) {
     await dbConnect();
     const body = await request.json();
 
+    // Validate logoUrl — only allow http(s) and relative paths
+    if (body.logoUrl && !/^(https?:\/\/|\/)/i.test(body.logoUrl)) {
+      return NextResponse.json(
+        { success: false, error: 'Logo-URL must start with http://, https:// or /' },
+        { status: 400 }
+      );
+    }
+
+    // Validate fontSize range
+    if (body.fontSize !== undefined && (body.fontSize < 6 || body.fontSize > 20)) {
+      return NextResponse.json(
+        { success: false, error: 'Font size must be between 6 and 20' },
+        { status: 400 }
+      );
+    }
+
+    // Validate color format
+    const colorFields = ['primaryColor', 'secondaryColor'];
+    for (const field of colorFields) {
+      if (body[field] && !/^#[0-9a-fA-F]{6}$/.test(body[field])) {
+        return NextResponse.json(
+          { success: false, error: `${field} must be a valid hex color (e.g. #3B82F6)` },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Strip dead fields that may still exist in client data
+    delete body.includeTableOfContents;
+    delete body.includeParticipants;
+    delete body.dateFormat;
+
     // Find active settings or create new
     let settings = await PdfSettings.findOne({ isActive: true });
 

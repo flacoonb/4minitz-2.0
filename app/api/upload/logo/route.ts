@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Get settings for validation
-    const settings = await Settings.findOne({}).sort({ version: -1 });
+    const settings = await Settings.findOne({}).sort({ updatedAt: -1 });
     
     // Validate file size
     const maxFileSizeMB = settings?.systemSettings?.maxFileUploadSize || 10; // Default 10MB

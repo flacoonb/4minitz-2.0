@@ -3,9 +3,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/mongodb';
 import Minutes from '@/models/Minutes';
 import MeetingSeries from '@/models/MeetingSeries';
-import Settings from '@/models/Settings';
 import Task from '@/models/Task';
 import { verifyToken } from '@/lib/auth';
+import { requirePermission, hasPermission } from '@/lib/permissions';
 import { logAction } from '@/lib/audit';
 
 export async function GET(
@@ -21,7 +21,6 @@ export async function GET(
     const authResult = await verifyToken(request);
     const username = authResult.success && authResult.user ? authResult.user.username : null;
     const userId = authResult.success && authResult.user ? authResult.user._id.toString() : null;
-    const userRole = authResult.success && authResult.user ? authResult.user.role : null;
 
     const minute = await Minutes.findOne({ _id: id })
       .populate({ path: 'meetingSeries_id', model: MeetingSeries })
@@ -33,20 +32,11 @@ export async function GET(
         { status: 404 }
       );
     }
-    
-    // Check permissions via Settings
-    const settings = await Settings.findOne({}).sort({ version: -1 });
-    let canViewAll = false;
 
-    if (settings && settings.roles && userRole && (settings.roles as any)[userRole]) {
-      const rolePermissions = (settings.roles as any)[userRole];
-      if (rolePermissions.canViewAllMinutes !== undefined) {
-        canViewAll = rolePermissions.canViewAllMinutes;
-      } else {
-        // Default: Admin gets access, others don't (strict separation from canViewAllMeetings)
-        canViewAll = (userRole === 'admin');
-      }
-    }
+    // Check permissions via centralized permission system
+    const canViewAll = authResult.user
+      ? await hasPermission(authResult.user, 'canViewAllMinutes')
+      : false;
 
     // Check visibility: public minutes are allowed for unauthenticated users.
     const series = minute.meetingSeries_id as any;
@@ -116,10 +106,9 @@ export async function PUT(
     }
 
     const userId = authResult.user._id.toString();
-    const userRole = authResult.user.role;
 
     const minute = await Minutes.findById(id);
-    
+
     if (!minute) {
       return NextResponse.json(
         { error: 'Minute not found' },
@@ -127,19 +116,20 @@ export async function PUT(
       );
     }
 
-    // Check permissions for finalized minutes
-    if (minute.isFinalized && userRole === 'user') {
+    // Check permissions for finalized minutes — requires canEditAllMinutes
+    const canEditAll = await hasPermission(authResult.user, 'canEditAllMinutes');
+    if (minute.isFinalized && !canEditAll) {
       return NextResponse.json(
-        { error: 'Forbidden: Nur Administratoren und Moderatoren dürfen finalisierte Protokolle bearbeiten' },
+        { error: 'Fehlende Berechtigung zum Bearbeiten finalisierter Protokolle' },
         { status: 403 }
       );
     }
 
     // Check permissions for finalization/reopening
     if (body.isFinalized !== undefined && body.isFinalized !== minute.isFinalized) {
-      if (userRole === 'user') {
+      if (!canEditAll) {
         return NextResponse.json(
-          { error: 'Forbidden: Nur Administratoren und Moderatoren dürfen Protokolle finalisieren oder wiedereröffnen' },
+          { error: 'Fehlende Berechtigung zum Finalisieren oder Wiedereröffnen von Protokollen' },
           { status: 403 }
         );
       }
@@ -340,10 +330,11 @@ export async function DELETE(
       );
     }
 
-    // Check role - only admin and moderator can delete minutes
-    if (authResult.user.role === 'user') {
+    // Check permission - only users with canDeleteMinutes can delete
+    const permResult = await requirePermission(authResult.user, 'canDeleteMinutes');
+    if (!permResult.success) {
       return NextResponse.json(
-        { error: 'Forbidden: Nur Administratoren und Moderatoren dürfen Protokolle löschen' },
+        { error: 'Fehlende Berechtigung zum Löschen von Protokollen' },
         { status: 403 }
       );
     }

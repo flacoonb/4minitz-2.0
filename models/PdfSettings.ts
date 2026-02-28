@@ -21,8 +21,6 @@ const PdfSettingsSchema = new mongoose.Schema({
   secondaryColor: { type: String, default: '#6B7280' }, // Gray
   
   // Layout
-  includeTableOfContents: { type: Boolean, default: false },
-  includeParticipants: { type: Boolean, default: true },
   includeResponsibles: { type: Boolean, default: true },
   includeStatusBadges: { type: Boolean, default: true },
   includePriorityBadges: { type: Boolean, default: true },

@@ -23,7 +23,7 @@ const FROM_EMAIL = process.env.FROM_EMAIL || 'noreply@4minitz.local';
 
 export async function getAppUrl() {
   try {
-    const settings = await Settings.findOne({}).sort({ version: -1 });
+    const settings = await Settings.findOne({}).sort({ updatedAt: -1 });
     if (settings && settings.systemSettings && settings.systemSettings.baseUrl) {
       return settings.systemSettings.baseUrl;
     }
@@ -33,7 +33,7 @@ export async function getAppUrl() {
 
 export async function getOrgName() {
   try {
-    const settings = await Settings.findOne({}).sort({ version: -1 });
+    const settings = await Settings.findOne({}).sort({ updatedAt: -1 });
     if (settings && settings.systemSettings && settings.systemSettings.organizationName) {
       return settings.systemSettings.organizationName;
     }
@@ -44,7 +44,7 @@ export async function getOrgName() {
 export async function getTransporter() {
   // Try to get settings from DB first
   try {
-    const settings = await Settings.findOne({}).sort({ version: -1 });
+    const settings = await Settings.findOne({}).sort({ updatedAt: -1 });
 
     // Check if email notifications are enabled globally
     if (settings?.notificationSettings?.enableEmailNotifications === false) {
@@ -90,7 +90,7 @@ export async function getTransporter() {
 
 export async function getFromEmail() {
   try {
-    const settings = await Settings.findOne({}).sort({ version: -1 });
+    const settings = await Settings.findOne({}).sort({ updatedAt: -1 });
     if (settings && settings.smtpSettings && settings.smtpSettings.from) {
       return settings.smtpSettings.from;
     }
