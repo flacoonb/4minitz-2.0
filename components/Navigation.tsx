@@ -16,7 +16,7 @@ import {
 export default function Navigation() {
   const pathname = usePathname();
   // const router = useRouter();
-  const { user: currentUser, loading, logout, hasPermission } = useAuth();
+  const { user: currentUser, loading, logout } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const t = useTranslations('nav');

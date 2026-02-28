@@ -91,16 +91,16 @@ export default function MeetingSeriesPage() {
       setSeries(sJson.data || null);
       const minutesData = mJson.data || [];
       setMinutes(minutesData);
-      
+
       // Check if there's a draft
       const draftExists = minutesData.some((m: Minute) => !m.isFinalized && !m.finalized);
       setHasDraft(draftExists);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      setError(err instanceof Error ? err.message : t('unknownError'));
     } finally {
       setLoading(false);
     }
-  }, [seriesId]);
+  }, [seriesId, t]);
 
   useEffect(() => {
     if (!seriesId) return;
@@ -110,11 +110,11 @@ export default function MeetingSeriesPage() {
 
   const createNewProtocol = async () => {
     if (!series) return;
-    
+
     setCreating(true);
     try {
       const today = new Date().toISOString().split('T')[0];
-      
+
       const response = await fetch('/api/minutes', {
         method: 'POST',
         headers: {
@@ -133,16 +133,16 @@ export default function MeetingSeriesPage() {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Fehler beim Erstellen des Protokolls');
+        throw new Error(error.error || t('errorCreatingProtocol'));
       }
 
       const result = await response.json();
-      
+
       // Redirect to edit page
       router.push(`/minutes/${result.data._id}/edit`);
     } catch (err) {
       console.error('Error creating protocol:', err);
-      alert('Fehler beim Erstellen des Protokolls: ' + (err instanceof Error ? err.message : 'Unbekannter Fehler'));
+      alert(t('errorCreatingProtocol') + ': ' + (err instanceof Error ? err.message : t('unknownError')));
     } finally {
       setCreating(false);
     }
@@ -150,13 +150,13 @@ export default function MeetingSeriesPage() {
 
   const deleteSeries = async () => {
     if (!series) return;
-    
+
     const confirmMessage = minutes.length > 0
-      ? `Diese Sitzungsserie hat ${minutes.length} Protokoll(e). Möchten Sie die Serie wirklich löschen? Alle Protokolle bleiben erhalten.`
-      : 'Möchten Sie diese Sitzungsserie wirklich löschen?';
-    
+      ? t('confirmDeleteWithMinutes', { count: minutes.length })
+      : t('confirmDeleteEmpty');
+
     if (!confirm(confirmMessage)) return;
-    
+
     try {
       const response = await fetch(`/api/meeting-series/${series._id}`, {
         method: 'DELETE',
@@ -165,14 +165,14 @@ export default function MeetingSeriesPage() {
 
       if (!response.ok) {
         const error = await response.json();
-        throw new Error(error.error || 'Fehler beim Löschen der Sitzungsserie');
+        throw new Error(t('loadListError'));
       }
 
       // Redirect to meeting series list
       router.push('/meeting-series');
     } catch (err) {
       console.error('Error deleting series:', err);
-      alert('Fehler beim Löschen: ' + (err instanceof Error ? err.message : 'Unbekannter Fehler'));
+      alert(t('errorDeleting', { error: err instanceof Error ? err.message : t('unknownError') }));
     }
   };
 
@@ -243,15 +243,15 @@ export default function MeetingSeriesPage() {
       });
       if (res.ok) {
         const result = await res.json();
-        setImportResult(`${result.imported} Aufgabe(n) erfolgreich übernommen`);
+        setImportResult(t('tasksImportedSuccess', { count: result.imported }));
         setImportTasks([]);
         setSelectedTaskIds(new Set());
       } else {
         const err = await res.json();
-        setImportResult(`Fehler: ${err.error || 'Import fehlgeschlagen'}`);
+        setImportResult(t('importError', { error: err.error || t('importFailed') }));
       }
     } catch {
-      setImportResult('Fehler beim Import');
+      setImportResult(t('importFailed'));
     } finally {
       setImporting(false);
     }
@@ -321,7 +321,7 @@ export default function MeetingSeriesPage() {
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                   </svg>
-                  Aufgaben importieren
+                  {t('importTasks')}
                 </button>
               )}
               {canEditSeries && (
@@ -354,7 +354,7 @@ export default function MeetingSeriesPage() {
       {/* Protokolle Section */}
       <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-100 shadow-lg">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-gray-900">{t('minutesCount', {count: minutes.length})}</h2>
+          <h2 className="text-xl font-bold text-gray-900">{t('minutesCount', { count: minutes.length })}</h2>
         </div>
 
         {minutes.length === 0 ? (
@@ -385,16 +385,15 @@ export default function MeetingSeriesPage() {
                         )}
                       </h3>
                       <p className="text-sm text-gray-500">
-                        {minute.topics?.length ? t('topicsCount', {count: minute.topics.length}) : t('noTopics')} • 
+                        {minute.topics?.length ? t('topicsCount', { count: minute.topics.length }) : t('noTopics')} •
                         {minute.isFinalized || minute.finalized ? t('finalized') : t('draft')}
                       </p>
                     </div>
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                    minute.isFinalized || minute.finalized 
-                      ? 'bg-green-100 text-green-700' 
+                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${minute.isFinalized || minute.finalized
+                      ? 'bg-green-100 text-green-700'
                       : 'bg-amber-100 text-amber-700'
-                  }`}>
+                    }`}>
                     {minute.isFinalized || minute.finalized ? t('finalized') : t('draft')}
                   </span>
                 </div>
@@ -402,7 +401,7 @@ export default function MeetingSeriesPage() {
             ))}
           </div>
         )}
-        
+
         {/* New Protocol Button - Only show if no draft exists and user has permission */}
         {!hasDraft && canCreateMinute && (
           <div className="mt-6 pt-6 border-t border-gray-200">
@@ -435,7 +434,7 @@ export default function MeetingSeriesPage() {
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-gray-900">Aufgaben importieren</h2>
+                <h2 className="text-xl font-bold text-gray-900">{t('importTasks')}</h2>
                 <button
                   onClick={() => setShowImportModal(false)}
                   className="text-gray-400 hover:text-gray-600 transition-colors"
@@ -447,7 +446,7 @@ export default function MeetingSeriesPage() {
                 </button>
               </div>
               <p className="text-sm text-gray-600 mt-1">
-                Offene Aufgaben aus einer anderen Sitzungsreihe übernehmen
+                {t('importTasksSubtitle')}
               </p>
             </div>
 
@@ -455,14 +454,14 @@ export default function MeetingSeriesPage() {
               {/* Source Series Selector */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Quell-Sitzungsreihe
+                  {t('sourceSeries')}
                 </label>
                 <select
                   value={importSourceId}
                   onChange={(e) => loadSourceTasks(e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
                 >
-                  <option value="">– Sitzungsreihe wählen –</option>
+                  <option value="">{t('selectSeries')}</option>
                   {allSeries.map(s => (
                     <option key={s._id} value={s._id}>
                       {s.project}{s.name ? ` – ${s.name}` : ''}
@@ -481,7 +480,7 @@ export default function MeetingSeriesPage() {
               {/* Task List */}
               {importSourceId && !loadingImportTasks && importTasks.length === 0 && (
                 <div className="text-center py-6 text-gray-500">
-                  Keine offenen Aufgaben in dieser Serie
+                  {t('noOpenTasks')}
                 </div>
               )}
 
@@ -489,13 +488,13 @@ export default function MeetingSeriesPage() {
                 <div>
                   <div className="flex items-center justify-between mb-3">
                     <span className="text-sm font-medium text-gray-700">
-                      {selectedTaskIds.size} von {importTasks.length} ausgewählt
+                      {t('selectedOfTotal', { selected: selectedTaskIds.size, total: importTasks.length })}
                     </span>
                     <button
                       onClick={toggleAllTasks}
                       className="text-sm text-blue-600 hover:text-blue-800"
                     >
-                      {selectedTaskIds.size === importTasks.length ? 'Alle abwählen' : 'Alle auswählen'}
+                      {selectedTaskIds.size === importTasks.length ? t('deselectAll') : t('selectAll')}
                     </button>
                   </div>
 
@@ -503,11 +502,10 @@ export default function MeetingSeriesPage() {
                     {importTasks.map(task => (
                       <label
                         key={task._id}
-                        className={`flex items-start gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
-                          selectedTaskIds.has(task._id)
+                        className={`flex items-start gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${selectedTaskIds.has(task._id)
                             ? 'border-blue-400 bg-blue-50'
                             : 'border-gray-200 hover:border-gray-300'
-                        }`}
+                          }`}
                       >
                         <input
                           type="checkbox"
@@ -518,17 +516,15 @@ export default function MeetingSeriesPage() {
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-gray-900 text-sm">{task.subject}</p>
                           <div className="flex flex-wrap gap-1.5 mt-1">
-                            <span className={`px-1.5 py-0.5 text-xs rounded ${
-                              task.status === 'in-progress' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'
-                            }`}>
-                              {task.status === 'in-progress' ? 'In Arbeit' : 'Offen'}
+                            <span className={`px-1.5 py-0.5 text-xs rounded ${task.status === 'in-progress' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'
+                              }`}>
+                              {task.status === 'in-progress' ? t('inProgressStatus') : t('openStatus')}
                             </span>
-                            <span className={`px-1.5 py-0.5 text-xs rounded ${
-                              task.priority === 'high' ? 'bg-red-100 text-red-800' :
-                              task.priority === 'medium' ? 'bg-orange-100 text-orange-800' :
-                              'bg-blue-100 text-blue-800'
-                            }`}>
-                              {task.priority === 'high' ? 'Hoch' : task.priority === 'medium' ? 'Mittel' : 'Niedrig'}
+                            <span className={`px-1.5 py-0.5 text-xs rounded ${task.priority === 'high' ? 'bg-red-100 text-red-800' :
+                                task.priority === 'medium' ? 'bg-orange-100 text-orange-800' :
+                                  'bg-blue-100 text-blue-800'
+                              }`}>
+                              {task.priority === 'high' ? t('highPriority') : task.priority === 'medium' ? t('mediumPriority') : t('lowPriority')}
                             </span>
                             {task.dueDate && (
                               <span className="px-1.5 py-0.5 text-xs bg-purple-100 text-purple-800 rounded">
@@ -545,9 +541,8 @@ export default function MeetingSeriesPage() {
 
               {/* Import Result */}
               {importResult && (
-                <div className={`p-3 rounded-lg text-sm ${
-                  importResult.startsWith('Fehler') ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'
-                }`}>
+                <div className={`p-3 rounded-lg text-sm ${importResult.startsWith('Fehler') ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'
+                  }`}>
                   {importResult}
                 </div>
               )}
@@ -559,7 +554,7 @@ export default function MeetingSeriesPage() {
                 onClick={() => setShowImportModal(false)}
                 className="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
               >
-                Schliessen
+                {t('close')}
               </button>
               {importTasks.length > 0 && selectedTaskIds.size > 0 && (
                 <button
@@ -570,10 +565,10 @@ export default function MeetingSeriesPage() {
                   {importing ? (
                     <>
                       <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                      Importiere...
+                      {t('importingTasks')}
                     </>
                   ) : (
-                    `${selectedTaskIds.size} Aufgabe(n) importieren`
+                    t('importNTasks', { count: selectedTaskIds.size })
                   )}
                 </button>
               )}

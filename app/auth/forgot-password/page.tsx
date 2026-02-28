@@ -2,9 +2,12 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 import { Mail, AlertCircle, CheckCircle2 } from 'lucide-react';
 
 export default function ForgotPasswordPage() {
+  const t = useTranslations('auth.forgotPassword');
+  const tErrors = useTranslations('errors');
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -26,15 +29,13 @@ export default function ForgotPasswordPage() {
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        setError(data?.error || 'Ein Fehler ist aufgetreten');
+        setError(data?.error || tErrors('generic'));
         return;
       }
 
-      setSuccess(
-        'Wenn ein Konto mit dieser E-Mail existiert, wurde ein Link zum Zurücksetzen des Passworts gesendet.'
-      );
+      setSuccess(t('successText'));
     } catch {
-      setError('Netzwerkfehler. Bitte versuchen Sie es erneut.');
+      setError(tErrors('networkError'));
     } finally {
       setLoading(false);
     }
@@ -47,8 +48,8 @@ export default function ForgotPasswordPage() {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl shadow-lg mb-4">
             <Mail className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-slate-800 mb-2">Passwort vergessen</h1>
-          <p className="text-slate-600">Wir senden Ihnen einen Link zum Zurücksetzen.</p>
+          <h1 className="text-3xl font-bold text-slate-800 mb-2">{t('title')}</h1>
+          <p className="text-slate-600">{t('subtitle')}</p>
         </div>
 
         <div className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-2xl shadow-xl p-8">
@@ -69,7 +70,7 @@ export default function ForgotPasswordPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label htmlFor="email" className="block text-sm font-semibold text-slate-700 mb-2">
-                E-Mail
+                {t('emailLabel')}
               </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
@@ -80,7 +81,7 @@ export default function ForgotPasswordPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white/50"
-                  placeholder="name@firma.ch"
+                  placeholder={t('emailPlaceholder')}
                   required
                 />
               </div>
@@ -91,7 +92,7 @@ export default function ForgotPasswordPage() {
               disabled={loading}
               className="w-full py-3 px-6 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold rounded-xl hover:from-indigo-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg"
             >
-              {loading ? 'Senden…' : 'Reset-Link senden'}
+              {loading ? t('sending') : t('sendButton')}
             </button>
           </form>
 
@@ -100,7 +101,7 @@ export default function ForgotPasswordPage() {
               href="/auth/login"
               className="font-semibold text-indigo-600 hover:text-indigo-500 transition-colors text-sm"
             >
-              Zurück zum Login
+              {t('backToLogin')}
             </Link>
           </div>
         </div>

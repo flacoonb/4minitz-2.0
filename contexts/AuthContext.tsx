@@ -149,7 +149,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   // Logout function
-  const logout = async () => {
+  const logout = useCallback(async () => {
     try {
       await fetch('/api/auth/logout', {
         method: 'POST',
@@ -161,7 +161,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(null);
       router.push('/auth/login');
     }
-  };
+  }, [router]);
 
   // Update user data locally
   const updateUser = (userData: Partial<User>) => {
@@ -194,7 +194,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setShowLogoutWarning(false);
       logout();
     }, timeoutMs);
-  }, [autoLogoutConfig, user]);
+  }, [autoLogoutConfig, user, logout]);
 
   // Setup activity listeners for auto-logout
   useEffect(() => {

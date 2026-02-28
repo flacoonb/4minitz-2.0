@@ -51,8 +51,11 @@ export async function POST(request: NextRequest) {
 
     // Check if user is active
     if (!user.isActive) {
+      // Distinguish between "pending approval" and "deactivated by admin"
+      // A user who never logged in and is inactive is likely pending approval
+      const isPendingApproval = !user.lastLogin;
       return NextResponse.json(
-        { error: t('accountDeactivated') },
+        { error: isPendingApproval ? t('accountPendingApproval') : t('accountDeactivated') },
         { status: 403 }
       );
     }
@@ -143,7 +146,7 @@ export async function POST(request: NextRequest) {
 
     return response;
 
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json(
       { error: t('loginError') },
       { status: 500 }

@@ -42,13 +42,13 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   const [formData, setFormData] = useState<FormData>({
     project: '',
     name: '',
     members: [],
   });
-  
+
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<string>('');
   const [existingProjectNames, setExistingProjectNames] = useState<string[]>([]);
@@ -84,20 +84,20 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
       const response = await fetch(`/api/meeting-series/${seriesId}`, { credentials: 'include' });
 
       if (!response.ok) {
-        throw new Error('Sitzungsserie nicht gefunden');
+        throw new Error(t('seriesNotFoundError'));
       }
 
       const result = await response.json();
       const seriesData = result.data;
       setSeries(seriesData);
-      
+
       setFormData({
         project: seriesData.project || '',
         name: seriesData.name || '',
         members: seriesData.members || [],
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Fehler beim Laden');
+      setError(err instanceof Error ? err.message : t('loadingError'));
     } finally {
       setLoading(false);
     }
@@ -141,14 +141,14 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Fehler beim Speichern');
+        throw new Error(errorData.error || t('saveError'));
       }
 
       await response.json();
 
       router.push(`/meeting-series/${seriesId}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Fehler beim Speichern');
+      setError(err instanceof Error ? err.message : t('saveError'));
       console.error('Save error:', err);
     } finally {
       setSaving(false);
@@ -193,10 +193,10 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">Fehler</h1>
+          <h1 className="text-2xl font-bold text-red-600 mb-4">{t('errorTitle')}</h1>
           <p className="text-gray-600">{error}</p>
           <Link href="/meeting-series" className="text-blue-600 hover:text-blue-800 mt-4 inline-block">
-            Zurück zur Übersicht
+            {t('backToSeries')}
           </Link>
         </div>
       </div>
@@ -277,7 +277,7 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
                   onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
                 >
-                  <option value="">– kein Jahr –</option>
+                  <option value="">{t('noYear')}</option>
                   {Array.from({ length: 7 }, (_, i) => new Date().getFullYear() - 2 + i).map(year => (
                     <option key={year} value={String(year)}>{year}</option>
                   ))}
@@ -347,11 +347,10 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
                           <div>
                             <p className="font-semibold text-gray-900">{user.firstName} {user.lastName}</p>
                             <p className="text-sm text-gray-600">{user.email}</p>
-                            <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium mt-1 ${
-                              user.role === 'admin' ? 'bg-red-100 text-red-800' :
-                              user.role === 'moderator' ? 'bg-blue-100 text-blue-800' :
-                              'bg-gray-100 text-gray-800'
-                            }`}>
+                            <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium mt-1 ${user.role === 'admin' ? 'bg-red-100 text-red-800' :
+                                user.role === 'moderator' ? 'bg-blue-100 text-blue-800' :
+                                  'bg-gray-100 text-gray-800'
+                              }`}>
                               {user.role}
                             </span>
                           </div>

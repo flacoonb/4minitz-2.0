@@ -3,9 +3,13 @@
 import React, { useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { Lock, AlertCircle, CheckCircle2, Check } from 'lucide-react';
 
 export default function ResetPasswordPage() {
+  const t = useTranslations('auth.resetPassword');
+  const tReg = useTranslations('auth.register');
+  const tErrors = useTranslations('errors');
   const searchParams = useSearchParams();
   const token = useMemo(() => searchParams?.get('token') || '', [searchParams]);
 
@@ -24,7 +28,7 @@ export default function ResetPasswordPage() {
       uppercase: /[A-Z]/.test(pw),
       lowercase: /[a-z]/.test(pw),
       number: /[0-9]/.test(pw),
-      special: /[!@#$%^&*(),.?":{}|<>]/.test(pw),
+      special: /[!@#$%^&*(),.?":\{\}|<>]/.test(pw),
     });
   };
 
@@ -37,17 +41,17 @@ export default function ResetPasswordPage() {
     setSuccess('');
 
     if (!token) {
-      setError('Token fehlt oder ist ungültig.');
+      setError(t('invalidToken'));
       return;
     }
 
     if (password.length < 8) {
-      setError('Das Passwort muss mindestens 8 Zeichen lang sein.');
+      setError(t('passwordTooShort'));
       return;
     }
 
     if (password !== confirmPassword) {
-      setError('Die Passwörter stimmen nicht überein.');
+      setError(t('passwordMismatch'));
       return;
     }
 
@@ -62,15 +66,15 @@ export default function ResetPasswordPage() {
       const data = await res.json().catch(() => ({}));
 
       if (!res.ok) {
-        setError(data?.error || 'Ein Fehler ist aufgetreten');
+        setError(data?.error || tErrors('generic'));
         return;
       }
 
-      setSuccess('Passwort wurde aktualisiert. Sie können sich jetzt anmelden.');
+      setSuccess(t('successText'));
       setPassword('');
       setConfirmPassword('');
     } catch {
-      setError('Netzwerkfehler. Bitte versuchen Sie es erneut.');
+      setError(tErrors('networkError'));
     } finally {
       setLoading(false);
     }
@@ -83,15 +87,15 @@ export default function ResetPasswordPage() {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl shadow-lg mb-4">
             <Lock className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-slate-800 mb-2">Passwort zurücksetzen</h1>
-          <p className="text-slate-600">Setzen Sie ein neues Passwort.</p>
+          <h1 className="text-3xl font-bold text-slate-800 mb-2">{t('title')}</h1>
+          <p className="text-slate-600">{t('subtitle')}</p>
         </div>
 
         <div className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-2xl shadow-xl p-8">
           {!token && (
             <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3">
               <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
-              <span className="text-red-700 text-sm">Token fehlt oder ist ungültig.</span>
+              <span className="text-red-700 text-sm">{t('invalidToken')}</span>
             </div>
           )}
 
@@ -112,7 +116,7 @@ export default function ResetPasswordPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
               <label htmlFor="password" className="block text-sm font-semibold text-slate-700 mb-2">
-                Neues Passwort
+                {t('newPasswordLabel')}
               </label>
               <input
                 type="password"
@@ -120,7 +124,7 @@ export default function ResetPasswordPage() {
                 value={password}
                 onChange={(e) => { setPassword(e.target.value); updatePasswordStrength(e.target.value); }}
                 className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white/50"
-                placeholder="Mindestens 8 Zeichen"
+                placeholder={t('newPasswordPlaceholder')}
                 required
                 disabled={!token}
               />
@@ -137,19 +141,16 @@ export default function ResetPasswordPage() {
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     <div className={`flex items-center gap-1 ${passwordStrength.length ? 'text-green-600' : 'text-slate-400'}`}>
-                      <Check className="w-3 h-3" /> 8+ Zeichen
+                      <Check className="w-3 h-3" /> {tReg('requirements.minLength')}
                     </div>
                     <div className={`flex items-center gap-1 ${passwordStrength.uppercase ? 'text-green-600' : 'text-slate-400'}`}>
-                      <Check className="w-3 h-3" /> Grossbuchstabe
+                      <Check className="w-3 h-3" /> {tReg('requirements.uppercase')}
                     </div>
                     <div className={`flex items-center gap-1 ${passwordStrength.lowercase ? 'text-green-600' : 'text-slate-400'}`}>
-                      <Check className="w-3 h-3" /> Kleinbuchstabe
+                      <Check className="w-3 h-3" /> {tReg('requirements.lowercase')}
                     </div>
                     <div className={`flex items-center gap-1 ${passwordStrength.number ? 'text-green-600' : 'text-slate-400'}`}>
-                      <Check className="w-3 h-3" /> Zahl
-                    </div>
-                    <div className={`flex items-center gap-1 ${passwordStrength.special ? 'text-green-600' : 'text-slate-400'} col-span-2`}>
-                      <Check className="w-3 h-3" /> Sonderzeichen (!@#$%^&*)
+                      <Check className="w-3 h-3" /> {tReg('requirements.number')}
                     </div>
                   </div>
                 </div>
@@ -158,7 +159,7 @@ export default function ResetPasswordPage() {
 
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-semibold text-slate-700 mb-2">
-                Passwort bestätigen
+                {t('confirmPasswordLabel')}
               </label>
               <input
                 type="password"
@@ -166,12 +167,12 @@ export default function ResetPasswordPage() {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white/50 ${confirmPassword && confirmPassword !== password ? 'border-red-300' : 'border-slate-200'}`}
-                placeholder="Nochmals eingeben"
+                placeholder={t('confirmPasswordPlaceholder')}
                 required
                 disabled={!token}
               />
               {confirmPassword && confirmPassword !== password && (
-                <p className="text-xs text-red-500 mt-1">Passwörter stimmen nicht überein</p>
+                <p className="text-xs text-red-500 mt-1">{t('passwordMismatch')}</p>
               )}
             </div>
 
@@ -180,7 +181,7 @@ export default function ResetPasswordPage() {
               disabled={loading || !token}
               className="w-full py-3 px-6 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold rounded-xl hover:from-indigo-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg"
             >
-              {loading ? 'Speichern…' : 'Passwort setzen'}
+              {loading ? t('resetting') : t('resetButton')}
             </button>
           </form>
 
@@ -189,7 +190,7 @@ export default function ResetPasswordPage() {
               href="/auth/login"
               className="font-semibold text-indigo-600 hover:text-indigo-500 transition-colors text-sm"
             >
-              Zum Login
+              {t('backToLogin')}
             </Link>
           </div>
         </div>

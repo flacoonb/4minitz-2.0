@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
       resetSeries: seriesResult.modifiedCount
     });
 
-  } catch (error) {
+  } catch (_error) {
     return NextResponse.json({ error: 'Reset failed' }, { status: 500 });
   }
 }

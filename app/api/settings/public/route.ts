@@ -27,6 +27,7 @@ export async function GET(_request: NextRequest) {
         organizationName: settings.systemSettings?.organizationName || '4Minitz 2.0',
         organizationLogo: settings.systemSettings?.organizationLogo,
         allowRegistration: settings.memberSettings?.allowSelfRegistration ?? false,
+        requireAdminApproval: settings.memberSettings?.requireAdminApproval ?? true,
         dateFormat: settings.systemSettings?.dateFormat || 'DD.MM.YYYY',
         timeFormat: settings.systemSettings?.timeFormat || '24h'
       },

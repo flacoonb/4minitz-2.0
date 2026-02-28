@@ -1,7 +1,7 @@
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import { UserOptions } from 'jspdf-autotable';
-import { IPdfLayoutSettings, ILayoutElement } from '@/models/PdfLayoutSettings';
+import { IPdfLayoutSettings } from '@/models/PdfLayoutSettings';
 
 // Extend jsPDF type to include autoTable
 declare module 'jspdf' {

@@ -4,7 +4,7 @@ import User from '@/models/User';
 import Settings from '@/models/Settings';
 import { checkRateLimit } from '@/lib/rate-limit';
 import { registerSchema, validateBody } from '@/lib/validations';
-import { sendWelcomeEmail, sendVerificationEmail } from '@/lib/email-service';
+import { sendWelcomeEmail, sendVerificationEmail, getTransporter, getFromEmail } from '@/lib/email-service';
 import crypto from 'crypto';
 import { getTranslations } from 'next-intl/server';
 
@@ -63,6 +63,7 @@ export async function POST(request: NextRequest) {
 
     // Check if email verification is required
     const requireEmailVerification = settings?.memberSettings?.requireEmailVerification ?? true;
+    const requireAdminApproval = settings?.memberSettings?.requireAdminApproval ?? true;
 
     // Generate verification token before save to avoid half-initialized user in DB
     let verificationToken: string | null = null;
@@ -73,7 +74,7 @@ export async function POST(request: NextRequest) {
       firstName,
       lastName,
       role,
-      isActive: true,
+      isActive: !requireAdminApproval, // Inactive until admin approves (if enabled)
       isEmailVerified: false
     };
 
@@ -111,16 +112,32 @@ export async function POST(request: NextRequest) {
       }).catch(() => {});
     }
 
+    // Notify admins about new registration if approval is required
+    if (requireAdminApproval) {
+      notifyAdminsAboutNewUser(newUser).catch(() => {});
+    }
+
+    // Determine response message
+    let message: string;
+    if (requireEmailVerification && requireAdminApproval) {
+      message = t('registrationSuccessVerifyAndApproval');
+    } else if (requireEmailVerification) {
+      message = t('registrationSuccessVerify');
+    } else if (requireAdminApproval) {
+      message = t('registrationSuccessApproval');
+    } else {
+      message = t('registrationSuccess');
+    }
+
     // Return user without password
     const userResponse = newUser.toJSON();
 
     return NextResponse.json({
       success: true,
-      message: requireEmailVerification
-        ? t('registrationSuccessVerify')
-        : t('registrationSuccess'),
+      message,
       data: userResponse,
       requiresVerification: requireEmailVerification,
+      requiresApproval: requireAdminApproval,
       emailSent: (newUser as any)._emailSent !== false,
     }, { status: 201 });
 
@@ -147,5 +164,43 @@ export async function POST(request: NextRequest) {
       { error: t('registrationError') },
       { status: 500 }
     );
+  }
+}
+
+/**
+ * Notify all admin users about a new registration that requires approval
+ */
+async function notifyAdminsAboutNewUser(newUser: { firstName: string; lastName: string; email: string; username: string }) {
+  try {
+    const admins = await User.find({ role: 'admin', isActive: true }).select('email firstName');
+
+    if (admins.length === 0) return;
+
+    const settings = await Settings.findOne({}).sort({ updatedAt: -1 });
+    const baseUrl = settings?.systemSettings?.baseUrl || process.env.APP_URL || 'http://localhost:3000';
+
+    const subject = `Neue Registrierung: ${newUser.firstName} ${newUser.lastName}`;
+    const html = `
+      <h2>Neue Benutzerregistrierung</h2>
+      <p>Ein neuer Benutzer hat sich registriert und wartet auf Freischaltung:</p>
+      <table style="border-collapse: collapse; margin: 16px 0;">
+        <tr><td style="padding: 4px 12px 4px 0; font-weight: bold;">Name:</td><td>${newUser.firstName} ${newUser.lastName}</td></tr>
+        <tr><td style="padding: 4px 12px 4px 0; font-weight: bold;">E-Mail:</td><td>${newUser.email}</td></tr>
+        <tr><td style="padding: 4px 12px 4px 0; font-weight: bold;">Benutzername:</td><td>${newUser.username}</td></tr>
+      </table>
+      <p>
+        <a href="${baseUrl}/admin/users" style="display: inline-block; padding: 10px 20px; background-color: #4F46E5; color: white; text-decoration: none; border-radius: 6px;">
+          Benutzerverwaltung öffnen
+        </a>
+      </p>
+    `;
+
+    const transporter = await getTransporter();
+    const from = await getFromEmail();
+    for (const admin of admins) {
+      await transporter.sendMail({ from, to: admin.email, subject, html }).catch(() => {});
+    }
+  } catch {
+    // Non-critical: registration succeeded, notification failed
   }
 }

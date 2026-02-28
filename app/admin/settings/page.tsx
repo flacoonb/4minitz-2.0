@@ -43,6 +43,7 @@ interface SystemSettings {
   };
   memberSettings: {
     requireEmailVerification: boolean;
+    requireAdminApproval: boolean;
     allowSelfRegistration: boolean;
     defaultRole: 'user' | 'moderator';
     maxMembersPerMeeting: number;
@@ -492,6 +493,22 @@ const AdminSettings = () => {
                     </label>
                   </div>
 
+                  {/* Admin Approval */}
+                  <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+                    <label className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        checked={settings.memberSettings.requireAdminApproval}
+                        onChange={(e) => updateMemberSettings('requireAdminApproval', e.target.checked)}
+                        className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
+                      />
+                      <div>
+                        <span className="text-sm font-medium text-slate-700">{t('members.requireAdminApproval')}</span>
+                        <p className="text-xs text-slate-500">{t('members.requireAdminApprovalDesc')}</p>
+                      </div>
+                    </label>
+                  </div>
+
                   {/* Self Registration */}
                   <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
                     <label className="flex items-center gap-3">
@@ -737,4 +754,4 @@ const AdminSettings = () => {
   );
 };
 
-export default AdminSettings;
+export default withAdminAuth(AdminSettings);

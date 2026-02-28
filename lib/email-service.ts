@@ -4,7 +4,6 @@ import { IMeetingSeries } from '@/models/MeetingSeries';
 import Settings from '@/models/Settings';
 import User from '@/models/User';
 import PendingNotification from '@/models/PendingNotification';
-import { ITask } from '@/models/Task';
 import { decrypt } from '@/lib/crypto';
 
 // Email Configuration

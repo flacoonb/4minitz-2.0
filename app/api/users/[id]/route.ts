@@ -4,6 +4,7 @@ import User from '@/models/User';
 import MeetingSeries from '@/models/MeetingSeries';
 import Task from '@/models/Task';
 import { verifyToken, requirePermission } from '@/lib/auth';
+import { sendWelcomeEmail } from '@/lib/email-service';
 
 export async function GET(
   request: NextRequest,
@@ -174,9 +175,21 @@ export async function PUT(
       userToUpdate.password = body.password; // Will be hashed by pre-save middleware
     }
 
+    // Detect approval (user was inactive, now being activated)
+    const wasApproved = !isOwnProfile && body.isActive === true && userToUpdate.isModified('isActive');
+
     // Update user
     await userToUpdate.save();
-    
+
+    // Send welcome email on approval
+    if (wasApproved) {
+      sendWelcomeEmail({
+        email: userToUpdate.email,
+        firstName: userToUpdate.firstName,
+        lastName: userToUpdate.lastName
+      }).catch(() => {});
+    }
+
     // Return user without sensitive fields (toJSON strips password, tokens, etc.)
     const userResponse = userToUpdate.toJSON();
 

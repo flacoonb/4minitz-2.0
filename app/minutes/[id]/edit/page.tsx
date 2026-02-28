@@ -64,18 +64,6 @@ function SortableTopic({
     transition,
   };
 
-  const getUserById = (userId: string): User | undefined => {
-    return allUsers.find(u => u._id === userId);
-  };
-
-  // Helper function to get user initials
-  const getUserInitials = (userId: string): string => {
-    const user = getUserById(userId);
-    if (!user) return '?';
-    return `${user.firstName.charAt(0).toUpperCase()}${user.lastName.charAt(0).toUpperCase()}`;
-  };
-
-  // Helper function to format multiple users as initials
   return (
     <div ref={setNodeRef} style={style} className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-gray-100">
       <div className="flex justify-between items-start mb-4">
@@ -1225,8 +1213,8 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
 
     // Also check formData state as backup
     const existingIds: string[] = [];
-    formData.topics.forEach((topic, topicIndex) => {
-      topic.infoItems?.forEach((item, itemIndex) => {
+    formData.topics.forEach((topic) => {
+      topic.infoItems?.forEach((item) => {
         if (item.originalTaskId) {
           existingIds.push(item.originalTaskId);
         }

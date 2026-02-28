@@ -1,8 +1,10 @@
 'use client';
 
+import { useEffect } from 'react';
+
 export default function GlobalError({
   error,
-  reset,
+  reset: _reset,
 }: {
   error: Error & { digest?: string };
   reset: () => void;
@@ -13,18 +15,42 @@ export default function GlobalError({
     error.message?.includes('Failed to load chunk') ||
     error.message?.includes('Failed to fetch dynamically imported module');
 
-  if (isChunkError) {
-    // Auto-reload for stale chunks after deploy
-    if (typeof window !== 'undefined') {
-      const reloadKey = 'chunk-error-reload';
-      const lastReload = sessionStorage.getItem(reloadKey);
-      const now = Date.now();
-      if (!lastReload || now - parseInt(lastReload, 10) > 30_000) {
-        sessionStorage.setItem(reloadKey, String(now));
-        window.location.reload();
-      }
+  useEffect(() => {
+    if (!isChunkError) return;
+    if (typeof window === 'undefined') return;
+
+    const reloadKey = 'chunk-error-reload';
+    const lastReload = sessionStorage.getItem(reloadKey);
+    const now = Date.now();
+
+    // #region agent log
+    fetch('http://localhost:7346/ingest/15cb3796-5cec-49ee-9297-9fc2187ea845', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Debug-Session-Id': '089733',
+      },
+      body: JSON.stringify({
+        sessionId: '089733',
+        runId: 'initial',
+        hypothesisId: 'H2',
+        location: 'app/global-error.tsx:18-30',
+        message: 'Global error auto-reload evaluated',
+        data: {
+          reloadKey,
+          lastReload,
+          now,
+        },
+        timestamp: Date.now(),
+      }),
+    }).catch(() => {});
+    // #endregion
+
+    if (!lastReload || now - parseInt(lastReload, 10) > 30_000) {
+      sessionStorage.setItem(reloadKey, String(now));
+      window.location.reload();
     }
-  }
+  }, [isChunkError]);
 
   return (
     <html>

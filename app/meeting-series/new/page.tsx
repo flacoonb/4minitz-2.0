@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTranslations } from 'next-intl';
 
 interface Member {
   userId: string;
@@ -19,11 +20,12 @@ interface User {
 }
 
 export default function NewMeetingSeriesPage() {
+  const t = useTranslations('meetingSeriesNew');
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Form state
   const [formData, setFormData] = useState({
     project: '',
@@ -33,11 +35,11 @@ export default function NewMeetingSeriesPage() {
     informedUsers: [] as string[],
     members: [] as Member[],
   });
-  
+
   // Users list
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<string>('');
-  
+
   // Existing session names for autocomplete
   const [existingProjectNames, setExistingProjectNames] = useState<string[]>([]);
 
@@ -90,7 +92,7 @@ export default function NewMeetingSeriesPage() {
         setAllUsers(result.data || []);
       }
     } catch (err) {
-      console.error('Fehler beim Laden der Benutzer:', err);
+      console.error('Error fetching users:', err);
     }
   };
 
@@ -168,7 +170,7 @@ export default function NewMeetingSeriesPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include', // Use cookies for authentication
+        credentials: 'include',
         body: JSON.stringify(formData),
       });
 
@@ -192,7 +194,7 @@ export default function NewMeetingSeriesPage() {
           if (importRes.ok) {
             const importResult = await importRes.json();
             if (importResult.imported > 0) {
-              setImportMessage(`${importResult.imported} Aufgaben übernommen`);
+              setImportMessage(t('tasksImported', { count: importResult.imported }));
             }
           }
         } catch {
@@ -233,7 +235,7 @@ export default function NewMeetingSeriesPage() {
           <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
-          Zurück zu Sitzungsserien
+          {t('backToSeries')}
         </Link>
 
         <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 rounded-2xl p-8 border border-blue-100">
@@ -245,10 +247,10 @@ export default function NewMeetingSeriesPage() {
             </div>
             <div>
               <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-                Neue Sitzungsserie
+                {t('title')}
               </h1>
               <p className="text-lg text-blue-700 font-medium mt-1">
-                Erstelle eine neue Serie für regelmäßige Meetings
+                {t('subtitle')}
               </p>
             </div>
           </div>
@@ -258,8 +260,14 @@ export default function NewMeetingSeriesPage() {
       {/* Error Message */}
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-          <p className="font-medium">Fehler beim Erstellen</p>
+          <p className="font-medium">{t('errorCreating')}</p>
           <p className="text-sm">{error}</p>
+        </div>
+      )}
+
+      {importMessage && (
+        <div className="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-lg">
+          <p className="text-sm font-medium">{importMessage}</p>
         </div>
       )}
 
@@ -270,7 +278,7 @@ export default function NewMeetingSeriesPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label htmlFor="project" className="block text-sm font-medium text-gray-700 mb-2">
-                Sitzungsname *
+                {t('sessionName')}
               </label>
               <input
                 type="text"
@@ -282,7 +290,7 @@ export default function NewMeetingSeriesPage() {
                 required
                 autoComplete="off"
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                placeholder="z.B. Vorstandssitzungen"
+                placeholder={t('sessionNamePlaceholder')}
               />
               <datalist id="existing-session-names">
                 {existingProjectNames.map(name => (
@@ -293,7 +301,7 @@ export default function NewMeetingSeriesPage() {
 
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                Jahr (optional)
+                {t('year')}
               </label>
               <select
                 id="name"
@@ -302,7 +310,7 @@ export default function NewMeetingSeriesPage() {
                 onChange={handleInputChange}
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white"
               >
-                <option value="">– kein Jahr –</option>
+                <option value="">{t('noYear')}</option>
                 {Array.from({ length: 7 }, (_, i) => new Date().getFullYear() - 2 + i).map(year => (
                   <option key={year} value={String(year)}>{year}</option>
                 ))}
@@ -314,7 +322,7 @@ export default function NewMeetingSeriesPage() {
           {existingSeries.length > 0 && (
             <div>
               <label htmlFor="sourceSeriesId" className="block text-sm font-medium text-gray-700 mb-2">
-                Pendenzen übernehmen von (optional)
+                {t('importTasksFrom')}
               </label>
               <select
                 id="sourceSeriesId"
@@ -322,7 +330,7 @@ export default function NewMeetingSeriesPage() {
                 onChange={(e) => setSourceSeriesId(e.target.value)}
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white"
               >
-                <option value="">– keine Übernahme –</option>
+                <option value="">{t('noImport')}</option>
                 {existingSeries.map(s => (
                   <option key={s._id} value={s._id}>
                     {s.project}{s.name ? ` – ${s.name}` : ''}
@@ -330,7 +338,7 @@ export default function NewMeetingSeriesPage() {
                 ))}
               </select>
               <p className="text-xs text-gray-500 mt-1">
-                Offene Aufgaben aus einer bestehenden Sitzungsreihe in die neue Serie übernehmen
+                {t('importHint')}
               </p>
             </div>
           )}
@@ -338,7 +346,7 @@ export default function NewMeetingSeriesPage() {
           {/* Description */}
           <div>
             <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
-              Beschreibung
+              {t('description')}
             </label>
             <textarea
               id="description"
@@ -347,14 +355,14 @@ export default function NewMeetingSeriesPage() {
               onChange={handleInputChange}
               rows={3}
               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
-              placeholder="Kurze Beschreibung der Sitzungsserie..."
+              placeholder={t('descriptionPlaceholder')}
             />
           </div>
 
           {/* Members - New Selection from Registered Users */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Mitglieder
+              {t('members')}
             </label>
             <div className="space-y-3">
               <div className="flex gap-2">
@@ -363,7 +371,7 @@ export default function NewMeetingSeriesPage() {
                   onChange={(e) => setSelectedUserId(e.target.value)}
                   className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 >
-                  <option value="">-- Benutzer auswählen --</option>
+                  <option value="">{t('selectUser')}</option>
                   {allUsers
                     .filter(user => !formData.members.some(m => m.userId === user._id))
                     .map(user => (
@@ -384,7 +392,7 @@ export default function NewMeetingSeriesPage() {
                   </svg>
                 </button>
               </div>
-              
+
               {formData.members.length > 0 && (
                 <div className="space-y-2">
                   {formData.members.map((member) => {
@@ -427,9 +435,9 @@ export default function NewMeetingSeriesPage() {
           {/* Participants */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Teilnehmer
+              {t('participants')}
             </label>
-            <p className="text-xs text-gray-500 mb-2">Aktive Sitzungsteilnehmer — können Protokolle bearbeiten und Aufgaben zugewiesen bekommen.</p>
+            <p className="text-xs text-gray-500 mb-2">{t('participantsHint')}</p>
             <div className="space-y-3">
               <div className="flex gap-2">
                 <input
@@ -438,7 +446,7 @@ export default function NewMeetingSeriesPage() {
                   onChange={(e) => setNewParticipant(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addParticipant())}
                   className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  placeholder="E-Mail oder Name des Teilnehmers"
+                  placeholder={t('participantPlaceholder')}
                 />
                 <button
                   type="button"
@@ -450,7 +458,7 @@ export default function NewMeetingSeriesPage() {
                   </svg>
                 </button>
               </div>
-              
+
               {formData.participants.length > 0 && (
                 <div className="flex flex-wrap gap-2">
                   {formData.participants.map((participant, index) => (
@@ -478,9 +486,9 @@ export default function NewMeetingSeriesPage() {
           {/* Informed Users */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Informierte Benutzer
+              {t('informedUsers')}
             </label>
-            <p className="text-xs text-gray-500 mb-2">Erhalten Protokolle und Benachrichtigungen, nehmen aber nicht aktiv an Sitzungen teil.</p>
+            <p className="text-xs text-gray-500 mb-2">{t('informedUsersHint')}</p>
             <div className="space-y-3">
               <div className="flex gap-2">
                 <input
@@ -489,7 +497,7 @@ export default function NewMeetingSeriesPage() {
                   onChange={(e) => setNewInformedUser(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addInformedUser())}
                   className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  placeholder="E-Mail oder Name"
+                  placeholder={t('informedUserPlaceholder')}
                 />
                 <button
                   type="button"
@@ -501,7 +509,7 @@ export default function NewMeetingSeriesPage() {
                   </svg>
                 </button>
               </div>
-              
+
               {formData.informedUsers.length > 0 && (
                 <div className="flex flex-wrap gap-2">
                   {formData.informedUsers.map((user, index) => (
@@ -536,14 +544,14 @@ export default function NewMeetingSeriesPage() {
               {loading ? (
                 <div className="flex items-center gap-2">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  <span>Erstelle Serie...</span>
+                  <span>{t('creatingSeries')}</span>
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  <span>Serie erstellen</span>
+                  <span>{t('createSeries')}</span>
                 </div>
               )}
             </button>
@@ -552,7 +560,7 @@ export default function NewMeetingSeriesPage() {
               href="/meeting-series"
               className="px-8 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors"
             >
-              Abbrechen
+              {t('cancel')}
             </Link>
           </div>
         </form>

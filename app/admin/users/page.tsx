@@ -224,6 +224,32 @@ const UserManagement = () => {
     }
   };
 
+  // Approve (activate) a pending user
+  const handleApproveUser = async (userToApprove: User) => {
+    setError('');
+    setSaving(true);
+    try {
+      const response = await fetch(`/api/users/${userToApprove._id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ isActive: true, isEmailVerified: true })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Fehler beim Freischalten');
+      }
+
+      setSuccess(`${userToApprove.firstName} ${userToApprove.lastName} wurde freigeschaltet`);
+      fetchUsers(pagination.page);
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   // Role icon and color
   const getRoleIcon = (role: string) => {
     switch (role) {
@@ -320,6 +346,7 @@ const UserManagement = () => {
                 <option value="all">{t('filters.allStatus')}</option>
                 <option value="active">{t('status.active')}</option>
                 <option value="inactive">{t('status.inactive')}</option>
+                <option value="pending">{t('status.pending')}</option>
               </select>
             </div>
 
@@ -407,6 +434,11 @@ const UserManagement = () => {
                               <UserCheck className="w-3 h-3" />
                               {t('status.active')}
                             </div>
+                          ) : !user.lastLogin ? (
+                            <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-semibold">
+                              <AlertCircle className="w-3 h-3" />
+                              {t('status.pending')}
+                            </div>
                           ) : (
                             <div className="inline-flex items-center gap-2 px-3 py-1 bg-red-100 text-red-800 rounded-full text-xs font-semibold">
                               <UserX className="w-3 h-3" />
@@ -419,6 +451,16 @@ const UserManagement = () => {
                         </td>
                         <td className="px-6 py-4 text-right">
                           <div className="flex items-center gap-2 justify-end">
+                            {!user.isActive && !user.lastLogin && (
+                              <button
+                                onClick={() => handleApproveUser(user)}
+                                className="px-3 py-1.5 text-xs font-semibold bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors flex items-center gap-1"
+                                title={t('actions.approve')}
+                              >
+                                <UserCheck className="w-3.5 h-3.5" />
+                                {t('actions.approve')}
+                              </button>
+                            )}
                             <button
                               onClick={() => {
                                 setSelectedUser(user);

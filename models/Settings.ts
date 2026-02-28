@@ -21,6 +21,7 @@ export interface ISettings extends Document {
   };
   memberSettings: {
     requireEmailVerification: boolean;
+    requireAdminApproval: boolean;
     allowSelfRegistration: boolean;
     defaultRole: 'user' | 'moderator';
     maxMembersPerMeeting: number;
@@ -91,6 +92,7 @@ const SettingsSchema = new Schema<ISettings>({
   },
   memberSettings: {
     requireEmailVerification: { type: Boolean, default: true },
+    requireAdminApproval: { type: Boolean, default: true },
     allowSelfRegistration: { type: Boolean, default: false },
     defaultRole: { type: String, enum: ['user', 'moderator'], default: 'user' },
     maxMembersPerMeeting: { type: Number, default: 50 },

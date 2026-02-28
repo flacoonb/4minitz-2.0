@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
+import { useTranslations, useLocale } from 'next-intl';
 
 interface Minute {
   _id: string;
@@ -31,9 +32,11 @@ interface MeetingSeries {
 }
 
 export default function SeriesMinutesPage() {
+  const t = useTranslations('seriesMinutes');
+  const locale = useLocale();
   const params = useParams();
   const seriesId = params.seriesId as string;
-  
+
   const [minutes, setMinutes] = useState<Minute[]>([]);
   const [series, setSeries] = useState<MeetingSeries | null>(null);
   const [loading, setLoading] = useState(true);
@@ -46,7 +49,7 @@ export default function SeriesMinutesPage() {
       const response = await fetch(`/api/meeting-series/${seriesId}`, {
         credentials: 'include'
       });
-      
+
       if (response.ok) {
         const result = await response.json();
         setSeries(result.data);
@@ -66,17 +69,17 @@ export default function SeriesMinutesPage() {
       });
 
       if (!response.ok) {
-        throw new Error('Fehler beim Laden der Protokolle');
+        throw new Error(t('loadError'));
       }
 
       const result = await response.json();
       setMinutes(result.data || []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unbekannter Fehler');
+      setError(err instanceof Error ? err.message : t('unknownError'));
     } finally {
       setLoading(false);
     }
-  }, [seriesId]);
+  }, [seriesId, t]);
 
   useEffect(() => {
     if (seriesId) {
@@ -87,14 +90,14 @@ export default function SeriesMinutesPage() {
 
   const filteredMinutes = minutes.filter(minute => {
     const { isFinalized } = minute;
-    
+
     if (statusFilter) {
       if (statusFilter === 'finalized' && !isFinalized) return false;
       if (statusFilter === 'draft' && isFinalized) return false;
     }
 
     if (!searchQuery) return true;
-    
+
     const query = searchQuery.toLowerCase();
     return (
       minute.meetingSeries_id?.project?.toLowerCase().includes(query) ||
@@ -102,6 +105,18 @@ export default function SeriesMinutesPage() {
       minute.globalNote?.toLowerCase().includes(query)
     );
   });
+
+  const formatDate = (dateStr: string) => {
+    return new Date(dateStr).toLocaleDateString(locale === 'de' ? 'de-DE' : 'en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
+  const formatDateShort = (dateStr: string) => {
+    return new Date(dateStr).toLocaleDateString(locale === 'de' ? 'de-DE' : 'en-US');
+  };
 
   if (loading) {
     return (
@@ -115,12 +130,12 @@ export default function SeriesMinutesPage() {
     return (
       <div className="max-w-7xl mx-auto py-8">
         <div className="bg-red-50 border border-red-200 rounded-2xl p-6 text-center">
-          <p className="text-red-600">Fehler: {error}</p>
-          <button 
-            onClick={() => {fetchSeriesData(); fetchMinutes();}}
+          <p className="text-red-600">{error}</p>
+          <button
+            onClick={() => { fetchSeriesData(); fetchMinutes(); }}
             className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
           >
-            Erneut versuchen
+            {t('tryAgain')}
           </button>
         </div>
       </div>
@@ -132,11 +147,11 @@ export default function SeriesMinutesPage() {
       {/* Breadcrumb Navigation */}
       <nav className="flex items-center space-x-2 text-sm text-gray-600">
         <Link href="/minutes" className="hover:text-green-600 transition-colors">
-          Protokolle
+          {t('minutes')}
         </Link>
         <span>&gt;</span>
         <span className="text-gray-900 font-medium">
-          {series ? `${series.project} - ${series.name}` : 'Laden...'}
+          {series ? `${series.project} - ${series.name}` : t('loading')}
         </span>
       </nav>
 
@@ -151,14 +166,17 @@ export default function SeriesMinutesPage() {
             </div>
             <div>
               <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-                {series ? `${series.project} - ${series.name}` : 'Protokolle'}
+                {series ? `${series.project} - ${series.name}` : t('minutes')}
               </h1>
               <p className="text-lg text-gray-600 mt-2">
-                {filteredMinutes.length} {filteredMinutes.length === 1 ? 'Protokoll' : 'Protokolle'} gefunden
+                {filteredMinutes.length === 1
+                  ? t('minuteFound', { count: filteredMinutes.length })
+                  : t('minutesFound', { count: filteredMinutes.length })
+                }
               </p>
             </div>
           </div>
-          
+
           <Link
             href={`/minutes/${seriesId}/new`}
             className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200"
@@ -166,7 +184,7 @@ export default function SeriesMinutesPage() {
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
             </svg>
-            Neues Protokoll
+            {t('newMinute')}
           </Link>
         </div>
       </div>
@@ -176,33 +194,33 @@ export default function SeriesMinutesPage() {
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
             <div className="relative">
-              <svg 
-                className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" 
-                fill="none" 
-                stroke="currentColor" 
+              <svg
+                className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400"
+                fill="none"
+                stroke="currentColor"
                 viewBox="0 0 24 24"
               >
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
               </svg>
               <input
                 type="text"
-                placeholder="Suche in Protokollen..."
+                placeholder={t('searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white/90 backdrop-blur-sm transition-all"
               />
             </div>
           </div>
-          
+
           <div className="flex gap-3">
-            <select 
-              value={statusFilter} 
+            <select
+              value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
               className="px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 bg-white/90 backdrop-blur-sm"
             >
-              <option value="">Alle Status</option>
-              <option value="draft">Entwürfe</option>
-              <option value="finalized">Finalisiert</option>
+              <option value="">{t('allStatus')}</option>
+              <option value="draft">{t('drafts')}</option>
+              <option value="finalized">{t('finalized')}</option>
             </select>
           </div>
         </div>
@@ -215,9 +233,9 @@ export default function SeriesMinutesPage() {
             <svg className="mx-auto w-24 h-24 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 712-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
-            <h3 className="text-xl font-semibold text-gray-600 mb-2">Keine Protokolle gefunden</h3>
+            <h3 className="text-xl font-semibold text-gray-600 mb-2">{t('noMinutesFound')}</h3>
             <p className="text-gray-500 mb-6">
-              {searchQuery || statusFilter ? 'Versuche es mit anderen Suchbegriffen.' : 'Erstelle dein erstes Protokoll für diese Serie.'}
+              {searchQuery || statusFilter ? t('noMinutesHint') : t('createFirstHint')}
             </p>
             <Link
               href={`/minutes/${seriesId}/new`}
@@ -226,7 +244,7 @@ export default function SeriesMinutesPage() {
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-              Neues Protokoll erstellen
+              {t('createNew')}
             </Link>
           </div>
         ) : (
@@ -240,42 +258,37 @@ export default function SeriesMinutesPage() {
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div className={`w-3 h-3 rounded-full ${minute.isFinalized ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
-                    <span className={`text-sm font-semibold px-3 py-1 rounded-lg ${
-                      minute.isFinalized 
-                        ? 'text-green-700 bg-green-100' 
+                    <span className={`text-sm font-semibold px-3 py-1 rounded-lg ${minute.isFinalized
+                        ? 'text-green-700 bg-green-100'
                         : 'text-yellow-700 bg-yellow-100'
-                    }`}>
-                      {minute.isFinalized ? 'Finalisiert' : 'Entwurf'}
+                      }`}>
+                      {minute.isFinalized ? t('finalized') : t('draft')}
                     </span>
                   </div>
                   <span className="text-sm text-gray-500">
-                    {new Date(minute.date).toLocaleDateString('de-DE', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    })}
+                    {formatDate(minute.date)}
                   </span>
                 </div>
-                
+
                 <h3 className="text-xl font-semibold text-gray-800 mb-2 group-hover:text-green-700 transition-colors">
-                  Protokoll vom {new Date(minute.date).toLocaleDateString('de-DE')}
+                  {t('minuteFrom', { date: formatDateShort(minute.date) })}
                 </h3>
-                
+
                 {minute.globalNote && (
                   <p className="text-gray-600 mb-4 line-clamp-2">
                     {minute.globalNote}
                   </p>
                 )}
-                
+
                 <div className="flex items-center justify-between text-sm text-gray-500">
                   <span>
-                    {minute.participants?.length || 0} Teilnehmer
+                    {t('participants', { count: minute.participants?.length || 0 })}
                   </span>
                   <span>
-                    {minute.topics?.length || 0} Tagesordnungspunkte
+                    {t('agendaItems', { count: minute.topics?.length || 0 })}
                   </span>
                   <span className="text-xs">
-                    Erstellt am {new Date(minute.createdAt).toLocaleDateString('de-DE')}
+                    {t('createdOn', { date: formatDateShort(minute.createdAt) })}
                   </span>
                 </div>
               </Link>

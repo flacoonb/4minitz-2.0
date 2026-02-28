@@ -56,6 +56,9 @@ export async function GET(request: NextRequest) {
         filter.isActive = true;
       } else if (status === 'inactive') {
         filter.isActive = false;
+      } else if (status === 'pending') {
+        filter.isActive = false;
+        filter.lastLogin = { $exists: false };
       }
     }
 
