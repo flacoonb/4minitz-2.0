@@ -36,6 +36,8 @@ interface User {
   lastLogin?: string;
 }
 
+const PAGE_LIMIT = 10;
+
 const UserManagement = () => {
   const t = useTranslations('admin.users');
   // tCommon removed
@@ -56,7 +58,6 @@ const UserManagement = () => {
 
   const [pagination, setPagination] = useState({
     page: 1,
-    limit: 10,
     total: 0,
     totalPages: 0
   });
@@ -86,7 +87,7 @@ const UserManagement = () => {
       setLoading(true);
       const params = new URLSearchParams({
         page: page.toString(),
-        limit: pagination.limit.toString(),
+        limit: PAGE_LIMIT.toString(),
         ...(roleFilter !== 'all' && { role: roleFilter }),
         ...(statusFilter !== 'all' && { status: statusFilter }),
         ...(searchTerm && { search: searchTerm })
@@ -106,7 +107,6 @@ const UserManagement = () => {
       setUsers(data.data);
       setPagination({
         page: data.pagination.page,
-        limit: data.pagination.limit,
         total: data.pagination.total,
         totalPages: data.pagination.totalPages
       });
@@ -116,7 +116,7 @@ const UserManagement = () => {
     } finally {
       setLoading(false);
     }
-  }, [pagination.limit, roleFilter, statusFilter, searchTerm, router]);
+  }, [roleFilter, statusFilter, searchTerm, router]);
 
   // Debounced server-side search
   useEffect(() => {
@@ -753,7 +753,7 @@ const UserManagement = () => {
                     disabled={saving}
                     className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
-                    {saving ? 'Lösche…' : t('actions.delete')}
+                    {saving ? t('actions.deleting') : t('actions.delete')}
                   </button>
                 </div>
               </div>

@@ -50,6 +50,9 @@ export async function POST(request: NextRequest) {
       } catch {
         // Continue even if email fails — don't leak timing info
       }
+    } else {
+      // Constant-time delay for non-existent/inactive accounts to prevent email enumeration via timing
+      await new Promise(resolve => setTimeout(resolve, 150 + Math.random() * 100));
     }
 
     return NextResponse.json({

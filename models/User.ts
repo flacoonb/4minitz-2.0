@@ -20,6 +20,7 @@ export interface IUser extends Document {
   role: 'admin' | 'moderator' | 'user';
   avatar?: string;
   isActive: boolean;
+  pendingApproval: boolean;
   isEmailVerified: boolean;
   emailVerificationToken?: string;
   emailVerificationExpires?: Date;
@@ -135,6 +136,11 @@ const UserSchema: Schema<IUser> = new Schema(
       type: Boolean,
       default: true,
       required: true
+    },
+
+    pendingApproval: {
+      type: Boolean,
+      default: false
     },
 
     isEmailVerified: {

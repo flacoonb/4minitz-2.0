@@ -109,7 +109,7 @@
     "highPriority": "High",
     "mediumPriority": "Medium",
     "lowPriority": "Low",
-    "dueLabel": "Due: {date}",
+    "dueLabel": "Due",
     "tasksImportedSuccess": "{count} task(s) successfully imported",
     "importError": "Error: {error}",
     "importFailed": "Error importing",
@@ -369,7 +369,11 @@
     "newResponsibles": "New Responsibles (Ctrl/Cmd + Click for multiple selection)",
     "addNewTask": "Add New Task",
     "userId": "User ID",
-    "guestNamePlaceholder": "Guest Name"
+    "guestNamePlaceholder": "Guest Name",
+    "confirmTitle": "Confirmation",
+    "createTitle": "Create New Minute",
+    "createInfo": "Minutes are created within a meeting series. Select a meeting series and click \"New Minute\" there.",
+    "toSeries": "Go to Meeting Series"
   },
   "dashboard": {
     "overview": "Overview of your Meeting Minutes",
@@ -814,7 +818,11 @@
         "enableAuditLogDesc": "Log all system activities",
         "allowedFileTypes": "Allowed File Types",
         "allowedFileTypesDesc": "Comma-separated list of file extensions"
-      }
+      },
+      "saveSuccess": "Settings saved successfully",
+      "resetConfirm": "Are you sure you want to reset all settings to their default values?",
+      "resetSuccess": "Settings reset to defaults",
+      "resetError": "Error resetting settings"
     },
     "users": {
       "title": "User Management",
@@ -837,14 +845,17 @@
         "active": "Active",
         "inactive": "Inactive",
         "verified": "Verified",
-        "unverified": "Unverified"
+        "unverified": "Unverified",
+        "pending": "Pending"
       },
       "actions": {
         "create": "Create User",
         "edit": "Edit",
         "update": "Update",
         "delete": "Delete",
-        "cancel": "Cancel"
+        "cancel": "Cancel",
+        "approve": "Approve",
+        "deleting": "Deleting…"
       },
       "table": {
         "user": "User",

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { withAdminAuth } from '@/contexts/AuthContext';
@@ -133,13 +133,14 @@ const AdminSettings = () => {
     }
   }, [router]);
 
-  // Check for changes
+  // Check for changes (memoized to avoid re-serializing on every render)
+  const settingsJson = useMemo(() => JSON.stringify(settings), [settings]);
+  const originalSettingsJson = useMemo(() => JSON.stringify(originalSettings), [originalSettings]);
   useEffect(() => {
     if (settings && originalSettings) {
-      const hasChanges = JSON.stringify(settings) !== JSON.stringify(originalSettings);
-      setHasChanges(hasChanges);
+      setHasChanges(settingsJson !== originalSettingsJson);
     }
-  }, [settings, originalSettings]);
+  }, [settingsJson, originalSettingsJson, settings, originalSettings]);
 
   // Initial load
   useEffect(() => {
@@ -171,7 +172,7 @@ const AdminSettings = () => {
       const data = await response.json();
       setSettings(data.data);
       setOriginalSettings(JSON.parse(JSON.stringify(data.data)));
-      setSuccess('Einstellungen erfolgreich gespeichert');
+      setSuccess(t('saveSuccess'));
       setHasChanges(false);
       
       // Trigger settings update event for other components
@@ -187,7 +188,7 @@ const AdminSettings = () => {
 
   // Reset to defaults
   const handleReset = async () => {
-    if (!confirm('Möchten Sie wirklich alle Einstellungen auf die Standardwerte zurücksetzen?')) {
+    if (!confirm(t('resetConfirm'))) {
       return;
     }
 
@@ -206,13 +207,13 @@ const AdminSettings = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Fehler beim Zurücksetzen der Einstellungen');
+        throw new Error(errorData.error || t('resetError'));
       }
 
       const data = await response.json();
       setSettings(data.data);
       setOriginalSettings(JSON.parse(JSON.stringify(data.data)));
-      setSuccess('Einstellungen auf Standardwerte zurückgesetzt');
+      setSuccess(t('resetSuccess'));
       setHasChanges(false);
     } catch (err: any) {
       setError(err.message);

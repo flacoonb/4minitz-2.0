@@ -23,7 +23,7 @@ export async function GET(request: NextRequest) {
     const isManager = permResult.success;
 
     const url = new URL(request.url);
-    const page = Math.max(parseInt(url.searchParams.get('page') || '1') || 1, 1);
+    const page = Math.min(Math.max(parseInt(url.searchParams.get('page') || '1') || 1, 1), 10000);
     const limit = Math.min(Math.max(parseInt(url.searchParams.get('limit') || '20') || 20, 1), 500);
     const search = url.searchParams.get('search') || '';
     const role = url.searchParams.get('role') || '';

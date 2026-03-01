@@ -34,11 +34,12 @@ export async function POST(request: NextRequest) {
     }
     const { username, password } = validation.data;
 
-    // Find user by email or username
+    // Find user by email or username (case-insensitive)
+    const escapedUsername = username.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const user = await User.findOne({
       $or: [
         { email: username.toLowerCase() },
-        { username: username }
+        { username: { $regex: new RegExp(`^${escapedUsername}$`, 'i') } }
       ]
     });
 
@@ -51,9 +52,8 @@ export async function POST(request: NextRequest) {
 
     // Check if user is active
     if (!user.isActive) {
-      // Distinguish between "pending approval" and "deactivated by admin"
-      // A user who never logged in and is inactive is likely pending approval
-      const isPendingApproval = !user.lastLogin;
+      // Use explicit pendingApproval flag (fallback: user never logged in and has no lastLogin)
+      const isPendingApproval = user.pendingApproval === true || (!user.pendingApproval && !user.lastLogin);
       return NextResponse.json(
         { error: isPendingApproval ? t('accountPendingApproval') : t('accountDeactivated') },
         { status: 403 }
@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
       value: token,
       httpOnly: true,
       secure: useSecureCookies,
-      sameSite: 'lax', // Changed from strict to lax to be more forgiving
+      sameSite: 'strict',
       maxAge: sessionTimeoutSeconds
     });
 

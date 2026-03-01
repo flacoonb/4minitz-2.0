@@ -70,7 +70,8 @@ const LoginPage = () => {
 
       // Redirect after a short delay (only allow relative paths to prevent open redirect)
       const rawRedirect = searchParams?.get('redirect') || '/';
-      const redirectUrl = rawRedirect.startsWith('/') && !rawRedirect.startsWith('//') ? rawRedirect : '/';
+      // Use regex: must start with '/' but NOT '//' (protocol-relative) and not contain ':' before first '/'
+      const redirectUrl = /^\/(?!\/)/.test(rawRedirect) ? rawRedirect : '/';
       setTimeout(() => {
         // Force a hard reload to ensure all cookies (including locale) are picked up correctly by the server
         window.location.href = redirectUrl;

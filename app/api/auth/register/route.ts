@@ -75,6 +75,7 @@ export async function POST(request: NextRequest) {
       lastName,
       role,
       isActive: !requireAdminApproval, // Inactive until admin approves (if enabled)
+      pendingApproval: requireAdminApproval, // Explicit flag for pending approval state
       isEmailVerified: false
     };
 
@@ -167,6 +168,16 @@ export async function POST(request: NextRequest) {
   }
 }
 
+/** Escape HTML special characters to prevent XSS in email templates */
+function escapeHtml(str: string): string {
+  return str
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 /**
  * Notify all admin users about a new registration that requires approval
  */
@@ -179,14 +190,17 @@ async function notifyAdminsAboutNewUser(newUser: { firstName: string; lastName: 
     const settings = await Settings.findOne({}).sort({ updatedAt: -1 });
     const baseUrl = settings?.systemSettings?.baseUrl || process.env.APP_URL || 'http://localhost:3000';
 
+    const safeName = `${escapeHtml(newUser.firstName)} ${escapeHtml(newUser.lastName)}`;
+    const safeEmail = escapeHtml(newUser.email);
+    const safeUsername = escapeHtml(newUser.username);
     const subject = `Neue Registrierung: ${newUser.firstName} ${newUser.lastName}`;
     const html = `
       <h2>Neue Benutzerregistrierung</h2>
       <p>Ein neuer Benutzer hat sich registriert und wartet auf Freischaltung:</p>
       <table style="border-collapse: collapse; margin: 16px 0;">
-        <tr><td style="padding: 4px 12px 4px 0; font-weight: bold;">Name:</td><td>${newUser.firstName} ${newUser.lastName}</td></tr>
-        <tr><td style="padding: 4px 12px 4px 0; font-weight: bold;">E-Mail:</td><td>${newUser.email}</td></tr>
-        <tr><td style="padding: 4px 12px 4px 0; font-weight: bold;">Benutzername:</td><td>${newUser.username}</td></tr>
+        <tr><td style="padding: 4px 12px 4px 0; font-weight: bold;">Name:</td><td>${safeName}</td></tr>
+        <tr><td style="padding: 4px 12px 4px 0; font-weight: bold;">E-Mail:</td><td>${safeEmail}</td></tr>
+        <tr><td style="padding: 4px 12px 4px 0; font-weight: bold;">Benutzername:</td><td>${safeUsername}</td></tr>
       </table>
       <p>
         <a href="${baseUrl}/admin/users" style="display: inline-block; padding: 10px 20px; background-color: #4F46E5; color: white; text-decoration: none; border-radius: 6px;">

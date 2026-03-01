@@ -1976,7 +1976,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
                   </svg>
                 </div>
-                <h3 className="text-lg font-bold text-gray-900">{t('confirmTitle') || 'Bestätigung'}</h3>
+                <h3 className="text-lg font-bold text-gray-900">{t('confirmTitle')}</h3>
               </div>
               <p className="text-gray-600 text-sm mb-6">{confirmDialog.message}</p>
               <div className="flex gap-3 justify-end">
@@ -1985,14 +1985,14 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
                   onClick={() => setConfirmDialog(null)}
                   className="px-5 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-medium text-sm"
                 >
-                  {t('cancel') || 'Abbrechen'}
+                  {t('cancel')}
                 </button>
                 <button
                   type="button"
                   onClick={confirmDialog.onConfirm}
                   className="px-5 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium text-sm"
                 >
-                  {t('delete') || 'Löschen'}
+                  {t('delete')}
                 </button>
               </div>
             </div>

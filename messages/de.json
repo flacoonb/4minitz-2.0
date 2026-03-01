@@ -109,7 +109,7 @@
     "highPriority": "Hoch",
     "mediumPriority": "Mittel",
     "lowPriority": "Niedrig",
-    "dueLabel": "Fällig: {date}",
+    "dueLabel": "Fällig",
     "tasksImportedSuccess": "{count} Aufgabe(n) erfolgreich übernommen",
     "importError": "Fehler: {error}",
     "importFailed": "Fehler beim Import",
@@ -369,7 +369,11 @@
     "finalizedDeleteError": "Finalisierte Protokolle können nicht gelöscht werden.",
     "deleteError": "Fehler beim Löschen",
     "deleteErrorGeneric": "Fehler beim Löschen des Protokolls",
-    "backToOverview": "Zurück zur Übersicht"
+    "backToOverview": "Zurück zur Übersicht",
+    "confirmTitle": "Bestätigung",
+    "createTitle": "Neues Protokoll erstellen",
+    "createInfo": "Protokolle werden innerhalb einer Sitzungsserie erstellt. Wählen Sie eine Sitzungsserie aus und klicken Sie dort auf \"Neues Protokoll\".",
+    "toSeries": "Zu den Sitzungsserien"
   },
   "dashboard": {
     "overview": "Übersicht Ihrer Meeting Minutes",
@@ -814,7 +818,11 @@
         "enableAuditLogDesc": "Protokollierung aller Systemaktivitäten",
         "allowedFileTypes": "Erlaubte Dateitypen",
         "allowedFileTypesDesc": "Komma-getrennte Liste von Dateierweiterungen"
-      }
+      },
+      "saveSuccess": "Einstellungen erfolgreich gespeichert",
+      "resetConfirm": "Möchten Sie wirklich alle Einstellungen auf die Standardwerte zurücksetzen?",
+      "resetSuccess": "Einstellungen auf Standardwerte zurückgesetzt",
+      "resetError": "Fehler beim Zurücksetzen der Einstellungen"
     },
     "users": {
       "title": "Benutzerverwaltung",
@@ -837,14 +845,17 @@
         "active": "Aktiv",
         "inactive": "Inaktiv",
         "verified": "Verifiziert",
-        "unverified": "Nicht verifiziert"
+        "unverified": "Nicht verifiziert",
+        "pending": "Ausstehend"
       },
       "actions": {
         "create": "Benutzer erstellen",
         "edit": "Bearbeiten",
         "update": "Aktualisieren",
         "delete": "Löschen",
-        "cancel": "Abbrechen"
+        "cancel": "Abbrechen",
+        "approve": "Freischalten",
+        "deleting": "Lösche…"
       },
       "table": {
         "user": "Benutzer",

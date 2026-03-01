@@ -1,8 +1,11 @@
 'use client';
 
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 
 export default function NewMinuteInfoPage() {
+  const t = useTranslations('minutes');
+
   return (
     <div className="min-h-[60vh] flex items-center justify-center px-4">
       <div className="text-center max-w-md">
@@ -11,16 +14,13 @@ export default function NewMinuteInfoPage() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         </div>
-        <h2 className="text-xl font-bold text-gray-900 mb-2">Neues Protokoll erstellen</h2>
-        <p className="text-gray-600 mb-6 text-sm">
-          Protokolle werden innerhalb einer Sitzungsserie erstellt.
-          Wählen Sie eine Sitzungsserie aus und klicken Sie dort auf &quot;Neues Protokoll&quot;.
-        </p>
+        <h2 className="text-xl font-bold text-gray-900 mb-2">{t('createTitle')}</h2>
+        <p className="text-gray-600 mb-6 text-sm">{t('createInfo')}</p>
         <Link
           href="/meeting-series"
           className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium inline-block"
         >
-          Zu den Sitzungsserien
+          {t('toSeries')}
         </Link>
       </div>
     </div>

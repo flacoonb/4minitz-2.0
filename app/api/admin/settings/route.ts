@@ -125,21 +125,19 @@ export async function PUT(request: NextRequest) {
     const userId = auth.user._id.toString();
     const body = await request.json();
 
-    let settings = await Settings.findOne({}).sort({ updatedAt: -1 });
-
-    if (!settings) {
-      settings = new Settings({
-        ...body,
-        updatedBy: userId
-      });
-    } else {
-      // Preserve smtpSettings if not explicitly sent (avoid accidental overwrite)
-      const { smtpSettings: _smtp, ...updateData } = body;
-      Object.assign(settings, updateData);
-      settings.updatedBy = userId;
+    // Only allow specific top-level sections to be updated (prevent arbitrary field injection)
+    const allowedSections = ['roles', 'memberSettings', 'notificationSettings', 'systemSettings'] as const;
+    const setData: Record<string, unknown> = { updatedBy: userId };
+    for (const section of allowedSections) {
+      if (body[section] !== undefined) setData[section] = body[section];
     }
 
-    await settings.save();
+    // Atomic upsert to avoid read-modify-write race condition
+    const settings = await Settings.findOneAndUpdate(
+      {},
+      { $set: setData },
+      { upsert: true, new: true, sort: { updatedAt: -1 }, runValidators: true }
+    );
 
     await logAction({
       action: 'UPDATE_SETTINGS',

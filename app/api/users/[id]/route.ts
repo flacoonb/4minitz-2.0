@@ -97,17 +97,40 @@ export async function PUT(
       );
     }
 
-    // Update fields
-    if (body.firstName) userToUpdate.firstName = body.firstName;
-    if (body.lastName) userToUpdate.lastName = body.lastName;
+    // Update fields (with length/format validation)
+    if (body.firstName !== undefined) {
+      if (typeof body.firstName !== 'string' || body.firstName.trim().length === 0 || body.firstName.length > 50) {
+        return NextResponse.json({ error: 'Vorname muss zwischen 1 und 50 Zeichen lang sein' }, { status: 400 });
+      }
+      userToUpdate.firstName = body.firstName.trim();
+    }
+    if (body.lastName !== undefined) {
+      if (typeof body.lastName !== 'string' || body.lastName.trim().length === 0 || body.lastName.length > 50) {
+        return NextResponse.json({ error: 'Nachname muss zwischen 1 und 50 Zeichen lang sein' }, { status: 400 });
+      }
+      userToUpdate.lastName = body.lastName.trim();
+    }
     if (body.email && body.email !== userToUpdate.email) {
       userToUpdate.email = body.email;
       if (isOwnProfile) {
         userToUpdate.isEmailVerified = false;
       }
     }
-    if (body.username) userToUpdate.username = body.username;
-    if (body.avatar !== undefined) userToUpdate.avatar = body.avatar;
+    if (body.username !== undefined) {
+      if (typeof body.username !== 'string' || body.username.length < 3 || body.username.length > 30) {
+        return NextResponse.json({ error: 'Benutzername muss zwischen 3 und 30 Zeichen lang sein' }, { status: 400 });
+      }
+      if (!/^[a-zA-Z0-9._-]+$/.test(body.username)) {
+        return NextResponse.json({ error: 'Benutzername darf nur Buchstaben, Zahlen, Punkte, Unterstriche und Bindestriche enthalten' }, { status: 400 });
+      }
+      userToUpdate.username = body.username;
+    }
+    if (body.avatar !== undefined) {
+      if (body.avatar !== null && (typeof body.avatar !== 'string' || body.avatar.length > 500 || !/^https?:\/\/.+/i.test(body.avatar))) {
+        return NextResponse.json({ error: 'Avatar muss eine gültige URL sein' }, { status: 400 });
+      }
+      userToUpdate.avatar = body.avatar;
+    }
 
     // Handle preferences
     if (body.preferences) {
@@ -149,7 +172,13 @@ export async function PUT(
         }
       }
       if (body.role) userToUpdate.role = body.role;
-      if (body.isActive !== undefined) userToUpdate.isActive = body.isActive;
+      if (body.isActive !== undefined) {
+        userToUpdate.isActive = body.isActive;
+        // Clear pending approval flag when admin activates a user
+        if (body.isActive === true && userToUpdate.pendingApproval) {
+          userToUpdate.pendingApproval = false;
+        }
+      }
       if (body.isEmailVerified !== undefined) userToUpdate.isEmailVerified = body.isEmailVerified;
     }
 

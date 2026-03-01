@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { resetPasswordSchema, validateBody } from '@/lib/validations';
 import crypto from 'crypto';
 import { getTranslations } from 'next-intl/server';
 
@@ -19,20 +20,11 @@ export async function POST(request: NextRequest) {
     await connectDB();
 
     const body = await request.json().catch(() => ({}));
-    const token = (body?.token || '').toString().trim();
-    const password = (body?.password || '').toString();
-
-    if (!token) {
-      return NextResponse.json({ error: t('missingToken') }, { status: 400 });
-    }
-
-    if (!password) {
+    const validation = validateBody(resetPasswordSchema, body);
+    if (!validation.success) {
       return NextResponse.json({ error: t('required') }, { status: 400 });
     }
-
-    if (password.length < 8) {
-      return NextResponse.json({ error: t('required') }, { status: 400 });
-    }
+    const { token, password } = validation.data;
 
     const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
 

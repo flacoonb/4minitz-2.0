@@ -4,7 +4,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
 
 interface MeetingSeries {
   _id: string;
@@ -40,6 +40,7 @@ export default function MeetingSeriesPage() {
   const { user, loading: _authLoading, hasPermission } = useAuth();
   const t = useTranslations('meetingSeries');
   const tCommon = useTranslations('common');
+  const locale = useLocale();
   const seriesId = params?.id;
 
   const [series, setSeries] = useState<MeetingSeries | null>(null);
@@ -64,12 +65,6 @@ export default function MeetingSeriesPage() {
   const canEditSeries = hasPermission('canModerateAllMeetings') || isModerator;
   const canDeleteSeries = hasPermission('canModerateAllMeetings') || isModerator; // Using moderate permission for delete as well
   const canCreateMinute = hasPermission('canModerateAllMeetings') || isModerator;
-
-  // useEffect(() => {
-  //   if (!seriesId) return;
-  //   // Don't wait for auth, allow immediate loading with fallback user
-  //   fetchData();
-  // }, [seriesId, user?._id]); // Re-fetch when user changes
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -528,7 +523,7 @@ export default function MeetingSeriesPage() {
                             </span>
                             {task.dueDate && (
                               <span className="px-1.5 py-0.5 text-xs bg-purple-100 text-purple-800 rounded">
-                                Fällig: {new Date(task.dueDate).toLocaleDateString('de-DE')}
+                                {t('dueLabel')}: {new Date(task.dueDate).toLocaleDateString(locale)}
                               </span>
                             )}
                           </div>

@@ -36,6 +36,7 @@ export default function EmailConfigPage() {
   const [result, setResult] = useState<{ success: boolean; message: string } | null>(null);
   const [testEmail, setTestEmail] = useState('');
   const [sendingTest, setSendingTest] = useState(false);
+  const [showDebug, setShowDebug] = useState(false);
 
   useEffect(() => {
     const loadConfig = async () => {
@@ -502,12 +503,21 @@ export default function EmailConfigPage() {
           </div>
         )}
 
-        {/* Debug: Raw loaded config (visible for admins to troubleshoot) */}
-        <div className="mt-4 bg-gray-50 border border-gray-200 p-4 rounded">
-          <h3 className="text-sm font-medium text-gray-700 mb-2">{t('debug.title')}</h3>
-          <pre className="text-xs text-gray-800 overflow-auto bg-white p-2 rounded" style={{ maxHeight: 200 }}>
-            {JSON.stringify({ config, isValid, result: result || null }, null, 2)}
-          </pre>
+        {/* Debug: Raw loaded config (collapsed by default) */}
+        <div className="mt-4">
+          <button
+            onClick={() => setShowDebug(v => !v)}
+            className="text-xs text-gray-500 hover:text-gray-700 underline"
+          >
+            {showDebug ? '▾' : '▸'} {t('debug.title')}
+          </button>
+          {showDebug && (
+            <div className="mt-2 bg-gray-50 border border-gray-200 p-4 rounded">
+              <pre className="text-xs text-gray-800 overflow-auto bg-white p-2 rounded" style={{ maxHeight: 200 }}>
+                {JSON.stringify({ config, isValid, result: result || null }, null, 2)}
+              </pre>
+            </div>
+          )}
         </div>
 
         {/* Instructions */}

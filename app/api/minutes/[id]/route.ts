@@ -175,16 +175,18 @@ export async function PUT(
                   taskId = newTask._id;
                   item.externalTaskId = taskId;
                 }
-              } catch {
+              } catch (taskErr) {
                 // Task sync failure is non-fatal — minute save continues
+                console.error('Task sync failed (non-fatal):', taskErr);
               }
             } else if (item.itemType === 'infoItem' && item.externalTaskId) {
               // Item was changed from actionItem to infoItem — clean up orphaned task
               try {
                 await Task.findByIdAndDelete(item.externalTaskId);
                 item.externalTaskId = undefined;
-              } catch {
+              } catch (cleanupErr) {
                 // Cleanup failure is non-fatal
+                console.error('Task cleanup failed (non-fatal):', cleanupErr);
               }
             }
           }
