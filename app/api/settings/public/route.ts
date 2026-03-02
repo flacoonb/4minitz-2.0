@@ -15,7 +15,8 @@ export async function GET(_request: NextRequest) {
         data: {
           system: {
             organizationName: '4Minitz 2.0',
-            organizationLogo: null
+            organizationLogo: null,
+            agendaItemLabelMode: 'topic-alpha'
           }
         }
       });
@@ -28,6 +29,7 @@ export async function GET(_request: NextRequest) {
         organizationLogo: settings.systemSettings?.organizationLogo,
         allowRegistration: settings.memberSettings?.allowSelfRegistration ?? false,
         requireAdminApproval: settings.memberSettings?.requireAdminApproval ?? true,
+        agendaItemLabelMode: settings.memberSettings?.agendaItemLabelMode || 'topic-alpha',
         dateFormat: settings.systemSettings?.dateFormat || 'DD.MM.YYYY',
         timeFormat: settings.systemSettings?.timeFormat || '24h'
       },

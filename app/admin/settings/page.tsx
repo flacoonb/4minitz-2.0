@@ -4,6 +4,7 @@ import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { withAdminAuth } from '@/contexts/AuthContext';
+import ConfirmationModal from '@/components/ConfirmationModal';
 import { 
   Settings, 
   Users, 
@@ -45,6 +46,7 @@ interface SystemSettings {
     requireEmailVerification: boolean;
     requireAdminApproval: boolean;
     allowSelfRegistration: boolean;
+    agendaItemLabelMode: 'manual' | 'topic-alpha';
     defaultRole: 'user' | 'moderator';
     maxMembersPerMeeting: number;
     enableGuestAccess: boolean;
@@ -92,20 +94,32 @@ const AdminSettings = () => {
   const [success, setSuccess] = useState('');
   const [activeTab, setActiveTab] = useState<'roles' | 'members' | 'language' | 'notifications' | 'system'>('roles');
   const [hasChanges, setHasChanges] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
   
   const router = useRouter();
 
   // Available timezones
   const availableTimezones = [
     'Europe/Berlin',
+    'Europe/Zurich',
+    'Europe/Vienna',
+    'Europe/Amsterdam',
+    'Europe/Brussels',
     'Europe/London', 
     'Europe/Paris',
     'Europe/Rome',
     'Europe/Madrid',
+    'Europe/Prague',
+    'Europe/Warsaw',
     'America/New_York',
+    'America/Chicago',
+    'America/Denver',
     'America/Los_Angeles',
+    'America/Toronto',
     'Asia/Tokyo',
-    'Asia/Shanghai'
+    'Asia/Shanghai',
+    'Asia/Singapore',
+    'Australia/Sydney'
   ];
 
   // Fetch settings
@@ -187,11 +201,7 @@ const AdminSettings = () => {
   };
 
   // Reset to defaults
-  const handleReset = async () => {
-    if (!confirm(t('resetConfirm'))) {
-      return;
-    }
-
+  const executeReset = async () => {
     setSaving(true);
     setError('');
 
@@ -220,6 +230,10 @@ const AdminSettings = () => {
     } finally {
       setSaving(false);
     }
+  };
+
+  const handleReset = () => {
+    setShowResetConfirm(true);
   };
 
   // Update role permission
@@ -326,7 +340,7 @@ const AdminSettings = () => {
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-6">
             <div className="flex items-center gap-3">
               <div className="p-3 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl text-white shadow-lg">
                 <Settings className="w-6 h-6" />
@@ -337,7 +351,7 @@ const AdminSettings = () => {
               </div>
             </div>
             
-            <div className="flex items-center gap-3">
+            <div className="hidden sm:flex sticky top-2 z-40 flex-col sm:flex-row sm:items-center gap-3 bg-white/80 backdrop-blur-sm p-2 rounded-xl border border-white/60 shadow-sm">
               {hasChanges && (
                 <span className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm font-medium">
                   {t('unsavedChanges')}
@@ -345,7 +359,7 @@ const AdminSettings = () => {
               )}
               <button
                 onClick={handleReset}
-                className="flex items-center gap-2 px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                className="flex items-center justify-center gap-2 px-4 py-2 min-h-11 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
                 title={t('reset')}
               >
                 <RotateCcw className="w-4 h-4" />
@@ -354,7 +368,7 @@ const AdminSettings = () => {
               <button
                 onClick={handleSave}
                 disabled={saving || !hasChanges}
-                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg hover:from-indigo-600 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                className="flex items-center justify-center gap-2 px-6 py-3 min-h-11 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg hover:from-indigo-600 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
               >
                 {saving ? (
                   <>
@@ -372,22 +386,43 @@ const AdminSettings = () => {
           </div>
         </div>
 
+        {/* Mobile sticky save button */}
+        <div className="sm:hidden sticky top-28 z-40 mb-4">
+          <button
+            onClick={handleSave}
+            disabled={saving || !hasChanges}
+            className="w-full flex items-center justify-center gap-2 px-6 py-3 min-h-11 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl hover:from-indigo-600 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+          >
+            {saving ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                {tCommon('saving')}
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4" />
+                {t('save')}
+              </>
+            )}
+          </button>
+        </div>
+
         {/* Alerts */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3">
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex flex-wrap items-start gap-3">
             <AlertCircle className="w-5 h-5 text-red-500" />
-            <span className="text-red-700">{error}</span>
-            <button onClick={() => setError('')} className="ml-auto text-red-500 hover:text-red-700">
+            <span className="text-red-700 min-w-0 flex-1 break-words">{error}</span>
+            <button onClick={() => setError('')} className="ml-auto shrink-0 text-red-500 hover:text-red-700 min-h-11 min-w-11 inline-flex items-center justify-center rounded-lg">
               <X className="w-4 h-4" />
             </button>
           </div>
         )}
 
         {success && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl flex items-center gap-3">
+          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl flex flex-wrap items-start gap-3">
             <CheckCircle2 className="w-5 h-5 text-green-500" />
-            <span className="text-green-700">{success}</span>
-            <button onClick={() => setSuccess('')} className="ml-auto text-green-500 hover:text-green-700">
+            <span className="text-green-700 min-w-0 flex-1 break-words">{success}</span>
+            <button onClick={() => setSuccess('')} className="ml-auto shrink-0 text-green-500 hover:text-green-700 min-h-11 min-w-11 inline-flex items-center justify-center rounded-lg">
               <X className="w-4 h-4" />
             </button>
           </div>
@@ -397,7 +432,7 @@ const AdminSettings = () => {
         <div className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-xl shadow-lg overflow-hidden">
           {/* Tabs */}
           <div className="border-b border-slate-200">
-            <nav className="flex overflow-x-auto">
+            <nav className="grid grid-cols-2 sm:flex sm:overflow-x-auto">
               {[
                 { key: 'roles', label: t('tabs.roles'), icon: Shield },
                 { key: 'members', label: t('tabs.members'), icon: Users },
@@ -407,7 +442,7 @@ const AdminSettings = () => {
                 <button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key as any)}
-                  className={`flex items-center gap-2 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                  className={`flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-6 py-3 sm:py-4 min-h-11 text-xs sm:text-sm font-medium border-b-2 transition-colors leading-tight text-center sm:whitespace-nowrap ${
                     activeTab === tab.key
                       ? 'border-indigo-500 text-indigo-600 bg-indigo-50/50'
                       : 'border-transparent text-slate-600 hover:text-slate-800 hover:bg-slate-50/50'
@@ -423,39 +458,39 @@ const AdminSettings = () => {
           <div className="p-6">
             {/* Roles & Permissions Tab */}
             {activeTab === 'roles' && (
-              <div className="space-y-8">
+              <div className="space-y-5 sm:space-y-8">
                 <div>
-                  <h3 className="text-lg font-semibold text-slate-800 mb-4">{t('roles.title')}</h3>
-                  <p className="text-slate-600 mb-6">
+                  <h3 className="text-lg font-semibold text-slate-800 mb-2 sm:mb-4">{t('roles.title')}</h3>
+                  <p className="text-slate-600 mb-4 sm:mb-6">
                     {t('roles.description')}
                   </p>
                 </div>
 
                 {Object.entries(settings.roles).map(([role, permissions]) => (
-                  <div key={role} className="bg-slate-50 rounded-xl p-6 border border-slate-200">
-                    <div className="flex items-center gap-3 mb-6">
+                  <div key={role} className="bg-slate-50 rounded-xl p-4 sm:p-6 border border-slate-200">
+                    <div className="flex items-center gap-2.5 sm:gap-3 mb-4 sm:mb-6">
                       {getRoleIcon(role)}
-                      <div className={`px-3 py-1 rounded-full text-sm font-semibold border ${getRoleBadgeColor(role)}`}>
+                      <div className={`px-2.5 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-semibold border ${getRoleBadgeColor(role)}`}>
                         {role === 'admin' ? t('roles.admin') : 
                          role === 'moderator' ? t('roles.moderator') : t('roles.user')}
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 min-[500px]:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-4">
                       {Object.entries(permissions).map(([permission, value]) => (
-                        <label key={permission} className="flex items-center gap-3 p-3 bg-white rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors cursor-pointer">
+                        <label key={permission} className="flex items-start gap-2.5 p-2.5 sm:p-3 bg-white rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors cursor-pointer">
                           <input
                             type="checkbox"
                             checked={value}
                             onChange={(e) => updateRolePermission(role as any, permission as keyof RolePermissions, e.target.checked)}
                             className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
                           />
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-start gap-1.5 sm:gap-2 min-w-0">
                             {value ? 
                               <Lock className="w-4 h-4 text-green-500" /> : 
                               <Unlock className="w-4 h-4 text-slate-400" />
                             }
-                            <span className="text-sm font-medium text-slate-700">
+                            <span className="text-xs sm:text-sm font-medium text-slate-700 leading-tight break-words">
                               {t(`roles.permissions.${permission}`)}
                             </span>
                           </div>
@@ -524,6 +559,19 @@ const AdminSettings = () => {
                         <p className="text-xs text-slate-500">{t('members.allowSelfRegistrationDesc')}</p>
                       </div>
                     </label>
+                  </div>
+
+                  <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 md:col-span-2">
+                    <label className="block text-sm font-medium text-slate-700 mb-2">{t('members.agendaItemLabelMode')}</label>
+                    <select
+                      value={settings.memberSettings.agendaItemLabelMode || 'topic-alpha'}
+                      onChange={(e) => updateMemberSettings('agendaItemLabelMode', e.target.value)}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    >
+                      <option value="topic-alpha">{t('members.agendaItemLabelModeTopicAlpha')}</option>
+                      <option value="manual">{t('members.agendaItemLabelModeManual')}</option>
+                    </select>
+                    <p className="text-xs text-slate-500 mt-1">{t('members.agendaItemLabelModeDesc')}</p>
                   </div>
 
                   {/* Guest Access, Default Role, Max Members, Guest Link Expiry removed — not yet implemented */}
@@ -750,6 +798,21 @@ const AdminSettings = () => {
             {/* Categories Tab removed */}
           </div>
         </div>
+
+        <ConfirmationModal
+          isOpen={showResetConfirm}
+          onClose={() => setShowResetConfirm(false)}
+          onConfirm={() => {
+            setShowResetConfirm(false);
+            executeReset();
+          }}
+          title={t('reset')}
+          message={t('resetConfirm')}
+          confirmText={t('reset')}
+          cancelText={tCommon('cancel')}
+          isProcessing={saving}
+          type="warning"
+        />
       </div>
     </div>
   );

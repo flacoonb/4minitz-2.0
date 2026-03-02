@@ -86,7 +86,7 @@ export default function Navigation() {
 
           {/* Mobile Dropdown Menu */}
           {mobileMenuOpen && (
-            <div className="absolute left-0 right-0 top-full mt-1 mx-4 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 py-2 z-50">
+            <div className="absolute left-0 right-0 top-full mt-1 mx-4 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 py-2 z-50 max-h-[70vh] overflow-y-auto">
               {navItems.map((item) => (
                 <Link
                   key={item.href}
@@ -131,13 +131,13 @@ export default function Navigation() {
             <Link
               key={item.href}
               href={item.href}
-              className={`group relative px-4 py-2.5 rounded-xl font-medium transition-all duration-200 min-h-[44px] flex items-center ${isActive(item.href)
+              className={`group relative px-4 py-2.5 rounded-xl font-medium transition-all duration-200 min-h-[44px] flex items-center min-w-0 ${isActive(item.href)
                 ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/50'
                 : 'text-gray-700 dark:text-gray-200 hover:bg-white/80 dark:hover:bg-slate-700 hover:shadow-md'
                 }`}
             >
               <div className="flex items-center gap-2">
-                <span className="whitespace-nowrap">{item.label}</span>
+                <span className="truncate">{item.label}</span>
               </div>
 
               {/* Active indicator */}
@@ -154,13 +154,13 @@ export default function Navigation() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className={`group relative px-4 py-2.5 rounded-xl font-medium transition-all duration-200 min-h-[44px] flex items-center ${isActive(item.href)
+                  className={`group relative px-4 py-2.5 rounded-xl font-medium transition-all duration-200 min-h-[44px] flex items-center min-w-0 ${isActive(item.href)
                     ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/50'
                     : 'text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-slate-700 hover:shadow-md border border-purple-200 dark:border-purple-700'
                     }`}
                 >
                   <div className="flex items-center gap-2">
-                    <span className="whitespace-nowrap">{item.label}</span>
+                    <span className="truncate">{item.label}</span>
                   </div>
 
                   {/* Active indicator */}

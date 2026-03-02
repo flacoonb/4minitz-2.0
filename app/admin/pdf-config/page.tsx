@@ -284,8 +284,8 @@ export default function PdfConfigPage() {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4">
       {/* Success/Error Message Toast - Fixed at top */}
       {message && (
-        <div className="fixed top-4 left-1/2 transform -translate-x-1/2 z-50 animate-in slide-in-from-top">
-          <div className={`px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 min-w-[400px] ${
+        <div className="fixed top-4 inset-x-4 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 z-50 animate-in slide-in-from-top">
+          <div className={`px-4 sm:px-6 py-4 rounded-xl shadow-2xl flex items-start gap-3 w-[min(92vw,28rem)] min-w-0 ${
             message.type === 'success' 
               ? 'bg-green-500 text-white' 
               : 'bg-red-500 text-white'
@@ -304,7 +304,7 @@ export default function PdfConfigPage() {
             </div>
             <button
               onClick={() => setMessage(null)}
-              className="text-white hover:text-gray-200 transition-colors"
+              className="text-white hover:text-gray-200 transition-colors min-h-10 min-w-10 inline-flex items-center justify-center rounded-lg"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -317,24 +317,24 @@ export default function PdfConfigPage() {
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-100">
-          <div className="flex items-center justify-between">
-            <div>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div className="min-w-0">
               <h1 className="text-3xl font-bold text-gray-900">{t('title')}</h1>
               <p className="text-gray-600 mt-2">{t('subtitle')}</p>
             </div>
             <Link
               href="/admin/settings"
-              className="px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors"
+              className="w-full sm:w-auto px-4 py-2 min-h-11 text-gray-600 hover:text-gray-900 transition-colors inline-flex items-center justify-center"
             >
               {t('back')}
             </Link>
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-4 mt-6 border-b border-gray-200">
+          <div className="flex gap-2 sm:gap-4 mt-6 border-b border-gray-200 overflow-x-auto">
             <button
               onClick={() => setActiveTab('content')}
-              className={`pb-3 px-4 font-semibold transition-all border-b-2 ${
+              className={`shrink-0 pb-3 px-3 sm:px-4 font-semibold transition-all border-b-2 whitespace-nowrap ${
                 activeTab === 'content'
                   ? 'border-blue-600 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -344,7 +344,7 @@ export default function PdfConfigPage() {
             </button>
             <button
               onClick={() => setActiveTab('layout')}
-              className={`pb-3 px-4 font-semibold transition-all border-b-2 ${
+              className={`shrink-0 pb-3 px-3 sm:px-4 font-semibold transition-all border-b-2 whitespace-nowrap ${
                 activeTab === 'layout'
                   ? 'border-blue-600 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
@@ -714,7 +714,7 @@ export default function PdfConfigPage() {
                       <label className="block text-sm font-medium text-gray-700 mb-1">
                         {t('layout.globalSettings.margins')}
                       </label>
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <input
                           type="number"
                           placeholder={t('layout.globalSettings.top')}
@@ -832,7 +832,7 @@ export default function PdfConfigPage() {
                     {/* Position */}
                     <div>
                       <h3 className="font-semibold text-gray-700 mb-2">{t('layout.properties.position')}</h3>
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <div>
                           <label className="block text-xs text-gray-600 mb-1">{t('layout.properties.x')} (mm)</label>
                           <input
@@ -861,7 +861,7 @@ export default function PdfConfigPage() {
                     {/* Size */}
                     <div>
                       <h3 className="font-semibold text-gray-700 mb-2">{t('layout.properties.size')}</h3>
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         <div>
                           <label className="block text-xs text-gray-600 mb-1">{t('layout.properties.width')} (mm)</label>
                           <input

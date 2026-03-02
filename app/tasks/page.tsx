@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useTranslations, useLocale } from 'next-intl';
+import { useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface Task {
@@ -42,6 +43,7 @@ const PRIORITY_CONFIG = {
 export default function TasksPage() {
   const t = useTranslations();
   const locale = useLocale();
+  const searchParams = useSearchParams();
   const { user } = useAuth();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
@@ -55,6 +57,24 @@ export default function TasksPage() {
   const [taskUpdateStatus, setTaskUpdateStatus] = useState<'open' | 'in-progress' | 'completed' | 'cancelled'>('open');
   const [taskUpdateNotes, setTaskUpdateNotes] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
+
+  useEffect(() => {
+    const statusParam = searchParams.get('status');
+    const priorityParam = searchParams.get('priority');
+    const overdueParam = searchParams.get('overdue');
+
+    setFilterStatus(
+      statusParam && ['active', 'all', 'open', 'in-progress', 'completed', 'cancelled'].includes(statusParam)
+        ? statusParam
+        : 'active'
+    );
+    setFilterPriority(
+      priorityParam && ['low', 'medium', 'high'].includes(priorityParam)
+        ? priorityParam
+        : ''
+    );
+    setFilterOverdue(overdueParam === 'true');
+  }, [searchParams]);
 
   const fetchTasks = useCallback(async () => {
     try {
@@ -169,7 +189,7 @@ export default function TasksPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-6 sm:py-8 px-3 sm:px-4">
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -207,12 +227,12 @@ export default function TasksPage() {
               placeholder={t('tasks.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent flex-1 min-w-[200px]"
+              className="px-4 py-2 min-h-11 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent flex-1 min-w-0 sm:min-w-[200px]"
             />
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500"
+              className="px-3 py-2 min-h-11 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500"
             >
               <option value="active">{t('tasks.filterActive')}</option>
               <option value="open">{t('tasks.statusOpen')}</option>
@@ -224,7 +244,7 @@ export default function TasksPage() {
             <select
               value={filterPriority}
               onChange={(e) => setFilterPriority(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500"
+              className="px-3 py-2 min-h-11 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500"
             >
               <option value="">{t('tasks.allPriorities')}</option>
               <option value="high">{t('tasks.priorityHigh')}</option>
@@ -320,7 +340,7 @@ export default function TasksPage() {
                   {/* Edit Button */}
                   <button
                     onClick={() => openTaskModal(task)}
-                    className="shrink-0 px-3 py-1.5 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-1"
+                    className="w-full sm:w-auto shrink-0 px-3 py-2 min-h-11 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors inline-flex items-center justify-center gap-1"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -343,20 +363,20 @@ export default function TasksPage() {
 
       {/* Task Edit Modal */}
       {editingTask && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900">{t('dashboard.editTask')}</h2>
-                  <p className="text-sm text-gray-600 mt-1">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-4 sm:p-6 border-b border-gray-200">
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900">{t('dashboard.editTask')}</h2>
+                  <p className="text-sm text-gray-600 mt-1 break-words">
                     {editingTask.meetingSeries?.project || t('dashboard.noSeries')}
                     {editingTask.meetingSeries?.name ? ` – ${editingTask.meetingSeries.name}` : ''}{editingTask.topicSubject ? ` • ${editingTask.topicSubject}` : ''}
                   </p>
                 </div>
                 <button
                   onClick={closeTaskModal}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  className="text-gray-400 hover:text-gray-600 transition-colors min-h-11 min-w-11 inline-flex items-center justify-center rounded-lg"
                   aria-label="Dialog schliessen"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -366,16 +386,16 @@ export default function TasksPage() {
               </div>
             </div>
 
-            <div className="p-6 space-y-6">
+            <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
               {/* Original Task Description (Read-only) */}
-              <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
+              <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-3 sm:p-4">
                 <div className="flex items-start gap-2 mb-2">
                   <svg className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
                   <div className="flex-1">
                     <h3 className="text-sm font-bold text-blue-900 mb-1">{t('dashboard.originalTask')}</h3>
-                    <p className="text-base text-blue-800 font-medium">{editingTask.subject}</p>
+                    <p className="text-sm sm:text-base text-blue-800 font-medium">{editingTask.subject}</p>
                     {editingTask.details && (
                       <p className="text-sm text-blue-700 mt-2 whitespace-pre-wrap">{editingTask.details}</p>
                     )}
@@ -406,49 +426,49 @@ export default function TasksPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   {t('dashboard.changeStatus')}
                 </label>
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 gap-2 sm:gap-3">
                   <button
                     onClick={() => setTaskUpdateStatus('open')}
-                    className={`p-4 rounded-lg border-2 transition-all ${taskUpdateStatus === 'open'
+                    className={`p-2.5 sm:p-3 rounded-lg border-2 transition-all min-h-[44px] ${taskUpdateStatus === 'open'
                       ? 'border-red-500 bg-red-50 text-red-900'
                       : 'border-gray-200 hover:border-gray-300'
                       }`}
                   >
-                    <div className="text-2xl mb-1">○</div>
-                    <div className="font-medium">{t('status.open')}</div>
+                    <div className="text-lg sm:text-xl mb-0.5">○</div>
+                    <div className="font-medium text-sm sm:text-base leading-tight">{t('status.open')}</div>
                   </button>
 
                   <button
                     onClick={() => setTaskUpdateStatus('in-progress')}
-                    className={`p-4 rounded-lg border-2 transition-all ${taskUpdateStatus === 'in-progress'
+                    className={`p-2.5 sm:p-3 rounded-lg border-2 transition-all min-h-[44px] ${taskUpdateStatus === 'in-progress'
                       ? 'border-yellow-500 bg-yellow-50 text-yellow-900'
                       : 'border-gray-200 hover:border-gray-300'
                       }`}
                   >
-                    <div className="text-2xl mb-1">⏳</div>
-                    <div className="font-medium">{t('status.inProgress')}</div>
+                    <div className="text-lg sm:text-xl mb-0.5">⏳</div>
+                    <div className="font-medium text-sm sm:text-base leading-tight">{t('status.inProgress')}</div>
                   </button>
 
                   <button
                     onClick={() => setTaskUpdateStatus('completed')}
-                    className={`p-4 rounded-lg border-2 transition-all ${taskUpdateStatus === 'completed'
+                    className={`p-2.5 sm:p-3 rounded-lg border-2 transition-all min-h-[44px] ${taskUpdateStatus === 'completed'
                       ? 'border-green-500 bg-green-50 text-green-900'
                       : 'border-gray-200 hover:border-gray-300'
                       }`}
                   >
-                    <div className="text-2xl mb-1">✓</div>
-                    <div className="font-medium">{t('status.completed')}</div>
+                    <div className="text-lg sm:text-xl mb-0.5">✓</div>
+                    <div className="font-medium text-sm sm:text-base leading-tight">{t('status.completed')}</div>
                   </button>
 
                   <button
                     onClick={() => setTaskUpdateStatus('cancelled')}
-                    className={`p-4 rounded-lg border-2 transition-all ${taskUpdateStatus === 'cancelled'
+                    className={`p-2.5 sm:p-3 rounded-lg border-2 transition-all min-h-[44px] ${taskUpdateStatus === 'cancelled'
                       ? 'border-gray-500 bg-gray-50 text-gray-900'
                       : 'border-gray-200 hover:border-gray-300'
                       }`}
                   >
-                    <div className="text-2xl mb-1">✕</div>
-                    <div className="font-medium">{t('status.cancelled')}</div>
+                    <div className="text-lg sm:text-xl mb-0.5">✕</div>
+                    <div className="font-medium text-sm sm:text-base leading-tight">{t('status.cancelled')}</div>
                   </button>
                 </div>
               </div>
@@ -462,7 +482,7 @@ export default function TasksPage() {
                   id="task-notes"
                   value={taskUpdateNotes}
                   onChange={(e) => setTaskUpdateNotes(e.target.value)}
-                  rows={5}
+                  rows={4}
                   placeholder={t('dashboard.commentPlaceholder')}
                   className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                 />
@@ -475,18 +495,18 @@ export default function TasksPage() {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3 pt-4 border-t border-gray-200">
                 <button
                   onClick={closeTaskModal}
                   disabled={isUpdating}
-                  className="px-6 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
+                  className="w-full sm:w-auto px-6 py-2 min-h-11 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
                 >
                   {t('common.cancel')}
                 </button>
                 <button
                   onClick={updateTaskStatus}
                   disabled={isUpdating}
-                  className="px-6 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+                  className="w-full sm:w-auto px-6 py-2 min-h-11 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 inline-flex items-center justify-center gap-2"
                 >
                   {isUpdating ? (
                     <>

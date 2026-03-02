@@ -135,9 +135,35 @@ export async function PUT(
       }
     }
 
+    const toAlphabetSuffix = (index: number): string => {
+      let n = index + 1;
+      let result = '';
+      while (n > 0) {
+        const remainder = (n - 1) % 26;
+        result = String.fromCharCode(97 + remainder) + result;
+        n = Math.floor((n - 1) / 26);
+      }
+      return result;
+    };
+
+    const topicsToPersist = Array.isArray(body.topics)
+      ? body.topics.map((topic: any, topicIndex: number) => ({
+          ...topic,
+          infoItems: Array.isArray(topic.infoItems)
+            ? topic.infoItems.map((item: any, itemIndex: number) => {
+                const autoLabel = `${topicIndex + 1}${toAlphabetSuffix(itemIndex)}`;
+                return {
+                  ...item,
+                  subject: (item.subject || '').trim() || autoLabel,
+                };
+              })
+            : topic.infoItems,
+        }))
+      : body.topics;
+
     // Sync infoItems with Central Task Registry
-    if (body.topics) {
-      for (const topic of body.topics) {
+    if (topicsToPersist) {
+      for (const topic of topicsToPersist) {
         // Ensure topic has an ID for linking tasks
         if (!topic._id) {
           topic._id = new mongoose.Types.ObjectId().toString();
@@ -199,9 +225,10 @@ export async function PUT(
       date: body.date ? new Date(body.date) : minute.date,
       participants: body.participants,
       participantsWithStatus: body.participantsWithStatus,
-      topics: body.topics,
+      topics: topicsToPersist,
       globalNote: body.globalNote,
       time: body.time || '', // Set to empty string if undefined/null
+      endTime: body.endTime || '', // Set to empty string if undefined/null
       location: body.location || '', // Set to empty string if undefined/null
       title: body.title || '', // Set to empty string if undefined/null
       updatedAt: new Date()

@@ -23,6 +23,7 @@ export interface ISettings extends Document {
     requireEmailVerification: boolean;
     requireAdminApproval: boolean;
     allowSelfRegistration: boolean;
+    agendaItemLabelMode: 'manual' | 'topic-alpha';
     defaultRole: 'user' | 'moderator';
     maxMembersPerMeeting: number;
     enableGuestAccess: boolean;
@@ -94,6 +95,7 @@ const SettingsSchema = new Schema<ISettings>({
     requireEmailVerification: { type: Boolean, default: true },
     requireAdminApproval: { type: Boolean, default: true },
     allowSelfRegistration: { type: Boolean, default: false },
+    agendaItemLabelMode: { type: String, enum: ['manual', 'topic-alpha'], default: 'topic-alpha' },
     defaultRole: { type: String, enum: ['user', 'moderator'], default: 'user' },
     maxMembersPerMeeting: { type: Number, default: 50 },
     enableGuestAccess: { type: Boolean, default: true },

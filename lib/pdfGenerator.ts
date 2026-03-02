@@ -70,6 +70,7 @@ interface Minute {
   } | any;
   date: string;
   time?: string;
+  endTime?: string;
   location?: string;
   participants: string[];
   participantsAdditional?: string;
@@ -135,6 +136,8 @@ function getLabels(locale: string) {
     location: isEn ? 'Location:' : 'Ort:',
     date: isEn ? 'Date:' : 'Datum:',
     time: isEn ? 'Time:' : 'Zeit:',
+    from: isEn ? 'from' : 'von',
+    to: isEn ? 'to' : 'bis',
     notSpecified: isEn ? 'Not specified' : 'Nicht angegeben',
     guests: isEn ? 'Guests:' : 'Gäste:',
     more: isEn ? 'more' : 'weitere',
@@ -153,6 +156,17 @@ function getLabels(locale: string) {
       ? { high: 'High', medium: 'Medium', low: 'Low' } as Record<string, string>
       : { high: 'Hoch', medium: 'Mittel', low: 'Niedrig' } as Record<string, string>,
   };
+}
+
+function toAlphabetSuffix(index: number): string {
+  let n = index + 1;
+  let result = '';
+  while (n > 0) {
+    const remainder = (n - 1) % 26;
+    result = String.fromCharCode(97 + remainder) + result;
+    n = Math.floor((n - 1) / 26);
+  }
+  return result;
 }
 
 // Helper to add draft watermark
@@ -476,7 +490,9 @@ export async function generateMinutePdf(
   });
   doc.text(dateStr, col2X + 2, yPosition + 11);
   
-  const timeText = minute.time || labels.notSpecified;
+  const timeText = minute.time && minute.endTime
+    ? `${labels.from} ${minute.time} ${labels.to} ${minute.endTime}`
+    : (minute.time ? minute.time : (minute.endTime ? `${labels.to} ${minute.endTime}` : labels.notSpecified));
   doc.text(timeText, col3X + 2, yPosition + 11);
   
   yPosition += infoBoxHeight + (layoutSettings?.sectionSpacing || 5);
@@ -558,7 +574,7 @@ export async function generateMinutePdf(
     // Info Items as subsections with improved layout
     if (topic.infoItems && topic.infoItems.length > 0) {
       topic.infoItems.forEach((item, itemIndex) => {
-        const subLetter = String.fromCharCode(97 + itemIndex); // a, b, c, etc.
+        const subLetter = toAlphabetSuffix(itemIndex);
         
         // Calculate estimated height for this item
         const calculateItemHeight = () => {
@@ -626,7 +642,8 @@ export async function generateMinutePdf(
         doc.setFontSize(8);
         doc.setFont(settings.fontFamily, 'bold');
         
-        const labelText = `${sectionNumber}${subLetter})`;
+        const autoLabel = `${sectionNumber}${subLetter}`;
+        const labelText = `${autoLabel})`;
         const labelTextWidth = doc.getTextWidth(labelText);
         
         // Get colors from layout settings
@@ -654,19 +671,24 @@ export async function generateMinutePdf(
         doc.setFont(settings.fontFamily, 'bold');
         doc.setTextColor(0, 0, 0);
         
-        const subjectLines = doc.splitTextToSize(item.subject, contentWidth);
-        doc.text(subjectLines[0], contentX, yPosition);
-        
-        // Additional subject lines if wrapped
-        if (subjectLines.length > 1) {
-          yPosition += 4.5;
-          for (let i = 1; i < subjectLines.length; i++) {
-            doc.text(subjectLines[i], contentX, yPosition);
+        const cleanedSubject = (item.subject || '').trim();
+        const subjectText = cleanedSubject === autoLabel ? '' : cleanedSubject;
+        if (subjectText) {
+          const subjectLines = doc.splitTextToSize(subjectText, contentWidth);
+          doc.text(subjectLines[0], contentX, yPosition);
+
+          // Additional subject lines if wrapped
+          if (subjectLines.length > 1) {
             yPosition += 4.5;
+            for (let i = 1; i < subjectLines.length; i++) {
+              doc.text(subjectLines[i], contentX, yPosition);
+              yPosition += 4.5;
+            }
           }
+          yPosition += 6;
+        } else {
+          yPosition += 2;
         }
-        
-        yPosition += 6;
 
         // Due date for action items (displayed prominently below subject)
         if (item.itemType === 'actionItem' && item.dueDate) {

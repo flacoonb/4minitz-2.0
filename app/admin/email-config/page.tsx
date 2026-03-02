@@ -214,7 +214,7 @@ export default function EmailConfigPage() {
         {/* Current Status */}
         <div className="bg-white rounded-lg shadow p-6 mb-6">
           <h2 className="text-lg font-semibold mb-4">{t('status.title')}</h2>
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <span className="text-gray-600">{t('status.connection')}</span>
               <span className={`ml-2 px-2 py-1 rounded text-sm ${
@@ -250,7 +250,7 @@ export default function EmailConfigPage() {
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 {t('settings.quickSelect')}
               </label>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <button
                   onClick={() => {
                     setConfig({
@@ -426,7 +426,7 @@ export default function EmailConfigPage() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-2.5 text-gray-500 hover:text-gray-700"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 min-h-10 min-w-10 inline-flex items-center justify-center rounded-lg"
                   >
                     {showPassword ? '🙈' : '👁️'}
                   </button>
@@ -450,18 +450,18 @@ export default function EmailConfigPage() {
           </div>
 
           {/* Action Buttons */}
-          <div className="mt-6 flex gap-4">
+          <div className="mt-6 flex flex-col sm:flex-row gap-4">
             <button
               onClick={saveConfig}
               disabled={saving}
-              className="flex-1 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 disabled:bg-gray-400"
+              className="w-full sm:flex-1 bg-blue-600 text-white px-4 py-2 min-h-11 rounded hover:bg-blue-700 disabled:bg-gray-400"
             >
               {saving ? t('actions.validating') : t('actions.validate')}
             </button>
             <button
               onClick={testConnection}
               disabled={testing}
-              className="flex-1 bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 disabled:bg-gray-400"
+              className="w-full sm:flex-1 bg-green-600 text-white px-4 py-2 min-h-11 rounded hover:bg-green-700 disabled:bg-gray-400"
             >
               {testing ? t('actions.testing') : t('actions.test')}
             </button>
@@ -474,7 +474,7 @@ export default function EmailConfigPage() {
           <p className="text-gray-600 mb-4">
             {t('testEmail.description')}
           </p>
-          <div className="flex gap-4">
+          <div className="flex flex-col sm:flex-row gap-4">
             <input
               type="email"
               value={testEmail}
@@ -485,7 +485,7 @@ export default function EmailConfigPage() {
             <button
               onClick={sendTestEmail}
               disabled={sendingTest || !testEmail}
-              className="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700 disabled:bg-gray-400"
+              className="w-full sm:w-auto bg-blue-600 text-white px-6 py-2 min-h-11 rounded hover:bg-blue-700 disabled:bg-gray-400"
             >
               {sendingTest ? t('actions.sending') : t('actions.send')}
             </button>

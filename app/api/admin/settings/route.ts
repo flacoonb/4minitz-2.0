@@ -47,6 +47,7 @@ const DEFAULT_SETTINGS = {
   memberSettings: {
     requireEmailVerification: true,
     allowSelfRegistration: false,
+    agendaItemLabelMode: 'topic-alpha',
   },
   notificationSettings: {
     enableEmailNotifications: true,
@@ -101,6 +102,10 @@ export async function GET(request: NextRequest) {
           }
         }
       });
+    }
+
+    if (settings.memberSettings && settings.memberSettings.agendaItemLabelMode === undefined) {
+      settings.memberSettings.agendaItemLabelMode = 'topic-alpha';
     }
 
     // Mask SMTP password in response

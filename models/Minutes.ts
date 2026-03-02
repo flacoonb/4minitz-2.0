@@ -53,6 +53,7 @@ export interface IMinutes extends Document {
   meetingSeries_id: mongoose.Types.ObjectId;
   date: Date;
   time?: string;
+  endTime?: string;
   location?: string;
   title?: string; // Protocol title for better overview
   createdAt: Date;
@@ -216,6 +217,10 @@ const MinutesSchema = new Schema<IMinutes>(
       index: true,
     },
     time: {
+      type: String,
+      trim: true,
+    },
+    endTime: {
       type: String,
       trim: true,
     },

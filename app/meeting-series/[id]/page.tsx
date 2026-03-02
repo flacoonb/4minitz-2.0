@@ -5,6 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTranslations, useLocale } from 'next-intl';
+import ConfirmationModal from '@/components/ConfirmationModal';
 
 interface MeetingSeries {
   _id: string;
@@ -59,6 +60,7 @@ export default function MeetingSeriesPage() {
   const [loadingImportTasks, setLoadingImportTasks] = useState(false);
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<string | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   // Check permissions
   const isModerator = series?.moderators?.includes(user?.username || '') || false;
@@ -146,12 +148,6 @@ export default function MeetingSeriesPage() {
   const deleteSeries = async () => {
     if (!series) return;
 
-    const confirmMessage = minutes.length > 0
-      ? t('confirmDeleteWithMinutes', { count: minutes.length })
-      : t('confirmDeleteEmpty');
-
-    if (!confirm(confirmMessage)) return;
-
     try {
       const response = await fetch(`/api/meeting-series/${series._id}`, {
         method: 'DELETE',
@@ -170,6 +166,10 @@ export default function MeetingSeriesPage() {
       alert(t('errorDeleting', { error: err instanceof Error ? err.message : t('unknownError') }));
     }
   };
+
+  const deleteConfirmMessage = minutes.length > 0
+    ? t('confirmDeleteWithMinutes', { count: minutes.length })
+    : t('confirmDeleteEmpty');
 
   const openImportModal = async () => {
     setShowImportModal(true);
@@ -275,7 +275,7 @@ export default function MeetingSeriesPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto py-8 space-y-8">
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-8">
       {/* Header */}
       <div>
         <Link
@@ -288,16 +288,16 @@ export default function MeetingSeriesPage() {
           {t('backToSeries')}
         </Link>
 
-        <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 rounded-2xl p-8 border border-blue-100">
-          <div className="flex items-start justify-between gap-6">
-            <div className="flex items-center gap-4">
-              <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
-                <svg className="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 rounded-2xl p-5 sm:p-8 border border-blue-100">
+          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
+            <div className="flex items-start sm:items-center gap-3 sm:gap-4 min-w-0">
+              <div className="w-14 h-14 sm:w-20 sm:h-20 shrink-0 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
+                <svg className="w-7 h-7 sm:w-10 sm:h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                 </svg>
               </div>
-              <div>
-                <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+              <div className="min-w-0">
+                <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent break-words">
                   {series.project}{series.name ? ` – ${series.name}` : ''}
                 </h1>
                 {series.description && (
@@ -307,11 +307,11 @@ export default function MeetingSeriesPage() {
                 )}
               </div>
             </div>
-            <div className="flex flex-col items-end gap-3">
+            <div className="flex flex-col w-full md:w-auto md:items-end gap-3">
               {canEditSeries && (
                 <button
                   onClick={openImportModal}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all"
+                  className="inline-flex w-full md:w-auto justify-center items-center gap-2 px-6 py-3 min-h-11 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl shadow-lg hover:shadow-xl md:hover:scale-105 transition-all"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -322,7 +322,7 @@ export default function MeetingSeriesPage() {
               {canEditSeries && (
                 <Link
                   href={`/meeting-series/${series._id}/edit`}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all"
+                  className="inline-flex w-full md:w-auto justify-center items-center gap-2 px-6 py-3 min-h-11 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl shadow-lg hover:shadow-xl md:hover:scale-105 transition-all"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -332,8 +332,8 @@ export default function MeetingSeriesPage() {
               )}
               {canDeleteSeries && (
                 <button
-                  onClick={deleteSeries}
-                  className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-red-600 to-rose-600 text-white rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="inline-flex w-full md:w-auto justify-center items-center gap-2 px-6 py-3 min-h-11 bg-gradient-to-r from-red-600 to-rose-600 text-white rounded-xl shadow-lg hover:shadow-xl md:hover:scale-105 transition-all"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -366,13 +366,13 @@ export default function MeetingSeriesPage() {
                 href={`/minutes/${minute._id}`}
                 className="block p-4 bg-gradient-to-r from-white to-gray-50 rounded-xl border hover:shadow-lg transition-all"
               >
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
                     <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
                       {index + 1}
                     </div>
-                    <div>
-                      <h3 className="font-bold text-gray-900">
+                    <div className="min-w-0">
+                      <h3 className="font-bold text-gray-900 break-words">
                         {minute.title ? (
                           <span>{minute.title} <span className="text-gray-500 font-normal text-sm">({new Date(minute.date).toLocaleDateString('de-DE')})</span></span>
                         ) : (
@@ -385,7 +385,7 @@ export default function MeetingSeriesPage() {
                       </p>
                     </div>
                   </div>
-                  <span className={`px-3 py-1 rounded-full text-xs font-medium ${minute.isFinalized || minute.finalized
+                  <span className={`self-start sm:self-auto px-3 py-1 rounded-full text-xs font-medium ${minute.isFinalized || minute.finalized
                       ? 'bg-green-100 text-green-700'
                       : 'bg-amber-100 text-amber-700'
                     }`}>
@@ -428,11 +428,11 @@ export default function MeetingSeriesPage() {
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto">
             <div className="p-6 border-b border-gray-200">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-3">
                 <h2 className="text-xl font-bold text-gray-900">{t('importTasks')}</h2>
                 <button
                   onClick={() => setShowImportModal(false)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors"
+                  className="text-gray-400 hover:text-gray-600 transition-colors min-h-10 min-w-10 inline-flex items-center justify-center rounded-lg"
                   aria-label="Dialog schliessen"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -571,6 +571,20 @@ export default function MeetingSeriesPage() {
           </div>
         </div>
       )}
+
+      <ConfirmationModal
+        isOpen={showDeleteConfirm}
+        onClose={() => setShowDeleteConfirm(false)}
+        onConfirm={() => {
+          setShowDeleteConfirm(false);
+          deleteSeries();
+        }}
+        title={tCommon('delete')}
+        message={deleteConfirmMessage}
+        confirmText={tCommon('delete')}
+        cancelText={tCommon('cancel')}
+        type="danger"
+      />
     </div>
   );
 }

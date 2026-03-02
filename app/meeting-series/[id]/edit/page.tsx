@@ -204,17 +204,17 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-6 sm:py-8 px-3 sm:px-4">
       <div className="max-w-6xl mx-auto space-y-8">
         {/* Header */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-gray-100">
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-5 sm:p-8 border border-gray-100">
           <div className="flex items-center gap-4 mb-6">
             <Link href={`/meeting-series/${seriesId}`} className="text-blue-600 hover:text-blue-800 transition-colors">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </Link>
-            <h1 className="text-3xl font-bold text-gray-900">{t('editSeries')}</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 break-words">{t('editSeries')}</h1>
           </div>
         </div>
 
@@ -227,7 +227,7 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
         )}
 
         {/* Sticky Save Button */}
-        <div className="fixed top-6 right-6 z-50">
+        <div className="hidden sm:block fixed top-6 right-6 z-50">
           <button
             type="submit"
             form="edit-form"
@@ -244,6 +244,27 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
               )}
               <span className="hidden sm:inline">{saving ? t('saving') : tCommon('save')}</span>
             </div>
+          </button>
+        </div>
+
+        {/* Mobile Save Button */}
+        <div className="sm:hidden sticky top-28 z-40 mb-4">
+          <button
+            type="submit"
+            form="edit-form"
+            disabled={saving}
+            className="w-full px-6 py-3 min-h-11 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl font-semibold transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed border border-white/60"
+          >
+            <span className="inline-flex items-center justify-center gap-2">
+              {saving ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              ) : (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+              {saving ? t('saving') : tCommon('save')}
+            </span>
           </button>
         </div>
 
@@ -300,16 +321,16 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
             {/* Add New Member */}
             <div className="bg-blue-50 p-4 rounded-xl border border-blue-200 mb-4">
               <h3 className="text-sm font-semibold text-gray-700 mb-3">{t('addNewMember')}</h3>
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-3">
                 <select
                   value={selectedUserId}
                   onChange={(e) => setSelectedUserId(e.target.value)}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm bg-white"
+                  className="flex-1 w-full px-4 py-2 min-h-11 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm bg-white"
                 >
                   <option value="">{t('selectUser')}</option>
                   {getAvailableUsers().map(user => (
                     <option key={user._id} value={user._id}>
-                      {user.firstName} {user.lastName} ({user.email}) - {user.role}
+                      {user.firstName} {user.lastName} - {user.role}
                     </option>
                   ))}
                 </select>
@@ -317,7 +338,7 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
                   type="button"
                   onClick={addMember}
                   disabled={!selectedUserId}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full sm:w-auto px-6 py-2 min-h-11 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   + {t('add')}
                 </button>

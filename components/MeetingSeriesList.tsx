@@ -134,31 +134,10 @@ export default function MeetingSeriesList() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 break-words">
           {t('meetingSeries.title')} ({series.length})
         </h2>
-        {hasPermission('canCreateMeetings') && (
-          <Link
-            href="/meeting-series/new"
-            className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:shadow-lg hover:scale-105 transition-all duration-200 shadow-md"
-          >
-            <svg
-              className="w-5 h-5 mr-2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 4v16m8-8H4"
-              />
-            </svg>
-            {t('meetingSeries.createNew')}
-          </Link>
-        )}
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

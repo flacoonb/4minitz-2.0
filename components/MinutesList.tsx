@@ -114,14 +114,14 @@ export default function MinutesList({ meetingSeriesId }: MinutesListProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+        <h2 className="text-2xl font-bold text-gray-900 break-words">
           {t('minutes.title')} ({minutes.length})
         </h2>
         {meetingSeriesId && (
           <Link
             href={`/meeting-series/${meetingSeriesId}/minutes/new`}
-            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="inline-flex w-full sm:w-auto justify-center items-center px-4 py-2 min-h-11 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             <svg
               className="w-5 h-5 mr-2"
@@ -155,10 +155,10 @@ export default function MinutesList({ meetingSeriesId }: MinutesListProps) {
               href={`/minutes/${minute._id}`}
               className="block p-6 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md hover:border-blue-300 transition-all"
             >
-              <div className="flex items-start justify-between">
-                <div className="flex-1">
+              <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-3 mb-2">
-                    <h3 className="text-lg font-semibold text-gray-900">
+                    <h3 className="text-lg font-semibold text-gray-900 break-words">
                       {new Date(minute.date).toLocaleDateString('de-DE', {
                         weekday: 'long',
                         year: 'numeric',
@@ -166,8 +166,8 @@ export default function MinutesList({ meetingSeriesId }: MinutesListProps) {
                         day: 'numeric',
                       })}
                     </h3>
-                    <span
-                      className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                  <span
+                    className={`self-start sm:self-auto inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                         minute.isFinalized
                           ? 'bg-green-100 text-green-800'
                           : 'bg-yellow-100 text-yellow-800'

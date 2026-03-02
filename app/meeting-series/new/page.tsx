@@ -225,7 +225,7 @@ export default function NewMeetingSeriesPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto py-8 space-y-8">
+    <div className="max-w-4xl mx-auto px-3 sm:px-4 py-6 sm:py-8 space-y-6 sm:space-y-8">
       {/* Header */}
       <div>
         <Link
@@ -238,18 +238,18 @@ export default function NewMeetingSeriesPage() {
           {t('backToSeries')}
         </Link>
 
-        <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 rounded-2xl p-8 border border-blue-100">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg">
-              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 rounded-2xl p-5 sm:p-8 border border-blue-100">
+          <div className="flex items-start sm:items-center gap-3 sm:gap-4 min-w-0">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 shrink-0 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg">
+              <svg className="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
               </svg>
             </div>
-            <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+            <div className="min-w-0">
+              <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent break-words">
                 {t('title')}
               </h1>
-              <p className="text-lg text-blue-700 font-medium mt-1">
+              <p className="text-base sm:text-lg text-blue-700 font-medium mt-1">
                 {t('subtitle')}
               </p>
             </div>
@@ -272,7 +272,7 @@ export default function NewMeetingSeriesPage() {
       )}
 
       {/* Form */}
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 border border-gray-100 shadow-lg">
+      <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 sm:p-8 border border-gray-100 shadow-lg">
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Basic Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -365,11 +365,11 @@ export default function NewMeetingSeriesPage() {
               {t('members')}
             </label>
             <div className="space-y-3">
-              <div className="flex gap-2">
+              <div className="flex flex-col min-[420px]:flex-row items-stretch min-[420px]:items-center gap-2">
                 <select
                   value={selectedUserId}
                   onChange={(e) => setSelectedUserId(e.target.value)}
-                  className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full flex-1 min-w-0 px-4 py-3 min-h-11 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 >
                   <option value="">{t('selectUser')}</option>
                   {allUsers
@@ -385,7 +385,7 @@ export default function NewMeetingSeriesPage() {
                   type="button"
                   onClick={addMember}
                   disabled={!selectedUserId}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full min-[420px]:w-auto px-3 sm:px-4 py-3 min-h-11 min-w-11 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center shrink-0"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -400,18 +400,18 @@ export default function NewMeetingSeriesPage() {
                     return (
                       <div
                         key={member.userId}
-                        className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200"
+                        className="flex items-start justify-between gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200"
                       >
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-start gap-3 min-w-0">
                           <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-full flex items-center justify-center text-white font-bold">
                             {user ? user.firstName.charAt(0).toUpperCase() : '?'}
                           </div>
-                          <div>
-                            <p className="font-medium text-gray-900">
+                          <div className="min-w-0">
+                            <p className="font-medium text-gray-900 break-words">
                               {user ? `${user.firstName} ${user.lastName}` : member.userId}
                             </p>
                             {user && (
-                              <p className="text-sm text-gray-600">{user.email}</p>
+                              <p className="text-sm text-gray-600 break-all">{user.email}</p>
                             )}
                           </div>
                         </div>
@@ -439,19 +439,19 @@ export default function NewMeetingSeriesPage() {
             </label>
             <p className="text-xs text-gray-500 mb-2">{t('participantsHint')}</p>
             <div className="space-y-3">
-              <div className="flex gap-2">
+              <div className="flex flex-col min-[420px]:flex-row items-stretch min-[420px]:items-center gap-2">
                 <input
                   type="text"
                   value={newParticipant}
                   onChange={(e) => setNewParticipant(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addParticipant())}
-                  className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full flex-1 min-w-0 px-4 py-3 min-h-11 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                   placeholder={t('participantPlaceholder')}
                 />
                 <button
                   type="button"
                   onClick={addParticipant}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
+                  className="w-full min-[420px]:w-auto px-3 sm:px-4 py-3 min-h-11 min-w-11 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors inline-flex items-center justify-center shrink-0"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -490,19 +490,19 @@ export default function NewMeetingSeriesPage() {
             </label>
             <p className="text-xs text-gray-500 mb-2">{t('informedUsersHint')}</p>
             <div className="space-y-3">
-              <div className="flex gap-2">
+              <div className="flex flex-col min-[420px]:flex-row items-stretch min-[420px]:items-center gap-2">
                 <input
                   type="text"
                   value={newInformedUser}
                   onChange={(e) => setNewInformedUser(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addInformedUser())}
-                  className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full flex-1 min-w-0 px-4 py-3 min-h-11 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                   placeholder={t('informedUserPlaceholder')}
                 />
                 <button
                   type="button"
                   onClick={addInformedUser}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
+                  className="w-full min-[420px]:w-auto px-3 sm:px-4 py-3 min-h-11 min-w-11 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors inline-flex items-center justify-center shrink-0"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -535,11 +535,11 @@ export default function NewMeetingSeriesPage() {
           </div>
 
           {/* Form Actions */}
-          <div className="flex items-center gap-4 pt-6 border-t">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-6 border-t">
             <button
               type="submit"
               disabled={loading || !formData.project}
-              className="px-8 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              className="w-full sm:w-auto px-6 sm:px-8 py-3 min-h-11 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl shadow-lg hover:shadow-xl sm:hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
               {loading ? (
                 <div className="flex items-center gap-2">
@@ -558,7 +558,7 @@ export default function NewMeetingSeriesPage() {
 
             <Link
               href="/meeting-series"
-              className="px-8 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors"
+              className="w-full sm:w-auto px-6 sm:px-8 py-3 min-h-11 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors inline-flex items-center justify-center"
             >
               {t('cancel')}
             </Link>
