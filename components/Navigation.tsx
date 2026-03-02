@@ -45,11 +45,6 @@ export default function Navigation() {
     };
   }, [showUserMenu, mobileMenuOpen]);
 
-  // Close mobile menu on route change
-  useEffect(() => {
-    setMobileMenuOpen(false);
-  }, [pathname]);
-
   const navItems = [
     { href: '/dashboard', label: t('dashboard'), icon: 'dashboard' },
     { href: '/meeting-series', label: t('meetingSeries'), icon: 'series' },
@@ -96,6 +91,7 @@ export default function Navigation() {
                 <Link
                   key={item.href}
                   href={item.href}
+                  onClick={() => setMobileMenuOpen(false)}
                   className={`block px-4 py-3 text-base font-medium transition-colors ${isActive(item.href)
                     ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-l-4 border-blue-600'
                     : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-700'
@@ -112,6 +108,7 @@ export default function Navigation() {
                     <Link
                       key={item.href}
                       href={item.href}
+                      onClick={() => setMobileMenuOpen(false)}
                       className={`block px-4 py-3 text-base font-medium transition-colors ${isActive(item.href)
                         ? 'bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-l-4 border-purple-600'
                         : 'text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-slate-700'
