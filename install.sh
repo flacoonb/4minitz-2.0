@@ -1,12 +1,19 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # 4Minitz 2.0 - Full Installer
 # Usage: curl -sL https://raw.githubusercontent.com/flacoonb/4minitz-2.0/main/install.sh | sudo bash
 
-set -e
+set -euo pipefail
 
 REPO_URL="https://github.com/flacoonb/4minitz-2.0.git"
-INSTALL_DIR="4minitz-2.0"
+NODE_MAJOR_REQUIRED=24
+INSTALL_BASENAME="4minitz-2.0"
+
+if [ -n "${SUDO_USER:-}" ]; then
+    INSTALL_DIR="/home/$SUDO_USER/$INSTALL_BASENAME"
+else
+    INSTALL_DIR="/root/$INSTALL_BASENAME"
+fi
 
 # Colors
 GREEN='\033[0;32m'
@@ -26,18 +33,18 @@ fi
 # 2. System Update & Dependencies
 echo -e "\n${BLUE}🔄 Updating system and installing base dependencies...${NC}"
 apt-get update
-apt-get install -y git curl build-essential
+apt-get install -y git curl ca-certificates build-essential
 
 # 3. Check/Install Node.js
 if ! command -v node &> /dev/null || ! command -v npm &> /dev/null; then
-    echo -e "${BLUE}📦 Installing Node.js 20...${NC}"
-    curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+    echo -e "${BLUE}📦 Installing Node.js ${NODE_MAJOR_REQUIRED}...${NC}"
+    curl -fsSL "https://deb.nodesource.com/setup_${NODE_MAJOR_REQUIRED}.x" | bash -
     apt-get install -y nodejs
 else
     NODE_VERSION=$(node -v | cut -d'v' -f2 | cut -d'.' -f1)
-    if [ "$NODE_VERSION" -lt 18 ]; then
-        echo -e "${BLUE}📦 Updating Node.js to version 20...${NC}"
-        curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+    if [ "$NODE_VERSION" -lt "$NODE_MAJOR_REQUIRED" ]; then
+        echo -e "${BLUE}📦 Updating Node.js to version ${NODE_MAJOR_REQUIRED}...${NC}"
+        curl -fsSL "https://deb.nodesource.com/setup_${NODE_MAJOR_REQUIRED}.x" | bash -
         apt-get install -y nodejs
     else
         echo -e "${GREEN}✅ Node.js $(node -v) is already installed.${NC}"
@@ -68,6 +75,10 @@ if [ -d "$INSTALL_DIR" ]; then
     read -p "Do you want to delete it and reinstall? (y/N) " -n 1 -r
     echo
     if [[ $REPLY =~ ^[Yy]$ ]]; then
+        if [[ "$INSTALL_DIR" != /* || "$INSTALL_DIR" == "/" || "$INSTALL_DIR" == "/home" || "$INSTALL_DIR" == "/root" ]]; then
+            echo -e "${RED}❌ Refusing to delete unsafe path: $INSTALL_DIR${NC}"
+            exit 1
+        fi
         rm -rf "$INSTALL_DIR"
     else
         echo "Aborting."
@@ -80,19 +91,17 @@ git clone "$REPO_URL" "$INSTALL_DIR"
 
 # 6. Prepare & Run Setup
 echo -e "\n${BLUE}⚙️  Starting setup...${NC}"
+cd "$INSTALL_DIR"
+chmod +x setup.sh
 
 # Fix permissions if running as sudo
 if [ -n "$SUDO_USER" ]; then
     chown -R "$SUDO_USER:$SUDO_USER" "$INSTALL_DIR"
-    cd "$INSTALL_DIR"
-    chmod +x setup.sh
     
     echo -e "${BLUE}👤 Running setup as user $SUDO_USER...${NC}"
-    # We use 'sudo -u' to run as the original user, preserving PATH to find newly installed binaries
-    sudo -u "$SUDO_USER" PATH=$PATH ./setup.sh
+    # Run as original user with a login shell for predictable environment.
+    sudo -H -u "$SUDO_USER" bash -lc "cd \"$INSTALL_DIR\" && ./setup.sh"
 else
-    cd "$INSTALL_DIR"
-    chmod +x setup.sh
     ./setup.sh
 fi
 
@@ -101,7 +110,8 @@ echo -e "\n${BLUE}🚀 Service Installation${NC}"
 read -p "Do you want to install 4Minitz as a systemd service (auto-start on boot)? (y/N) " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
-    APP_NAME="4minitz-2.0"
+    APP_NAME="4minitz"
+    LEGACY_APP_NAME="4minitz-2.0"
     APP_DIR=$(pwd)
     SERVICE_FILE="4minitz-2.0.service"
     SYSTEMD_DIR="/etc/systemd/system"
@@ -131,22 +141,26 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
         cp "$SERVICE_FILE" "$TARGET_SERVICE"
         
         # Update paths and user in the installed service file
-        sed -i "s|User=pi|User=$APP_USER|g" "$TARGET_SERVICE"
-        sed -i "s|Group=pi|Group=$(id -gn $APP_USER)|g" "$TARGET_SERVICE"
-        sed -i "s|WorkingDirectory=/home/pi/4minitz-next|WorkingDirectory=$APP_DIR|g" "$TARGET_SERVICE"
-        sed -i "s|ExecStart=/home/pi/4minitz-next|ExecStart=$APP_DIR|g" "$TARGET_SERVICE"
+        sed -i "s|^User=.*|User=$APP_USER|g" "$TARGET_SERVICE"
+        sed -i "s|^Group=.*|Group=$(id -gn "$APP_USER")|g" "$TARGET_SERVICE"
+        sed -i "s|^WorkingDirectory=.*|WorkingDirectory=$APP_DIR|g" "$TARGET_SERVICE"
+        sed -i "s|^ExecStart=.*|ExecStart=$APP_DIR/node_modules/.bin/next start|g" "$TARGET_SERVICE"
         
+        # Disable legacy service name to avoid duplicate processes/ports.
+        systemctl stop "${LEGACY_APP_NAME}.service" 2>/dev/null || true
+        systemctl disable "${LEGACY_APP_NAME}.service" 2>/dev/null || true
+
         # Reload systemd
         systemctl daemon-reload
         systemctl enable ${APP_NAME}.service
         systemctl start ${APP_NAME}.service
         
         echo -e "${GREEN}✅ Service installed and started!${NC}"
-        echo "   Status: sudo systemctl status ${APP_NAME}"
+        echo "   Status: sudo systemctl status ${APP_NAME}.service"
     else
         echo -e "${RED}❌ Service file template '$SERVICE_FILE' not found.${NC}"
     fi
 else
     echo -e "\n${GREEN}✅ Installation complete!${NC}"
-    echo "You can start the app manually with: cd $INSTALL_DIR && npm run dev"
+    echo "You can start the app manually with: cd \"$INSTALL_DIR\" && npm run dev"
 fi
