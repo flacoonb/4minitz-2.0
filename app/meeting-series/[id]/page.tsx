@@ -159,7 +159,7 @@ export default function MeetingSeriesPage() {
       });
 
       if (!response.ok) {
-        const error = await response.json();
+        await response.json();
         throw new Error(t('loadListError'));
       }
 

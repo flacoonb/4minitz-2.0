@@ -101,7 +101,7 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
     } finally {
       setLoading(false);
     }
-  }, [seriesId]);
+  }, [seriesId, t]);
 
   const fetchExistingNames = useCallback(async () => {
     try {
