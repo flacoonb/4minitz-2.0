@@ -18,7 +18,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        node-version: [20.x, 22.x] # wenn du nur eins willst: [20.x] oder [22.x]
+        node-version: [24.x] # Standardisiert auf Node 24 LTS
 
     steps:
       - name: Checkout
