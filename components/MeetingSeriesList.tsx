@@ -135,7 +135,7 @@ export default function MeetingSeriesList() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">
           {t('meetingSeries.title')} ({series.length})
         </h2>
         {hasPermission('canCreateMeetings') && (
@@ -166,7 +166,7 @@ export default function MeetingSeriesList() {
           <Link
             key={item._id}
             href={`/meeting-series/${item._id}`}
-            className="group block p-6 bg-white/80 backdrop-blur-sm border border-gray-200 rounded-2xl shadow-lg hover:shadow-2xl hover:border-blue-300 hover:scale-[1.02] transition-all duration-300"
+            className="group block p-6 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-gray-200 dark:border-slate-700 rounded-2xl shadow-lg hover:shadow-2xl hover:border-blue-300 dark:hover:border-blue-600 transition-all duration-300"
           >
             {item.name && (
               <div className="mb-3">
@@ -179,11 +179,11 @@ export default function MeetingSeriesList() {
               </div>
             )}
 
-            <h3 className="text-lg font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
               {item.project}
             </h3>
             
-            <div className="space-y-2 text-sm text-gray-600">
+            <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
               {item.lastMinutesDate && (
                 <div className="flex items-center">
                   <svg

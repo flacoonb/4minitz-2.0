@@ -231,11 +231,11 @@ export default function DashboardPage() {
     <div>
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
-        <p className="text-gray-600">{t('dashboard.overview')}</p>
+        <p className="text-gray-600 dark:text-gray-400">{t('dashboard.overview')}</p>
       </div>
 
       {/* Statistics Cards with Compact Design */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4 mb-8">
         {/* Series Card */}
         <div className="group relative bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl shadow-md hover:shadow-lg transition-all duration-300 p-4 overflow-hidden">
           <div className="absolute top-0 right-0 w-16 h-16 bg-white/10 rounded-full -mr-8 -mt-8"></div>
@@ -333,7 +333,7 @@ export default function DashboardPage() {
           
           {/* Moderator Actions */}
           {(user?.role === 'admin' || user?.role === 'moderator') && (
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all">
+            <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-100 dark:border-slate-700 p-6 hover:shadow-xl transition-all">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
                   <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-xl flex items-center justify-center shadow-lg">
@@ -346,7 +346,7 @@ export default function DashboardPage() {
                   </h2>
                 </div>
               </div>
-              <p className="text-gray-600 mb-4 text-sm">
+              <p className="text-gray-600 dark:text-gray-400 mb-4 text-sm">
                 {t('dashboard.sendRemindersDesc')}
               </p>
               <div className="flex items-center gap-4">
@@ -382,7 +382,7 @@ export default function DashboardPage() {
           )}
 
           {/* My Tasks Section */}
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all">
+          <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-100 dark:border-slate-700 p-6 hover:shadow-xl transition-all">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center gap-2">
                 <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
@@ -401,7 +401,7 @@ export default function DashboardPage() {
               <select
                 value={taskFilter.status || ''}
                 onChange={(e) => setTaskFilter({ ...taskFilter, status: e.target.value || undefined })}
-                className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="px-3 py-2.5 text-sm border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 min-h-[44px]"
               >
                 <option value="">{t('tasks.filterActive')}</option>
                 <option value="open">{t('status.open')}</option>
@@ -413,7 +413,7 @@ export default function DashboardPage() {
               <select
                 value={taskFilter.priority || ''}
                 onChange={(e) => setTaskFilter({ ...taskFilter, priority: e.target.value || undefined })}
-                className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                className="px-3 py-2.5 text-sm border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 min-h-[44px]"
               >
                 <option value="">{t('dashboard.allPriorities')}</option>
                 <option value="high">{t('priority.high')}</option>
@@ -423,9 +423,9 @@ export default function DashboardPage() {
 
               <button
                 onClick={() => setTaskFilter({ ...taskFilter, overdue: !taskFilter.overdue })}
-                className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${taskFilter.overdue
-                  ? 'bg-red-100 text-red-800 border border-red-300'
-                  : 'bg-gray-100 text-gray-700 border border-gray-300'
+                className={`px-3 py-2.5 text-sm rounded-lg transition-colors min-h-[44px] ${taskFilter.overdue
+                  ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 border border-red-300 dark:border-red-700'
+                  : 'bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-slate-600'
                   }`}
               >
                 {taskFilter.overdue ? `✓ ${t('dashboard.onlyOverdue')}` : t('dashboard.onlyOverdue')}
@@ -434,7 +434,7 @@ export default function DashboardPage() {
               {(taskFilter.status || taskFilter.priority || taskFilter.overdue) && (
                 <button
                   onClick={() => setTaskFilter({})}
-                  className="px-3 py-1.5 text-sm text-gray-600 hover:text-gray-900"
+                  className="px-3 py-2.5 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 min-h-[44px]"
                 >
                   ✕ {t('dashboard.resetFilters')}
                 </button>
@@ -463,21 +463,21 @@ export default function DashboardPage() {
                     <div
                       key={task._id}
                       className={`relative p-4 rounded-xl border-2 transition-all ${isOverdue
-                        ? 'bg-red-50 border-red-200'
+                        ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
                         : task.priority === 'high'
-                          ? 'bg-orange-50 border-orange-200'
-                          : 'bg-white border-gray-200'
+                          ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800'
+                          : 'bg-white dark:bg-slate-800 border-gray-200 dark:border-slate-700'
                         }`}
                     >
                       <div className="flex items-start justify-between mb-2">
                         <div className="flex-1">
                           <Link
                             href={`/minutes/${task.minutesId}`}
-                            className="font-semibold text-gray-900 mb-1 hover:text-blue-600 block"
+                            className="font-semibold text-gray-900 dark:text-gray-100 mb-1 hover:text-blue-600 dark:hover:text-blue-400 block"
                           >
                             {task.subject}
                           </Link>
-                          <p className="text-sm text-gray-600 mb-2">
+                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
                             {seriesProject ? `${seriesProject} • ` : ''}
                             {seriesName} • {task.topicSubject}
                           </p>
@@ -554,7 +554,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Recent Minutes - Sidebar */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all">
+        <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-100 dark:border-slate-700 p-6 hover:shadow-xl transition-all">
           <div className="flex items-center gap-2 mb-6">
             <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
               <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -570,12 +570,12 @@ export default function DashboardPage() {
               <Link
                 key={minute._id}
                 href={`/minutes/${minute._id}`}
-                className="block p-3 bg-gradient-to-br from-gray-50 to-green-50 border border-gray-200 rounded-lg hover:shadow-md hover:scale-[1.02] transition-all duration-200"
+                className="block p-3 bg-gradient-to-br from-gray-50 to-green-50 dark:from-slate-700 dark:to-emerald-900/20 border border-gray-200 dark:border-slate-600 rounded-lg hover:shadow-md transition-all duration-200"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <p className="font-medium text-gray-900 text-sm truncate">
+                      <p className="font-medium text-gray-900 dark:text-gray-100 text-sm truncate">
                         {new Date(minute.date).toLocaleDateString(locale, {
                           month: 'short',
                           day: 'numeric',
@@ -617,12 +617,12 @@ export default function DashboardPage() {
       {/* Task Update Modal */}
       {editingTask && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-gray-200">
+          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200 dark:border-slate-700">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-2xl font-bold text-gray-900">{t('dashboard.editTask')}</h2>
-                  <p className="text-sm text-gray-600 mt-1">
+                  <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{t('dashboard.editTask')}</h2>
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                     {(editingTask.meetingSeries?.project || t('dashboard.noSeries'))}
                     {editingTask.meetingSeries?.name ? ` – ${editingTask.meetingSeries.name}` : ''} • {editingTask.topicSubject}
                   </p>
@@ -674,15 +674,15 @@ export default function DashboardPage() {
 
               {/* Status Selection */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   {t('dashboard.changeStatus')}
                 </label>
                 <div className="grid grid-cols-2 gap-3">
                   <button
                     onClick={() => setTaskUpdateStatus('open')}
-                    className={`p-4 rounded-lg border-2 transition-all ${taskUpdateStatus === 'open'
-                      ? 'border-red-500 bg-red-50 text-red-900'
-                      : 'border-gray-200 hover:border-gray-300'
+                    className={`p-4 rounded-lg border-2 transition-all min-h-[44px] ${taskUpdateStatus === 'open'
+                      ? 'border-red-500 bg-red-50 dark:bg-red-900/30 text-red-900 dark:text-red-300'
+                      : 'border-gray-200 dark:border-slate-600 hover:border-gray-300 dark:hover:border-slate-500 dark:text-gray-200'
                       }`}
                   >
                     <div className="text-2xl mb-1">○</div>
@@ -691,9 +691,9 @@ export default function DashboardPage() {
 
                   <button
                     onClick={() => setTaskUpdateStatus('in-progress')}
-                    className={`p-4 rounded-lg border-2 transition-all ${taskUpdateStatus === 'in-progress'
-                      ? 'border-yellow-500 bg-yellow-50 text-yellow-900'
-                      : 'border-gray-200 hover:border-gray-300'
+                    className={`p-4 rounded-lg border-2 transition-all min-h-[44px] ${taskUpdateStatus === 'in-progress'
+                      ? 'border-yellow-500 bg-yellow-50 dark:bg-yellow-900/30 text-yellow-900 dark:text-yellow-300'
+                      : 'border-gray-200 dark:border-slate-600 hover:border-gray-300 dark:hover:border-slate-500 dark:text-gray-200'
                       }`}
                   >
                     <div className="text-2xl mb-1">⏳</div>
@@ -702,9 +702,9 @@ export default function DashboardPage() {
 
                   <button
                     onClick={() => setTaskUpdateStatus('completed')}
-                    className={`p-4 rounded-lg border-2 transition-all ${taskUpdateStatus === 'completed'
-                      ? 'border-green-500 bg-green-50 text-green-900'
-                      : 'border-gray-200 hover:border-gray-300'
+                    className={`p-4 rounded-lg border-2 transition-all min-h-[44px] ${taskUpdateStatus === 'completed'
+                      ? 'border-green-500 bg-green-50 dark:bg-green-900/30 text-green-900 dark:text-green-300'
+                      : 'border-gray-200 dark:border-slate-600 hover:border-gray-300 dark:hover:border-slate-500 dark:text-gray-200'
                       }`}
                   >
                     <div className="text-2xl mb-1">✓</div>
@@ -713,9 +713,9 @@ export default function DashboardPage() {
 
                   <button
                     onClick={() => setTaskUpdateStatus('cancelled')}
-                    className={`p-4 rounded-lg border-2 transition-all ${taskUpdateStatus === 'cancelled'
-                      ? 'border-gray-500 bg-gray-50 text-gray-900'
-                      : 'border-gray-200 hover:border-gray-300'
+                    className={`p-4 rounded-lg border-2 transition-all min-h-[44px] ${taskUpdateStatus === 'cancelled'
+                      ? 'border-gray-500 bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-gray-200'
+                      : 'border-gray-200 dark:border-slate-600 hover:border-gray-300 dark:hover:border-slate-500 dark:text-gray-200'
                       }`}
                   >
                     <div className="text-2xl mb-1">✕</div>
@@ -726,7 +726,7 @@ export default function DashboardPage() {
 
               {/* Additional Notes (Editable) */}
               <div>
-                <label htmlFor="task-notes" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="task-notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
                   💬 {t('dashboard.yourComment')}
                 </label>
                 <textarea
@@ -735,7 +735,7 @@ export default function DashboardPage() {
                   onChange={(e) => setTaskUpdateNotes(e.target.value)}
                   rows={5}
                   placeholder={t('dashboard.commentPlaceholder')}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  className="w-full px-4 py-3 border-2 border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
                 />
                 <p className="mt-2 text-xs text-gray-500 flex items-start gap-1">
                   <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -746,18 +746,18 @@ export default function DashboardPage() {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
+              <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200 dark:border-slate-700">
                 <button
                   onClick={closeTaskModal}
                   disabled={isUpdating}
-                  className="px-6 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
+                  className="px-6 py-2.5 text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-slate-700 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors disabled:opacity-50 min-h-[44px]"
                 >
                   {t('common.cancel')}
                 </button>
                 <button
                   onClick={updateTaskStatus}
                   disabled={isUpdating}
-                  className="px-6 py-2 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+                  className="px-6 py-2.5 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center gap-2 min-h-[44px]"
                 >
                   {isUpdating ? (
                     <>
