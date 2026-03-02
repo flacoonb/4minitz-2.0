@@ -561,19 +561,6 @@ const AdminSettings = () => {
                     </label>
                   </div>
 
-                  <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 md:col-span-2">
-                    <label className="block text-sm font-medium text-slate-700 mb-2">{t('members.agendaItemLabelMode')}</label>
-                    <select
-                      value={settings.memberSettings.agendaItemLabelMode || 'topic-alpha'}
-                      onChange={(e) => updateMemberSettings('agendaItemLabelMode', e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    >
-                      <option value="topic-alpha">{t('members.agendaItemLabelModeTopicAlpha')}</option>
-                      <option value="manual">{t('members.agendaItemLabelModeManual')}</option>
-                    </select>
-                    <p className="text-xs text-slate-500 mt-1">{t('members.agendaItemLabelModeDesc')}</p>
-                  </div>
-
                   {/* Guest Access, Default Role, Max Members, Guest Link Expiry removed — not yet implemented */}
                 </div>
               </div>
@@ -712,6 +699,19 @@ const AdminSettings = () => {
                       <option value="24h">24 Stunden</option>
                       <option value="12h">12 Stunden (AM/PM)</option>
                     </select>
+                  </div>
+
+                  <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 md:col-span-2">
+                    <label className="block text-sm font-medium text-slate-700 mb-2">{t('members.agendaItemLabelMode')}</label>
+                    <select
+                      value={settings.memberSettings.agendaItemLabelMode || 'topic-alpha'}
+                      onChange={(e) => updateMemberSettings('agendaItemLabelMode', e.target.value)}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    >
+                      <option value="topic-alpha">{t('members.agendaItemLabelModeTopicAlpha')}</option>
+                      <option value="manual">{t('members.agendaItemLabelModeManual')}</option>
+                    </select>
+                    <p className="text-xs text-slate-500 mt-1">{t('members.agendaItemLabelModeDesc')}</p>
                   </div>
 
                   {/* Auto Logout */}
