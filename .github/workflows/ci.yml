@@ -32,7 +32,7 @@ jobs:
 
       # Next.js Build-Cache VOR dem Build restore'n (und am Ende automatisch speichern)
       - name: Restore Next.js build cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: .next/cache
           key: ${{ runner.os }}-nextjs-${{ matrix.node-version }}-${{ hashFiles('package-lock.json', 'next.config.*', 'src/**', 'app/**', 'pages/**') }}
