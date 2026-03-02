@@ -220,19 +220,41 @@ export async function PUT(
       }
     }
 
-    // Build update object with explicit field setting
+    const hasField = (field: string) => Object.prototype.hasOwnProperty.call(body, field);
+
+    // Build update object for partial updates only.
+    // Important for finalize/reopen calls that intentionally send only status fields.
     const updateData: any = {
-      date: body.date ? new Date(body.date) : minute.date,
-      participants: body.participants,
-      participantsWithStatus: body.participantsWithStatus,
-      topics: topicsToPersist,
-      globalNote: body.globalNote,
-      time: body.time || '', // Set to empty string if undefined/null
-      endTime: body.endTime || '', // Set to empty string if undefined/null
-      location: body.location || '', // Set to empty string if undefined/null
-      title: body.title || '', // Set to empty string if undefined/null
       updatedAt: new Date()
     };
+
+    if (hasField('date') && body.date) {
+      updateData.date = new Date(body.date);
+    }
+    if (hasField('participants')) {
+      updateData.participants = body.participants;
+    }
+    if (hasField('participantsWithStatus')) {
+      updateData.participantsWithStatus = body.participantsWithStatus;
+    }
+    if (hasField('topics')) {
+      updateData.topics = topicsToPersist;
+    }
+    if (hasField('globalNote')) {
+      updateData.globalNote = body.globalNote;
+    }
+    if (hasField('time')) {
+      updateData.time = body.time || '';
+    }
+    if (hasField('endTime')) {
+      updateData.endTime = body.endTime || '';
+    }
+    if (hasField('location')) {
+      updateData.location = body.location || '';
+    }
+    if (hasField('title')) {
+      updateData.title = body.title || '';
+    }
 
     // Handle finalization status
     if (body.isFinalized !== undefined) {

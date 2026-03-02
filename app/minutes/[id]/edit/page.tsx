@@ -1465,12 +1465,13 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
     e.preventDefault();
     if (!minuteId) return;
 
-    // Prepare data for saving - convert empty strings to undefined
+    // Keep explicit empty strings so users can clear optional fields.
     const dataToSave = {
       ...formData,
-      time: formData.time?.trim() || undefined,
-      endTime: formData.endTime?.trim() || undefined,
-      location: formData.location?.trim() || undefined,
+      time: (formData.time || '').trim(),
+      endTime: (formData.endTime || '').trim(),
+      location: (formData.location || '').trim(),
+      title: (formData.title || '').trim(),
     };
 
     setSaving(true);
