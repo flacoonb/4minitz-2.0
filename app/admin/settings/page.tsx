@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { withAdminAuth } from '@/contexts/AuthContext';
@@ -12,6 +12,10 @@ import {
   Server,
   Save, 
   RotateCcw,
+  Download,
+  Upload,
+  Database,
+  Trash2,
   AlertCircle,
   CheckCircle2,
   X,
@@ -83,6 +87,8 @@ interface SystemSettings {
   };
 }
 
+type DataResetTarget = 'users' | 'minutes' | 'meeting-series' | 'all';
+
 const AdminSettings = () => {
   const t = useTranslations('admin.settings');
   const tCommon = useTranslations('common');
@@ -95,6 +101,9 @@ const AdminSettings = () => {
   const [activeTab, setActiveTab] = useState<'roles' | 'members' | 'language' | 'notifications' | 'system'>('roles');
   const [hasChanges, setHasChanges] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [showDataResetConfirm, setShowDataResetConfirm] = useState(false);
+  const [pendingDataResetTarget, setPendingDataResetTarget] = useState<DataResetTarget | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   
   const router = useRouter();
 
@@ -236,6 +245,165 @@ const AdminSettings = () => {
     setShowResetConfirm(true);
   };
 
+  const downloadJsonFile = (filename: string, data: unknown) => {
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExportSettings = () => {
+    if (!settings) return;
+    const payload = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      settings: {
+        roles: settings.roles,
+        memberSettings: settings.memberSettings,
+        notificationSettings: settings.notificationSettings,
+        systemSettings: settings.systemSettings,
+      },
+    };
+    downloadJsonFile(`4minitz-settings-${new Date().toISOString().slice(0, 10)}.json`, payload);
+    setSuccess(t('system.exportSuccess'));
+  };
+
+  const handleImportSettingsClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleImportSettingsFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setSaving(true);
+    setError('');
+
+    try {
+      const raw = await file.text();
+      const parsed = JSON.parse(raw);
+      const imported = parsed?.settings ?? parsed;
+
+      const requiredSections: Array<keyof Pick<SystemSettings, 'roles' | 'memberSettings' | 'notificationSettings' | 'systemSettings'>> = [
+        'roles',
+        'memberSettings',
+        'notificationSettings',
+        'systemSettings',
+      ];
+
+      const isValid = requiredSections.every((section) => imported?.[section] !== undefined);
+      if (!isValid) {
+        throw new Error(t('system.importInvalid'));
+      }
+
+      const response = await fetch('/api/admin/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          roles: imported.roles,
+          memberSettings: imported.memberSettings,
+          notificationSettings: imported.notificationSettings,
+          systemSettings: imported.systemSettings,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || t('system.importError'));
+      }
+
+      const data = await response.json();
+      setSettings(data.data);
+      setOriginalSettings(JSON.parse(JSON.stringify(data.data)));
+      setHasChanges(false);
+      setSuccess(t('system.importSuccess'));
+
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('settingsUpdated'));
+      }
+    } catch (err: any) {
+      setError(err.message || t('system.importError'));
+    } finally {
+      setSaving(false);
+      event.target.value = '';
+    }
+  };
+
+  const handleDownloadBackup = async () => {
+    setSaving(true);
+    setError('');
+    try {
+      const response = await fetch('/api/admin/system/backup', {
+        method: 'GET',
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || t('system.backupError'));
+      }
+
+      const blob = await response.blob();
+      const contentDisposition = response.headers.get('content-disposition') || '';
+      const fileMatch = contentDisposition.match(/filename="?([^"]+)"?/i);
+      const filename = fileMatch?.[1] || `4minitz-backup-${new Date().toISOString()}.json`;
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+
+      setSuccess(t('system.backupSuccess'));
+    } catch (err: any) {
+      setError(err.message || t('system.backupError'));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const requestDataReset = (target: DataResetTarget) => {
+    setPendingDataResetTarget(target);
+    setShowDataResetConfirm(true);
+  };
+
+  const executeDataReset = async () => {
+    if (!pendingDataResetTarget) return;
+    setSaving(true);
+    setError('');
+
+    try {
+      const response = await fetch('/api/admin/system/reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ target: pendingDataResetTarget }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || t('system.dataResetError'));
+      }
+
+      setSuccess(t(`system.dataResetSuccess.${pendingDataResetTarget}`));
+    } catch (err: any) {
+      setError(err.message || t('system.dataResetError'));
+    } finally {
+      setSaving(false);
+      setShowDataResetConfirm(false);
+      setPendingDataResetTarget(null);
+    }
+  };
+
   // Update role permission
   const updateRolePermission = (role: 'admin' | 'moderator' | 'user', permission: keyof RolePermissions, value: boolean) => {
     if (!settings) return;
@@ -312,6 +480,16 @@ const AdminSettings = () => {
       default:
         return 'bg-gray-100 text-gray-800 border-gray-200';
     }
+  };
+
+  const getDataResetModalTitle = () => {
+    if (!pendingDataResetTarget) return t('system.resetAllData');
+    return t(`system.dataResetConfirmTitle.${pendingDataResetTarget}`);
+  };
+
+  const getDataResetModalMessage = () => {
+    if (!pendingDataResetTarget) return t('system.dataResetConfirm');
+    return t(`system.dataResetConfirmMessage.${pendingDataResetTarget}`);
   };
 
   if (loading) {
@@ -791,6 +969,87 @@ const AdminSettings = () => {
                     />
                     <p className="text-xs text-slate-500 mt-1">{t('system.allowedFileTypesDesc')}</p>
                   </div>
+
+                  <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 md:col-span-2">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Database className="w-4 h-4 text-indigo-600" />
+                      <h4 className="text-sm font-semibold text-slate-800">{t('system.dataManagementTitle')}</h4>
+                    </div>
+                    <p className="text-xs text-slate-500 mb-4">{t('system.dataManagementDesc')}</p>
+
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="application/json"
+                      className="hidden"
+                      onChange={handleImportSettingsFile}
+                    />
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+                      <button
+                        type="button"
+                        onClick={handleExportSettings}
+                        className="w-full min-h-11 inline-flex items-center justify-center gap-2 px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-100 transition-colors"
+                      >
+                        <Download className="w-4 h-4" />
+                        {t('system.exportSettings')}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleImportSettingsClick}
+                        className="w-full min-h-11 inline-flex items-center justify-center gap-2 px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-100 transition-colors"
+                      >
+                        <Upload className="w-4 h-4" />
+                        {t('system.importSettings')}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleDownloadBackup}
+                        className="w-full min-h-11 inline-flex items-center justify-center gap-2 px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-100 transition-colors"
+                      >
+                        <Database className="w-4 h-4" />
+                        {t('system.downloadBackup')}
+                      </button>
+                    </div>
+
+                    <div className="border-t border-slate-200 pt-4">
+                      <p className="text-xs text-red-600 font-semibold mb-3">{t('system.dangerZone')}</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <button
+                          type="button"
+                          onClick={() => requestDataReset('users')}
+                          className="w-full min-h-11 inline-flex items-center justify-center gap-2 px-4 py-2 bg-red-50 border border-red-200 rounded-lg text-red-700 hover:bg-red-100 transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          {t('system.resetUsers')}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => requestDataReset('minutes')}
+                          className="w-full min-h-11 inline-flex items-center justify-center gap-2 px-4 py-2 bg-red-50 border border-red-200 rounded-lg text-red-700 hover:bg-red-100 transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          {t('system.resetMinutes')}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => requestDataReset('meeting-series')}
+                          className="w-full min-h-11 inline-flex items-center justify-center gap-2 px-4 py-2 bg-red-50 border border-red-200 rounded-lg text-red-700 hover:bg-red-100 transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          {t('system.resetMeetingSeries')}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => requestDataReset('all')}
+                          className="w-full min-h-11 inline-flex items-center justify-center gap-2 px-4 py-2 bg-red-600 border border-red-600 rounded-lg text-white hover:bg-red-700 transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          {t('system.resetAllData')}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
@@ -812,6 +1071,21 @@ const AdminSettings = () => {
           cancelText={tCommon('cancel')}
           isProcessing={saving}
           type="warning"
+        />
+
+        <ConfirmationModal
+          isOpen={showDataResetConfirm}
+          onClose={() => {
+            setShowDataResetConfirm(false);
+            setPendingDataResetTarget(null);
+          }}
+          onConfirm={executeDataReset}
+          title={getDataResetModalTitle()}
+          message={getDataResetModalMessage()}
+          confirmText={t('system.resetNow')}
+          cancelText={tCommon('cancel')}
+          isProcessing={saving}
+          type="danger"
         />
       </div>
     </div>

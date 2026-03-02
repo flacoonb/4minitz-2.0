@@ -823,7 +823,44 @@
         "enableAuditLog": "Enable Audit Log",
         "enableAuditLogDesc": "Log all system activities",
         "allowedFileTypes": "Allowed File Types",
-        "allowedFileTypesDesc": "Comma-separated list of file extensions"
+        "allowedFileTypesDesc": "Comma-separated list of file extensions",
+        "dataManagementTitle": "Data management",
+        "dataManagementDesc": "Export/import settings, download a backup, or reset selected data scopes.",
+        "exportSettings": "Export settings",
+        "importSettings": "Import settings",
+        "downloadBackup": "Database backup",
+        "dangerZone": "Danger zone",
+        "resetUsers": "Reset users",
+        "resetMinutes": "Reset minutes",
+        "resetMeetingSeries": "Reset sessions",
+        "resetAllData": "Reset all data",
+        "resetNow": "Reset now",
+        "exportSuccess": "Settings were exported as JSON.",
+        "importSuccess": "Settings imported successfully.",
+        "importError": "Failed to import settings.",
+        "importInvalid": "Invalid JSON file: required settings sections are missing.",
+        "backupSuccess": "Database backup downloaded.",
+        "backupError": "Failed to create database backup.",
+        "dataResetError": "Failed to reset data.",
+        "dataResetConfirm": "Do you really want to permanently delete the selected data?",
+        "dataResetConfirmTitle": {
+          "users": "Reset users?",
+          "minutes": "Reset minutes?",
+          "meeting-series": "Reset sessions?",
+          "all": "Reset all data?"
+        },
+        "dataResetConfirmMessage": {
+          "users": "All users except your current admin account will be deleted.",
+          "minutes": "All minutes, tasks and related attachments will be deleted.",
+          "meeting-series": "All sessions and linked minutes, tasks and attachments will be deleted.",
+          "all": "All users (except your current admin), minutes, sessions, tasks and attachments will be deleted."
+        },
+        "dataResetSuccess": {
+          "users": "User data has been reset.",
+          "minutes": "Minutes data has been reset.",
+          "meeting-series": "Session data has been reset.",
+          "all": "All selected data has been reset."
+        }
       },
       "saveSuccess": "Settings saved successfully",
       "resetConfirm": "Are you sure you want to reset all settings to their default values?",

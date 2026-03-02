@@ -823,7 +823,44 @@
         "enableAuditLog": "Audit-Log aktivieren",
         "enableAuditLogDesc": "Protokollierung aller Systemaktivitäten",
         "allowedFileTypes": "Erlaubte Dateitypen",
-        "allowedFileTypesDesc": "Komma-getrennte Liste von Dateierweiterungen"
+        "allowedFileTypesDesc": "Komma-getrennte Liste von Dateierweiterungen",
+        "dataManagementTitle": "Datenverwaltung",
+        "dataManagementDesc": "Einstellungen exportieren/importieren, Backup herunterladen oder Datenbereiche gezielt zurücksetzen.",
+        "exportSettings": "Einstellungen exportieren",
+        "importSettings": "Einstellungen importieren",
+        "downloadBackup": "Datenbank-Backup",
+        "dangerZone": "Gefahrenbereich",
+        "resetUsers": "Benutzer zurücksetzen",
+        "resetMinutes": "Protokolle zurücksetzen",
+        "resetMeetingSeries": "Sitzungen zurücksetzen",
+        "resetAllData": "Alle Daten zurücksetzen",
+        "resetNow": "Jetzt zurücksetzen",
+        "exportSuccess": "Einstellungen wurden als JSON exportiert.",
+        "importSuccess": "Einstellungen erfolgreich importiert.",
+        "importError": "Fehler beim Import der Einstellungen.",
+        "importInvalid": "Ungültige JSON-Datei: Erforderliche Einstellungsbereiche fehlen.",
+        "backupSuccess": "Datenbank-Backup wurde heruntergeladen.",
+        "backupError": "Fehler beim Erstellen des Datenbank-Backups.",
+        "dataResetError": "Fehler beim Zurücksetzen der Daten.",
+        "dataResetConfirm": "Möchten Sie die ausgewählten Daten wirklich unwiderruflich löschen?",
+        "dataResetConfirmTitle": {
+          "users": "Benutzer zurücksetzen?",
+          "minutes": "Protokolle zurücksetzen?",
+          "meeting-series": "Sitzungen zurücksetzen?",
+          "all": "Alle Daten zurücksetzen?"
+        },
+        "dataResetConfirmMessage": {
+          "users": "Alle Benutzer außer Ihrem aktuellen Admin-Konto werden gelöscht.",
+          "minutes": "Alle Protokolle, Aufgaben und verknüpften Anhänge werden gelöscht.",
+          "meeting-series": "Alle Sitzungen sowie verknüpfte Protokolle, Aufgaben und Anhänge werden gelöscht.",
+          "all": "Alle Benutzer (außer Ihrem aktuellen Admin), Protokolle, Sitzungen, Aufgaben und Anhänge werden gelöscht."
+        },
+        "dataResetSuccess": {
+          "users": "Benutzerdaten wurden zurückgesetzt.",
+          "minutes": "Protokolldaten wurden zurückgesetzt.",
+          "meeting-series": "Sitzungsdaten wurden zurückgesetzt.",
+          "all": "Alle ausgewählten Daten wurden zurückgesetzt."
+        }
       },
       "saveSuccess": "Einstellungen erfolgreich gespeichert",
       "resetConfirm": "Möchten Sie wirklich alle Einstellungen auf die Standardwerte zurücksetzen?",
