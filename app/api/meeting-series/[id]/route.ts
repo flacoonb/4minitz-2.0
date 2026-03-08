@@ -135,6 +135,11 @@ export async function PUT(
       );
     }
 
+    // Snapshot members before applying updates so added members are detected correctly.
+    const oldMembers = Array.isArray(series.members)
+      ? (series.members as any[]).map((member: any) => ({ userId: member?.userId }))
+      : [];
+
     // Update allowed fields
     const allowedUpdates = [
       'project', 'name', 'participants', 'informedUsers',
@@ -152,8 +157,7 @@ export async function PUT(
     });
 
     // Detect new members
-    const oldMembers = series.members || [];
-    const newMembers = body.members || [];
+    const newMembers = Array.isArray(body.members) ? body.members : [];
     const addedMembers = newMembers.filter((member: any) =>
       !oldMembers.some((oldMember: any) => oldMember.userId === member.userId)
     );

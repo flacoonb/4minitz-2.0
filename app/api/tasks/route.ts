@@ -72,6 +72,7 @@ export async function GET(request: NextRequest) {
 
     const enrichedTasks = tasks.map(task => ({
       ...task,
+      notes: task.details || '',
       meetingSeries: seriesMap.get(task.meetingSeriesId) || null,
       minutesId: task.minutesId || 'central',
       topicSubject: (task.topicId && topicMap.get(task.topicId)) || 'Task', 

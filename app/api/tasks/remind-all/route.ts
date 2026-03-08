@@ -40,7 +40,10 @@ export async function POST(request: NextRequest) {
       const allSeries = await MeetingSeries.find({}, '_id');
       seriesIds = allSeries.map((s: any) => s._id.toString());
     } else {
-      const modSeries = await MeetingSeries.find({ moderators: user.username }, '_id');
+      const modSeries = await MeetingSeries.find(
+        { moderators: { $in: [user.username, user._id.toString()] } },
+        '_id'
+      );
       seriesIds = modSeries.map((s: any) => s._id.toString());
     }
 
