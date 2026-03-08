@@ -16,6 +16,7 @@ interface CalendarEventItem {
   note?: string;
   status: 'draft' | 'invited' | 'confirmed' | 'cancelled' | 'completed';
   updatedAt?: Date;
+  invitees?: Array<{ userId?: string }>;
 }
 
 function escapeIcalText(value: string): string {
@@ -132,11 +133,36 @@ export async function GET(request: NextRequest, context: RouteContext) {
     }
 
     const seriesIds = Array.from(seriesById.keys());
-    const query = seriesIds.length > 0 ? { meetingSeriesId: { $in: seriesIds } } : { _id: { $in: [] } };
-    const events = (await MeetingEvent.find(query)
+    const eventQuery =
+      isAdmin || canViewAllMeetings
+        ? {}
+        : {
+            $or: [
+              ...(seriesIds.length > 0 ? [{ meetingSeriesId: { $in: seriesIds } }] : []),
+              { 'invitees.userId': { $in: [userId, username] } },
+            ],
+          };
+    const events = (await MeetingEvent.find(eventQuery)
       .sort({ scheduledDate: 1, startTime: 1 })
-      .select('meetingSeriesId title scheduledDate startTime endTime location note status updatedAt')
+      .select('meetingSeriesId title scheduledDate startTime endTime location note status updatedAt invitees')
       .lean()) as unknown as CalendarEventItem[];
+
+    // Backfill series labels for events that are visible via direct invitee match.
+    const missingSeriesIds = Array.from(
+      new Set(
+        events
+          .map((event) => String(event.meetingSeriesId || '').trim())
+          .filter((id) => id && !seriesById.has(id))
+      )
+    );
+    if (missingSeriesIds.length > 0) {
+      const missingSeries = await MeetingSeries.find({ _id: { $in: missingSeriesIds } })
+        .select('_id project name')
+        .lean();
+      for (const series of missingSeries) {
+        seriesById.set(String(series._id), series);
+      }
+    }
 
     const baseUrl = `${request.nextUrl.protocol}//${request.nextUrl.host}`.replace(/\/+$/, '');
     const now = new Date();
@@ -166,8 +192,8 @@ export async function GET(request: NextRequest, context: RouteContext) {
       lines.push('BEGIN:VEVENT');
       lines.push(`UID:meeting-event-${event._id}@4minitz`);
       lines.push(`DTSTAMP:${toUtcStamp(updatedAt)}`);
-      lines.push(`DTSTART:${startsAt}`);
-      lines.push(`DTEND:${endsAt}`);
+      lines.push(`DTSTART;TZID=Europe/Zurich:${startsAt}`);
+      lines.push(`DTEND;TZID=Europe/Zurich:${endsAt}`);
       lines.push(`SUMMARY:${escapeIcalText(summary)}`);
       lines.push(`DESCRIPTION:${escapeIcalText(details)}`);
       if (location) lines.push(`LOCATION:${escapeIcalText(location)}`);
