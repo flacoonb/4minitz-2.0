@@ -6,23 +6,39 @@ on:
   pull_request:
     branches: [ main, master ]
 
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     strategy:
+      fail-fast: false
       matrix:
-        node-version: [22.x]   # oder [20.x], falls du lieber 20 LTS nutzt
+        node-version: [24.x] # Standardisiert auf Node 24 LTS
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
 
       - name: Use Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'          # npm / node_modules Cache
+          cache: npm
+
+      # Next.js Build-Cache VOR dem Build restore'n (und am Ende automatisch speichern)
+      - name: Restore Next.js build cache
+        uses: actions/cache@v5
+        with:
+          path: .next/cache
+          key: ${{ runner.os }}-nextjs-${{ matrix.node-version }}-${{ hashFiles('package-lock.json', 'next.config.*', 'src/**', 'app/**', 'pages/**') }}
+          restore-keys: |
+            ${{ runner.os }}-nextjs-${{ matrix.node-version }}-
+            ${{ runner.os }}-nextjs-
 
       - name: Install dependencies
         run: npm ci
@@ -32,14 +48,6 @@ jobs:
 
       - name: Type Check
         run: npm run type-check --if-present
-
-      - name: Restore Next.js build cache
-        uses: actions/cache@v5
-        with:
-          path: .next/cache
-          key: ${{ runner.os }}-nextjs-${{ hashFiles('package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-nextjs-
 
       - name: Build
         run: npm run build

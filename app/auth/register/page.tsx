@@ -3,19 +3,22 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { 
-  UserPlus, 
-  User, 
-  Mail, 
-  Lock, 
-  Eye, 
-  EyeOff, 
+import { useTranslations } from 'next-intl';
+import {
+  UserPlus,
+  User,
+  Mail,
+  Lock,
+  Eye,
+  EyeOff,
   AlertCircle,
   CheckCircle2,
   Check
 } from 'lucide-react';
 
 const RegisterPage = () => {
+  const t = useTranslations('auth.register');
+  const tErrors = useTranslations('errors');
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -55,44 +58,44 @@ const RegisterPage = () => {
         uppercase: /[A-Z]/.test(value),
         lowercase: /[a-z]/.test(value),
         number: /\d/.test(value),
-        special: /[!@#$%^&*(),.?":{}|<>]/.test(value)
+        special: /[!@#$%^&*(),.?":\{\}|<>]/.test(value)
       });
     }
   };
 
   const validateForm = () => {
     if (!formData.username.trim()) {
-      setError('Benutzername ist erforderlich');
+      setError(tErrors('required'));
       return false;
     }
 
     if (!formData.email.trim()) {
-      setError('E-Mail-Adresse ist erforderlich');
+      setError(tErrors('required'));
       return false;
     }
 
     if (!/\S+@\S+\.\S+/.test(formData.email)) {
-      setError('Bitte geben Sie eine gültige E-Mail-Adresse ein');
+      setError(tErrors('invalidEmail'));
       return false;
     }
 
     if (!formData.firstName.trim()) {
-      setError('Vorname ist erforderlich');
+      setError(tErrors('required'));
       return false;
     }
 
     if (!formData.lastName.trim()) {
-      setError('Nachname ist erforderlich');
+      setError(tErrors('required'));
       return false;
     }
 
     if (formData.password.length < 8) {
-      setError('Passwort muss mindestens 8 Zeichen lang sein');
+      setError(t('requirements.minLength'));
       return false;
     }
 
     if (formData.password !== formData.confirmPassword) {
-      setError('Passwörter stimmen nicht überein');
+      setError(t('requirements.minLength'));
       return false;
     }
 
@@ -123,18 +126,21 @@ const RegisterPage = () => {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || 'Registrierung fehlgeschlagen');
+        throw new Error(data.error || tErrors('registrationError'));
       }
 
-      setSuccess('Konto erfolgreich erstellt! Sie werden zur Anmeldung weitergeleitet...');
-      
-      // Redirect after a short delay
-      setTimeout(() => {
-        router.push('/auth/login');
-      }, 2000);
+      // Show server-provided message (includes info about verification/approval)
+      setSuccess(data.message || tErrors('registrationSuccess'));
+
+      // Only auto-redirect if no approval is needed
+      if (!data.requiresApproval) {
+        setTimeout(() => {
+          router.push('/auth/login');
+        }, 3000);
+      }
 
     } catch (err: any) {
-      setError(err.message || 'Ein unbekannter Fehler ist aufgetreten');
+      setError(err.message || tErrors('generic'));
     } finally {
       setLoading(false);
     }
@@ -159,8 +165,8 @@ const RegisterPage = () => {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl shadow-lg mb-4">
             <UserPlus className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-slate-800 mb-2">Konto erstellen</h1>
-          <p className="text-slate-600">Registrieren Sie sich für 4Minitz 2.0</p>
+          <h1 className="text-3xl font-bold text-slate-800 mb-2">{t('title')}</h1>
+          <p className="text-slate-600">{t('subtitle')}</p>
         </div>
 
         {/* Registration Form */}
@@ -184,7 +190,7 @@ const RegisterPage = () => {
             {/* Username Field */}
             <div>
               <label htmlFor="username" className="block text-sm font-semibold text-slate-700 mb-2">
-                Benutzername
+                {t('usernameLabel')}
               </label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
@@ -195,7 +201,7 @@ const RegisterPage = () => {
                   value={formData.username}
                   onChange={handleInputChange}
                   className="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white/50"
-                  placeholder="Wählen Sie einen Benutzernamen"
+                  placeholder={t('usernamePlaceholder')}
                   required
                 />
               </div>
@@ -204,7 +210,7 @@ const RegisterPage = () => {
             {/* Email Field */}
             <div>
               <label htmlFor="email" className="block text-sm font-semibold text-slate-700 mb-2">
-                E-Mail-Adresse
+                {t('emailLabel')}
               </label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
@@ -215,7 +221,7 @@ const RegisterPage = () => {
                   value={formData.email}
                   onChange={handleInputChange}
                   className="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white/50"
-                  placeholder="ihre@email.de"
+                  placeholder={t('emailPlaceholder')}
                   required
                 />
               </div>
@@ -225,7 +231,7 @@ const RegisterPage = () => {
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label htmlFor="firstName" className="block text-sm font-semibold text-slate-700 mb-2">
-                  Vorname
+                  {t('firstNameLabel')}
                 </label>
                 <input
                   type="text"
@@ -234,13 +240,13 @@ const RegisterPage = () => {
                   value={formData.firstName}
                   onChange={handleInputChange}
                   className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white/50"
-                  placeholder="Max"
+                  placeholder={t('firstNamePlaceholder')}
                   required
                 />
               </div>
               <div>
                 <label htmlFor="lastName" className="block text-sm font-semibold text-slate-700 mb-2">
-                  Nachname
+                  {t('lastNameLabel')}
                 </label>
                 <input
                   type="text"
@@ -249,7 +255,7 @@ const RegisterPage = () => {
                   value={formData.lastName}
                   onChange={handleInputChange}
                   className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white/50"
-                  placeholder="Mustermann"
+                  placeholder={t('lastNamePlaceholder')}
                   required
                 />
               </div>
@@ -258,7 +264,7 @@ const RegisterPage = () => {
             {/* Password Field */}
             <div>
               <label htmlFor="password" className="block text-sm font-semibold text-slate-700 mb-2">
-                Passwort
+                {t('passwordLabel')}
               </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
@@ -269,7 +275,7 @@ const RegisterPage = () => {
                   value={formData.password}
                   onChange={handleInputChange}
                   className="w-full pl-12 pr-12 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white/50"
-                  placeholder="Mindestens 8 Zeichen"
+                  placeholder={t('passwordPlaceholder')}
                   required
                 />
                 <button
@@ -280,13 +286,13 @@ const RegisterPage = () => {
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
-              
+
               {/* Password Strength Indicator */}
               {formData.password && (
                 <div className="mt-3">
                   <div className="flex items-center gap-2 mb-2">
                     <div className="flex-1 bg-slate-200 rounded-full h-2">
-                      <div 
+                      <div
                         className={`h-2 rounded-full transition-all ${getPasswordStrengthColor()}`}
                         style={{ width: `${(getPasswordStrengthScore() / 5) * 100}%` }}
                       ></div>
@@ -298,23 +304,19 @@ const RegisterPage = () => {
                   <div className="grid grid-cols-2 gap-2 text-xs">
                     <div className={`flex items-center gap-1 ${passwordStrength.length ? 'text-green-600' : 'text-slate-400'}`}>
                       <Check className="w-3 h-3" />
-                      8+ Zeichen
+                      {t('requirements.minLength')}
                     </div>
                     <div className={`flex items-center gap-1 ${passwordStrength.uppercase ? 'text-green-600' : 'text-slate-400'}`}>
                       <Check className="w-3 h-3" />
-                      Großbuchstabe
+                      {t('requirements.uppercase')}
                     </div>
                     <div className={`flex items-center gap-1 ${passwordStrength.lowercase ? 'text-green-600' : 'text-slate-400'}`}>
                       <Check className="w-3 h-3" />
-                      Kleinbuchstabe
+                      {t('requirements.lowercase')}
                     </div>
                     <div className={`flex items-center gap-1 ${passwordStrength.number ? 'text-green-600' : 'text-slate-400'}`}>
                       <Check className="w-3 h-3" />
-                      Zahl
-                    </div>
-                    <div className={`flex items-center gap-1 ${passwordStrength.special ? 'text-green-600' : 'text-slate-400'} col-span-2`}>
-                      <Check className="w-3 h-3" />
-                      Sonderzeichen (!@#$%^&*)
+                      {t('requirements.number')}
                     </div>
                   </div>
                 </div>
@@ -324,7 +326,7 @@ const RegisterPage = () => {
             {/* Confirm Password Field */}
             <div>
               <label htmlFor="confirmPassword" className="block text-sm font-semibold text-slate-700 mb-2">
-                Passwort bestätigen
+                {t('confirmPasswordLabel')}
               </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
@@ -335,7 +337,7 @@ const RegisterPage = () => {
                   value={formData.confirmPassword}
                   onChange={handleInputChange}
                   className="w-full pl-12 pr-12 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white/50"
-                  placeholder="Passwort wiederholen"
+                  placeholder={t('confirmPasswordPlaceholder')}
                   required
                 />
                 <button
@@ -347,7 +349,7 @@ const RegisterPage = () => {
                 </button>
               </div>
               {formData.confirmPassword && formData.password !== formData.confirmPassword && (
-                <p className="mt-2 text-xs text-red-600">Passwörter stimmen nicht überein</p>
+                <p className="mt-2 text-xs text-red-600">{tErrors('validationError')}</p>
               )}
             </div>
 
@@ -360,12 +362,12 @@ const RegisterPage = () => {
               {loading ? (
                 <div className="flex items-center justify-center gap-3">
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  Registrierung läuft...
+                  {t('registering')}
                 </div>
               ) : (
                 <div className="flex items-center justify-center gap-2">
                   <UserPlus className="w-5 h-5" />
-                  Konto erstellen
+                  {t('registerButton')}
                 </div>
               )}
             </button>
@@ -374,12 +376,12 @@ const RegisterPage = () => {
           {/* Login Link */}
           <div className="mt-8 pt-6 border-t border-slate-200 text-center">
             <p className="text-slate-600 text-sm">
-              Bereits ein Konto?{' '}
-              <Link 
-                href="/auth/login" 
+              {t('alreadyHaveAccount')}{' '}
+              <Link
+                href="/auth/login"
                 className="font-semibold text-indigo-600 hover:text-indigo-500 transition-colors"
               >
-                Hier anmelden
+                {t('loginNow')}
               </Link>
             </p>
           </div>
@@ -388,7 +390,7 @@ const RegisterPage = () => {
         {/* Footer */}
         <div className="mt-8 text-center">
           <p className="text-xs text-slate-500">
-            © 2024 4Minitz 2.0. Alle Rechte vorbehalten.
+            © Copyright by Bph
           </p>
         </div>
       </div>

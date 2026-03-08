@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
 import { withAdminAuth } from '@/contexts/AuthContext';
+import ConfirmationModal from '@/components/ConfirmationModal';
 import { 
   Settings, 
   Users, 
@@ -11,6 +12,10 @@ import {
   Server,
   Save, 
   RotateCcw,
+  Download,
+  Upload,
+  Database,
+  Trash2,
   AlertCircle,
   CheckCircle2,
   X,
@@ -43,7 +48,9 @@ interface SystemSettings {
   };
   memberSettings: {
     requireEmailVerification: boolean;
+    requireAdminApproval: boolean;
     allowSelfRegistration: boolean;
+    agendaItemLabelMode: 'manual' | 'topic-alpha';
     defaultRole: 'user' | 'moderator';
     maxMembersPerMeeting: number;
     enableGuestAccess: boolean;
@@ -80,6 +87,8 @@ interface SystemSettings {
   };
 }
 
+type DataResetTarget = 'users' | 'minutes' | 'meeting-series' | 'all';
+
 const AdminSettings = () => {
   const t = useTranslations('admin.settings');
   const tCommon = useTranslations('common');
@@ -91,20 +100,35 @@ const AdminSettings = () => {
   const [success, setSuccess] = useState('');
   const [activeTab, setActiveTab] = useState<'roles' | 'members' | 'language' | 'notifications' | 'system'>('roles');
   const [hasChanges, setHasChanges] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [showDataResetConfirm, setShowDataResetConfirm] = useState(false);
+  const [pendingDataResetTarget, setPendingDataResetTarget] = useState<DataResetTarget | null>(null);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   
   const router = useRouter();
 
   // Available timezones
   const availableTimezones = [
     'Europe/Berlin',
+    'Europe/Zurich',
+    'Europe/Vienna',
+    'Europe/Amsterdam',
+    'Europe/Brussels',
     'Europe/London', 
     'Europe/Paris',
     'Europe/Rome',
     'Europe/Madrid',
+    'Europe/Prague',
+    'Europe/Warsaw',
     'America/New_York',
+    'America/Chicago',
+    'America/Denver',
     'America/Los_Angeles',
+    'America/Toronto',
     'Asia/Tokyo',
-    'Asia/Shanghai'
+    'Asia/Shanghai',
+    'Asia/Singapore',
+    'Australia/Sydney'
   ];
 
   // Fetch settings
@@ -132,13 +156,14 @@ const AdminSettings = () => {
     }
   }, [router]);
 
-  // Check for changes
+  // Check for changes (memoized to avoid re-serializing on every render)
+  const settingsJson = useMemo(() => JSON.stringify(settings), [settings]);
+  const originalSettingsJson = useMemo(() => JSON.stringify(originalSettings), [originalSettings]);
   useEffect(() => {
     if (settings && originalSettings) {
-      const hasChanges = JSON.stringify(settings) !== JSON.stringify(originalSettings);
-      setHasChanges(hasChanges);
+      setHasChanges(settingsJson !== originalSettingsJson);
     }
-  }, [settings, originalSettings]);
+  }, [settingsJson, originalSettingsJson, settings, originalSettings]);
 
   // Initial load
   useEffect(() => {
@@ -170,7 +195,7 @@ const AdminSettings = () => {
       const data = await response.json();
       setSettings(data.data);
       setOriginalSettings(JSON.parse(JSON.stringify(data.data)));
-      setSuccess('Einstellungen erfolgreich gespeichert');
+      setSuccess(t('saveSuccess'));
       setHasChanges(false);
       
       // Trigger settings update event for other components
@@ -185,11 +210,7 @@ const AdminSettings = () => {
   };
 
   // Reset to defaults
-  const handleReset = async () => {
-    if (!confirm('Möchten Sie wirklich alle Einstellungen auf die Standardwerte zurücksetzen?')) {
-      return;
-    }
-
+  const executeReset = async () => {
     setSaving(true);
     setError('');
 
@@ -205,18 +226,181 @@ const AdminSettings = () => {
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Fehler beim Zurücksetzen der Einstellungen');
+        throw new Error(errorData.error || t('resetError'));
       }
 
       const data = await response.json();
       setSettings(data.data);
       setOriginalSettings(JSON.parse(JSON.stringify(data.data)));
-      setSuccess('Einstellungen auf Standardwerte zurückgesetzt');
+      setSuccess(t('resetSuccess'));
       setHasChanges(false);
     } catch (err: any) {
       setError(err.message);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleReset = () => {
+    setShowResetConfirm(true);
+  };
+
+  const downloadJsonFile = (filename: string, data: unknown) => {
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExportSettings = () => {
+    if (!settings) return;
+    const payload = {
+      version: 1,
+      exportedAt: new Date().toISOString(),
+      settings: {
+        roles: settings.roles,
+        memberSettings: settings.memberSettings,
+        notificationSettings: settings.notificationSettings,
+        systemSettings: settings.systemSettings,
+      },
+    };
+    downloadJsonFile(`4minitz-settings-${new Date().toISOString().slice(0, 10)}.json`, payload);
+    setSuccess(t('system.exportSuccess'));
+  };
+
+  const handleImportSettingsClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleImportSettingsFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    setSaving(true);
+    setError('');
+
+    try {
+      const raw = await file.text();
+      const parsed = JSON.parse(raw);
+      const imported = parsed?.settings ?? parsed;
+
+      const requiredSections: Array<keyof Pick<SystemSettings, 'roles' | 'memberSettings' | 'notificationSettings' | 'systemSettings'>> = [
+        'roles',
+        'memberSettings',
+        'notificationSettings',
+        'systemSettings',
+      ];
+
+      const isValid = requiredSections.every((section) => imported?.[section] !== undefined);
+      if (!isValid) {
+        throw new Error(t('system.importInvalid'));
+      }
+
+      const response = await fetch('/api/admin/settings', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          roles: imported.roles,
+          memberSettings: imported.memberSettings,
+          notificationSettings: imported.notificationSettings,
+          systemSettings: imported.systemSettings,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || t('system.importError'));
+      }
+
+      const data = await response.json();
+      setSettings(data.data);
+      setOriginalSettings(JSON.parse(JSON.stringify(data.data)));
+      setHasChanges(false);
+      setSuccess(t('system.importSuccess'));
+
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('settingsUpdated'));
+      }
+    } catch (err: any) {
+      setError(err.message || t('system.importError'));
+    } finally {
+      setSaving(false);
+      event.target.value = '';
+    }
+  };
+
+  const handleDownloadBackup = async () => {
+    setSaving(true);
+    setError('');
+    try {
+      const response = await fetch('/api/admin/system/backup', {
+        method: 'GET',
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || t('system.backupError'));
+      }
+
+      const blob = await response.blob();
+      const contentDisposition = response.headers.get('content-disposition') || '';
+      const fileMatch = contentDisposition.match(/filename="?([^"]+)"?/i);
+      const filename = fileMatch?.[1] || `4minitz-backup-${new Date().toISOString()}.json`;
+
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+
+      setSuccess(t('system.backupSuccess'));
+    } catch (err: any) {
+      setError(err.message || t('system.backupError'));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const requestDataReset = (target: DataResetTarget) => {
+    setPendingDataResetTarget(target);
+    setShowDataResetConfirm(true);
+  };
+
+  const executeDataReset = async () => {
+    if (!pendingDataResetTarget) return;
+    setSaving(true);
+    setError('');
+
+    try {
+      const response = await fetch('/api/admin/system/reset', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ target: pendingDataResetTarget }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || t('system.dataResetError'));
+      }
+
+      setSuccess(t(`system.dataResetSuccess.${pendingDataResetTarget}`));
+    } catch (err: any) {
+      setError(err.message || t('system.dataResetError'));
+    } finally {
+      setSaving(false);
+      setShowDataResetConfirm(false);
+      setPendingDataResetTarget(null);
     }
   };
 
@@ -298,6 +482,16 @@ const AdminSettings = () => {
     }
   };
 
+  const getDataResetModalTitle = () => {
+    if (!pendingDataResetTarget) return t('system.resetAllData');
+    return t(`system.dataResetConfirmTitle.${pendingDataResetTarget}`);
+  };
+
+  const getDataResetModalMessage = () => {
+    if (!pendingDataResetTarget) return t('system.dataResetConfirm');
+    return t(`system.dataResetConfirmMessage.${pendingDataResetTarget}`);
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex items-center justify-center">
@@ -324,7 +518,7 @@ const AdminSettings = () => {
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-6">
             <div className="flex items-center gap-3">
               <div className="p-3 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl text-white shadow-lg">
                 <Settings className="w-6 h-6" />
@@ -335,7 +529,7 @@ const AdminSettings = () => {
               </div>
             </div>
             
-            <div className="flex items-center gap-3">
+            <div className="hidden sm:flex sticky top-2 z-40 flex-col sm:flex-row sm:items-center gap-3 bg-white/80 backdrop-blur-sm p-2 rounded-xl border border-white/60 shadow-sm">
               {hasChanges && (
                 <span className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm font-medium">
                   {t('unsavedChanges')}
@@ -343,7 +537,7 @@ const AdminSettings = () => {
               )}
               <button
                 onClick={handleReset}
-                className="flex items-center gap-2 px-4 py-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                className="flex items-center justify-center gap-2 px-4 py-2 min-h-11 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
                 title={t('reset')}
               >
                 <RotateCcw className="w-4 h-4" />
@@ -352,7 +546,7 @@ const AdminSettings = () => {
               <button
                 onClick={handleSave}
                 disabled={saving || !hasChanges}
-                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg hover:from-indigo-600 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                className="flex items-center justify-center gap-2 px-6 py-3 min-h-11 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg hover:from-indigo-600 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
               >
                 {saving ? (
                   <>
@@ -370,22 +564,43 @@ const AdminSettings = () => {
           </div>
         </div>
 
+        {/* Mobile sticky save button */}
+        <div className="sm:hidden sticky top-28 z-40 mb-4">
+          <button
+            onClick={handleSave}
+            disabled={saving || !hasChanges}
+            className="w-full flex items-center justify-center gap-2 px-6 py-3 min-h-11 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl hover:from-indigo-600 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+          >
+            {saving ? (
+              <>
+                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                {tCommon('saving')}
+              </>
+            ) : (
+              <>
+                <Save className="w-4 h-4" />
+                {t('save')}
+              </>
+            )}
+          </button>
+        </div>
+
         {/* Alerts */}
         {error && (
-          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-center gap-3">
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex flex-wrap items-start gap-3">
             <AlertCircle className="w-5 h-5 text-red-500" />
-            <span className="text-red-700">{error}</span>
-            <button onClick={() => setError('')} className="ml-auto text-red-500 hover:text-red-700">
+            <span className="text-red-700 min-w-0 flex-1 break-words">{error}</span>
+            <button onClick={() => setError('')} className="ml-auto shrink-0 text-red-500 hover:text-red-700 min-h-11 min-w-11 inline-flex items-center justify-center rounded-lg">
               <X className="w-4 h-4" />
             </button>
           </div>
         )}
 
         {success && (
-          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl flex items-center gap-3">
+          <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl flex flex-wrap items-start gap-3">
             <CheckCircle2 className="w-5 h-5 text-green-500" />
-            <span className="text-green-700">{success}</span>
-            <button onClick={() => setSuccess('')} className="ml-auto text-green-500 hover:text-green-700">
+            <span className="text-green-700 min-w-0 flex-1 break-words">{success}</span>
+            <button onClick={() => setSuccess('')} className="ml-auto shrink-0 text-green-500 hover:text-green-700 min-h-11 min-w-11 inline-flex items-center justify-center rounded-lg">
               <X className="w-4 h-4" />
             </button>
           </div>
@@ -395,7 +610,7 @@ const AdminSettings = () => {
         <div className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-xl shadow-lg overflow-hidden">
           {/* Tabs */}
           <div className="border-b border-slate-200">
-            <nav className="flex overflow-x-auto">
+            <nav className="grid grid-cols-2 sm:flex sm:overflow-x-auto">
               {[
                 { key: 'roles', label: t('tabs.roles'), icon: Shield },
                 { key: 'members', label: t('tabs.members'), icon: Users },
@@ -405,7 +620,7 @@ const AdminSettings = () => {
                 <button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key as any)}
-                  className={`flex items-center gap-2 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                  className={`flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-6 py-3 sm:py-4 min-h-11 text-xs sm:text-sm font-medium border-b-2 transition-colors leading-tight text-center sm:whitespace-nowrap ${
                     activeTab === tab.key
                       ? 'border-indigo-500 text-indigo-600 bg-indigo-50/50'
                       : 'border-transparent text-slate-600 hover:text-slate-800 hover:bg-slate-50/50'
@@ -421,39 +636,39 @@ const AdminSettings = () => {
           <div className="p-6">
             {/* Roles & Permissions Tab */}
             {activeTab === 'roles' && (
-              <div className="space-y-8">
+              <div className="space-y-5 sm:space-y-8">
                 <div>
-                  <h3 className="text-lg font-semibold text-slate-800 mb-4">{t('roles.title')}</h3>
-                  <p className="text-slate-600 mb-6">
+                  <h3 className="text-lg font-semibold text-slate-800 mb-2 sm:mb-4">{t('roles.title')}</h3>
+                  <p className="text-slate-600 mb-4 sm:mb-6">
                     {t('roles.description')}
                   </p>
                 </div>
 
                 {Object.entries(settings.roles).map(([role, permissions]) => (
-                  <div key={role} className="bg-slate-50 rounded-xl p-6 border border-slate-200">
-                    <div className="flex items-center gap-3 mb-6">
+                  <div key={role} className="bg-slate-50 rounded-xl p-4 sm:p-6 border border-slate-200">
+                    <div className="flex items-center gap-2.5 sm:gap-3 mb-4 sm:mb-6">
                       {getRoleIcon(role)}
-                      <div className={`px-3 py-1 rounded-full text-sm font-semibold border ${getRoleBadgeColor(role)}`}>
+                      <div className={`px-2.5 sm:px-3 py-1 rounded-full text-xs sm:text-sm font-semibold border ${getRoleBadgeColor(role)}`}>
                         {role === 'admin' ? t('roles.admin') : 
                          role === 'moderator' ? t('roles.moderator') : t('roles.user')}
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 min-[500px]:grid-cols-2 lg:grid-cols-3 gap-2.5 sm:gap-4">
                       {Object.entries(permissions).map(([permission, value]) => (
-                        <label key={permission} className="flex items-center gap-3 p-3 bg-white rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors cursor-pointer">
+                        <label key={permission} className="flex items-start gap-2.5 p-2.5 sm:p-3 bg-white rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors cursor-pointer">
                           <input
                             type="checkbox"
                             checked={value}
                             onChange={(e) => updateRolePermission(role as any, permission as keyof RolePermissions, e.target.checked)}
                             className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
                           />
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-start gap-1.5 sm:gap-2 min-w-0">
                             {value ? 
                               <Lock className="w-4 h-4 text-green-500" /> : 
                               <Unlock className="w-4 h-4 text-slate-400" />
                             }
-                            <span className="text-sm font-medium text-slate-700">
+                            <span className="text-xs sm:text-sm font-medium text-slate-700 leading-tight break-words">
                               {t(`roles.permissions.${permission}`)}
                             </span>
                           </div>
@@ -492,6 +707,22 @@ const AdminSettings = () => {
                     </label>
                   </div>
 
+                  {/* Admin Approval */}
+                  <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
+                    <label className="flex items-center gap-3">
+                      <input
+                        type="checkbox"
+                        checked={settings.memberSettings.requireAdminApproval}
+                        onChange={(e) => updateMemberSettings('requireAdminApproval', e.target.checked)}
+                        className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
+                      />
+                      <div>
+                        <span className="text-sm font-medium text-slate-700">{t('members.requireAdminApproval')}</span>
+                        <p className="text-xs text-slate-500">{t('members.requireAdminApprovalDesc')}</p>
+                      </div>
+                    </label>
+                  </div>
+
                   {/* Self Registration */}
                   <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
                     <label className="flex items-center gap-3">
@@ -508,62 +739,7 @@ const AdminSettings = () => {
                     </label>
                   </div>
 
-                  {/* Guest Access */}
-                  <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
-                    <label className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        checked={settings.memberSettings.enableGuestAccess}
-                        onChange={(e) => updateMemberSettings('enableGuestAccess', e.target.checked)}
-                        className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
-                      />
-                      <div>
-                        <span className="text-sm font-medium text-slate-700">{t('members.enableGuestAccess')}</span>
-                        <p className="text-xs text-slate-500">{t('members.enableGuestAccessDesc')}</p>
-                      </div>
-                    </label>
-                  </div>
-
-                  {/* Default Role */}
-                  <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
-                    <label className="block text-sm font-medium text-slate-700 mb-2">{t('members.defaultRole')}</label>
-                    <select
-                      value={settings.memberSettings.defaultRole}
-                      onChange={(e) => updateMemberSettings('defaultRole', e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    >
-                      <option value="user">{t('roles.user')}</option>
-                      <option value="moderator">{t('roles.moderator')}</option>
-                    </select>
-                    <p className="text-xs text-slate-500 mt-1">{t('members.defaultRoleDesc')}</p>
-                  </div>
-
-                  {/* Max Members Per Meeting */}
-                  <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
-                    <label className="block text-sm font-medium text-slate-700 mb-2">{t('members.maxMembersPerMeeting')}</label>
-                    <input
-                      type="number"
-                      min="1"
-                      max="1000"
-                      value={settings.memberSettings.maxMembersPerMeeting}
-                      onChange={(e) => updateMemberSettings('maxMembersPerMeeting', parseInt(e.target.value))}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    />
-                  </div>
-
-                  {/* Guest Link Expiry */}
-                  <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
-                    <label className="block text-sm font-medium text-slate-700 mb-2">{t('members.guestLinkExpiryDays')}</label>
-                    <input
-                      type="number"
-                      min="1"
-                      max="365"
-                      value={settings.memberSettings.guestLinkExpiryDays}
-                      onChange={(e) => updateMemberSettings('guestLinkExpiryDays', parseInt(e.target.value))}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                      disabled={!settings.memberSettings.enableGuestAccess}
-                    />
-                  </div>
+                  {/* Guest Access, Default Role, Max Members, Guest Link Expiry removed — not yet implemented */}
                 </div>
               </div>
             )}
@@ -621,51 +797,7 @@ const AdminSettings = () => {
                     )}
                   </div>
 
-                  {/* Push Notifications */}
-                  <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
-                    <label className="flex items-center gap-3">
-                      <input
-                        type="checkbox"
-                        checked={settings.notificationSettings.enablePushNotifications}
-                        onChange={(e) => updateNotificationSettings('enablePushNotifications', e.target.checked)}
-                        className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
-                      />
-                      <div>
-                        <span className="text-sm font-medium text-slate-700">{t('notifications.enablePushNotifications')}</span>
-                        <p className="text-xs text-slate-500">{t('notifications.enablePushNotificationsDesc')}</p>
-                      </div>
-                    </label>
-                  </div>
-
-                  {/* Meeting Reminders */}
-                  <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
-                    <label className="flex items-center gap-3 mb-3">
-                      <input
-                        type="checkbox"
-                        checked={settings.notificationSettings.sendMeetingReminders}
-                        onChange={(e) => updateNotificationSettings('sendMeetingReminders', e.target.checked)}
-                        className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
-                      />
-                      <div>
-                        <span className="text-sm font-medium text-slate-700">{t('notifications.sendMeetingReminders')}</span>
-                        <p className="text-xs text-slate-500">{t('notifications.sendMeetingRemindersDesc')}</p>
-                      </div>
-                    </label>
-
-                    {settings.notificationSettings.sendMeetingReminders && (
-                      <div className="ml-7">
-                        <label className="block text-xs text-slate-600 mb-1">{t('notifications.reminderHoursBefore')}</label>
-                        <input
-                          type="number"
-                          min="1"
-                          max="168"
-                          value={settings.notificationSettings.reminderHoursBefore}
-                          onChange={(e) => updateNotificationSettings('reminderHoursBefore', parseInt(e.target.value))}
-                          className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                        />
-                      </div>
-                    )}
-                  </div>
+                  {/* Push Notifications and Meeting Reminders removed — not yet implemented */}
                 </div>
               </div>
             )}
@@ -747,6 +879,19 @@ const AdminSettings = () => {
                     </select>
                   </div>
 
+                  <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 md:col-span-2">
+                    <label className="block text-sm font-medium text-slate-700 mb-2">{t('members.agendaItemLabelMode')}</label>
+                    <select
+                      value={settings.memberSettings.agendaItemLabelMode || 'topic-alpha'}
+                      onChange={(e) => updateMemberSettings('agendaItemLabelMode', e.target.value)}
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    >
+                      <option value="topic-alpha">{t('members.agendaItemLabelModeTopicAlpha')}</option>
+                      <option value="manual">{t('members.agendaItemLabelModeManual')}</option>
+                    </select>
+                    <p className="text-xs text-slate-500 mt-1">{t('members.agendaItemLabelModeDesc')}</p>
+                  </div>
+
                   {/* Auto Logout */}
                   <div className="p-4 bg-slate-50 rounded-lg border border-slate-200">
                     <label className="flex items-center gap-3 mb-3">
@@ -824,6 +969,87 @@ const AdminSettings = () => {
                     />
                     <p className="text-xs text-slate-500 mt-1">{t('system.allowedFileTypesDesc')}</p>
                   </div>
+
+                  <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 md:col-span-2">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Database className="w-4 h-4 text-indigo-600" />
+                      <h4 className="text-sm font-semibold text-slate-800">{t('system.dataManagementTitle')}</h4>
+                    </div>
+                    <p className="text-xs text-slate-500 mb-4">{t('system.dataManagementDesc')}</p>
+
+                    <input
+                      ref={fileInputRef}
+                      type="file"
+                      accept="application/json"
+                      className="hidden"
+                      onChange={handleImportSettingsFile}
+                    />
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4">
+                      <button
+                        type="button"
+                        onClick={handleExportSettings}
+                        className="w-full min-h-11 inline-flex items-center justify-center gap-2 px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-100 transition-colors"
+                      >
+                        <Download className="w-4 h-4" />
+                        {t('system.exportSettings')}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleImportSettingsClick}
+                        className="w-full min-h-11 inline-flex items-center justify-center gap-2 px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-100 transition-colors"
+                      >
+                        <Upload className="w-4 h-4" />
+                        {t('system.importSettings')}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleDownloadBackup}
+                        className="w-full min-h-11 inline-flex items-center justify-center gap-2 px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-700 hover:bg-slate-100 transition-colors"
+                      >
+                        <Database className="w-4 h-4" />
+                        {t('system.downloadBackup')}
+                      </button>
+                    </div>
+
+                    <div className="border-t border-slate-200 pt-4">
+                      <p className="text-xs text-red-600 font-semibold mb-3">{t('system.dangerZone')}</p>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <button
+                          type="button"
+                          onClick={() => requestDataReset('users')}
+                          className="w-full min-h-11 inline-flex items-center justify-center gap-2 px-4 py-2 bg-red-50 border border-red-200 rounded-lg text-red-700 hover:bg-red-100 transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          {t('system.resetUsers')}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => requestDataReset('minutes')}
+                          className="w-full min-h-11 inline-flex items-center justify-center gap-2 px-4 py-2 bg-red-50 border border-red-200 rounded-lg text-red-700 hover:bg-red-100 transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          {t('system.resetMinutes')}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => requestDataReset('meeting-series')}
+                          className="w-full min-h-11 inline-flex items-center justify-center gap-2 px-4 py-2 bg-red-50 border border-red-200 rounded-lg text-red-700 hover:bg-red-100 transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          {t('system.resetMeetingSeries')}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => requestDataReset('all')}
+                          className="w-full min-h-11 inline-flex items-center justify-center gap-2 px-4 py-2 bg-red-600 border border-red-600 rounded-lg text-white hover:bg-red-700 transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          {t('system.resetAllData')}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             )}
@@ -831,9 +1057,39 @@ const AdminSettings = () => {
             {/* Categories Tab removed */}
           </div>
         </div>
+
+        <ConfirmationModal
+          isOpen={showResetConfirm}
+          onClose={() => setShowResetConfirm(false)}
+          onConfirm={() => {
+            setShowResetConfirm(false);
+            executeReset();
+          }}
+          title={t('reset')}
+          message={t('resetConfirm')}
+          confirmText={t('reset')}
+          cancelText={tCommon('cancel')}
+          isProcessing={saving}
+          type="warning"
+        />
+
+        <ConfirmationModal
+          isOpen={showDataResetConfirm}
+          onClose={() => {
+            setShowDataResetConfirm(false);
+            setPendingDataResetTarget(null);
+          }}
+          onConfirm={executeDataReset}
+          title={getDataResetModalTitle()}
+          message={getDataResetModalMessage()}
+          confirmText={t('system.resetNow')}
+          cancelText={tCommon('cancel')}
+          isProcessing={saving}
+          type="danger"
+        />
       </div>
     </div>
   );
 };
 
-export default AdminSettings;
+export default withAdminAuth(AdminSettings);

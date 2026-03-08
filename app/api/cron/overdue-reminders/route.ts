@@ -10,9 +10,9 @@ import { sendOverdueReminder } from '@/lib/email-service';
  */
 export async function GET(request: NextRequest) {
   try {
-    // Security: Check for cron secret (optional but recommended)
+    // Security: Check for cron secret (mandatory)
     const cronSecret = request.headers.get('x-cron-secret');
-    if (process.env.CRON_SECRET && cronSecret !== process.env.CRON_SECRET) {
+    if (!process.env.CRON_SECRET || cronSecret !== process.env.CRON_SECRET) {
       return NextResponse.json(
         { error: 'Unauthorized' },
         { status: 401 }
@@ -24,11 +24,13 @@ export async function GET(request: NextRequest) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // Find all finalized minutes with action items
+    // Find finalized minutes with action items (batch to prevent memory exhaustion)
     const minutes = await Minutes.find({
       isFinalized: true,
+      'topics.infoItems.dueDate': { $lt: today },
     })
       .populate('meetingSeries_id')
+      .limit(1000)
       .lean();
 
     // Collect overdue items by responsible person
@@ -39,10 +41,10 @@ export async function GET(request: NextRequest) {
         for (const item of topic.infoItems || []) {
           const actionItem = item as any;
           if (
-            actionItem.isActionItem &&
-            !actionItem.isComplete &&
-            actionItem.duedate &&
-            new Date(actionItem.duedate) < today
+            actionItem.itemType === 'actionItem' &&
+            actionItem.status !== 'completed' && actionItem.status !== 'cancelled' &&
+            actionItem.dueDate &&
+            new Date(actionItem.dueDate) < today
           ) {
             // Add to each responsible person
             for (const responsible of actionItem.responsibles || []) {
@@ -51,7 +53,7 @@ export async function GET(request: NextRequest) {
               }
               overdueByUser[responsible].push({
                 subject: actionItem.subject,
-                dueDate: actionItem.duedate,
+                dueDate: actionItem.dueDate,
                 priority: actionItem.priority,
                 meetingSeries: minute.meetingSeries_id,
                 minuteDate: minute.date,

@@ -122,7 +122,7 @@ export async function PATCH(
       },
     });
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error updating task:', error);
     return NextResponse.json(
       { error: 'Internal server error' },
