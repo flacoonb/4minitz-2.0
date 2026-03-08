@@ -30,8 +30,8 @@ export default function CreateMeetingSeriesForm() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-user-id': 'demo-user', // TODO: Replace with real auth
         },
+        credentials: 'include',
         body: JSON.stringify({
           project: formData.project,
           name: formData.name,
@@ -133,18 +133,18 @@ export default function CreateMeetingSeriesForm() {
         </p>
       </div>
 
-      <div className="flex items-center justify-between pt-4">
+      <div className="flex flex-col sm:flex-row gap-3 pt-4">
         <button
           type="button"
           onClick={() => router.back()}
-          className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+          className="w-full sm:w-auto px-6 py-2 min-h-11 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
         >
           {t('common.cancel')}
         </button>
         <button
           type="submit"
           disabled={loading}
-          className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="w-full sm:w-auto px-6 py-2 min-h-11 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {loading ? t('meetingSeriesForm.creating') : t('meetingSeriesForm.submitCreate')}
         </button>
