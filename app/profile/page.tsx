@@ -300,8 +300,24 @@ const ProfilePage = () => {
   }, [user, t, router, updateUser]);
 
   const subscribePushNotifications = useCallback(async () => {
-    if (typeof window === 'undefined' || !('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
+    if (typeof window === 'undefined') {
       throw new Error(t('messages.pushNotSupported'));
+    }
+
+    if (!window.isSecureContext) {
+      throw new Error(t('messages.pushRequiresHttps'));
+    }
+
+    if (!('serviceWorker' in navigator)) {
+      throw new Error(t('messages.pushServiceWorkerMissing'));
+    }
+
+    if (!('PushManager' in window)) {
+      throw new Error(t('messages.pushManagerMissing'));
+    }
+
+    if (!('Notification' in window)) {
+      throw new Error(t('messages.pushNotificationApiMissing'));
     }
 
     const permission = await Notification.requestPermission();
