@@ -7,6 +7,22 @@ import { verifyToken, requirePermission } from '@/lib/auth';
 import { sendVerificationEmail, sendWelcomeEmail } from '@/lib/email-service';
 import crypto from 'crypto';
 
+function getRequestBaseUrl(request: NextRequest): string {
+  const forwardedProto = request.headers.get('x-forwarded-proto')?.split(',')[0]?.trim();
+  const forwardedHost = request.headers.get('x-forwarded-host')?.split(',')[0]?.trim();
+  if (forwardedProto && forwardedHost) {
+    return `${forwardedProto}://${forwardedHost}`;
+  }
+
+  const host = request.headers.get('host')?.trim();
+  if (host) {
+    const proto = request.nextUrl.protocol.replace(/:$/, '') || 'https';
+    return `${proto}://${host}`;
+  }
+
+  return new URL(request.url).origin;
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -267,13 +283,17 @@ export async function PUT(
     // Send email verification when address changes
     if (emailChanged && emailVerificationToken) {
       try {
+        const appUrlFromRequest = getRequestBaseUrl(request);
+        const locale = userToUpdate.preferences?.language === 'en' ? 'en' : 'de';
         await sendVerificationEmail(
           {
             email: userToUpdate.email,
             firstName: userToUpdate.firstName,
             lastName: userToUpdate.lastName,
           },
-          emailVerificationToken
+          emailVerificationToken,
+          locale,
+          appUrlFromRequest
         );
         verificationMailSent = true;
       } catch {

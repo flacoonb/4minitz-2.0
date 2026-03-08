@@ -31,7 +31,7 @@ export async function getAppUrl() {
       return settings.systemSettings.baseUrl;
     }
   } catch (_e) { }
-  return process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+  return process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 }
 
 export async function getOrgName() {
@@ -584,10 +584,11 @@ export async function sendWelcomeEmail(
 export async function sendVerificationEmail(
   user: { email: string; firstName: string; lastName: string },
   token: string,
-  locale: 'de' | 'en' = 'de'
+  locale: 'de' | 'en' = 'de',
+  appUrlOverride?: string
 ): Promise<void> {
   const t = translations[locale].verifyEmail;
-  const appUrl = await getAppUrl();
+  const appUrl = (appUrlOverride || (await getAppUrl())).replace(/\/+$/, '');
   const verifyUrl = `${appUrl}/auth/verify-email?token=${token}`;
 
   const htmlContent = `
