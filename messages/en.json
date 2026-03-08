@@ -1364,6 +1364,8 @@
       "pushManagerMissing": "The Push API is not available in this browser",
       "pushNotificationApiMissing": "The Notifications API is not available in this browser",
       "pushPermissionDenied": "Please allow browser notifications to enable push",
+      "pushServiceUnavailable": "Browser push service is unreachable. Check browser, network/firewall, or blockers",
+      "pushInvalidVapid": "Invalid push key (VAPID). Please reset the keys",
       "pushConfigError": "Push notifications are currently unavailable",
       "pushSubscribeError": "Could not enable push notifications",
       "pushToggleError": "Could not update push notification setting"

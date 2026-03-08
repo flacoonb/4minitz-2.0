@@ -342,14 +342,40 @@ const ProfilePage = () => {
       throw new Error(keyData?.error || t('messages.pushConfigError'));
     }
 
-    const registration = await navigator.serviceWorker.register('/sw.js');
+    await navigator.serviceWorker.register('/sw.js');
+    const registration = await navigator.serviceWorker.ready;
     let subscription = await registration.pushManager.getSubscription();
+    const applicationServerKey = urlBase64ToUint8Array(String(keyData.publicKey).trim()) as unknown as BufferSource;
 
     if (!subscription) {
-      subscription = await registration.pushManager.subscribe({
-        userVisibleOnly: true,
-        applicationServerKey: urlBase64ToUint8Array(keyData.publicKey).buffer as ArrayBuffer,
-      });
+      try {
+        subscription = await registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey,
+        });
+      } catch (_subscribeError: any) {
+        // Retry once after removing a potentially stale browser subscription.
+        const staleSubscription = await registration.pushManager.getSubscription().catch(() => null);
+        if (staleSubscription) {
+          await staleSubscription.unsubscribe().catch(() => {});
+        }
+
+        try {
+          subscription = await registration.pushManager.subscribe({
+            userVisibleOnly: true,
+            applicationServerKey,
+          });
+        } catch (retryError: any) {
+          const retryMessage = String(retryError?.message || '');
+          if (/push service error/i.test(retryMessage)) {
+            throw new Error(t('messages.pushServiceUnavailable'));
+          }
+          if (/InvalidAccessError|applicationServerKey/i.test(retryMessage)) {
+            throw new Error(t('messages.pushInvalidVapid'));
+          }
+          throw retryError;
+        }
+      }
     }
 
     const saveResponse = await fetch('/api/push/subscription', {
