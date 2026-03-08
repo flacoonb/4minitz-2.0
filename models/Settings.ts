@@ -21,7 +21,9 @@ export interface ISettings extends Document {
   };
   memberSettings: {
     requireEmailVerification: boolean;
+    requireAdminApproval: boolean;
     allowSelfRegistration: boolean;
+    agendaItemLabelMode: 'manual' | 'topic-alpha';
     defaultRole: 'user' | 'moderator';
     maxMembersPerMeeting: number;
     enableGuestAccess: boolean;
@@ -56,6 +58,16 @@ export interface ISettings extends Document {
     allowedFileTypes: string[];
     baseUrl?: string;
   };
+  smtpSettings?: {
+    host: string;
+    port: number;
+    secure: boolean;
+    auth: {
+      user: string;
+      pass: string; // encrypted
+    };
+    from: string;
+  };
   updatedAt: Date;
   updatedBy: string;
 }
@@ -81,7 +93,9 @@ const SettingsSchema = new Schema<ISettings>({
   },
   memberSettings: {
     requireEmailVerification: { type: Boolean, default: true },
+    requireAdminApproval: { type: Boolean, default: true },
     allowSelfRegistration: { type: Boolean, default: false },
+    agendaItemLabelMode: { type: String, enum: ['manual', 'topic-alpha'], default: 'topic-alpha' },
     defaultRole: { type: String, enum: ['user', 'moderator'], default: 'user' },
     maxMembersPerMeeting: { type: Number, default: 50 },
     enableGuestAccess: { type: Boolean, default: true },
@@ -115,6 +129,16 @@ const SettingsSchema = new Schema<ISettings>({
     maxFileUploadSize: { type: Number, default: 10 },
     allowedFileTypes: { type: [String], default: ['pdf', 'doc', 'docx', 'jpg', 'png'] },
     baseUrl: { type: String }
+  },
+  smtpSettings: {
+    host: { type: String },
+    port: { type: Number, default: 587 },
+    secure: { type: Boolean, default: false },
+    auth: {
+      user: { type: String },
+      pass: { type: String }, // encrypted via lib/crypto
+    },
+    from: { type: String },
   },
   updatedBy: { type: String }
 }, {

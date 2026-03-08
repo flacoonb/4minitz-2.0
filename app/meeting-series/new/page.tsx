@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTranslations } from 'next-intl';
 
 interface Member {
   userId: string;
@@ -19,11 +20,12 @@ interface User {
 }
 
 export default function NewMeetingSeriesPage() {
+  const t = useTranslations('meetingSeriesNew');
   const router = useRouter();
   const { user, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Form state
   const [formData, setFormData] = useState({
     project: '',
@@ -33,11 +35,19 @@ export default function NewMeetingSeriesPage() {
     informedUsers: [] as string[],
     members: [] as Member[],
   });
-  
+
   // Users list
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<string>('');
-  
+
+  // Existing session names for autocomplete
+  const [existingProjectNames, setExistingProjectNames] = useState<string[]>([]);
+
+  // Existing series for task import
+  const [existingSeries, setExistingSeries] = useState<{ _id: string; project: string; name?: string }[]>([]);
+  const [sourceSeriesId, setSourceSeriesId] = useState<string>('');
+  const [importMessage, setImportMessage] = useState<string | null>(null);
+
   // Input states for adding participants/informed users (kept for backward compatibility)
   const [newParticipant, setNewParticipant] = useState('');
   const [newInformedUser, setNewInformedUser] = useState('');
@@ -52,8 +62,24 @@ export default function NewMeetingSeriesPage() {
   useEffect(() => {
     if (user && user.role !== 'user') {
       fetchUsers();
+      fetchExistingNames();
     }
   }, [user]);
+
+  const fetchExistingNames = async () => {
+    try {
+      const response = await fetch('/api/meeting-series', { credentials: 'include' });
+      if (response.ok) {
+        const result = await response.json();
+        const series = (result.data || []) as { _id: string; project: string; name?: string }[];
+        const names = [...new Set(series.map((s) => s.project).filter(Boolean))] as string[];
+        setExistingProjectNames(names);
+        setExistingSeries(series);
+      }
+    } catch {
+      // ignore
+    }
+  };
 
   const fetchUsers = async () => {
     try {
@@ -66,11 +92,11 @@ export default function NewMeetingSeriesPage() {
         setAllUsers(result.data || []);
       }
     } catch (err) {
-      console.error('Fehler beim Laden der Benutzer:', err);
+      console.error('Error fetching users:', err);
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
       ...prev,
@@ -80,11 +106,6 @@ export default function NewMeetingSeriesPage() {
 
   const getUserById = (userId: string): User | undefined => {
     return allUsers.find(u => u._id === userId);
-  };
-
-  const _getUserDisplayName = (userId: string): string => {
-    const user = getUserById(userId);
-    return user ? `${user.firstName} ${user.lastName}` : userId;
   };
 
   const addMember = () => {
@@ -149,7 +170,7 @@ export default function NewMeetingSeriesPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include', // Use cookies for authentication
+        credentials: 'include',
         body: JSON.stringify(formData),
       });
 
@@ -159,9 +180,29 @@ export default function NewMeetingSeriesPage() {
       }
 
       const result = await response.json();
-      
-      // Redirect to the new meeting series
-      router.push(`/meeting-series/${result.data._id}`);
+      const newSeriesId = result.data._id;
+
+      // Import tasks from source series if selected
+      if (sourceSeriesId) {
+        try {
+          const importRes = await fetch(`/api/meeting-series/${newSeriesId}/import-tasks`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ sourceSeriesId }),
+          });
+          if (importRes.ok) {
+            const importResult = await importRes.json();
+            if (importResult.imported > 0) {
+              setImportMessage(t('tasksImported', { count: importResult.imported }));
+            }
+          }
+        } catch {
+          // Non-critical: series was created, task import failed silently
+        }
+      }
+
+      router.push(`/meeting-series/${newSeriesId}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'An error occurred');
     } finally {
@@ -184,7 +225,7 @@ export default function NewMeetingSeriesPage() {
   }
 
   return (
-    <div className="max-w-4xl mx-auto py-8 space-y-8">
+    <div className="max-w-4xl mx-auto px-3 sm:px-4 py-6 sm:py-8 space-y-6 sm:space-y-8">
       {/* Header */}
       <div>
         <Link
@@ -194,22 +235,22 @@ export default function NewMeetingSeriesPage() {
           <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
-          Zurück zu Sitzungsserien
+          {t('backToSeries')}
         </Link>
 
-        <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 rounded-2xl p-8 border border-blue-100">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg">
-              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 rounded-2xl p-5 sm:p-8 border border-blue-100">
+          <div className="flex items-start sm:items-center gap-3 sm:gap-4 min-w-0">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 shrink-0 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg">
+              <svg className="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
               </svg>
             </div>
-            <div>
-              <h1 className="text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
-                Neue Sitzungsserie
+            <div className="min-w-0">
+              <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent break-words">
+                {t('title')}
               </h1>
-              <p className="text-lg text-blue-700 font-medium mt-1">
-                Erstelle eine neue Serie für regelmäßige Meetings
+              <p className="text-base sm:text-lg text-blue-700 font-medium mt-1">
+                {t('subtitle')}
               </p>
             </div>
           </div>
@@ -219,53 +260,93 @@ export default function NewMeetingSeriesPage() {
       {/* Error Message */}
       {error && (
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
-          <p className="font-medium">Fehler beim Erstellen</p>
+          <p className="font-medium">{t('errorCreating')}</p>
           <p className="text-sm">{error}</p>
         </div>
       )}
 
+      {importMessage && (
+        <div className="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-lg">
+          <p className="text-sm font-medium">{importMessage}</p>
+        </div>
+      )}
+
       {/* Form */}
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 border border-gray-100 shadow-lg">
+      <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 sm:p-8 border border-gray-100 shadow-lg">
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Basic Information */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label htmlFor="project" className="block text-sm font-medium text-gray-700 mb-2">
-                Projekt *
+                {t('sessionName')}
               </label>
               <input
                 type="text"
                 id="project"
                 name="project"
+                list="existing-session-names"
                 value={formData.project}
                 onChange={handleInputChange}
                 required
+                autoComplete="off"
                 className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                placeholder="z.B. IT-Projekt Alpha"
+                placeholder={t('sessionNamePlaceholder')}
               />
+              <datalist id="existing-session-names">
+                {existingProjectNames.map(name => (
+                  <option key={name} value={name} />
+                ))}
+              </datalist>
             </div>
 
             <div>
               <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
-                Serie Name *
+                {t('year')}
               </label>
-              <input
-                type="text"
+              <select
                 id="name"
                 name="name"
                 value={formData.name}
                 onChange={handleInputChange}
-                required
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                placeholder="z.B. Wöchentliches Standup"
-              />
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white"
+              >
+                <option value="">{t('noYear')}</option>
+                {Array.from({ length: 7 }, (_, i) => new Date().getFullYear() - 2 + i).map(year => (
+                  <option key={year} value={String(year)}>{year}</option>
+                ))}
+              </select>
             </div>
           </div>
+
+          {/* Import Tasks from existing Series */}
+          {existingSeries.length > 0 && (
+            <div>
+              <label htmlFor="sourceSeriesId" className="block text-sm font-medium text-gray-700 mb-2">
+                {t('importTasksFrom')}
+              </label>
+              <select
+                id="sourceSeriesId"
+                value={sourceSeriesId}
+                onChange={(e) => setSourceSeriesId(e.target.value)}
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white"
+              >
+                <option value="">{t('noImport')}</option>
+                {existingSeries.map(s => (
+                  <option key={s._id} value={s._id}>
+                    {s.project}{s.name ? ` – ${s.name}` : ''}
+                  </option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500 mt-1">
+                {t('importHint')}
+              </p>
+            </div>
+          )}
 
           {/* Description */}
           <div>
             <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-2">
-              Beschreibung
+              {t('description')}
             </label>
             <textarea
               id="description"
@@ -274,23 +355,23 @@ export default function NewMeetingSeriesPage() {
               onChange={handleInputChange}
               rows={3}
               className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
-              placeholder="Kurze Beschreibung der Sitzungsserie..."
+              placeholder={t('descriptionPlaceholder')}
             />
           </div>
 
           {/* Members - New Selection from Registered Users */}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Mitglieder
+              {t('members')}
             </label>
             <div className="space-y-3">
-              <div className="flex gap-2">
+              <div className="flex flex-col min-[420px]:flex-row items-stretch min-[420px]:items-center gap-2">
                 <select
                   value={selectedUserId}
                   onChange={(e) => setSelectedUserId(e.target.value)}
-                  className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full flex-1 min-w-0 px-4 py-3 min-h-11 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 >
-                  <option value="">-- Benutzer auswählen --</option>
+                  <option value="">{t('selectUser')}</option>
                   {allUsers
                     .filter(user => !formData.members.some(m => m.userId === user._id))
                     .map(user => (
@@ -304,14 +385,14 @@ export default function NewMeetingSeriesPage() {
                   type="button"
                   onClick={addMember}
                   disabled={!selectedUserId}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full min-[420px]:w-auto px-3 sm:px-4 py-3 min-h-11 min-w-11 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center shrink-0"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                   </svg>
                 </button>
               </div>
-              
+
               {formData.members.length > 0 && (
                 <div className="space-y-2">
                   {formData.members.map((member) => {
@@ -319,18 +400,18 @@ export default function NewMeetingSeriesPage() {
                     return (
                       <div
                         key={member.userId}
-                        className="flex items-center justify-between p-3 bg-blue-50 rounded-lg border border-blue-200"
+                        className="flex items-start justify-between gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200"
                       >
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-start gap-3 min-w-0">
                           <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-full flex items-center justify-center text-white font-bold">
                             {user ? user.firstName.charAt(0).toUpperCase() : '?'}
                           </div>
-                          <div>
-                            <p className="font-medium text-gray-900">
+                          <div className="min-w-0">
+                            <p className="font-medium text-gray-900 break-words">
                               {user ? `${user.firstName} ${user.lastName}` : member.userId}
                             </p>
                             {user && (
-                              <p className="text-sm text-gray-600">{user.email}</p>
+                              <p className="text-sm text-gray-600 break-all">{user.email}</p>
                             )}
                           </div>
                         </div>
@@ -353,30 +434,31 @@ export default function NewMeetingSeriesPage() {
 
           {/* Participants */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Teilnehmer
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              {t('participants')}
             </label>
+            <p className="text-xs text-gray-500 mb-2">{t('participantsHint')}</p>
             <div className="space-y-3">
-              <div className="flex gap-2">
+              <div className="flex flex-col min-[420px]:flex-row items-stretch min-[420px]:items-center gap-2">
                 <input
                   type="text"
                   value={newParticipant}
                   onChange={(e) => setNewParticipant(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addParticipant())}
-                  className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  placeholder="E-Mail oder Name des Teilnehmers"
+                  onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addParticipant())}
+                  className="w-full flex-1 min-w-0 px-4 py-3 min-h-11 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  placeholder={t('participantPlaceholder')}
                 />
                 <button
                   type="button"
                   onClick={addParticipant}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors"
+                  className="w-full min-[420px]:w-auto px-3 sm:px-4 py-3 min-h-11 min-w-11 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors inline-flex items-center justify-center shrink-0"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                   </svg>
                 </button>
               </div>
-              
+
               {formData.participants.length > 0 && (
                 <div className="flex flex-wrap gap-2">
                   {formData.participants.map((participant, index) => (
@@ -403,31 +485,31 @@ export default function NewMeetingSeriesPage() {
 
           {/* Informed Users */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Informierte Benutzer
-              <span className="text-gray-500 text-xs ml-2">(erhalten Benachrichtigungen)</span>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              {t('informedUsers')}
             </label>
+            <p className="text-xs text-gray-500 mb-2">{t('informedUsersHint')}</p>
             <div className="space-y-3">
-              <div className="flex gap-2">
+              <div className="flex flex-col min-[420px]:flex-row items-stretch min-[420px]:items-center gap-2">
                 <input
                   type="text"
                   value={newInformedUser}
                   onChange={(e) => setNewInformedUser(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addInformedUser())}
-                  className="flex-1 px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
-                  placeholder="E-Mail oder Name"
+                  onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addInformedUser())}
+                  className="w-full flex-1 min-w-0 px-4 py-3 min-h-11 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  placeholder={t('informedUserPlaceholder')}
                 />
                 <button
                   type="button"
                   onClick={addInformedUser}
-                  className="px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-colors"
+                  className="w-full min-[420px]:w-auto px-3 sm:px-4 py-3 min-h-11 min-w-11 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors inline-flex items-center justify-center shrink-0"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
                   </svg>
                 </button>
               </div>
-              
+
               {formData.informedUsers.length > 0 && (
                 <div className="flex flex-wrap gap-2">
                   {formData.informedUsers.map((user, index) => (
@@ -453,32 +535,32 @@ export default function NewMeetingSeriesPage() {
           </div>
 
           {/* Form Actions */}
-          <div className="flex items-center gap-4 pt-6 border-t">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-6 border-t">
             <button
               type="submit"
-              disabled={loading || !formData.project || !formData.name}
-              className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              disabled={loading || !formData.project}
+              className="w-full sm:w-auto px-6 sm:px-8 py-3 min-h-11 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl shadow-lg hover:shadow-xl sm:hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
               {loading ? (
                 <div className="flex items-center gap-2">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  <span>Erstelle Serie...</span>
+                  <span>{t('creatingSeries')}</span>
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                  <span>Serie erstellen</span>
+                  <span>{t('createSeries')}</span>
                 </div>
               )}
             </button>
 
             <Link
               href="/meeting-series"
-              className="px-8 py-3 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors"
+              className="w-full sm:w-auto px-6 sm:px-8 py-3 min-h-11 bg-gray-100 text-gray-700 rounded-xl hover:bg-gray-200 transition-colors inline-flex items-center justify-center"
             >
-              Abbrechen
+              {t('cancel')}
             </Link>
           </div>
         </form>

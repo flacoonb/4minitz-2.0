@@ -24,4 +24,20 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  padding-top: env(safe-area-inset-top);
+  padding-right: env(safe-area-inset-right);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+}
+
+/* Disable hover effects on touch devices */
+@media (hover: none) {
+  .hover\:scale-105,
+  .hover\:scale-\[1\.02\],
+  .hover\:shadow-2xl,
+  .hover\:shadow-xl,
+  .hover\:shadow-lg {
+    transform: none !important;
+    box-shadow: inherit !important;
+  }
 }

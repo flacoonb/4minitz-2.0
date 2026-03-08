@@ -20,6 +20,28 @@ interface MeetingSeries {
   createdAt: string;
 }
 
+const YEAR_COLORS = [
+  { bg: '#3b82f6', text: '#ffffff' }, // blue
+  { bg: '#10b981', text: '#ffffff' }, // emerald
+  { bg: '#8b5cf6', text: '#ffffff' }, // purple
+  { bg: '#f59e0b', text: '#ffffff' }, // amber
+  { bg: '#f43f5e', text: '#ffffff' }, // rose
+  { bg: '#06b6d4', text: '#ffffff' }, // cyan
+  { bg: '#f97316', text: '#ffffff' }, // orange
+];
+
+function getYearColor(name: string): { bg: string; text: string } {
+  const year = parseInt(name, 10);
+  if (!isNaN(year)) {
+    return YEAR_COLORS[year % YEAR_COLORS.length];
+  }
+  let hash = 0;
+  for (let i = 0; i < name.length; i++) {
+    hash = name.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return YEAR_COLORS[Math.abs(hash) % YEAR_COLORS.length];
+}
+
 export default function MeetingSeriesList() {
   const t = useTranslations();
   const { hasPermission } = useAuth();
@@ -35,9 +57,7 @@ export default function MeetingSeriesList() {
     try {
       setLoading(true);
       const response = await fetch('/api/meeting-series', {
-        headers: {
-          'x-user-id': 'demo-user', // TODO: Replace with real auth
-        },
+        credentials: 'include',
       });
       
       if (!response.ok) {
@@ -114,31 +134,10 @@ export default function MeetingSeriesList() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">
+      <div className="mb-6">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 break-words">
           {t('meetingSeries.title')} ({series.length})
         </h2>
-        {hasPermission('canCreateMeetings') && (
-          <Link
-            href="/meeting-series/new"
-            className="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl hover:shadow-lg hover:scale-105 transition-all duration-200 shadow-md"
-          >
-            <svg
-              className="w-5 h-5 mr-2"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 4v16m8-8H4"
-              />
-            </svg>
-            {t('meetingSeries.createNew')}
-          </Link>
-        )}
       </div>
 
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -146,19 +145,24 @@ export default function MeetingSeriesList() {
           <Link
             key={item._id}
             href={`/meeting-series/${item._id}`}
-            className="group block p-6 bg-white/80 backdrop-blur-sm border border-gray-200 rounded-2xl shadow-lg hover:shadow-2xl hover:border-blue-300 hover:scale-[1.02] transition-all duration-300"
+            className="group block p-6 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-gray-200 dark:border-slate-700 rounded-2xl shadow-lg hover:shadow-2xl hover:border-blue-300 dark:hover:border-blue-600 transition-all duration-300"
           >
-            <div className="mb-3">
-              <span className="text-xs font-semibold text-blue-600 bg-gradient-to-r from-blue-50 to-indigo-50 px-3 py-1.5 rounded-lg">
-                {item.project}
-              </span>
-            </div>
-            
-            <h3 className="text-lg font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors">
-              {item.name}
+            {item.name && (
+              <div className="mb-3">
+                <span
+                  className="text-xs font-semibold px-3 py-1.5 rounded-lg"
+                  style={{ backgroundColor: getYearColor(item.name).bg, color: getYearColor(item.name).text }}
+                >
+                  {item.name}
+                </span>
+              </div>
+            )}
+
+            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+              {item.project}
             </h3>
             
-            <div className="space-y-2 text-sm text-gray-600">
+            <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
               {item.lastMinutesDate && (
                 <div className="flex items-center">
                   <svg
