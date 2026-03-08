@@ -144,7 +144,7 @@ export async function GET(request: NextRequest) {
       }
 
       query.$or = [
-        ...(canUseTemplates || canManageGlobalTemplates ? [{ scope: 'global' }] : []),
+        ...(isAdmin || canUseTemplates || canManageGlobalTemplates ? [{ scope: 'global' }] : []),
         { scope: 'series', meetingSeriesId: new mongoose.Types.ObjectId(meetingSeriesId) },
       ];
     } else if (!query.scope) {
