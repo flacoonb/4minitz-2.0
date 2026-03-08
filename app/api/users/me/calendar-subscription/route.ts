@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
 import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
+import Settings from '@/models/Settings';
 import { verifyToken } from '@/lib/auth';
-import { getAppUrl } from '@/lib/email-service';
 
 function getRequestBaseUrl(request: NextRequest): string {
   const forwardedProto = request.headers.get('x-forwarded-proto')?.split(',')[0]?.trim();
@@ -30,10 +30,16 @@ function buildIcalUrl(baseUrl: string, token: string): string {
 }
 
 async function resolvePublicBaseUrl(request: NextRequest): Promise<string> {
-  const configured = String((await getAppUrl()) || '').trim();
-  if (configured) {
-    return configured.replace(/\/+$/, '');
+  try {
+    const settings = await Settings.findOne({}).sort({ updatedAt: -1 }).select('systemSettings.baseUrl').lean();
+    const configured = String((settings as any)?.systemSettings?.baseUrl || '').trim();
+    if (configured) {
+      return configured.replace(/\/+$/, '');
+    }
+  } catch {
+    // Ignore settings lookup errors and fallback to request-derived origin.
   }
+
   return getRequestBaseUrl(request).replace(/\/+$/, '');
 }
 
