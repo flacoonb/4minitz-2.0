@@ -5,20 +5,29 @@ import Settings from '@/models/Settings';
 import { encrypt } from '@/lib/crypto';
 import fs from 'fs/promises';
 import path from 'path';
+import crypto from 'crypto';
 
 const SETUP_TOKEN_FILE = path.resolve(process.cwd(), '.setup_token');
 
-async function isTokenRequired() {
+async function getExpectedSetupToken(): Promise<string | null> {
+  const envToken = (process.env.SETUP_TOKEN || '').trim();
+  if (envToken) return envToken;
   try {
-    await fs.access(SETUP_TOKEN_FILE);
-    return true;
+    const token = (await fs.readFile(SETUP_TOKEN_FILE, 'utf8')).trim();
+    return token || null;
   } catch {
-    return false;
+    return null;
   }
 }
 
-async function providedTokenMatches(body: any, request: Request | undefined) {
-  if (!(await isTokenRequired())) return true;
+function timingSafeEquals(a: string, b: string): boolean {
+  const left = Buffer.from(a);
+  const right = Buffer.from(b);
+  if (left.length !== right.length) return false;
+  return crypto.timingSafeEqual(left, right);
+}
+
+async function providedTokenMatches(expectedToken: string, body: any, request: Request | undefined) {
   let provided = '';
   try {
     if (request && typeof (request as any).headers?.get === 'function') {
@@ -26,12 +35,8 @@ async function providedTokenMatches(body: any, request: Request | undefined) {
     }
   } catch { /* ignore */ }
   if (!provided && body && body.token) provided = body.token;
-  try {
-    const expected = (await fs.readFile(SETUP_TOKEN_FILE, 'utf8')).trim();
-    return provided === expected;
-  } catch {
-    return false;
-  }
+  if (!provided) return false;
+  return timingSafeEquals(String(provided).trim(), expectedToken);
 }
 
 export async function GET() {
@@ -47,14 +52,27 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
+    const expectedSetupToken = await getExpectedSetupToken();
 
-    // If a setup token exists, require it for web-setup POST
-    if (!(await providedTokenMatches(body, request as unknown as Request))) {
+    if (!expectedSetupToken) {
+      return NextResponse.json(
+        { success: false, error: 'Setup token is not configured' },
+        { status: 503 }
+      );
+    }
+
+    if (!(await providedTokenMatches(expectedSetupToken, body, request as unknown as Request))) {
       return NextResponse.json({ success: false, error: 'Invalid or missing setup token' }, { status: 403 });
     }
 
     // Connect to DB using provided URI or default
-    const mongoUri = body.mongoUri || process.env.MONGODB_URI || 'mongodb://localhost:27017/4minitz';
+    const mongoUri = String(body.mongoUri || process.env.MONGODB_URI || 'mongodb://localhost:27017/4minitz').trim();
+    if (!/^mongodb(\+srv)?:\/\//i.test(mongoUri)) {
+      return NextResponse.json({ success: false, error: 'Invalid MongoDB URI format' }, { status: 400 });
+    }
+    if (/[\r\n]/.test(mongoUri)) {
+      return NextResponse.json({ success: false, error: 'Invalid MongoDB URI characters' }, { status: 400 });
+    }
     await connectDB(mongoUri);
 
     const existing = await User.countDocuments({});
@@ -82,6 +100,9 @@ export async function POST(request: NextRequest) {
     }
 
     const userName = username && username.trim().length >= 3 ? username.trim() : email.split('@')[0];
+    if (/^[a-fA-F0-9]{24}$/.test(userName)) {
+      return NextResponse.json({ success: false, error: 'Username is reserved' }, { status: 400 });
+    }
 
     const user = new User({
       email: email.toLowerCase(),
@@ -134,9 +155,12 @@ export async function POST(request: NextRequest) {
         envContent = await fs.readFile(envPath, 'utf8');
       } catch { /* file doesn't exist yet */ }
 
-      if (!envContent.includes(`MONGODB_URI=${mongoUri}`)) {
+      const escapedMongoUri = mongoUri.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+      const mongoEnvLine = `MONGODB_URI='${escapedMongoUri}'`;
+
+      if (!envContent.includes(mongoEnvLine)) {
         envContent = envContent.replace(/^MONGODB_URI=.*$/m, '');
-        envContent += `\nMONGODB_URI=${mongoUri}\n`;
+        envContent += `\n${mongoEnvLine}\n`;
         await fs.writeFile(envPath, envContent.trim() + '\n');
       }
     } catch {

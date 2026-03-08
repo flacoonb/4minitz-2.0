@@ -43,6 +43,15 @@ export async function verifyToken(request: NextRequest): Promise<AuthResult> {
       };
     }
 
+    const decodedTokenVersion = typeof decoded.tokenVersion === 'number' ? decoded.tokenVersion : 0;
+    const currentTokenVersion = typeof (user as any).tokenVersion === 'number' ? (user as any).tokenVersion : 0;
+    if (decodedTokenVersion !== currentTokenVersion) {
+      return {
+        success: false,
+        error: 'Ungültiger Token'
+      };
+    }
+
     return {
       success: true,
       user
@@ -124,7 +133,8 @@ export function generateToken(user: IUser, expiresInSeconds?: number): string {
       userId: user._id,
       email: user.email,
       username: user.username,
-      role: user.role
+      role: user.role,
+      tokenVersion: (user as any).tokenVersion || 0,
     },
     getJwtSecret(),
     { expiresIn: expiresInSeconds || 28800 } // Default 8 hours (480 min)

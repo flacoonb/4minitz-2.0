@@ -22,14 +22,20 @@ export async function GET(
 
     // Verify user has access to this series
     const username = authResult.user.username;
+    const userId = authResult.user._id.toString();
     const series = await MeetingSeries.findById(seriesId);
     if (!series) {
       return NextResponse.json({ success: false, error: 'Not found' }, { status: 404 });
     }
-    const hasAccess = series.visibleFor?.includes(username) ||
-                      series.moderators?.includes(username) ||
-                      series.participants?.includes(username) ||
-                      authResult.user.role === 'admin';
+    const hasAccess =
+      authResult.user.role === 'admin' ||
+      series.visibleFor?.includes(username) ||
+      series.visibleFor?.includes(userId) ||
+      series.moderators?.includes(username) ||
+      series.moderators?.includes(userId) ||
+      series.participants?.includes(username) ||
+      series.participants?.includes(userId) ||
+      (Array.isArray(series.members) && series.members.some((member: any) => member?.userId === userId));
     if (!hasAccess) {
       return NextResponse.json({ success: false, error: 'Forbidden' }, { status: 403 });
     }

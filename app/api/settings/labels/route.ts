@@ -20,12 +20,15 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: authResult.error || 'Nicht authentifiziert' }, { status: 401 });
     }
 
-    const userId = authResult.user.username;
+    const userId = authResult.user._id.toString();
+    const ownerIdentifiers = Array.from(
+      new Set([userId, authResult.user.username, ...((authResult.user as any).usernameHistory || [])])
+    );
 
     // Get user's custom labels and system labels
     const labels = await Label.find({
       $or: [
-        { createdBy: userId },
+        { createdBy: { $in: ownerIdentifiers } },
         { isSystemLabel: true }
       ]
     })
@@ -64,7 +67,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: authResult.error || 'Nicht authentifiziert' }, { status: 401 });
     }
 
-    const userId = authResult.user.username;
+    const userId = authResult.user._id.toString();
+    const ownerIdentifiers = Array.from(
+      new Set([userId, authResult.user.username, ...((authResult.user as any).usernameHistory || [])])
+    );
     
     // Validation
     if (!body.name || !body.color) {
@@ -81,7 +87,7 @@ export async function POST(request: NextRequest) {
     const existingLabel = await Label.findOne({
       name: body.name,
       $or: [
-        { createdBy: userId },
+        { createdBy: { $in: ownerIdentifiers } },
         { isSystemLabel: true }
       ]
     });

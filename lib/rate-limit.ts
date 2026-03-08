@@ -25,15 +25,20 @@ setInterval(() => {
  * @returns Object indicating if the request is allowed and remaining requests
  */
 export function checkRateLimit(request: NextRequest, limit: number, windowMs: number) {
-    // Get IP address from headers (x-forwarded-for is standard for proxies/load balancers)
-    const ip = request.headers.get('x-forwarded-for')?.split(',')[0] || 'unknown';
+    const ip = getClientIp(request);
+    const path = request.nextUrl?.pathname || 'global';
+    return checkRateLimitByKey(`ip:${ip}:${path}`, limit, windowMs);
+}
+
+export function checkRateLimitByKey(rawKey: string, limit: number, windowMs: number) {
+    const key = sanitizeKeyPart(rawKey);
 
     const now = Date.now();
-    const store = ipRateLimits.get(ip);
+    const store = ipRateLimits.get(key);
 
     if (!store || now > store.resetTime) {
         // New window or expired window
-        ipRateLimits.set(ip, {
+        ipRateLimits.set(key, {
             count: 1,
             resetTime: now + windowMs
         });
@@ -47,4 +52,29 @@ export function checkRateLimit(request: NextRequest, limit: number, windowMs: nu
 
     store.count += 1;
     return { allowed: true, remaining: limit - store.count, resetTime: store.resetTime };
+}
+
+function sanitizeKeyPart(value: string): string {
+    return value.toLowerCase().replace(/[^a-z0-9:._-]/g, '_').slice(0, 200);
+}
+
+function getClientIp(request: NextRequest): string {
+    // Preferred source in Next runtimes.
+    const directIp = ((request as any).ip as string | undefined)?.trim();
+    if (directIp) return sanitizeKeyPart(directIp);
+
+    // Trusted reverse proxies often provide x-real-ip.
+    const realIp = request.headers.get('x-real-ip')?.trim();
+    if (realIp) return sanitizeKeyPart(realIp);
+
+    // For x-forwarded-for, prefer right-most element (closest trusted proxy hop).
+    const xff = request.headers.get('x-forwarded-for');
+    if (xff) {
+        const parts = xff.split(',').map((part) => part.trim()).filter(Boolean);
+        if (parts.length > 0) {
+            return sanitizeKeyPart(parts[parts.length - 1]);
+        }
+    }
+
+    return 'unknown';
 }

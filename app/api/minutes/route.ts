@@ -217,8 +217,15 @@ export async function POST(request: NextRequest) {
 
     if (userRole !== 'admin' && userRole !== 'moderator') {
       // For regular users, check if they're a moderator or participant of this series
-      const isModerator = meetingSeries.moderators.includes(username);
-      const isParticipant = meetingSeries.participants.includes(username);
+      const isModerator =
+        meetingSeries.moderators.includes(username) || meetingSeries.moderators.includes(userId);
+      const isParticipant =
+        meetingSeries.participants.includes(username) ||
+        meetingSeries.participants.includes(userId) ||
+        meetingSeries.visibleFor?.includes(username) ||
+        meetingSeries.visibleFor?.includes(userId) ||
+        (Array.isArray(meetingSeries.members) &&
+          meetingSeries.members.some((member: any) => member?.userId === userId));
 
       if (!isModerator && !isParticipant) {
         return NextResponse.json(

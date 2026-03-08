@@ -59,11 +59,17 @@ export async function GET(request: NextRequest) {
     }
 
     const username = authResult.user.username;
+    const userId = authResult.user._id.toString();
     const series = minute.meetingSeries_id as any;
-    const hasAccess = series?.visibleFor?.includes(username) ||
-                      series?.moderators?.includes(username) ||
-                      series?.participants?.includes(username) ||
-                      authResult.user.role === 'admin';
+    const hasAccess =
+      authResult.user.role === 'admin' ||
+      series?.visibleFor?.includes(username) ||
+      series?.visibleFor?.includes(userId) ||
+      series?.moderators?.includes(username) ||
+      series?.moderators?.includes(userId) ||
+      series?.participants?.includes(username) ||
+      series?.participants?.includes(userId) ||
+      (Array.isArray(series?.members) && series.members.some((member: any) => member?.userId === userId));
 
     if (!hasAccess) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
@@ -97,7 +103,8 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: authResult.error || 'Nicht authentifiziert' }, { status: 401 });
     }
 
-    const userId = authResult.user.username;
+    const userId = authResult.user._id.toString();
+    const username = authResult.user.username;
 
     // Parse multipart form data
     const formData = await request.formData();
@@ -175,10 +182,18 @@ export async function POST(request: NextRequest) {
 
     // Check authorization
     const meetingSeries = minute.meetingSeries_id as any;
-    const isModerator = meetingSeries.moderators?.includes(userId);
-    const isParticipant = meetingSeries.participants?.includes(userId);
-    
-    if (!isModerator && !isParticipant) {
+    const isAdmin = authResult.user.role === 'admin';
+    const isModerator =
+      meetingSeries.moderators?.includes(userId) || meetingSeries.moderators?.includes(username);
+    const isParticipant =
+      meetingSeries.participants?.includes(userId) ||
+      meetingSeries.participants?.includes(username) ||
+      meetingSeries.visibleFor?.includes(userId) ||
+      meetingSeries.visibleFor?.includes(username) ||
+      (Array.isArray(meetingSeries.members) &&
+        meetingSeries.members.some((member: any) => member?.userId === userId));
+
+    if (!isAdmin && !isModerator && !isParticipant) {
       return NextResponse.json(
         { error: 'Forbidden: You must be a moderator or participant' },
         { status: 403 }
@@ -248,7 +263,8 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: authResult.error || 'Nicht authentifiziert' }, { status: 401 });
     }
 
-    const userId = authResult.user.username;
+    const userId = authResult.user._id.toString();
+    const username = authResult.user.username;
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
@@ -280,10 +296,12 @@ export async function DELETE(request: NextRequest) {
     }
 
     const meetingSeries = minute.meetingSeries_id as any;
-    const isModerator = meetingSeries.moderators?.includes(userId);
-    const isUploader = attachment.uploadedBy === userId;
+    const isAdmin = authResult.user.role === 'admin';
+    const isModerator =
+      meetingSeries.moderators?.includes(userId) || meetingSeries.moderators?.includes(username);
+    const isUploader = attachment.uploadedBy === userId || attachment.uploadedBy === username;
 
-    if (!isModerator && !isUploader) {
+    if (!isAdmin && !isModerator && !isUploader) {
       return NextResponse.json(
         { error: 'Forbidden: You can only delete your own attachments or must be a moderator' },
         { status: 403 }

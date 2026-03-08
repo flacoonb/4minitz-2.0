@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
-import { checkRateLimit } from '@/lib/rate-limit';
+import { checkRateLimit, checkRateLimitByKey } from '@/lib/rate-limit';
 import { forgotPasswordSchema, validateBody } from '@/lib/validations';
 import crypto from 'crypto';
 import { getTranslations } from 'next-intl/server';
@@ -26,6 +26,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: t('invalidEmail') }, { status: 400 });
     }
     const emailRaw = validation.data.email.toLowerCase();
+    const accountRateLimit = checkRateLimitByKey(`forgot-password:${emailRaw}`, 5, 60 * 60 * 1000);
+    if (!accountRateLimit.allowed) {
+      return NextResponse.json({ error: t('tooManyPasswordResetAttempts') }, { status: 429 });
+    }
 
     const user = await User.findOne({ email: emailRaw });
 

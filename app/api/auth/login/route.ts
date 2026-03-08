@@ -4,7 +4,7 @@ import User from '@/models/User';
 import Settings from '@/models/Settings';
 import { generateToken } from '@/lib/auth';
 import { logAction } from '@/lib/audit';
-import { checkRateLimit } from '@/lib/rate-limit';
+import { checkRateLimit, checkRateLimitByKey } from '@/lib/rate-limit';
 import { loginSchema, validateBody } from '@/lib/validations';
 import { getTranslations } from 'next-intl/server';
 
@@ -33,6 +33,13 @@ export async function POST(request: NextRequest) {
       );
     }
     const { username, password } = validation.data;
+    const accountRateLimit = checkRateLimitByKey(`login-account:${username.toLowerCase()}`, 10, 15 * 60 * 1000);
+    if (!accountRateLimit.allowed) {
+      return NextResponse.json(
+        { error: t('tooManyLoginAttempts') },
+        { status: 429 }
+      );
+    }
 
     // Find user by email or username (case-insensitive)
     const escapedUsername = username.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

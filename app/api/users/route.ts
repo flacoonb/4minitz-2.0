@@ -140,9 +140,17 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const normalizedUsername = String(username).trim();
+    if (/^[a-fA-F0-9]{24}$/.test(normalizedUsername)) {
+      return NextResponse.json(
+        { error: 'Benutzername ist reserviert' },
+        { status: 400 }
+      );
+    }
+
     // Check if user already exists
     const existingUser = await User.findOne({
-      $or: [{ email }, { username }]
+      $or: [{ email }, { username: normalizedUsername }, { usernameHistory: normalizedUsername }]
     });
 
     if (existingUser) {
@@ -156,7 +164,7 @@ export async function POST(request: NextRequest) {
     // Create new user
     const newUser = new User({
       email,
-      username,
+      username: normalizedUsername,
       password,
       firstName,
       lastName,

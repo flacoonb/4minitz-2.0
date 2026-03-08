@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
-import { checkRateLimit } from '@/lib/rate-limit';
+import { checkRateLimit, checkRateLimitByKey } from '@/lib/rate-limit';
 import { getTranslations } from 'next-intl/server';
 import crypto from 'crypto';
 
@@ -27,6 +27,15 @@ export async function GET(request: NextRequest) {
 
         if (!token) {
             return NextResponse.json({ error: t('missingToken') }, { status: 400 });
+        }
+
+        const tokenThrottleKey = crypto.createHash('sha256').update(token).digest('hex').slice(0, 24);
+        const tokenRateLimit = checkRateLimitByKey(`verify-email:${tokenThrottleKey}`, 10, 60 * 60 * 1000);
+        if (!tokenRateLimit.allowed) {
+            return NextResponse.json(
+                { error: t('tooManyRequests') },
+                { status: 429 }
+            );
         }
 
         // Hash the token and find user (tokens are stored hashed)
@@ -56,4 +65,3 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: t('serverError') }, { status: 500 });
     }
 }
-

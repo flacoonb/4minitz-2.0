@@ -26,12 +26,15 @@ export async function GET(
     if (!authResult.success || !authResult.user) {
       return NextResponse.json({ error: authResult.error || 'Nicht authentifiziert' }, { status: 401 });
     }
-    const userId = authResult.user.username;
+    const userId = authResult.user._id.toString();
+    const ownerIdentifiers = Array.from(
+      new Set([userId, authResult.user.username, ...((authResult.user as any).usernameHistory || [])])
+    );
     
     const label = await Label.findOne({
       _id: id,
       $or: [
-        { createdBy: userId },
+        { createdBy: { $in: ownerIdentifiers } },
         { isSystemLabel: true }
       ]
     }).select('-__v').lean();
@@ -74,14 +77,17 @@ export async function PUT(
     if (!authResult.success || !authResult.user) {
       return NextResponse.json({ error: authResult.error || 'Nicht authentifiziert' }, { status: 401 });
     }
-    const userId = authResult.user.username;
+    const userId = authResult.user._id.toString();
+    const ownerIdentifiers = Array.from(
+      new Set([userId, authResult.user.username, ...((authResult.user as any).usernameHistory || [])])
+    );
     const body = await request.json();
     
     // Check if label exists and user owns it (or is system label that can be modified)
     const label = await Label.findOne({
       _id: id,
       $or: [
-        { createdBy: userId },
+        { createdBy: { $in: ownerIdentifiers } },
         { isSystemLabel: true }
       ]
     });
@@ -107,7 +113,7 @@ export async function PUT(
         name: body.name,
         _id: { $ne: id },
         $or: [
-          { createdBy: userId },
+          { createdBy: { $in: ownerIdentifiers } },
           { isSystemLabel: true }
         ]
       });
@@ -167,11 +173,14 @@ export async function DELETE(
     if (!authResult.success || !authResult.user) {
       return NextResponse.json({ error: authResult.error || 'Nicht authentifiziert' }, { status: 401 });
     }
-    const userId = authResult.user.username;
+    const userId = authResult.user._id.toString();
+    const ownerIdentifiers = Array.from(
+      new Set([userId, authResult.user.username, ...((authResult.user as any).usernameHistory || [])])
+    );
     
     const label = await Label.findOne({
       _id: id,
-      createdBy: userId,
+      createdBy: { $in: ownerIdentifiers },
       isSystemLabel: false, // Only allow deletion of custom labels
     });
     

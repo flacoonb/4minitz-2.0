@@ -98,6 +98,8 @@ export async function PUT(
       );
     }
 
+    const objectIdLikeUsername = /^[a-fA-F0-9]{24}$/;
+
     // Update fields (with length/format validation)
     if (body.firstName !== undefined) {
       if (typeof body.firstName !== 'string' || body.firstName.trim().length === 0 || body.firstName.length > 50) {
@@ -138,10 +140,32 @@ export async function PUT(
       if (typeof body.username !== 'string' || body.username.length < 3 || body.username.length > 30) {
         return NextResponse.json({ error: 'Benutzername muss zwischen 3 und 30 Zeichen lang sein' }, { status: 400 });
       }
-      if (!/^[\p{L}\p{N}._-]+$/u.test(body.username)) {
+      const normalizedUsername = body.username.trim();
+      if (!/^[\p{L}\p{N}._-]+$/u.test(normalizedUsername)) {
         return NextResponse.json({ error: 'Benutzername darf nur Buchstaben, Zahlen, Punkte, Unterstriche und Bindestriche enthalten' }, { status: 400 });
       }
-      userToUpdate.username = body.username;
+      if (objectIdLikeUsername.test(normalizedUsername)) {
+        return NextResponse.json({ error: 'Benutzername darf nicht wie eine Benutzer-ID aussehen' }, { status: 400 });
+      }
+
+      if (normalizedUsername !== userToUpdate.username) {
+        const conflictingUser = await User.findOne({
+          _id: { $ne: id },
+          $or: [
+            { username: normalizedUsername },
+            { usernameHistory: normalizedUsername },
+          ],
+        }).select('_id');
+
+        if (conflictingUser) {
+          return NextResponse.json({ error: 'Benutzername wird bereits verwendet oder ist reserviert' }, { status: 409 });
+        }
+
+        userToUpdate.usernameHistory = Array.from(
+          new Set([...(userToUpdate.usernameHistory || []), userToUpdate.username])
+        );
+        userToUpdate.username = normalizedUsername;
+      }
     }
     if (body.avatar !== undefined) {
       if (body.avatar !== null && (typeof body.avatar !== 'string' || body.avatar.length > 500 || !/^https?:\/\/.+/i.test(body.avatar))) {
@@ -222,6 +246,7 @@ export async function PUT(
         }
       }
       userToUpdate.password = body.password; // Will be hashed by pre-save middleware
+      userToUpdate.tokenVersion = (userToUpdate.tokenVersion || 0) + 1;
     }
 
     // Detect approval (user was inactive, now being activated)

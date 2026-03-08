@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
 import Settings from '@/models/Settings';
-import { checkRateLimit } from '@/lib/rate-limit';
+import { checkRateLimit, checkRateLimitByKey } from '@/lib/rate-limit';
 import { registerSchema, validateBody } from '@/lib/validations';
 import { sendWelcomeEmail, sendVerificationEmail, getTransporter, getFromEmail } from '@/lib/email-service';
 import crypto from 'crypto';
@@ -34,6 +34,25 @@ export async function POST(request: NextRequest) {
     }
     const { email, username, password, firstName, lastName } = validation.data;
     const role = 'user';
+    const normalizedUsername = username.trim();
+    const accountRateLimit = checkRateLimitByKey(
+      `register-account:${email.toLowerCase()}:${normalizedUsername.toLowerCase()}`,
+      5,
+      60 * 60 * 1000
+    );
+    if (!accountRateLimit.allowed) {
+      return NextResponse.json(
+        { error: t('tooManyRegisterAttempts') },
+        { status: 429 }
+      );
+    }
+
+    if (/^[a-fA-F0-9]{24}$/.test(normalizedUsername)) {
+      return NextResponse.json(
+        { error: 'Username ist reserviert' },
+        { status: 400 }
+      );
+    }
 
     // Check if self-registration is allowed
     const settings = await Settings.findOne({}).sort({ updatedAt: -1 });
@@ -50,7 +69,7 @@ export async function POST(request: NextRequest) {
 
     // Check if user already exists
     const existingUser = await User.findOne({
-      $or: [{ email }, { username }]
+      $or: [{ email }, { username: normalizedUsername }, { usernameHistory: normalizedUsername }]
     });
 
     if (existingUser) {
@@ -69,7 +88,7 @@ export async function POST(request: NextRequest) {
     let verificationToken: string | null = null;
     const userFields: Record<string, unknown> = {
       email,
-      username,
+      username: normalizedUsername,
       password, // Will be hashed by pre-save middleware
       firstName,
       lastName,

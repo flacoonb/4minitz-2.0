@@ -114,6 +114,7 @@ export async function PUT(
     }
 
     const username = authResult.user.username;
+    const userId = authResult.user._id.toString();
 
     // Check if user is moderator (moderators contains usernames)
     const series = await MeetingSeries.findById(id);
@@ -128,7 +129,9 @@ export async function PUT(
     // Check permissions
     const canModerateAll = await hasPermission(authResult.user, 'canModerateAllMeetings');
 
-    if (!series.moderators.includes(username) && !canModerateAll) {
+    const isSeriesModerator =
+      series.moderators.includes(username) || series.moderators.includes(userId);
+    if (!isSeriesModerator && !canModerateAll) {
       return NextResponse.json(
         { success: false, error: 'Not authorized to update this series' },
         { status: 403 }
@@ -232,6 +235,7 @@ export async function DELETE(
     }
 
     const username = authResult.user.username;
+    const userId = authResult.user._id.toString();
 
     // Find the series first to check authorization
     const series = await MeetingSeries.findById(id);
@@ -245,7 +249,9 @@ export async function DELETE(
 
     // Check if user is a moderator of this series or has global moderator permission
     const canModerateAll = await hasPermission(authResult.user, 'canModerateAllMeetings');
-    if (!series.moderators.includes(username) && !canModerateAll) {
+    const isSeriesModerator =
+      series.moderators.includes(username) || series.moderators.includes(userId);
+    if (!isSeriesModerator && !canModerateAll) {
       return NextResponse.json(
         { success: false, error: 'Not authorized to delete this series' },
         { status: 403 }

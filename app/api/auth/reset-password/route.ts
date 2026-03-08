@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
-import { checkRateLimit } from '@/lib/rate-limit';
+import { checkRateLimit, checkRateLimitByKey } from '@/lib/rate-limit';
 import { resetPasswordSchema, validateBody } from '@/lib/validations';
 import crypto from 'crypto';
 import { getTranslations } from 'next-intl/server';
@@ -25,6 +25,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: t('required') }, { status: 400 });
     }
     const { token, password } = validation.data;
+    const tokenThrottleKey = crypto.createHash('sha256').update(token).digest('hex').slice(0, 24);
+    const tokenRateLimit = checkRateLimitByKey(`reset-password:${tokenThrottleKey}`, 10, 60 * 60 * 1000);
+    if (!tokenRateLimit.allowed) {
+      return NextResponse.json({ error: t('tooManyRequests') }, { status: 429 });
+    }
 
     const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
 
@@ -39,6 +44,7 @@ export async function POST(request: NextRequest) {
     }
 
     user.password = password; // hashed via pre-save hook
+    user.tokenVersion = (user.tokenVersion || 0) + 1;
     user.passwordResetTokenHash = undefined;
     user.passwordResetExpires = undefined;
     await user.save();

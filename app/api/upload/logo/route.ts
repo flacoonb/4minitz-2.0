@@ -48,6 +48,10 @@ export async function POST(request: NextRequest) {
     const buffer = Buffer.from(await file.arrayBuffer());
     // Sanitize filename (strip everything except alphanumeric, hyphen, single dot for extension)
     const ext = path.extname(file.name).replace(/[^a-zA-Z0-9.]/g, '');
+    const allowedLogoExtensions = new Set(['.jpg', '.jpeg', '.png', '.gif', '.webp']);
+    if (!allowedLogoExtensions.has(ext.toLowerCase())) {
+      return NextResponse.json({ error: 'Dateiendung nicht erlaubt' }, { status: 400 });
+    }
     const filename = `logo-${Date.now()}${ext}`;
 
     // Ensure directory exists

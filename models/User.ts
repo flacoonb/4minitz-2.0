@@ -14,6 +14,7 @@ export interface IUser extends Document {
   _id: mongoose.Types.ObjectId;
   email: string;
   username: string;
+  usernameHistory: string[];
   password: string;
   firstName: string;
   lastName: string;
@@ -40,6 +41,7 @@ export interface IUser extends Document {
   };
   createdAt: Date;
   updatedAt: Date;
+  tokenVersion: number;
 
   // Methods
   comparePassword(password: string): Promise<boolean>;
@@ -83,10 +85,16 @@ const UserSchema: Schema<IUser> = new Schema(
       maxlength: [30, 'Benutzername darf maximal 30 Zeichen lang sein'],
       validate: {
         validator: (username: string) => {
-          return /^[\p{L}\p{N}._-]+$/u.test(username);
+          // Reserve ObjectId-like values to prevent identifier confusion (username vs userId).
+          return /^[\p{L}\p{N}._-]+$/u.test(username) && !/^[a-fA-F0-9]{24}$/.test(username);
         },
-        message: 'Benutzername darf nur Buchstaben, Zahlen, Punkte, Unterstriche und Bindestriche enthalten'
+        message: 'Benutzername ist ungültig oder reserviert'
       }
+    },
+
+    usernameHistory: {
+      type: [String],
+      default: [],
     },
 
     password: {
@@ -205,7 +213,13 @@ const UserSchema: Schema<IUser> = new Schema(
         enum: ['light', 'dark', 'auto'],
         default: 'auto'
       }
-    }
+    },
+
+    tokenVersion: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
   },
   {
     timestamps: true,
@@ -216,6 +230,8 @@ const UserSchema: Schema<IUser> = new Schema(
         delete ret.passwordResetExpires;
         delete ret.emailVerificationToken;
         delete ret.emailVerificationExpires;
+        delete ret.usernameHistory;
+        delete ret.tokenVersion;
         return ret;
       }
     }
@@ -275,5 +291,3 @@ const User: Model<IUser> =
   mongoose.models.User || mongoose.model<IUser>('User', UserSchema);
 
 export default User;
-
-

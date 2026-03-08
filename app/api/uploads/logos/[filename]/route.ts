@@ -5,6 +5,8 @@ import { existsSync } from 'fs';
 import { verifyToken } from '@/lib/auth';
 import { safePath } from '@/lib/file-security';
 
+const ALLOWED_EXTENSIONS = new Set(['.jpg', '.jpeg', '.png', '.gif', '.webp']);
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ filename: string }> }
@@ -19,6 +21,10 @@ export async function GET(
     }
 
     const { filename } = await params;
+    const ext = path.extname(filename).toLowerCase();
+    if (!ALLOWED_EXTENSIONS.has(ext)) {
+      return NextResponse.json({ error: 'File type not allowed' }, { status: 400 });
+    }
 
     // Try to find the file in the new location first
     const primaryDir = path.join(process.cwd(), 'uploads', 'logos');
@@ -35,14 +41,12 @@ export async function GET(
     }
 
     const fileBuffer = await readFile(filePath);
-    const ext = path.extname(filename).toLowerCase();
     let contentType = 'application/octet-stream';
 
     if (ext === '.jpg' || ext === '.jpeg') contentType = 'image/jpeg';
     else if (ext === '.png') contentType = 'image/png';
     else if (ext === '.gif') contentType = 'image/gif';
     else if (ext === '.webp') contentType = 'image/webp';
-    else if (ext === '.svg') contentType = 'image/svg+xml';
 
     return new NextResponse(fileBuffer, {
       headers: {

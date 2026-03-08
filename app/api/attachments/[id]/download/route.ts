@@ -44,11 +44,17 @@ export async function GET(
     }
 
     const username = authResult.user.username;
+    const userId = authResult.user._id.toString();
     const series = minute.meetingSeries_id as any;
-    const hasAccess = series?.visibleFor?.includes(username) ||
-                      series?.moderators?.includes(username) ||
-                      series?.participants?.includes(username) ||
-                      authResult.user.role === 'admin';
+    const hasAccess =
+      authResult.user.role === 'admin' ||
+      series?.visibleFor?.includes(username) ||
+      series?.visibleFor?.includes(userId) ||
+      series?.moderators?.includes(username) ||
+      series?.moderators?.includes(userId) ||
+      series?.participants?.includes(username) ||
+      series?.participants?.includes(userId) ||
+      (Array.isArray(series?.members) && series.members.some((member: any) => member?.userId === userId));
 
     if (!hasAccess) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
