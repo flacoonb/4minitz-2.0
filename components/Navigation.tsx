@@ -12,13 +12,14 @@ import {
   ChevronDown,
   Users as UsersIcon,
   FileText,
+  CalendarDays,
   Menu,
   X
 } from 'lucide-react';
 
 export default function Navigation() {
   const pathname = usePathname();
-  const { user: currentUser, loading, logout } = useAuth();
+  const { user: currentUser, loading, logout, hasPermission } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
@@ -46,10 +47,18 @@ export default function Navigation() {
     };
   }, [showUserMenu, mobileMenuOpen]);
 
+  const canAccessPlanning = Boolean(
+    currentUser &&
+      (currentUser.role === 'admin' ||
+        currentUser.role === 'moderator' ||
+        hasPermission('canCreateMeetings'))
+  );
+
   const navItems = [
     { href: '/dashboard', label: t('dashboard'), icon: 'dashboard' },
     { href: '/meeting-series', label: t('meetingSeries'), icon: 'series' },
     { href: '/tasks', label: t('tasks'), icon: 'tasks' },
+    ...(canAccessPlanning ? [{ href: '/planning', label: t('planning'), icon: 'planning' }] : []),
   ];
 
   const adminItems = [
@@ -224,6 +233,17 @@ export default function Navigation() {
                   <User className="w-4 h-4 text-slate-600 dark:text-slate-400" />
                   <span className="text-sm text-slate-700 dark:text-slate-300">{t('myProfile')}</span>
                 </Link>
+
+                {canAccessPlanning && (
+                  <Link
+                    href="/planning"
+                    className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors min-h-[44px]"
+                    onClick={() => setShowUserMenu(false)}
+                  >
+                    <CalendarDays className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+                    <span className="text-sm text-slate-700 dark:text-slate-300">{t('planning')}</span>
+                  </Link>
+                )}
 
                 {currentUser.role === 'admin' && (
                   <>

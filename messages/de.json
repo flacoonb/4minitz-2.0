@@ -35,7 +35,69 @@
     "logout": "Abmelden",
     "login": "Anmelden",
     "register": "Registrieren",
-    "tasks": "Aufgaben"
+    "tasks": "Aufgaben",
+    "planning": "Planung"
+  },
+  "planning": {
+    "title": "Sitzungsplanung",
+    "subtitle": "Hier sehen Sie alle Sitzungen und wer zugesagt oder abgesagt hat.",
+    "refresh": "Aktualisieren",
+    "loadError": "Planungsdaten konnten nicht geladen werden",
+    "unknownSeries": "Unbekannte Serie",
+    "filterStatus": "Status",
+    "statusAll": "Alle",
+    "empty": "Keine geplanten Sitzungen gefunden.",
+    "openSeries": "Serie öffnen",
+    "openMinutes": "Protokoll öffnen",
+    "minuteEntryDefaultTitle": "Protokoll",
+    "minuteFinalized": "Finalisiert",
+    "minuteDraft": "Entwurf",
+    "rsvp": "RSVP: {accepted} zugesagt, {tentative} vorbehalt, {declined} abgesagt, {pending} offen ({total} total)",
+    "rsvpBadges": {
+      "accepted": "zugesagt",
+      "tentative": "vorbehalt",
+      "declined": "abgesagt",
+      "pending": "offen",
+      "total": "total"
+    },
+    "calendar": {
+      "quickCreateTitle": "Monatskalender",
+      "quickCreateHint": "Klicke auf ein Datum, um direkt eine Sitzung an diesem Tag zu planen.",
+      "createButton": "Neue Sitzung planen",
+      "noPermission": "Sie haben keine Berechtigung, neue Sitzungen zu planen."
+    },
+    "entryModal": {
+      "title": "Sitzungsinfo",
+      "typeEvent": "Sitzung",
+      "typeMinute": "Protokoll",
+      "location": "Ort"
+    },
+    "create": {
+      "title": "Neue Sitzung planen",
+      "series": "Sitzungsserie",
+      "selectSeries": "Sitzungsserie auswählen",
+      "titleLabel": "Titel",
+      "titlePlaceholder": "z.B. Vorstandssitzung",
+      "date": "Datum",
+      "startTime": "Startzeit",
+      "endTime": "Endzeit",
+      "location": "Ort",
+      "locationPlaceholder": "z.B. Vereinslokal",
+      "note": "Hinweis",
+      "notePlaceholder": "Optionaler Hinweis zur Sitzung",
+      "cancel": "Abbrechen",
+      "submit": "Sitzung erstellen",
+      "creating": "Erstelle...",
+      "validationError": "Bitte Serie, Titel, Datum und Startzeit ausfüllen.",
+      "createError": "Sitzung konnte nicht erstellt werden."
+    },
+    "status": {
+      "draft": "Entwurf",
+      "invited": "Eingeladen",
+      "confirmed": "Bestätigt",
+      "cancelled": "Abgesagt",
+      "completed": "Abgeschlossen"
+    }
   },
   "home": {
     "title": "Willkommen bei 4Minitz 2.0",
@@ -1239,6 +1301,22 @@
       "emailNotificationsDesc": "Erhalten Sie Updates zu Meetings und Protokollen per E-Mail",
       "pushNotifications": "Push-Benachrichtigungen",
       "pushNotificationsDesc": "Erhalten Sie sofortige Benachrichtigungen im Browser",
+      "calendar": {
+        "title": "Kalender abonnieren (iCal)",
+        "description": "Abonnieren Sie Ihre geplanten Sitzungen in einem externen Kalender (Apple, Google, Outlook usw.).",
+        "linkLabel": "Persönlicher Abo-Link",
+        "noLinkYet": "Noch kein Abo-Link verfügbar.",
+        "copy": "Link kopieren",
+        "regenerate": "Link neu generieren",
+        "revoke": "Link widerrufen",
+        "note": "Beim Neu-Generieren oder Widerrufen wird der bisherige Kalender-Link ungültig.",
+        "messages": {
+          "copied": "Kalender-Link wurde in die Zwischenablage kopiert.",
+          "copyError": "Kalender-Link konnte nicht kopiert werden.",
+          "regenerated": "Neuer Kalender-Link wurde erstellt.",
+          "revoked": "Kalender-Link wurde widerrufen."
+        }
+      },
       "save": "Einstellungen speichern",
       "saving": "Einstellungen werden gespeichert..."
     },

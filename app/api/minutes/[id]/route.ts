@@ -4,9 +4,32 @@ import connectToDatabase from '@/lib/mongodb';
 import Minutes from '@/models/Minutes';
 import MeetingSeries from '@/models/MeetingSeries';
 import Task from '@/models/Task';
+import MeetingEvent from '@/models/MeetingEvent';
 import { verifyToken } from '@/lib/auth';
 import { requirePermission, hasPermission } from '@/lib/permissions';
 import { logAction } from '@/lib/audit';
+
+type AttendanceStatus = 'present' | 'excused' | 'absent';
+
+function mapResponseToAttendance(responseStatus: string): AttendanceStatus {
+  if (responseStatus === 'accepted') return 'present';
+  if (responseStatus === 'declined') return 'absent';
+  if (responseStatus === 'tentative') return 'excused';
+  return 'excused';
+}
+
+function computeEventDeadline(event: any): Date | null {
+  if (!event?.scheduledDate || !event?.startTime) return null;
+  const date = new Date(event.scheduledDate);
+  if (Number.isNaN(date.getTime())) return null;
+  const [hoursRaw, minutesRaw] = String(event.startTime).split(':');
+  const hours = Number(hoursRaw);
+  const minutes = Number(minutesRaw || '0');
+  if (Number.isNaN(hours) || Number.isNaN(minutes)) return null;
+  const deadline = new Date(date);
+  deadline.setHours(hours, minutes, 0, 0);
+  return deadline;
+}
 
 export async function GET(
   request: NextRequest,
@@ -73,6 +96,58 @@ export async function GET(
       isSeriesParticipant ||
       isMinuteDirectlyVisible
     ) {
+      // Keep protocol attendance synchronized with RSVP until meeting start time.
+      const linkedEvent = await MeetingEvent.findOne({ linkedMinutesId: id }).lean();
+      const deadline = computeEventDeadline(linkedEvent);
+      if (linkedEvent && deadline && new Date() < deadline) {
+        const existingStatus = new Map<string, AttendanceStatus>();
+        const existingParticipantsWithStatus = Array.isArray((minute as any).participantsWithStatus)
+          ? (minute as any).participantsWithStatus
+          : [];
+
+        for (const participant of existingParticipantsWithStatus) {
+          const participantId = String(participant?.userId || '').trim();
+          if (!participantId) continue;
+          const status = String(participant?.attendance || 'excused') as AttendanceStatus;
+          existingStatus.set(participantId, status);
+        }
+
+        const syncedByUserId = new Map<string, AttendanceStatus>();
+        for (const invitee of linkedEvent.invitees || []) {
+          const inviteeId = String((invitee as any)?.userId || '').trim();
+          if (!inviteeId) continue;
+          syncedByUserId.set(inviteeId, mapResponseToAttendance(String((invitee as any)?.responseStatus || 'pending')));
+        }
+
+        for (const member of seriesMembers) {
+          const memberId = String((member as any)?.userId || '').trim();
+          if (!memberId || syncedByUserId.has(memberId)) continue;
+          syncedByUserId.set(memberId, existingStatus.get(memberId) || 'excused');
+        }
+
+        // Keep guests or manually added non-series users untouched.
+        for (const [participantId, attendance] of existingStatus.entries()) {
+          if (syncedByUserId.has(participantId)) continue;
+          if (participantId.startsWith('guest:')) {
+            syncedByUserId.set(participantId, attendance);
+          }
+        }
+
+        const participantsWithStatus = Array.from(syncedByUserId.entries()).map(([entryUserId, attendance]) => ({
+          userId: entryUserId,
+          attendance,
+        }));
+        const participants = participantsWithStatus
+          .map((entry) => entry.userId)
+          .filter((entryUserId) => !entryUserId.startsWith('guest:'));
+
+        await Minutes.findByIdAndUpdate(id, {
+          $set: { participantsWithStatus, participants, updatedAt: new Date() },
+        });
+        (minute as any).participantsWithStatus = participantsWithStatus;
+        (minute as any).participants = participants;
+      }
+
       return NextResponse.json({ success: true, data: minute });
     }
 

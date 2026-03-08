@@ -48,6 +48,31 @@ const LoginPage = () => {
     fetchSettings();
   }, []);
 
+  useEffect(() => {
+    const rsvpStatus = searchParams?.get('rsvp');
+    const rsvpResponse = searchParams?.get('response');
+    const rsvpReason = searchParams?.get('reason');
+    if (rsvpStatus === 'success') {
+      const responseLabel =
+        rsvpResponse === 'accepted'
+          ? 'Zusage'
+          : rsvpResponse === 'tentative'
+            ? 'Vorbehalt'
+            : rsvpResponse === 'declined'
+              ? 'Absage'
+              : 'Antwort';
+      setSuccess(`Ihre ${responseLabel} wurde gespeichert.`);
+      setError('');
+    } else if (rsvpStatus === 'error') {
+      const reasonLabel =
+        rsvpReason === 'invalid_or_expired'
+          ? 'Der RSVP-Link ist ungültig oder abgelaufen.'
+          : 'Die Antwort konnte nicht gespeichert werden.';
+      setError(reasonLabel);
+      setSuccess('');
+    }
+  }, [searchParams]);
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({

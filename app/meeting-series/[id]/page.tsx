@@ -44,6 +44,33 @@ interface MinutesTemplate {
   scope: 'global' | 'series';
 }
 
+interface MeetingEventInvitee {
+  userId: string;
+  responseStatus: 'pending' | 'accepted' | 'declined' | 'tentative';
+}
+
+interface MeetingEvent {
+  _id: string;
+  meetingSeriesId: string;
+  title: string;
+  scheduledDate: string;
+  startTime: string;
+  endTime?: string;
+  location?: string;
+  note?: string;
+  status: 'draft' | 'invited' | 'confirmed' | 'cancelled' | 'completed';
+  linkedMinutesId?: string;
+  invitees: MeetingEventInvitee[];
+}
+
+interface UserDirectoryEntry {
+  _id: string;
+  firstName?: string;
+  lastName?: string;
+  username?: string;
+  email?: string;
+}
+
 export default function MeetingSeriesPage() {
   const params = useParams() as { id: string };
   const router = useRouter();
@@ -75,6 +102,20 @@ export default function MeetingSeriesPage() {
   const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
   const [loadingTemplates, setLoadingTemplates] = useState(false);
   const [templatesError, setTemplatesError] = useState<string | null>(null);
+  const [meetingEvents, setMeetingEvents] = useState<MeetingEvent[]>([]);
+  const [showEventCreator, setShowEventCreator] = useState(false);
+  const [creatingEvent, setCreatingEvent] = useState(false);
+  const [eventActionLoadingId, setEventActionLoadingId] = useState<string | null>(null);
+  const [eventError, setEventError] = useState<string | null>(null);
+  const [userDirectory, setUserDirectory] = useState<Record<string, UserDirectoryEntry>>({});
+  const [eventTitle, setEventTitle] = useState('');
+  const [eventDate, setEventDate] = useState('');
+  const [eventStartTime, setEventStartTime] = useState('19:00');
+  const [eventEndTime, setEventEndTime] = useState('21:00');
+  const [eventLocation, setEventLocation] = useState('');
+  const [eventNote, setEventNote] = useState('');
+  const [selectedInviteeIds, setSelectedInviteeIds] = useState<string[]>([]);
+  const [eventToDelete, setEventToDelete] = useState<MeetingEvent | null>(null);
 
   // Check permissions
   const username = user?.username || '';
@@ -99,9 +140,10 @@ export default function MeetingSeriesPage() {
     try {
       // Use cookie/JWT-based authentication; include credentials so server can
       // authenticate the request. Server will enforce visibility rules.
-      const [sRes, mRes] = await Promise.all([
+      const [sRes, mRes, eRes] = await Promise.all([
         fetch(`/api/meeting-series/${seriesId}`, { credentials: 'include' }),
         fetch(`/api/minutes?meetingSeriesId=${seriesId}`, { credentials: 'include' }),
+        fetch(`/api/meeting-events?meetingSeriesId=${seriesId}`, { credentials: 'include' }),
       ]);
 
       if (!sRes.ok) throw new Error('Failed to load series');
@@ -109,10 +151,12 @@ export default function MeetingSeriesPage() {
 
       const sJson = await sRes.json();
       const mJson = await mRes.json();
+      const eJson = eRes.ok ? await eRes.json() : { data: [] };
 
       setSeries(sJson.data || null);
       const minutesData = mJson.data || [];
       setMinutes(minutesData);
+      setMeetingEvents(Array.isArray(eJson.data) ? eJson.data : []);
 
       // Check if there's a draft
       const draftExists = minutesData.some((m: Minute) => !m.isFinalized && !m.finalized);
@@ -129,6 +173,36 @@ export default function MeetingSeriesPage() {
     // Don't wait for auth, allow immediate loading with fallback user
     fetchData();
   }, [seriesId, user?._id, fetchData]);
+
+  useEffect(() => {
+    if (!series?.members?.length) return;
+    setSelectedInviteeIds(series.members.map((member) => member.userId));
+  }, [series?._id, series?.members]);
+
+  useEffect(() => {
+    let isCancelled = false;
+    const fetchUsers = async () => {
+      try {
+        const response = await fetch('/api/users?limit=500', { credentials: 'include' });
+        if (!response.ok) return;
+        const result = await response.json();
+        if (isCancelled) return;
+        const entries: UserDirectoryEntry[] = Array.isArray(result.data) ? result.data : [];
+        const map: Record<string, UserDirectoryEntry> = {};
+        entries.forEach((entry) => {
+          if (!entry?._id) return;
+          map[entry._id] = entry;
+        });
+        setUserDirectory(map);
+      } catch {
+        // non-blocking
+      }
+    };
+    fetchUsers();
+    return () => {
+      isCancelled = true;
+    };
+  }, []);
 
   const createNewProtocol = async (templateId?: string) => {
     if (!series) return;
@@ -169,6 +243,156 @@ export default function MeetingSeriesPage() {
     } finally {
       setCreating(false);
     }
+  };
+
+  const resolveUserLabel = (userIdValue: string) => {
+    const userEntry = userDirectory[userIdValue];
+    if (!userEntry) return userIdValue;
+    const fullName = `${userEntry.firstName || ''} ${userEntry.lastName || ''}`.trim();
+    return fullName || userEntry.username || userEntry.email || userIdValue;
+  };
+
+  const formatEventDateTime = (event: MeetingEvent) => {
+    const dateLabel = new Date(event.scheduledDate).toLocaleDateString(locale);
+    const endPart = event.endTime ? ` - ${event.endTime}` : '';
+    return `${dateLabel}, ${event.startTime}${endPart}`;
+  };
+
+  const getInviteeCounts = (event: MeetingEvent) => {
+    const counts = { pending: 0, accepted: 0, declined: 0, tentative: 0 };
+    event.invitees?.forEach((invitee) => {
+      if (invitee.responseStatus in counts) {
+        (counts as any)[invitee.responseStatus] += 1;
+      }
+    });
+    return counts;
+  };
+
+  const resetEventForm = () => {
+    const defaultDate = new Date().toISOString().split('T')[0];
+    setEventTitle('');
+    setEventDate(defaultDate);
+    setEventStartTime('19:00');
+    setEventEndTime('21:00');
+    setEventLocation('');
+    setEventNote('');
+    setSelectedInviteeIds(series?.members?.map((member) => member.userId) || []);
+  };
+
+  const createMeetingEvent = async () => {
+    if (!series) return;
+    if (!eventTitle.trim() || !eventDate || !eventStartTime) {
+      setEventError('Bitte Titel, Datum und Startzeit ausfüllen.');
+      return;
+    }
+    setCreatingEvent(true);
+    setEventError(null);
+    try {
+      const response = await fetch('/api/meeting-events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          meetingSeriesId: series._id,
+          title: eventTitle.trim(),
+          scheduledDate: eventDate,
+          startTime: eventStartTime,
+          endTime: eventEndTime || undefined,
+          location: eventLocation.trim() || undefined,
+          note: eventNote.trim() || undefined,
+          inviteeUserIds: selectedInviteeIds,
+        }),
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result.error || 'Sitzung konnte nicht erstellt werden.');
+      }
+      setMeetingEvents((prev) =>
+        [...prev, result.data].sort((a, b) => {
+          const left = new Date(a.scheduledDate).getTime();
+          const right = new Date(b.scheduledDate).getTime();
+          return left - right;
+        })
+      );
+      setShowEventCreator(false);
+      resetEventForm();
+    } catch (err) {
+      setEventError(err instanceof Error ? err.message : 'Sitzung konnte nicht erstellt werden.');
+    } finally {
+      setCreatingEvent(false);
+    }
+  };
+
+  const sendEventInvites = async (eventId: string) => {
+    setEventActionLoadingId(eventId);
+    setEventError(null);
+    try {
+      const response = await fetch(`/api/meeting-events/${eventId}/send-invites`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result.error || 'Einladungen konnten nicht versendet werden.');
+      }
+      await fetchData();
+    } catch (err) {
+      setEventError(err instanceof Error ? err.message : 'Einladungen konnten nicht versendet werden.');
+    } finally {
+      setEventActionLoadingId(null);
+    }
+  };
+
+  const prepareMinutesFromEvent = async (eventId: string) => {
+    setEventActionLoadingId(eventId);
+    setEventError(null);
+    try {
+      const response = await fetch(`/api/meeting-events/${eventId}/prepare-minutes`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result.error || 'Protokoll konnte nicht vorbereitet werden.');
+      }
+      const minutesId = result?.data?.minutesId;
+      if (minutesId) {
+        router.push(`/minutes/${minutesId}/edit`);
+        return;
+      }
+      await fetchData();
+    } catch (err) {
+      setEventError(err instanceof Error ? err.message : 'Protokoll konnte nicht vorbereitet werden.');
+    } finally {
+      setEventActionLoadingId(null);
+    }
+  };
+
+  const deleteMeetingEvent = async (event: MeetingEvent) => {
+    setEventActionLoadingId(event._id);
+    setEventError(null);
+    try {
+      const response = await fetch(`/api/meeting-events/${event._id}`, {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(result.error || 'Sitzung konnte nicht gelöscht werden.');
+      }
+      setMeetingEvents((prev) => prev.filter((entry) => entry._id !== event._id));
+      setEventToDelete(null);
+    } catch (err) {
+      setEventError(err instanceof Error ? err.message : 'Sitzung konnte nicht gelöscht werden.');
+    } finally {
+      setEventActionLoadingId(null);
+    }
+  };
+
+  const toggleInvitee = (inviteeId: string) => {
+    setSelectedInviteeIds((prev) =>
+      prev.includes(inviteeId) ? prev.filter((value) => value !== inviteeId) : [...prev, inviteeId]
+    );
   };
 
   const deleteSeries = async () => {
@@ -406,6 +630,210 @@ export default function MeetingSeriesPage() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* Sitzungsplaner Section */}
+      <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-100 shadow-lg">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
+          <div>
+            <h2 className="text-xl font-bold text-gray-900">Sitzungsplaner</h2>
+            <p className="text-sm text-gray-600">
+              Termine planen, Mitglieder einladen (RSVP) und Protokoll-Entwurf vorbereiten.
+            </p>
+          </div>
+          {canCreateMinute && (
+            <button
+              onClick={() => {
+                resetEventForm();
+                setShowEventCreator((prev) => !prev);
+                setEventError(null);
+              }}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+              </svg>
+              {showEventCreator ? 'Eingabe schliessen' : 'Sitzung planen'}
+            </button>
+          )}
+        </div>
+
+        {showEventCreator && (
+          <div className="mb-6 p-4 rounded-xl border border-violet-100 bg-violet-50/40 space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Titel</label>
+                <input
+                  value={eventTitle}
+                  onChange={(e) => setEventTitle(e.target.value)}
+                  placeholder="z.B. Vorstandssitzung März"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Datum</label>
+                <input
+                  type="date"
+                  value={eventDate}
+                  onChange={(e) => setEventDate(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Startzeit</label>
+                <input
+                  type="time"
+                  value={eventStartTime}
+                  onChange={(e) => setEventStartTime(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Endzeit</label>
+                <input
+                  type="time"
+                  value={eventEndTime}
+                  onChange={(e) => setEventEndTime(e.target.value)}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Ort</label>
+                <input
+                  value={eventLocation}
+                  onChange={(e) => setEventLocation(e.target.value)}
+                  placeholder="z.B. Vereinslokal"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-1">Hinweis (optional)</label>
+                <textarea
+                  value={eventNote}
+                  onChange={(e) => setEventNote(e.target.value)}
+                  rows={2}
+                  placeholder="Zusätzliche Information für die Einladung"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                />
+              </div>
+            </div>
+
+            <div>
+              <p className="text-sm font-medium text-gray-700 mb-2">
+                Eingeladene Mitglieder ({selectedInviteeIds.length})
+              </p>
+              {series.members?.length ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {series.members.map((member) => (
+                    <label
+                      key={member.userId}
+                      className="flex items-center gap-2 px-2 py-1.5 rounded-md border border-gray-200 bg-white"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedInviteeIds.includes(member.userId)}
+                        onChange={() => toggleInvitee(member.userId)}
+                        className="h-4 w-4 text-violet-600 rounded"
+                      />
+                      <span className="text-sm text-gray-800">{resolveUserLabel(member.userId)}</span>
+                    </label>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500">Keine Mitglieder vorhanden.</p>
+              )}
+            </div>
+
+            {eventError && <p className="text-sm text-red-700">{eventError}</p>}
+
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setShowEventCreator(false)}
+                className="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200"
+              >
+                Abbrechen
+              </button>
+              <button
+                onClick={createMeetingEvent}
+                disabled={creatingEvent}
+                className="px-4 py-2 rounded-lg bg-violet-600 text-white hover:bg-violet-700 disabled:opacity-50"
+              >
+                {creatingEvent ? 'Speichert...' : 'Sitzung erstellen'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {meetingEvents.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-gray-300 p-5 text-sm text-gray-600">
+            Noch keine geplanten Sitzungen.
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {meetingEvents.map((event) => {
+              const counts = getInviteeCounts(event);
+              const isActionLoading = eventActionLoadingId === event._id;
+              return (
+                <div key={event._id} className="rounded-xl border border-gray-200 p-4 bg-white">
+                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+                    <div>
+                      <p className="font-semibold text-gray-900">{event.title}</p>
+                      <p className="text-sm text-gray-600">{formatEventDateTime(event)}</p>
+                      {event.location && <p className="text-sm text-gray-600">{event.location}</p>}
+                    </div>
+                    <div className="flex flex-wrap gap-2 text-xs">
+                      <span className="px-2 py-1 rounded-full bg-blue-100 text-blue-800">offen {counts.pending}</span>
+                      <span className="px-2 py-1 rounded-full bg-green-100 text-green-800">zugesagt {counts.accepted}</span>
+                      <span className="px-2 py-1 rounded-full bg-yellow-100 text-yellow-800">vorbehalt {counts.tentative}</span>
+                      <span className="px-2 py-1 rounded-full bg-rose-100 text-rose-800">abgesagt {counts.declined}</span>
+                    </div>
+                  </div>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <button
+                      onClick={() => sendEventInvites(event._id)}
+                      disabled={isActionLoading}
+                      className="px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-sm hover:bg-indigo-700 disabled:opacity-50"
+                    >
+                      Einladungen senden
+                    </button>
+                    <button
+                      onClick={() => prepareMinutesFromEvent(event._id)}
+                      disabled={isActionLoading || (event.status !== 'invited' && event.status !== 'confirmed')}
+                      className="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-sm hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                      title={
+                        event.status !== 'invited' && event.status !== 'confirmed'
+                          ? 'Erst nach Versand der Einladungen verfügbar'
+                          : undefined
+                      }
+                    >
+                      Protokoll vorbereiten
+                    </button>
+                    <button
+                      onClick={() => setEventToDelete(event)}
+                      disabled={isActionLoading}
+                      className="px-3 py-1.5 rounded-lg bg-rose-600 text-white text-sm hover:bg-rose-700 disabled:opacity-50"
+                    >
+                      Sitzung absagen
+                    </button>
+                    {event.linkedMinutesId && (
+                      <Link
+                        href={`/minutes/${event.linkedMinutesId}/edit`}
+                        className="px-3 py-1.5 rounded-lg bg-gray-100 text-gray-700 text-sm hover:bg-gray-200"
+                      >
+                        Zum Entwurf
+                      </Link>
+                    )}
+                  </div>
+                  {event.status !== 'invited' && event.status !== 'confirmed' && (
+                    <p className="mt-2 text-xs text-amber-700">
+                      Protokoll vorbereiten wird aktiv, sobald Einladungen versendet wurden.
+                    </p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Protokolle Section */}
@@ -741,6 +1169,25 @@ export default function MeetingSeriesPage() {
           </div>
         </div>
       )}
+
+      <ConfirmationModal
+        isOpen={Boolean(eventToDelete)}
+        onClose={() => setEventToDelete(null)}
+        onConfirm={() => {
+          if (!eventToDelete) return;
+          deleteMeetingEvent(eventToDelete);
+        }}
+        title="Geplante Sitzung löschen?"
+        message={
+          eventToDelete
+            ? `"${eventToDelete.title}" vom ${new Date(eventToDelete.scheduledDate).toLocaleDateString(locale)} wird unwiderruflich gelöscht.`
+            : 'Diese geplante Sitzung wird unwiderruflich gelöscht.'
+        }
+        confirmText="Sitzung löschen"
+        cancelText={tCommon('cancel')}
+        isProcessing={Boolean(eventToDelete && eventActionLoadingId === eventToDelete._id)}
+        type="danger"
+      />
 
       <ConfirmationModal
         isOpen={showDeleteConfirm}

@@ -42,6 +42,8 @@ export interface IUser extends Document {
   createdAt: Date;
   updatedAt: Date;
   tokenVersion: number;
+  calendarFeedToken?: string;
+  calendarFeedTokenCreatedAt?: Date;
 
   // Methods
   comparePassword(password: string): Promise<boolean>;
@@ -220,6 +222,13 @@ const UserSchema: Schema<IUser> = new Schema(
       default: 0,
       min: 0,
     },
+    calendarFeedToken: {
+      type: String,
+      trim: true,
+    },
+    calendarFeedTokenCreatedAt: {
+      type: Date,
+    },
   },
   {
     timestamps: true,
@@ -232,6 +241,8 @@ const UserSchema: Schema<IUser> = new Schema(
         delete ret.emailVerificationExpires;
         delete ret.usernameHistory;
         delete ret.tokenVersion;
+        delete ret.calendarFeedToken;
+        delete ret.calendarFeedTokenCreatedAt;
         return ret;
       }
     }
@@ -242,6 +253,7 @@ const UserSchema: Schema<IUser> = new Schema(
 UserSchema.index({ role: 1 });
 UserSchema.index({ isActive: 1 });
 UserSchema.index({ createdAt: -1 });
+UserSchema.index({ calendarFeedToken: 1 }, { sparse: true, unique: true });
 
 // Hash password before saving
 UserSchema.pre('save', async function (next) {

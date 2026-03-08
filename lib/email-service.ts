@@ -813,6 +813,16 @@ type MeetingInvitePayload = {
   declineUrl: string;
 };
 
+type MeetingCancellationPayload = {
+  eventTitle: string;
+  seriesName: string;
+  scheduledDate: Date;
+  startTime: string;
+  endTime?: string;
+  location?: string;
+  note?: string;
+};
+
 export async function sendMeetingInvitationEmail(
   user: MeetingInviteUser,
   payload: MeetingInvitePayload,
@@ -876,6 +886,59 @@ export async function sendMeetingInvitationEmail(
       `${payload.location ? `${locationLabel}: ${payload.location}\n` : ''}` +
       `${payload.note ? `${noteLabel}: ${payload.note}\n` : ''}` +
       `\n${ctaAccept}: ${payload.acceptUrl}\n${ctaTentative}: ${payload.tentativeUrl}\n${ctaDecline}: ${payload.declineUrl}`,
+    html: await generateEmailHTML(htmlContent),
+  };
+
+  const transport = await getTransporter();
+  await transport.sendMail(mailOptions);
+}
+
+export async function sendMeetingCancellationEmail(
+  user: MeetingInviteUser,
+  payload: MeetingCancellationPayload,
+  locale: MeetingInviteLocale = 'de'
+): Promise<void> {
+  const dateLabel = new Date(payload.scheduledDate).toLocaleDateString(locale);
+  const greeting = locale === 'de' ? `Hallo ${user.firstName || ''}`.trim() : `Hello ${user.firstName || ''}`.trim();
+  const subject =
+    locale === 'de'
+      ? `Absage: ${payload.eventTitle}`
+      : `Cancelled: ${payload.eventTitle}`;
+
+  const detailsLabel = locale === 'de' ? 'Sitzungsdetails' : 'Meeting details';
+  const locationLabel = locale === 'de' ? 'Ort' : 'Location';
+  const noteLabel = locale === 'de' ? 'Hinweis' : 'Note';
+  const timeText = payload.endTime ? `${payload.startTime} - ${payload.endTime}` : payload.startTime;
+  const intro =
+    locale === 'de'
+      ? `Die Sitzung "${payload.eventTitle}" (${payload.seriesName}) wurde abgesagt.`
+      : `The meeting "${payload.eventTitle}" (${payload.seriesName}) has been cancelled.`;
+
+  const htmlContent = `
+    <p><strong>${greeting},</strong></p>
+    <p>${intro}</p>
+    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 16px; background-color: #fff1f2; border: 1px solid #fecdd3; border-left: 4px solid #e11d48; border-radius: 4px;">
+      <tr>
+        <td style="padding: 16px;">
+          <p style="margin: 0 0 8px 0;"><strong>${detailsLabel}</strong></p>
+          <p style="margin: 0 0 6px 0;">${dateLabel}, ${timeText}</p>
+          ${payload.location ? `<p style="margin: 0 0 6px 0;"><strong>${locationLabel}:</strong> ${payload.location}</p>` : ''}
+          ${payload.note ? `<p style="margin: 0;"><strong>${noteLabel}:</strong> ${payload.note}</p>` : ''}
+        </td>
+      </tr>
+    </table>
+  `;
+
+  const fromEmail = await getFromEmail();
+  const mailOptions = {
+    from: fromEmail,
+    to: user.email,
+    subject,
+    text:
+      `${intro}\n\n` +
+      `${dateLabel}, ${timeText}\n` +
+      `${payload.location ? `${locationLabel}: ${payload.location}\n` : ''}` +
+      `${payload.note ? `${noteLabel}: ${payload.note}\n` : ''}`,
     html: await generateEmailHTML(htmlContent),
   };
 

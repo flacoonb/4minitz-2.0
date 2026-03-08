@@ -35,7 +35,69 @@
     "logout": "Logout",
     "login": "Login",
     "register": "Register",
-    "tasks": "Tasks"
+    "tasks": "Tasks",
+    "planning": "Planning"
+  },
+  "planning": {
+    "title": "Meeting Planning",
+    "subtitle": "Here you can see all meetings and who accepted or declined.",
+    "refresh": "Refresh",
+    "loadError": "Failed to load planning data",
+    "unknownSeries": "Unknown series",
+    "filterStatus": "Status",
+    "statusAll": "All",
+    "empty": "No planned meetings found.",
+    "openSeries": "Open series",
+    "openMinutes": "Open minutes",
+    "minuteEntryDefaultTitle": "Minutes",
+    "minuteFinalized": "Finalized",
+    "minuteDraft": "Draft",
+    "rsvp": "RSVP: {accepted} accepted, {tentative} tentative, {declined} declined, {pending} pending ({total} total)",
+    "rsvpBadges": {
+      "accepted": "accepted",
+      "tentative": "tentative",
+      "declined": "declined",
+      "pending": "pending",
+      "total": "total"
+    },
+    "calendar": {
+      "quickCreateTitle": "Monthly Calendar",
+      "quickCreateHint": "Click a date to start planning a meeting on that day.",
+      "createButton": "Plan new meeting",
+      "noPermission": "You do not have permission to create meetings."
+    },
+    "entryModal": {
+      "title": "Meeting details",
+      "typeEvent": "Meeting",
+      "typeMinute": "Minutes",
+      "location": "Location"
+    },
+    "create": {
+      "title": "Plan new meeting",
+      "series": "Meeting series",
+      "selectSeries": "Select meeting series",
+      "titleLabel": "Title",
+      "titlePlaceholder": "e.g. Board meeting",
+      "date": "Date",
+      "startTime": "Start time",
+      "endTime": "End time",
+      "location": "Location",
+      "locationPlaceholder": "e.g. Club room",
+      "note": "Note",
+      "notePlaceholder": "Optional note for the meeting",
+      "cancel": "Cancel",
+      "submit": "Create meeting",
+      "creating": "Creating...",
+      "validationError": "Please provide series, title, date and start time.",
+      "createError": "Could not create meeting."
+    },
+    "status": {
+      "draft": "Draft",
+      "invited": "Invited",
+      "confirmed": "Confirmed",
+      "cancelled": "Cancelled",
+      "completed": "Completed"
+    }
   },
   "home": {
     "title": "Welcome to 4Minitz 2.0",
@@ -1267,6 +1329,22 @@
       "emailNotificationsDesc": "Receive updates about meetings and minutes via email",
       "pushNotifications": "Push Notifications",
       "pushNotificationsDesc": "Receive instant notifications in the browser",
+      "calendar": {
+        "title": "Subscribe calendar (iCal)",
+        "description": "Subscribe to your planned meetings in an external calendar (Apple, Google, Outlook, etc.).",
+        "linkLabel": "Personal subscription link",
+        "noLinkYet": "No subscription link available yet.",
+        "copy": "Copy link",
+        "regenerate": "Regenerate link",
+        "revoke": "Revoke link",
+        "note": "Regenerating or revoking will invalidate the previous calendar link.",
+        "messages": {
+          "copied": "Calendar link copied to clipboard.",
+          "copyError": "Could not copy calendar link.",
+          "regenerated": "A new calendar link has been created.",
+          "revoked": "Calendar link has been revoked."
+        }
+      },
       "save": "Save Preferences",
       "saving": "Saving preferences..."
     },

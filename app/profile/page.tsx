@@ -18,7 +18,11 @@ import {
   EyeOff,
   AlertCircle,
   CheckCircle2,
-  Settings
+  Settings,
+  Copy,
+  RefreshCw,
+  Link2,
+  Unlink
 } from 'lucide-react';
 
 // Demo fallback removed; use cookie/JWT auth via credentials
@@ -106,6 +110,10 @@ const ProfilePage = () => {
       inApp: true
     }
   });
+  const [calendarSubscribeUrl, setCalendarSubscribeUrl] = useState('');
+  const [loadingCalendarLink, setLoadingCalendarLink] = useState(false);
+  const [regeneratingCalendarLink, setRegeneratingCalendarLink] = useState(false);
+  const [revokingCalendarLink, setRevokingCalendarLink] = useState(false);
 
   // Helper to reset profileData from user object
   const resetProfileData = useCallback((u: UserProfile) => {
@@ -358,6 +366,86 @@ const ProfilePage = () => {
     if (!saveResponse.ok) {
       const errorData = await saveResponse.json().catch(() => ({}));
       throw new Error(errorData?.error || t('messages.pushSubscribeError'));
+    }
+  }, [t]);
+
+  const loadCalendarSubscriptionLink = useCallback(async () => {
+    setLoadingCalendarLink(true);
+    try {
+      const response = await fetch('/api/users/me/calendar-subscription', {
+        credentials: 'include',
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(payload?.error || t('messages.loadError'));
+      }
+      const subscribeUrl = String(payload?.data?.subscribeUrl || '');
+      setCalendarSubscribeUrl(subscribeUrl);
+    } catch (err: any) {
+      setError(err?.message || t('messages.loadError'));
+    } finally {
+      setLoadingCalendarLink(false);
+    }
+  }, [t]);
+
+  useEffect(() => {
+    if (activeTab !== 'preferences') return;
+    if (calendarSubscribeUrl || loadingCalendarLink) return;
+    loadCalendarSubscriptionLink();
+  }, [activeTab, calendarSubscribeUrl, loadingCalendarLink, loadCalendarSubscriptionLink]);
+
+  const handleRegenerateCalendarLink = useCallback(async () => {
+    setRegeneratingCalendarLink(true);
+    setError('');
+    setSuccess('');
+    try {
+      const response = await fetch('/api/users/me/calendar-subscription', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(payload?.error || t('messages.updateError'));
+      }
+      const subscribeUrl = String(payload?.data?.subscribeUrl || '');
+      setCalendarSubscribeUrl(subscribeUrl);
+      setSuccess(t('preferencesTab.calendar.messages.regenerated'));
+    } catch (err: any) {
+      setError(err?.message || t('messages.updateError'));
+    } finally {
+      setRegeneratingCalendarLink(false);
+    }
+  }, [t]);
+
+  const handleCopyCalendarLink = useCallback(async () => {
+    if (!calendarSubscribeUrl) return;
+    try {
+      await navigator.clipboard.writeText(calendarSubscribeUrl);
+      setSuccess(t('preferencesTab.calendar.messages.copied'));
+    } catch {
+      setError(t('preferencesTab.calendar.messages.copyError'));
+    }
+  }, [calendarSubscribeUrl, t]);
+
+  const handleRevokeCalendarLink = useCallback(async () => {
+    setRevokingCalendarLink(true);
+    setError('');
+    setSuccess('');
+    try {
+      const response = await fetch('/api/users/me/calendar-subscription', {
+        method: 'DELETE',
+        credentials: 'include',
+      });
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(payload?.error || t('messages.updateError'));
+      }
+      setCalendarSubscribeUrl('');
+      setSuccess(t('preferencesTab.calendar.messages.revoked'));
+    } catch (err: any) {
+      setError(err?.message || t('messages.updateError'));
+    } finally {
+      setRevokingCalendarLink(false);
     }
   }, [t]);
 
@@ -895,6 +983,77 @@ const ProfilePage = () => {
                             <p className="text-xs text-slate-500 dark:text-slate-400">{t('preferencesTab.pushNotificationsDesc')}</p>
                           </div>
                         </label>
+                      </div>
+
+                      <div className="border border-slate-200 dark:border-slate-700 rounded-xl p-4 sm:p-5 space-y-4">
+                        <div className="flex items-start gap-3">
+                          <div className="p-2 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-300">
+                            <Link2 className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <h4 className="text-md font-semibold text-slate-800 dark:text-slate-200">
+                              {t('preferencesTab.calendar.title')}
+                            </h4>
+                            <p className="text-sm text-slate-600 dark:text-slate-400">
+                              {t('preferencesTab.calendar.description')}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="space-y-2">
+                          <label className="block text-xs uppercase tracking-wide text-slate-500 dark:text-slate-400">
+                            {t('preferencesTab.calendar.linkLabel')}
+                          </label>
+                          <input
+                            type="text"
+                            readOnly
+                            value={calendarSubscribeUrl}
+                            placeholder={loadingCalendarLink ? t('loading') : t('preferencesTab.calendar.noLinkYet')}
+                            className="w-full px-3 py-2.5 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 text-slate-700 dark:text-slate-200 rounded-lg"
+                          />
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row gap-2">
+                          <button
+                            type="button"
+                            onClick={handleCopyCalendarLink}
+                            disabled={!calendarSubscribeUrl}
+                            className="px-4 py-2 min-h-11 rounded-lg border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50 inline-flex items-center justify-center gap-2"
+                          >
+                            <Copy className="w-4 h-4" />
+                            {t('preferencesTab.calendar.copy')}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleRegenerateCalendarLink}
+                            disabled={regeneratingCalendarLink}
+                            className="px-4 py-2 min-h-11 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:from-indigo-600 hover:to-purple-700 disabled:opacity-50 inline-flex items-center justify-center gap-2"
+                          >
+                            {regeneratingCalendarLink ? (
+                              <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                            ) : (
+                              <RefreshCw className="w-4 h-4" />
+                            )}
+                            {t('preferencesTab.calendar.regenerate')}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleRevokeCalendarLink}
+                            disabled={revokingCalendarLink || !calendarSubscribeUrl}
+                            className="px-4 py-2 min-h-11 rounded-lg border border-red-200 dark:border-red-800 text-red-600 dark:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 disabled:opacity-50 inline-flex items-center justify-center gap-2"
+                          >
+                            {revokingCalendarLink ? (
+                              <div className="w-4 h-4 border-2 border-red-300/40 border-t-red-500 rounded-full animate-spin"></div>
+                            ) : (
+                              <Unlink className="w-4 h-4" />
+                            )}
+                            {t('preferencesTab.calendar.revoke')}
+                          </button>
+                        </div>
+
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                          {t('preferencesTab.calendar.note')}
+                        </p>
                       </div>
                     </div>
                   </div>
