@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
 import Settings from '@/models/Settings';
-import jwt from 'jsonwebtoken';
+import { generateToken } from '@/lib/auth';
 import { logAction } from '@/lib/audit';
 import { checkRateLimit } from '@/lib/rate-limit';
+import { loginSchema, validateBody } from '@/lib/validations';
 import { getTranslations } from 'next-intl/server';
 
 // POST - Login user
@@ -24,21 +25,21 @@ export async function POST(request: NextRequest) {
     await connectDB();
 
     const body = await request.json();
-    const { username, password } = body;
-
-    // Validation
-    if (!username || !password) {
+    const validation = validateBody(loginSchema, body);
+    if (!validation.success) {
       return NextResponse.json(
         { error: t('missingCredentials') },
         { status: 400 }
       );
     }
+    const { username, password } = validation.data;
 
-    // Find user by email or username
+    // Find user by email or username (case-insensitive)
+    const escapedUsername = username.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const user = await User.findOne({
       $or: [
         { email: username.toLowerCase() },
-        { username: username }
+        { username: { $regex: new RegExp(`^${escapedUsername}$`, 'i') } }
       ]
     });
 
@@ -51,14 +52,16 @@ export async function POST(request: NextRequest) {
 
     // Check if user is active
     if (!user.isActive) {
+      // Use explicit pendingApproval flag (fallback: user never logged in and has no lastLogin)
+      const isPendingApproval = user.pendingApproval === true || (!user.pendingApproval && !user.lastLogin);
       return NextResponse.json(
-        { error: t('accountDeactivated') },
+        { error: isPendingApproval ? t('accountPendingApproval') : t('accountDeactivated') },
         { status: 403 }
       );
     }
 
     // Check if email verification is required
-    const settings = await Settings.findOne({}).sort({ version: -1 });
+    const settings = await Settings.findOne({}).sort({ updatedAt: -1 });
     const requireEmailVerification = settings?.memberSettings?.requireEmailVerification ?? true;
 
     if (requireEmailVerification && !user.isEmailVerified && user.role !== 'admin') {
@@ -93,22 +96,14 @@ export async function POST(request: NextRequest) {
     });
 
     // Get session timeout from settings
-    // settings already fetched above
-    const sessionTimeoutMinutes = settings?.systemSettings?.sessionTimeout || 480; // Default 8 hours
+    const autoLogoutEnabled = settings?.systemSettings?.autoLogout?.enabled ?? true;
+    const sessionTimeoutMinutes = autoLogoutEnabled
+      ? (settings?.systemSettings?.autoLogout?.minutes || 480)
+      : 43200; // 30 days if auto-logout disabled
     const sessionTimeoutSeconds = sessionTimeoutMinutes * 60;
-    const sessionTimeoutMs = sessionTimeoutSeconds * 1000;
 
-    // Generate JWT token
-    const token = jwt.sign(
-      {
-        userId: user._id,
-        email: user.email,
-        username: user.username,
-        role: user.role
-      },
-      process.env.JWT_SECRET || 'fallback-secret',
-      { expiresIn: sessionTimeoutSeconds }
-    );
+    // Generate JWT token with settings-based expiry
+    const token = generateToken(user, sessionTimeoutSeconds);
 
     // Create response with user data
     const userResponse = user.toJSON();
@@ -118,13 +113,12 @@ export async function POST(request: NextRequest) {
       success: true,
       message: t('loginSuccess'),
       user: userResponse,
-      token
     });
 
     // Determine if we should use secure cookies
     // In production, we usually want secure cookies, unless we are explicitly running on HTTP (e.g. local network)
     const isProduction = process.env.NODE_ENV === 'production';
-    const isHttp = process.env.NEXTAUTH_URL?.startsWith('http://');
+    const isHttp = process.env.APP_URL?.startsWith('http://');
     const useSecureCookies = isProduction && !isHttp && process.env.DISABLE_SECURE_COOKIES !== 'true';
 
     // Set secure cookie
@@ -133,8 +127,8 @@ export async function POST(request: NextRequest) {
       value: token,
       httpOnly: true,
       secure: useSecureCookies,
-      sameSite: 'lax', // Changed from strict to lax to be more forgiving
-      maxAge: sessionTimeoutMs
+      sameSite: 'strict',
+      maxAge: sessionTimeoutSeconds
     });
 
     // Set locale cookie if user has a preference
@@ -152,8 +146,7 @@ export async function POST(request: NextRequest) {
 
     return response;
 
-  } catch (error: any) {
-    console.error('Error logging in user:', error);
+  } catch (_error) {
     return NextResponse.json(
       { error: t('loginError') },
       { status: 500 }

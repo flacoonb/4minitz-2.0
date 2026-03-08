@@ -1,11 +1,11 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # 4Minitz 2.0 Service Uninstallation Script
 # This script removes the 4Minitz 2.0 systemd service
 
-set -e
+set -euo pipefail
 
-APP_NAME="4minitz-2.0"
+APP_NAMES=("4minitz" "4minitz-2.0")
 SYSTEMD_DIR="/etc/systemd/system"
 
 echo "🛑 Uninstalling 4Minitz 2.0 systemd service..."
@@ -17,17 +17,19 @@ if [[ $EUID -ne 0 ]]; then
    exit 1
 fi
 
-# Stop the service if running
-echo "⏹️  Stopping service..."
-systemctl stop ${APP_NAME}.service 2>/dev/null || true
+for APP_NAME in "${APP_NAMES[@]}"; do
+  # Stop the service if running
+  echo "⏹️  Stopping service ${APP_NAME}.service..."
+  systemctl stop "${APP_NAME}.service" 2>/dev/null || true
 
-# Disable the service
-echo "❌ Disabling service..."
-systemctl disable ${APP_NAME}.service 2>/dev/null || true
+  # Disable the service
+  echo "❌ Disabling service ${APP_NAME}.service..."
+  systemctl disable "${APP_NAME}.service" 2>/dev/null || true
 
-# Remove service file
-echo "🗑️  Removing service file..."
-rm -f "$SYSTEMD_DIR/${APP_NAME}.service"
+  # Remove service file
+  echo "🗑️  Removing service file ${APP_NAME}.service..."
+  rm -f "$SYSTEMD_DIR/${APP_NAME}.service"
+done
 
 # Reload systemd daemon
 echo "🔄 Reloading systemd daemon..."

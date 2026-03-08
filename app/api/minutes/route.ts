@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/mongodb';
 import Minutes from '@/models/Minutes';
 import MeetingSeries from '@/models/MeetingSeries';
-import Settings from '@/models/Settings';
 import { sendNewMinutesNotification } from '@/lib/email-service';
 import mongoose from 'mongoose';
 import { verifyToken } from '@/lib/auth';
+import { requirePermission, hasPermission } from '@/lib/permissions';
 
 /**
  * GET /api/minutes
@@ -18,8 +18,8 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const meetingSeriesId = searchParams.get('meetingSeriesId');
     const isFinalized = searchParams.get('isFinalized');
-    const limit = parseInt(searchParams.get('limit') || '50');
-    const page = parseInt(searchParams.get('page') || '1');
+    const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '50') || 50, 1), 200);
+    const page = Math.max(parseInt(searchParams.get('page') || '1') || 1, 1);
 
     // Determine requesting user (if any) using verifyToken. If unauthenticated
     // allow only public minutes (visibleFor empty). If authenticated, use
@@ -27,33 +27,24 @@ export async function GET(request: NextRequest) {
     const authResult = await verifyToken(request);
     let username: string | null = null;
     let userId: string | null = null;
-    let userRole: string | null = null;
 
     if (authResult.success && authResult.user) {
       username = authResult.user.username;
       userId = authResult.user._id.toString();
-      userRole = authResult.user.role;
     }
 
-    // Check permissions via Settings
-    const settings = await Settings.findOne({}).sort({ version: -1 });
-    let canViewAll = false;
-
-    if (settings && settings.roles && userRole && (settings.roles as any)[userRole]) {
-      const rolePermissions = (settings.roles as any)[userRole];
-      // Use specific permission if available, otherwise fallback to admin check
-      if (rolePermissions.canViewAllMinutes !== undefined) {
-        canViewAll = rolePermissions.canViewAllMinutes;
-      } else {
-        // Default: Admin gets access, others don't (strict separation from canViewAllMeetings)
-        canViewAll = (userRole === 'admin');
-      }
-    }
+    // Check permissions via centralized permission system
+    const canViewAll = authResult.user
+      ? await hasPermission(authResult.user, 'canViewAllMinutes')
+      : false;
 
     // Build the query with proper filters
-    const query: any = {};
+    const query: Record<string, unknown> = {};
 
     if (meetingSeriesId) {
+      if (!mongoose.isValidObjectId(meetingSeriesId)) {
+        return NextResponse.json({ error: 'Invalid meetingSeriesId' }, { status: 400 });
+      }
       query.meetingSeries_id = new mongoose.Types.ObjectId(meetingSeriesId);
     }
 
@@ -160,10 +151,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check role - only admin and moderator can create minutes
-    if (authResult.user.role === 'user') {
+    // Check permission - only users with canCreateMeetings can create minutes
+    const permResult = await requirePermission(authResult.user, 'canCreateMeetings');
+    if (!permResult.success) {
       return NextResponse.json(
-        { error: 'Forbidden: Nur Administratoren und Moderatoren dürfen Protokolle erstellen' },
+        { error: 'Nur Benutzer mit Protokoll-Erstell-Berechtigung dürfen Protokolle erstellen' },
         { status: 403 }
       );
     }
@@ -190,7 +182,7 @@ export async function POST(request: NextRequest) {
           subject: entry.subject,
           details: entry.content,
           itemType: 'infoItem',
-          isComplete: entry.isCompleted || false
+          status: entry.isCompleted ? 'completed' : 'open'
         })) : []
       }));
     }
@@ -216,13 +208,17 @@ export async function POST(request: NextRequest) {
       const isParticipant = meetingSeries.participants.includes(username);
 
       if (!isModerator && !isParticipant) {
-        console.log('Auth failed:', { username, role: userRole, moderators: meetingSeries.moderators, participants: meetingSeries.participants });
         return NextResponse.json(
           { error: 'Forbidden: You must be a moderator or participant of this meeting series' },
           { status: 403 }
         );
       }
     }
+
+    // Derive visibility from meeting series members
+    const visibleFor = [
+      ...new Set([...meetingSeries.moderators, ...meetingSeries.participants])
+    ];
 
     // Create new minute
     const minute = await Minutes.create({
@@ -233,6 +229,7 @@ export async function POST(request: NextRequest) {
       globalNote: globalNote || '',
       isFinalized: false,
       createdBy: userId,
+      visibleFor,
     });
 
     // Populate meetingSeries for email

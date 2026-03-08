@@ -4,6 +4,7 @@ export interface UserPermissions {
   canCreateMeetings: boolean;
   canModerateAllMeetings: boolean;
   canViewAllMeetings: boolean;
+  canViewAllMinutes: boolean;
   canEditAllMinutes: boolean;
   canDeleteMinutes: boolean;
   canManageUsers: boolean;
@@ -13,7 +14,7 @@ export interface UserPermissions {
 }
 
 export interface User {
-  _id: string;
+  _id: string | { toString(): string };
   role: 'admin' | 'moderator' | 'user';
   [key: string]: any;
 }
@@ -43,7 +44,7 @@ export async function hasPermission(
 ): Promise<boolean> {
   try {
     // Get current system settings
-    const settings = await Settings.findOne({}).sort({ version: -1 });
+    const settings = await Settings.findOne({}).sort({ updatedAt: -1 });
     
     if (!settings) {
       // Fall back to default permissions if no settings exist
@@ -64,7 +65,7 @@ export async function hasPermission(
  */
 export async function getUserPermissions(user: User): Promise<UserPermissions> {
   try {
-    const settings = await Settings.findOne({}).sort({ version: -1 });
+    const settings = await Settings.findOne({}).sort({ updatedAt: -1 });
     
     if (!settings) {
       return getDefaultPermissions(user.role);
@@ -81,12 +82,13 @@ export async function getUserPermissions(user: User): Promise<UserPermissions> {
 /**
  * Default permissions when no settings are available
  */
-function getDefaultPermissions(role: string): UserPermissions {
+export function getDefaultPermissions(role: string): UserPermissions {
   const defaults = {
     admin: {
       canCreateMeetings: true,
       canModerateAllMeetings: true,
       canViewAllMeetings: true,
+      canViewAllMinutes: true,
       canEditAllMinutes: true,
       canDeleteMinutes: true,
       canManageUsers: true,
@@ -98,6 +100,7 @@ function getDefaultPermissions(role: string): UserPermissions {
       canCreateMeetings: true,
       canModerateAllMeetings: false,
       canViewAllMeetings: true,
+      canViewAllMinutes: false,
       canEditAllMinutes: false,
       canDeleteMinutes: false,
       canManageUsers: false,
@@ -109,6 +112,7 @@ function getDefaultPermissions(role: string): UserPermissions {
       canCreateMeetings: false,
       canModerateAllMeetings: false,
       canViewAllMeetings: false,
+      canViewAllMinutes: false,
       canEditAllMinutes: false,
       canDeleteMinutes: false,
       canManageUsers: false,
@@ -122,59 +126,22 @@ function getDefaultPermissions(role: string): UserPermissions {
 }
 
 /**
- * Check if user can access a specific route
- */
-export async function canAccessRoute(user: User | null, route: string): Promise<boolean> {
-  if (!user) {
-    // Public routes that don't require authentication
-    const publicRoutes = ['/', '/auth/login', '/auth/register'];
-    return publicRoutes.includes(route) || route.startsWith('/public');
-  }
-
-  // Define route permissions
-  const routePermissions: Record<string, keyof UserPermissions | 'admin' | 'moderator' | null> = {
-    '/admin/users': 'admin',
-    '/admin/settings': 'admin',
-    '/admin': 'admin',
-    '/profile': null, // All authenticated users
-    '/meeting-series': 'canViewAllMeetings',
-    '/minutes': 'canViewAllMeetings',
-    '/dashboard': null, // All authenticated users
-  };
-
-  // Check specific route permission
-  for (const [routePath, permission] of Object.entries(routePermissions)) {
-    if (route.startsWith(routePath)) {
-      if (permission === null) {
-        return true; // All authenticated users can access
-      }
-      
-      if (permission === 'admin' || permission === 'moderator') {
-        return hasRole(user, permission);
-      }
-      
-      return await hasPermission(user, permission as keyof UserPermissions);
-    }
-  }
-
-  // Default to allowing access if no specific rule is found
-  return true;
-}
-
-/**
  * Middleware helper for API route protection
  */
 export async function requirePermission(
-  user: User, 
-  permission: keyof UserPermissions
+  user: { role: string; [key: string]: any },
+  permission: keyof UserPermissions | string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const hasAccess = await hasPermission(user, permission);
-    
+    const hasAccess = await hasPermission(
+      user as User,
+      permission as keyof UserPermissions
+    );
+
     if (!hasAccess) {
       return {
         success: false,
-        error: 'Insufficient permissions for this action'
+        error: `Fehlende Berechtigung: ${permission}`
       };
     }
 
@@ -183,24 +150,8 @@ export async function requirePermission(
     console.error('Permission check error:', error);
     return {
       success: false,
-      error: 'Error checking permissions'
+      error: 'Fehler bei der Berechtigungsprüfung'
     };
-  }
-}
-
-/**
- * Check multiple permissions at once
- */
-export async function hasAnyPermission(
-  user: User, 
-  permissions: (keyof UserPermissions)[]
-): Promise<boolean> {
-  try {
-    const userPermissions = await getUserPermissions(user);
-    return permissions.some(permission => userPermissions[permission]);
-  } catch (error) {
-    console.error('Error checking multiple permissions:', error);
-    return false;
   }
 }
 
@@ -221,43 +172,12 @@ export function canModifyResource(
   return hasRole(user, requiredRole);
 }
 
-/**
- * Filter items based on user permissions
- */
-export async function filterByPermissions<T extends { createdBy?: string; moderators?: string[] }>(
-  user: User,
-  items: T[],
-  permission: keyof UserPermissions
-): Promise<T[]> {
-  const hasGlobalPermission = await hasPermission(user, permission);
-  
-  if (hasGlobalPermission) {
-    return items; // User can see all items
-  }
-
-  // Filter to only items the user owns or moderates
-  return items.filter(item => {
-    if (item.createdBy && item.createdBy === user._id.toString()) {
-      return true; // User created this item
-    }
-    
-    if (item.moderators && item.moderators.includes(user._id.toString())) {
-      return true; // User is a moderator of this item
-    }
-    
-    return false;
-  });
-}
-
 const permissions = {
   hasRole,
   hasPermission,
   getUserPermissions,
-  canAccessRoute,
   requirePermission,
-  hasAnyPermission,
   canModifyResource,
-  filterByPermissions
 };
 
 export default permissions;

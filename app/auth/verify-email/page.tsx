@@ -3,8 +3,10 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import { useTranslations } from 'next-intl';
 
 export default function VerifyEmailPage() {
+    const t = useTranslations('auth.verifyEmail');
     const router = useRouter();
     const searchParams = useSearchParams();
     const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
@@ -16,7 +18,7 @@ export default function VerifyEmailPage() {
         if (!token) {
             // eslint-disable-next-line react-hooks/set-state-in-effect
             setStatus('error');
-            setMessage('Kein Bestätigungstoken gefunden');
+            setMessage(t('missingToken'));
             return;
         }
 
@@ -35,13 +37,14 @@ export default function VerifyEmailPage() {
                     }, 3000);
                 } else {
                     setStatus('error');
-                    setMessage(data.error || 'Fehler bei der E-Mail-Bestätigung');
+                    setMessage(data.error || t('errorText'));
                 }
             })
             .catch(_err => {
                 setStatus('error');
-                setMessage('Netzwerkfehler bei der E-Mail-Bestätigung');
+                setMessage(t('errorText'));
             });
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [searchParams, router]);
 
     return (
@@ -51,8 +54,7 @@ export default function VerifyEmailPage() {
                     {status === 'loading' && (
                         <>
                             <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-indigo-600 mx-auto mb-4"></div>
-                            <h1 className="text-2xl font-bold text-gray-900 mb-2">E-Mail wird bestätigt...</h1>
-                            <p className="text-gray-600">Bitte warten Sie einen Moment.</p>
+                            <h1 className="text-2xl font-bold text-gray-900 mb-2">{t('verifying')}</h1>
                         </>
                     )}
 
@@ -63,9 +65,9 @@ export default function VerifyEmailPage() {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                                 </svg>
                             </div>
-                            <h1 className="text-2xl font-bold text-gray-900 mb-2">E-Mail bestätigt!</h1>
+                            <h1 className="text-2xl font-bold text-gray-900 mb-2">{t('successTitle')}</h1>
                             <p className="text-gray-600 mb-4">{message}</p>
-                            <p className="text-sm text-gray-500">Sie werden in Kürze zur Anmeldeseite weitergeleitet...</p>
+                            <p className="text-sm text-gray-500">{t('successText')}</p>
                         </>
                     )}
 
@@ -76,13 +78,13 @@ export default function VerifyEmailPage() {
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
                                 </svg>
                             </div>
-                            <h1 className="text-2xl font-bold text-gray-900 mb-2">Fehler</h1>
+                            <h1 className="text-2xl font-bold text-gray-900 mb-2">{t('errorTitle')}</h1>
                             <p className="text-gray-600 mb-6">{message}</p>
                             <Link
                                 href="/auth/login"
                                 className="inline-block px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
                             >
-                                Zur Anmeldung
+                                {t('loginButton')}
                             </Link>
                         </>
                     )}

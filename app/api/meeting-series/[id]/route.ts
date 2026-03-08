@@ -6,8 +6,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import MeetingSeries from '@/models/MeetingSeries';
 import Minutes from '@/models/Minutes';
-import Settings from '@/models/Settings';
+import Task from '@/models/Task';
+import Attachment from '@/models/Attachment';
 import { verifyToken } from '@/lib/auth';
+import { hasPermission } from '@/lib/permissions';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -46,16 +48,9 @@ export async function GET(
     const participants = series.participants || [];
 
     // Check global permission
-    const settings = await Settings.findOne({}).sort({ version: -1 });
-    let canViewAll = false;
-    if (authResult.user) {
-      const userRole = authResult.user.role;
-      if (settings && settings.roles && (settings.roles as any)[userRole]) {
-        canViewAll = (settings.roles as any)[userRole].canViewAllMeetings;
-      } else if (userRole === 'admin') {
-        canViewAll = true;
-      }
-    }
+    const canViewAll = authResult.user
+      ? await hasPermission(authResult.user, 'canViewAllMeetings')
+      : false;
 
     if (!username) {
       return NextResponse.json(
@@ -120,10 +115,6 @@ export async function PUT(
 
     const username = authResult.user.username;
 
-    console.log('========= PUT REQUEST START ========='); // Unique marker
-    console.log('PUT request body:', JSON.stringify(body, null, 2)); // Debug log
-    console.log('Members in body:', body.members); // Debug log
-
     // Check if user is moderator (moderators contains usernames)
     const series = await MeetingSeries.findById(id);
 
@@ -135,13 +126,7 @@ export async function PUT(
     }
 
     // Check permissions
-    const settings = await Settings.findOne({}).sort({ version: -1 });
-    let canModerateAll = false;
-    if (settings && settings.roles && settings.roles[authResult.user.role]) {
-      canModerateAll = settings.roles[authResult.user.role].canModerateAllMeetings;
-    } else if (authResult.user.role === 'admin') {
-      canModerateAll = true;
-    }
+    const canModerateAll = await hasPermission(authResult.user, 'canModerateAllMeetings');
 
     if (!series.moderators.includes(username) && !canModerateAll) {
       return NextResponse.json(
@@ -149,8 +134,6 @@ export async function PUT(
         { status: 403 }
       );
     }
-
-    console.log('Current members before update:', series.members); // Debug log
 
     // Update allowed fields
     const allowedUpdates = [
@@ -168,8 +151,6 @@ export async function PUT(
       }
     });
 
-    console.log('Members after assignment:', series.members); // Debug log
-
     // Detect new members
     const oldMembers = series.members || [];
     const newMembers = body.members || [];
@@ -177,25 +158,15 @@ export async function PUT(
       !oldMembers.some((oldMember: any) => oldMember.userId === member.userId)
     );
 
-    console.log('Added members:', addedMembers); // Debug log
-
     await series.save();
-
-    console.log('Members after save:', series.members); // Debug log
 
     // If members were added, update all draft minutes
     if (addedMembers.length > 0) {
-      console.log(`Adding ${addedMembers.length} new members to draft minutes...`);
-
-      // Find all draft minutes for this series
       const draftMinutes = await Minutes.find({
         meetingSeries_id: id,
         isFinalized: false
       });
 
-      console.log(`Found ${draftMinutes.length} draft minutes to update`);
-
-      // Update each draft minute
       for (const minute of draftMinutes) {
         const existingParticipants = minute.participantsWithStatus || [];
 
@@ -215,11 +186,7 @@ export async function PUT(
 
         minute.participantsWithStatus = updatedParticipants;
         await minute.save();
-
-        console.log(`Updated minute ${minute._id} with new participants`);
       }
-
-      console.log('Finished updating draft minutes');
     }
 
     return NextResponse.json({
@@ -272,12 +239,21 @@ export async function DELETE(
       );
     }
 
-    // Check if user is a moderator (moderators contains usernames, not IDs)
-    if (!series.moderators.includes(username)) {
+    // Check if user is a moderator of this series or has global moderator permission
+    const canModerateAll = await hasPermission(authResult.user, 'canModerateAllMeetings');
+    if (!series.moderators.includes(username) && !canModerateAll) {
       return NextResponse.json(
         { success: false, error: 'Not authorized to delete this series' },
         { status: 403 }
       );
+    }
+
+    // Cascade delete: remove associated minutes, tasks, and attachments
+    const minuteIds = await Minutes.find({ meetingSeries_id: id }).distinct('_id');
+    if (minuteIds.length > 0) {
+      await Attachment.deleteMany({ minuteId: { $in: minuteIds } });
+      await Task.deleteMany({ meetingSeriesId: id });
+      await Minutes.deleteMany({ meetingSeries_id: id });
     }
 
     // Delete the series
@@ -287,8 +263,7 @@ export async function DELETE(
       success: true,
       message: 'Meeting series deleted successfully',
     });
-  } catch (error) {
-    console.error('Error deleting meeting series:', error);
+  } catch {
     return NextResponse.json(
       {
         success: false,

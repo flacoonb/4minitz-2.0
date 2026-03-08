@@ -27,10 +27,10 @@ export interface IInfoItem {
   _id?: string;
   subject: string;
   details?: string; // Detailed description from protocol
-  isOpen: boolean;
+  isOpen?: boolean; // Legacy field, use status instead
   itemType: 'actionItem' | 'infoItem';
   priority?: 'high' | 'medium' | 'low';
-  duedate?: Date;
+  dueDate?: Date;
   responsibles: string[];
   labels?: string[];
   // Extended fields for task management
@@ -53,6 +53,7 @@ export interface IMinutes extends Document {
   meetingSeries_id: mongoose.Types.ObjectId;
   date: Date;
   time?: string;
+  endTime?: string;
   location?: string;
   title?: string; // Protocol title for better overview
   createdAt: Date;
@@ -110,7 +111,7 @@ const InfoItemSchema = new Schema<IInfoItem>({
     enum: ['high', 'medium', 'low'],
     default: 'medium',
   },
-  duedate: {
+  dueDate: {
     type: Date,
   },
   responsibles: [{
@@ -219,6 +220,10 @@ const MinutesSchema = new Schema<IMinutes>(
       type: String,
       trim: true,
     },
+    endTime: {
+      type: String,
+      trim: true,
+    },
     location: {
       type: String,
       trim: true,
@@ -306,7 +311,7 @@ MinutesSchema.index({ createdAt: -1 });
 MinutesSchema.virtual('openActionItemsCount').get(function () {
   return this.topics.reduce((count, topic) => {
     return count + (topic.infoItems?.filter(item =>
-      item.itemType === 'actionItem' && item.isOpen
+      item.itemType === 'actionItem' && item.status !== 'completed' && item.status !== 'cancelled'
     ).length || 0);
   }, 0);
 });
