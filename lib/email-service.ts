@@ -4,6 +4,7 @@ import { IMeetingSeries } from '@/models/MeetingSeries';
 import Settings from '@/models/Settings';
 import PendingNotification from '@/models/PendingNotification';
 import { decrypt } from '@/lib/crypto';
+import { sendPushToUserIds } from '@/lib/push-service';
 import {
   isEmailIdentifier,
   lookupUsersByIdentifiers,
@@ -285,10 +286,15 @@ export async function sendNewMinutesNotification(
   
   const directRecipients: string[] = [];
   const digestPromises: Promise<any>[] = [];
+  const pushUserIds = new Set<string>();
   const handledEmails = new Set<string>();
 
   for (const identifier of recipientIdentifiers) {
     const user = userMap.get(normalizeIdentifier(identifier)) as any;
+    if (user?._id && user?.preferences?.notifications?.inApp !== false) {
+      pushUserIds.add(String(user._id));
+    }
+
     const targetEmail = (user?.email || (isEmailIdentifier(identifier) ? identifier : '')).trim().toLowerCase();
     if (!targetEmail || handledEmails.has(targetEmail)) continue;
     handledEmails.add(targetEmail);
@@ -318,18 +324,31 @@ export async function sendNewMinutesNotification(
 
   }
 
-  if (directRecipients.length === 0) {
-    return;
-  }
-
   const seriesName = minute.meetingSeries.name ? `${minute.meetingSeries.project} – ${minute.meetingSeries.name}` : minute.meetingSeries.project;
   const date = new Date(minute.date).toLocaleDateString(locale);
   const appUrl = await getAppUrl();
   const minuteUrl = `${appUrl}/minutes/${minute._id}`;
+  const minutePath = `/minutes/${minute._id}`;
 
   const actionItemsCount = minute.topics?.reduce((count: number, topic: ITopic) => {
     return count + (topic.infoItems?.filter((item: IInfoItem) => item.itemType === 'actionItem' && item.status !== 'completed' && item.status !== 'cancelled').length || 0);
   }, 0) || 0;
+
+  if (pushUserIds.size > 0) {
+    await sendPushToUserIds(Array.from(pushUserIds), {
+      title: locale === 'de' ? 'Neues Protokoll' : 'New Minutes',
+      body: locale === 'de'
+        ? `${seriesName} (${date})`
+        : `${seriesName} (${date})`,
+      url: minutePath,
+      tag: `minute-${minute._id}`,
+      lang: locale,
+    });
+  }
+
+  if (directRecipients.length === 0) {
+    return;
+  }
 
   const htmlContent = `
     <p><strong>${t.greeting},</strong></p>
@@ -401,10 +420,15 @@ export async function sendActionItemAssignedNotification(
   
   const directRecipients: string[] = [];
   const digestPromises: Promise<any>[] = [];
+  const pushUserIds = new Set<string>();
   const handledEmails = new Set<string>();
 
   for (const identifier of responsibleIdentifiers) {
     const user = userMap.get(normalizeIdentifier(identifier)) as any;
+    if (user?._id && user?.preferences?.notifications?.inApp !== false) {
+      pushUserIds.add(String(user._id));
+    }
+
     const targetEmail = (user?.email || (isEmailIdentifier(identifier) ? identifier : '')).trim().toLowerCase();
     if (!targetEmail || handledEmails.has(targetEmail)) continue;
     handledEmails.add(targetEmail);
@@ -433,13 +457,10 @@ export async function sendActionItemAssignedNotification(
     await Promise.all(digestPromises);
   }
 
-  if (directRecipients.length === 0) {
-    return;
-  }
-
   const seriesName = minute.meetingSeries.name ? `${minute.meetingSeries.project} – ${minute.meetingSeries.name}` : minute.meetingSeries.project;
   const appUrl = await getAppUrl();
   const minuteUrl = `${appUrl}/minutes/${minute._id}`;
+  const minutePath = `/minutes/${minute._id}`;
   const priorityColors = {
     high: '#ef4444',
     medium: '#f59e0b',
@@ -452,6 +473,20 @@ export async function sendActionItemAssignedNotification(
   };
   const pColor = priorityColors[actionItem.priority as keyof typeof priorityColors] || priorityColors.medium;
   const pBg = priorityBg[actionItem.priority as keyof typeof priorityBg] || priorityBg.medium;
+
+  if (pushUserIds.size > 0) {
+    await sendPushToUserIds(Array.from(pushUserIds), {
+      title: locale === 'de' ? 'Neuer Aktionspunkt' : 'New Action Item',
+      body: actionItem.subject || seriesName,
+      url: minutePath,
+      tag: `action-item-${minute._id}`,
+      lang: locale,
+    });
+  }
+
+  if (directRecipients.length === 0) {
+    return;
+  }
 
   const htmlContent = `
     <p><strong>${t.greeting},</strong></p>
@@ -756,6 +791,91 @@ export async function sendPasswordResetEmail(
     to: user.email,
     subject: t.subject,
     text: `${t.intro}\n\n${t.resetButton}: ${resetUrl}\n\n${t.expiryNote}`,
+    html: await generateEmailHTML(htmlContent),
+  };
+
+  const transport = await getTransporter();
+  await transport.sendMail(mailOptions);
+}
+
+type MeetingInviteLocale = 'de' | 'en';
+type MeetingInviteUser = { email: string; firstName?: string; lastName?: string };
+type MeetingInvitePayload = {
+  eventTitle: string;
+  seriesName: string;
+  scheduledDate: Date;
+  startTime: string;
+  endTime?: string;
+  location?: string;
+  note?: string;
+  acceptUrl: string;
+  tentativeUrl: string;
+  declineUrl: string;
+};
+
+export async function sendMeetingInvitationEmail(
+  user: MeetingInviteUser,
+  payload: MeetingInvitePayload,
+  locale: MeetingInviteLocale = 'de'
+): Promise<void> {
+  const dateLabel = new Date(payload.scheduledDate).toLocaleDateString(locale);
+  const greeting = locale === 'de' ? `Hallo ${user.firstName || ''}`.trim() : `Hello ${user.firstName || ''}`.trim();
+  const subject =
+    locale === 'de'
+      ? `Einladung: ${payload.eventTitle}`
+      : `Invitation: ${payload.eventTitle}`;
+
+  const detailsLabel = locale === 'de' ? 'Sitzungsdetails' : 'Meeting details';
+  const locationLabel = locale === 'de' ? 'Ort' : 'Location';
+  const noteLabel = locale === 'de' ? 'Hinweis' : 'Note';
+  const timeText = payload.endTime ? `${payload.startTime} - ${payload.endTime}` : payload.startTime;
+  const intro =
+    locale === 'de'
+      ? `Sie wurden zur Sitzung "${payload.eventTitle}" (${payload.seriesName}) eingeladen.`
+      : `You have been invited to "${payload.eventTitle}" (${payload.seriesName}).`;
+
+  const ctaAccept = locale === 'de' ? 'Zusage' : 'Accept';
+  const ctaTentative = locale === 'de' ? 'Mit Vorbehalt' : 'Tentative';
+  const ctaDecline = locale === 'de' ? 'Absage' : 'Decline';
+  const footerHint =
+    locale === 'de'
+      ? 'Sie können Ihre Antwort später erneut über denselben Link ändern, solange der Link gültig ist.'
+      : 'You can update your response later using the same link while it remains valid.';
+
+  const htmlContent = `
+    <p><strong>${greeting},</strong></p>
+    <p>${intro}</p>
+    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 16px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #3b82f6; border-radius: 4px;">
+      <tr>
+        <td style="padding: 16px;">
+          <p style="margin: 0 0 8px 0;"><strong>${detailsLabel}</strong></p>
+          <p style="margin: 0 0 6px 0;">${dateLabel}, ${timeText}</p>
+          ${payload.location ? `<p style="margin: 0 0 6px 0;"><strong>${locationLabel}:</strong> ${payload.location}</p>` : ''}
+          ${payload.note ? `<p style="margin: 0;"><strong>${noteLabel}:</strong> ${payload.note}</p>` : ''}
+        </td>
+      </tr>
+    </table>
+
+    <center>
+      <a href="${payload.acceptUrl}" style="display: inline-block; background: #16a34a; color: white; padding: 12px 20px; text-decoration: none; border-radius: 8px; font-weight: 600; margin: 6px;">${ctaAccept}</a>
+      <a href="${payload.tentativeUrl}" style="display: inline-block; background: #f59e0b; color: white; padding: 12px 20px; text-decoration: none; border-radius: 8px; font-weight: 600; margin: 6px;">${ctaTentative}</a>
+      <a href="${payload.declineUrl}" style="display: inline-block; background: #dc2626; color: white; padding: 12px 20px; text-decoration: none; border-radius: 8px; font-weight: 600; margin: 6px;">${ctaDecline}</a>
+    </center>
+
+    <p style="text-align: center; color: #6b7280; font-size: 13px; margin-top: 18px;">${footerHint}</p>
+  `;
+
+  const fromEmail = await getFromEmail();
+  const mailOptions = {
+    from: fromEmail,
+    to: user.email,
+    subject,
+    text:
+      `${intro}\n\n` +
+      `${dateLabel}, ${timeText}\n` +
+      `${payload.location ? `${locationLabel}: ${payload.location}\n` : ''}` +
+      `${payload.note ? `${noteLabel}: ${payload.note}\n` : ''}` +
+      `\n${ctaAccept}: ${payload.acceptUrl}\n${ctaTentative}: ${payload.tentativeUrl}\n${ctaDecline}: ${payload.declineUrl}`,
     html: await generateEmailHTML(htmlContent),
   };
 

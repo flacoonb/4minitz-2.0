@@ -1279,7 +1279,12 @@
       "passwordError": "Error changing password",
       "passwordSuccess": "Password changed successfully",
       "preferencesError": "Error updating preferences",
-      "preferencesSuccess": "Preferences saved successfully"
+      "preferencesSuccess": "Preferences saved successfully",
+      "pushNotSupported": "Push notifications are not supported by this browser",
+      "pushPermissionDenied": "Please allow browser notifications to enable push",
+      "pushConfigError": "Push notifications are currently unavailable",
+      "pushSubscribeError": "Could not enable push notifications",
+      "pushToggleError": "Could not update push notification setting"
     }
   },
   "attendance": {

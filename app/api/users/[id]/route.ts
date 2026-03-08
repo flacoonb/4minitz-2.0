@@ -3,6 +3,7 @@ import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
 import MeetingSeries from '@/models/MeetingSeries';
 import Task from '@/models/Task';
+import PushSubscription from '@/models/PushSubscription';
 import { verifyToken, requirePermission } from '@/lib/auth';
 import { sendVerificationEmail, sendWelcomeEmail } from '@/lib/email-service';
 import crypto from 'crypto';
@@ -409,6 +410,9 @@ export async function DELETE(
       { responsibles: userId },
       { $pull: { responsibles: userId } }
     );
+
+    // Remove push subscriptions for this user
+    await PushSubscription.deleteMany({ userId });
 
     const deletedUser = await User.findByIdAndDelete(id);
     if (!deletedUser) {

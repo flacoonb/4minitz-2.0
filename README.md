@@ -21,6 +21,7 @@ Minutes can be created visually or in Markdown mode, then managed consistently t
 - PDF export and configurable PDF settings/layout
 - User/admin management with role-based permissions
 - Auth flows: login/logout, registration, email verification, forgot/reset password
+- Browser push notifications (service worker + VAPID)
 - i18n support (`de`, `en`)
 
 ## Tech Stack
@@ -80,6 +81,7 @@ Use `.env.example` as source of truth. Important keys:
 - `APP_URL`
 - `NEXT_PUBLIC_APP_URL`
 - `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `FROM_EMAIL`
+- `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` (for web push)
 - `CRON_SECRET`
 
 ## Useful Scripts

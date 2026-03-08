@@ -1251,7 +1251,12 @@
       "passwordError": "Fehler beim Ändern des Passworts",
       "passwordSuccess": "Passwort erfolgreich geändert",
       "preferencesError": "Fehler beim Aktualisieren der Einstellungen",
-      "preferencesSuccess": "Einstellungen erfolgreich gespeichert"
+      "preferencesSuccess": "Einstellungen erfolgreich gespeichert",
+      "pushNotSupported": "Push-Benachrichtigungen werden von diesem Browser nicht unterstützt",
+      "pushPermissionDenied": "Bitte erlauben Sie Browser-Benachrichtigungen, um Push zu aktivieren",
+      "pushConfigError": "Push-Benachrichtigungen sind derzeit nicht verfügbar",
+      "pushSubscribeError": "Push-Benachrichtigung konnte nicht aktiviert werden",
+      "pushToggleError": "Push-Benachrichtigung konnte nicht aktualisiert werden"
     }
   },
   "topic": "Traktandum",

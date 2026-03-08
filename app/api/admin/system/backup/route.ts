@@ -13,6 +13,7 @@ import PdfSettings from '@/models/PdfSettings';
 import PdfLayoutSettings from '@/models/PdfLayoutSettings';
 import AuditLog from '@/models/AuditLog';
 import PendingNotification from '@/models/PendingNotification';
+import PushSubscription from '@/models/PushSubscription';
 
 function sanitizeUsers(users: any[], includeSensitive: boolean) {
   if (includeSensitive) return users;
@@ -83,6 +84,7 @@ export async function GET(request: NextRequest) {
       pdfLayoutSettings,
       auditLogs,
       pendingNotifications,
+      pushSubscriptions,
     ] = await Promise.all([
       Settings.find({}).lean(),
       User.find({}).lean(),
@@ -95,6 +97,7 @@ export async function GET(request: NextRequest) {
       PdfLayoutSettings.find({}).lean(),
       AuditLog.find({}).lean(),
       PendingNotification.find({}).lean(),
+      PushSubscription.find({}).lean(),
     ]);
 
     const exportedAt = new Date();
@@ -124,6 +127,7 @@ export async function GET(request: NextRequest) {
         pdfLayoutSettings,
         auditLogs,
         pendingNotifications,
+        pushSubscriptions,
       },
     };
 
@@ -149,6 +153,7 @@ export async function GET(request: NextRequest) {
           pdfLayoutSettings: pdfLayoutSettings.length,
           auditLogs: auditLogs.length,
           pendingNotifications: pendingNotifications.length,
+          pushSubscriptions: pushSubscriptions.length,
         },
       },
     });

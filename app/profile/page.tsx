@@ -48,6 +48,19 @@ interface UserProfile {
   };
 }
 
+function urlBase64ToUint8Array(base64String: string): Uint8Array {
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+
+  for (let i = 0; i < rawData.length; i++) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+
+  return outputArray;
+}
+
 const ProfilePage = () => {
   const t = useTranslations('profile');
   const tRoles = useTranslations('admin.users.roles');
@@ -57,6 +70,7 @@ const ProfilePage = () => {
   const [savingProfile, setSavingProfile] = useState(false);
   const [savingPassword, setSavingPassword] = useState(false);
   const [savingPreferences, setSavingPreferences] = useState(false);
+  const [configuringPush, setConfiguringPush] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [activeTab, setActiveTab] = useState<'profile' | 'security' | 'preferences'>('profile');
@@ -284,6 +298,118 @@ const ProfilePage = () => {
       }
     }, 300);
   }, [user, t, router, updateUser]);
+
+  const subscribePushNotifications = useCallback(async () => {
+    if (typeof window === 'undefined' || !('serviceWorker' in navigator) || !('PushManager' in window) || !('Notification' in window)) {
+      throw new Error(t('messages.pushNotSupported'));
+    }
+
+    const permission = await Notification.requestPermission();
+    if (permission !== 'granted') {
+      throw new Error(t('messages.pushPermissionDenied'));
+    }
+
+    const keyResponse = await fetch('/api/push/public-key', {
+      credentials: 'include',
+    });
+
+    const keyData = await keyResponse.json().catch(() => ({}));
+    if (!keyResponse.ok || typeof keyData?.publicKey !== 'string') {
+      throw new Error(keyData?.error || t('messages.pushConfigError'));
+    }
+
+    const registration = await navigator.serviceWorker.register('/sw.js');
+    let subscription = await registration.pushManager.getSubscription();
+
+    if (!subscription) {
+      subscription = await registration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(keyData.publicKey).buffer as ArrayBuffer,
+      });
+    }
+
+    const saveResponse = await fetch('/api/push/subscription', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({
+        subscription: subscription.toJSON(),
+      }),
+    });
+
+    if (!saveResponse.ok) {
+      const errorData = await saveResponse.json().catch(() => ({}));
+      throw new Error(errorData?.error || t('messages.pushSubscribeError'));
+    }
+  }, [t]);
+
+  const unsubscribePushNotifications = useCallback(async () => {
+    if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
+      return;
+    }
+
+    const registration = await navigator.serviceWorker.getRegistration();
+    if (!registration) {
+      await fetch('/api/push/subscription', {
+        method: 'DELETE',
+        credentials: 'include',
+      }).catch(() => {});
+      return;
+    }
+
+    const subscription = await registration.pushManager.getSubscription();
+    if (!subscription) {
+      await fetch('/api/push/subscription', {
+        method: 'DELETE',
+        credentials: 'include',
+      }).catch(() => {});
+      return;
+    }
+
+    await fetch('/api/push/subscription', {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      credentials: 'include',
+      body: JSON.stringify({ endpoint: subscription.endpoint }),
+    }).catch(() => {});
+
+    await subscription.unsubscribe().catch(() => {});
+  }, []);
+
+  const handlePushToggle = useCallback(async (enabled: boolean) => {
+    if (!user) return;
+
+    setError('');
+    setSuccess('');
+    setConfiguringPush(true);
+
+    try {
+      if (enabled) {
+        await subscribePushNotifications();
+      } else {
+        await unsubscribePushNotifications();
+      }
+
+      const newPreferences = {
+        ...preferencesData,
+        notifications: {
+          ...preferencesData.notifications,
+          inApp: enabled,
+        },
+      };
+
+      setPreferencesData(newPreferences);
+      updatePreferences(newPreferences);
+    } catch (err: any) {
+      setError(err?.message || t('messages.pushToggleError'));
+    } finally {
+      setConfiguringPush(false);
+    }
+  }, [user, preferencesData, subscribePushNotifications, unsubscribePushNotifications, t, updatePreferences]);
 
   const getRoleText = (role: string) => {
     switch (role) {
@@ -744,17 +870,8 @@ const ProfilePage = () => {
                           <input
                             type="checkbox"
                             checked={preferencesData.notifications.inApp}
-                            onChange={(e) => {
-                              const newPrefs = {
-                                ...preferencesData,
-                                notifications: {
-                                  ...preferencesData.notifications,
-                                  inApp: e.target.checked
-                                }
-                              };
-                              setPreferencesData(newPrefs);
-                              updatePreferences(newPrefs);
-                            }}
+                            disabled={configuringPush || savingPreferences}
+                            onChange={(e) => handlePushToggle(e.target.checked)}
                             className="w-4 h-4 text-indigo-600 border-slate-300 dark:border-slate-600 rounded focus:ring-indigo-500 dark:bg-slate-800"
                           />
                           <div>

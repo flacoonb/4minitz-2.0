@@ -8,6 +8,7 @@ import Minutes from '@/models/Minutes';
 import Task from '@/models/Task';
 import Attachment from '@/models/Attachment';
 import PendingNotification from '@/models/PendingNotification';
+import PushSubscription from '@/models/PushSubscription';
 
 type ResetTarget = 'users' | 'minutes' | 'meeting-series' | 'all';
 
@@ -25,9 +26,11 @@ async function verifyAdmin(request: NextRequest) {
 async function resetUsers(currentUserId: string) {
   const usersResult = await User.deleteMany({ _id: { $ne: currentUserId } });
   const pendingResult = await PendingNotification.deleteMany({});
+  const pushResult = await PushSubscription.deleteMany({ userId: { $ne: currentUserId } });
   return {
     usersDeleted: usersResult.deletedCount ?? 0,
     pendingNotificationsDeleted: pendingResult.deletedCount ?? 0,
+    pushSubscriptionsDeleted: pushResult.deletedCount ?? 0,
   };
 }
 
@@ -136,4 +139,3 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
-
