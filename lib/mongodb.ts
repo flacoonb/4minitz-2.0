@@ -39,16 +39,16 @@ async function connectDB(uri?: string) {
       bufferCommands: false,
     };
 
-    const connectionUri = uri || process.env.MONGODB_URI || 'mongodb://localhost:27017/4minitz';
+    const connectionUri = uri || process.env.MONGODB_URI;
 
     if (!connectionUri) {
-      throw new Error('Please define the MONGODB_URI environment variable inside .env.local or provide it to connectDB');
+      throw new Error(
+        'MONGODB_URI environment variable is not set. ' +
+        'Please define it in your .env.local file.'
+      );
     }
 
-    cached!.promise = mongoose.connect(connectionUri, opts).then((mongoose) => {
-      console.log('✅ MongoDB connected successfully');
-      return mongoose;
-    });
+    cached!.promise = mongoose.connect(connectionUri, opts);
   }
 
   try {
