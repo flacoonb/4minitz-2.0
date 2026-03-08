@@ -146,6 +146,36 @@ export default function AdminDashboard() {
             </div>
           </Link>
 
+          {/* Templates */}
+          <Link
+            href="/admin/templates"
+            className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6 border-l-4 border-purple-500"
+          >
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <svg
+                  className="h-8 w-8 text-purple-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h4l2 2h4a2 2 0 012 2v12a2 2 0 01-2 2z"
+                  />
+                </svg>
+              </div>
+              <div className="ml-4">
+                <h3 className="text-lg font-semibold text-gray-900">{t('templates.title')}</h3>
+                <p className="text-gray-600 text-sm mt-1">
+                  {t('templates.description')}
+                </p>
+              </div>
+            </div>
+          </Link>
+
           {/* Back to Dashboard */}
           <Link
             href="/dashboard"

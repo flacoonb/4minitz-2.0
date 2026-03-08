@@ -81,6 +81,8 @@ export interface IMinutes extends Document {
   // Content
   topics: ITopic[];
   globalNote?: string;
+  templateId?: string;
+  templateNameSnapshot?: string;
 
   // Agenda
   agendaSentAt?: Date;
@@ -286,6 +288,14 @@ const MinutesSchema = new Schema<IMinutes>(
     // Content
     topics: [TopicSchema],
     globalNote: {
+      type: String,
+      trim: true,
+    },
+    templateId: {
+      type: String,
+      index: true,
+    },
+    templateNameSnapshot: {
       type: String,
       trim: true,
     },

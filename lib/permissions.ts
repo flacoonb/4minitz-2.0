@@ -11,6 +11,9 @@ export interface UserPermissions {
   canAssignModerators: boolean;
   canExportData: boolean;
   canAccessReports: boolean;
+  canManageGlobalTemplates: boolean;
+  canManageSeriesTemplates: boolean;
+  canUseTemplates: boolean;
 }
 
 export interface User {
@@ -52,7 +55,20 @@ export async function hasPermission(
     }
 
     const rolePermissions = settings.roles[user.role];
-    return rolePermissions ? rolePermissions[permission] || false : false;
+    const defaults = getDefaultPermissions(user.role);
+
+    if (!rolePermissions) {
+      return defaults[permission] || false;
+    }
+
+    // Backward-compatible fallback for newly introduced permissions
+    // when existing settings documents don't have the key yet.
+    const value = (rolePermissions as any)[permission];
+    if (typeof value === 'boolean') {
+      return value;
+    }
+
+    return defaults[permission] || false;
   } catch (error) {
     console.error('Error checking permission:', error);
     // Fall back to default permissions on error
@@ -72,7 +88,11 @@ export async function getUserPermissions(user: User): Promise<UserPermissions> {
     }
 
     const rolePermissions = settings.roles[user.role];
-    return rolePermissions || getDefaultPermissions(user.role);
+    const defaults = getDefaultPermissions(user.role);
+    return {
+      ...defaults,
+      ...(rolePermissions || {}),
+    } as UserPermissions;
   } catch (error) {
     console.error('Error getting user permissions:', error);
     return getDefaultPermissions(user.role);
@@ -94,7 +114,10 @@ export function getDefaultPermissions(role: string): UserPermissions {
       canManageUsers: true,
       canAssignModerators: true,
       canExportData: true,
-      canAccessReports: true
+      canAccessReports: true,
+      canManageGlobalTemplates: true,
+      canManageSeriesTemplates: true,
+      canUseTemplates: true
     },
     moderator: {
       canCreateMeetings: true,
@@ -106,7 +129,10 @@ export function getDefaultPermissions(role: string): UserPermissions {
       canManageUsers: false,
       canAssignModerators: false,
       canExportData: true,
-      canAccessReports: false
+      canAccessReports: false,
+      canManageGlobalTemplates: false,
+      canManageSeriesTemplates: true,
+      canUseTemplates: true
     },
     user: {
       canCreateMeetings: false,
@@ -118,7 +144,10 @@ export function getDefaultPermissions(role: string): UserPermissions {
       canManageUsers: false,
       canAssignModerators: false,
       canExportData: false,
-      canAccessReports: false
+      canAccessReports: false,
+      canManageGlobalTemplates: false,
+      canManageSeriesTemplates: false,
+      canUseTemplates: false
     }
   };
 

@@ -81,12 +81,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         'canManageUsers',
         'canAssignModerators',
         'canExportData',
-        'canAccessReports'
+        'canAccessReports',
+        'canManageGlobalTemplates',
+        'canManageSeriesTemplates',
+        'canUseTemplates'
       ],
       moderator: [
         'canCreateMeetings',
         'canViewAllMeetings',
-        'canExportData'
+        'canExportData',
+        'canManageSeriesTemplates',
+        'canUseTemplates'
       ],
       user: []
     };

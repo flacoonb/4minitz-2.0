@@ -17,7 +17,10 @@ const DEFAULT_SETTINGS = {
       canManageUsers: true,
       canAssignModerators: true,
       canExportData: true,
-      canAccessReports: true
+      canAccessReports: true,
+      canManageGlobalTemplates: true,
+      canManageSeriesTemplates: true,
+      canUseTemplates: true
     },
     moderator: {
       canCreateMeetings: true,
@@ -29,7 +32,10 @@ const DEFAULT_SETTINGS = {
       canManageUsers: false,
       canAssignModerators: false,
       canExportData: true,
-      canAccessReports: false
+      canAccessReports: false,
+      canManageGlobalTemplates: false,
+      canManageSeriesTemplates: true,
+      canUseTemplates: true
     },
     user: {
       canCreateMeetings: false,
@@ -41,7 +47,10 @@ const DEFAULT_SETTINGS = {
       canManageUsers: false,
       canAssignModerators: false,
       canExportData: false,
-      canAccessReports: false
+      canAccessReports: false,
+      canManageGlobalTemplates: false,
+      canManageSeriesTemplates: false,
+      canUseTemplates: false
     }
   },
   memberSettings: {
@@ -99,6 +108,15 @@ export async function GET(request: NextRequest) {
         if (settings.roles[role]) {
           if (settings.roles[role].canViewAllMinutes === undefined) {
             settings.roles[role].canViewAllMinutes = role === 'admin';
+          }
+          if ((settings.roles[role] as any).canManageGlobalTemplates === undefined) {
+            (settings.roles[role] as any).canManageGlobalTemplates = role === 'admin';
+          }
+          if ((settings.roles[role] as any).canManageSeriesTemplates === undefined) {
+            (settings.roles[role] as any).canManageSeriesTemplates = role !== 'user';
+          }
+          if ((settings.roles[role] as any).canUseTemplates === undefined) {
+            (settings.roles[role] as any).canUseTemplates = role !== 'user';
           }
         }
       });
