@@ -4,17 +4,20 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
-import { 
-  LogIn, 
-  User, 
-  Lock, 
-  Eye, 
-  EyeOff, 
+import { useTranslations } from 'next-intl';
+import {
+  LogIn,
+  User,
+  Lock,
+  Eye,
+  EyeOff,
   AlertCircle,
   CheckCircle2
 } from 'lucide-react';
 
 const LoginPage = () => {
+  const t = useTranslations('auth.login');
+  const tErrors = useTranslations('errors');
   const [formData, setFormData] = useState({
     username: '',
     password: ''
@@ -62,18 +65,20 @@ const LoginPage = () => {
 
     try {
       await login(formData.username, formData.password);
-      
-      setSuccess('Erfolgreich angemeldet! Sie werden weitergeleitet...');
-      
-      // Redirect after a short delay
-      const redirectUrl = searchParams?.get('redirect') || '/';
+
+      setSuccess(tErrors('loginSuccess'));
+
+      // Redirect after a short delay (only allow relative paths to prevent open redirect)
+      const rawRedirect = searchParams?.get('redirect') || '/';
+      // Use regex: must start with '/' but NOT '//' (protocol-relative) and not contain ':' before first '/'
+      const redirectUrl = /^\/(?!\/)/.test(rawRedirect) ? rawRedirect : '/';
       setTimeout(() => {
         // Force a hard reload to ensure all cookies (including locale) are picked up correctly by the server
         window.location.href = redirectUrl;
       }, 1000);
 
     } catch (err: any) {
-      setError(err.message || 'Ein unbekannter Fehler ist aufgetreten');
+      setError(err.message || tErrors('generic'));
     } finally {
       setLoading(false);
     }
@@ -87,8 +92,8 @@ const LoginPage = () => {
           <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl shadow-lg mb-4">
             <LogIn className="w-8 h-8 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-slate-800 mb-2">Willkommen zurück</h1>
-          <p className="text-slate-600">Melden Sie sich in Ihrem Konto an</p>
+          <h1 className="text-3xl font-bold text-slate-800 mb-2">{t('title')}</h1>
+          <p className="text-slate-600">{t('subtitle')}</p>
         </div>
 
         {/* Login Form */}
@@ -112,7 +117,7 @@ const LoginPage = () => {
             {/* Username Field */}
             <div>
               <label htmlFor="username" className="block text-sm font-semibold text-slate-700 mb-2">
-                Benutzername oder E-Mail
+                {t('usernameLabel')}
               </label>
               <div className="relative">
                 <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
@@ -123,7 +128,7 @@ const LoginPage = () => {
                   value={formData.username}
                   onChange={handleInputChange}
                   className="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white/50"
-                  placeholder="Geben Sie Ihren Benutzernamen ein"
+                  placeholder={t('usernamePlaceholder')}
                   required
                 />
               </div>
@@ -132,7 +137,7 @@ const LoginPage = () => {
             {/* Password Field */}
             <div>
               <label htmlFor="password" className="block text-sm font-semibold text-slate-700 mb-2">
-                Passwort
+                {t('passwordLabel')}
               </label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
@@ -143,7 +148,7 @@ const LoginPage = () => {
                   value={formData.password}
                   onChange={handleInputChange}
                   className="w-full pl-12 pr-12 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white/50"
-                  placeholder="Geben Sie Ihr Passwort ein"
+                  placeholder={t('passwordPlaceholder')}
                   required
                 />
                 <button
@@ -156,6 +161,15 @@ const LoginPage = () => {
               </div>
             </div>
 
+            <div className="mt-2 text-right">
+              <Link
+                href="/auth/forgot-password"
+                className="text-sm font-semibold text-indigo-600 hover:text-indigo-500 transition-colors"
+              >
+                {t('forgotPassword')}
+              </Link>
+            </div>
+
             {/* Submit Button */}
             <button
               type="submit"
@@ -165,12 +179,12 @@ const LoginPage = () => {
               {loading ? (
                 <div className="flex items-center justify-center gap-3">
                   <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  Anmeldung läuft...
+                  {t('loggingIn')}
                 </div>
               ) : (
                 <div className="flex items-center justify-center gap-2">
                   <LogIn className="w-5 h-5" />
-                  Anmelden
+                  {t('loginButton')}
                 </div>
               )}
             </button>
@@ -179,12 +193,12 @@ const LoginPage = () => {
           {/* Registration Link */}
           <div className="mt-8 pt-6 border-t border-slate-200 text-center">
             <p className="text-slate-600 text-sm">
-              Noch kein Konto?{' '}
-              <Link 
-                href="/auth/register" 
+              {t('noAccount')}{' '}
+              <Link
+                href="/auth/register"
                 className="font-semibold text-indigo-600 hover:text-indigo-500 transition-colors"
               >
-                Hier registrieren
+                {t('registerNow')}
               </Link>
             </p>
           </div>

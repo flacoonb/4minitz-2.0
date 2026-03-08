@@ -42,15 +42,16 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  
+
   const [formData, setFormData] = useState<FormData>({
     project: '',
     name: '',
     members: [],
   });
-  
+
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<string>('');
+  const [existingProjectNames, setExistingProjectNames] = useState<string[]>([]);
 
   useEffect(() => {
     const getParams = async () => {
@@ -83,37 +84,49 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
       const response = await fetch(`/api/meeting-series/${seriesId}`, { credentials: 'include' });
 
       if (!response.ok) {
-        throw new Error('Sitzungsserie nicht gefunden');
+        throw new Error(t('seriesNotFoundError'));
       }
 
       const result = await response.json();
       const seriesData = result.data;
       setSeries(seriesData);
-      
+
       setFormData({
         project: seriesData.project || '',
         name: seriesData.name || '',
         members: seriesData.members || [],
       });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Fehler beim Laden');
+      setError(err instanceof Error ? err.message : t('loadingError'));
     } finally {
       setLoading(false);
     }
-  }, [seriesId]);
+  }, [seriesId, t]);
+
+  const fetchExistingNames = useCallback(async () => {
+    try {
+      const response = await fetch('/api/meeting-series', { credentials: 'include' });
+      if (response.ok) {
+        const result = await response.json();
+        const names = [...new Set((result.data || []).map((s: { project: string }) => s.project).filter(Boolean))] as string[];
+        setExistingProjectNames(names);
+      }
+    } catch {
+      // ignore
+    }
+  }, []);
 
   useEffect(() => {
     if (seriesId) {
       fetchSeries();
       fetchUsers();
+      fetchExistingNames();
     }
-  }, [seriesId, fetchSeries, fetchUsers]);
+  }, [seriesId, fetchSeries, fetchUsers, fetchExistingNames]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!seriesId) return;
-
-    console.log('Saving formData:', formData); // Debug log
 
     setSaving(true);
     try {
@@ -128,16 +141,15 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Fehler beim Speichern');
+        throw new Error(errorData.error || t('saveError'));
       }
 
-      const result = await response.json();
-      console.log('Save result:', result); // Debug log
+      await response.json();
 
       router.push(`/meeting-series/${seriesId}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Fehler beim Speichern');
-      console.error('Save error:', err); // Debug log
+      setError(err instanceof Error ? err.message : t('saveError'));
+      console.error('Save error:', err);
     } finally {
       setSaving(false);
     }
@@ -181,10 +193,10 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-600 mb-4">Fehler</h1>
+          <h1 className="text-2xl font-bold text-red-600 mb-4">{t('errorTitle')}</h1>
           <p className="text-gray-600">{error}</p>
           <Link href="/meeting-series" className="text-blue-600 hover:text-blue-800 mt-4 inline-block">
-            Zurück zur Übersicht
+            {t('backToSeries')}
           </Link>
         </div>
       </div>
@@ -192,17 +204,17 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-6 sm:py-8 px-3 sm:px-4">
       <div className="max-w-6xl mx-auto space-y-8">
         {/* Header */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-gray-100">
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-5 sm:p-8 border border-gray-100">
           <div className="flex items-center gap-4 mb-6">
             <Link href={`/meeting-series/${seriesId}`} className="text-blue-600 hover:text-blue-800 transition-colors">
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
             </Link>
-            <h1 className="text-3xl font-bold text-gray-900">{t('editSeries')}</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 break-words">{t('editSeries')}</h1>
           </div>
         </div>
 
@@ -215,12 +227,12 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
         )}
 
         {/* Sticky Save Button */}
-        <div className="fixed top-6 right-6 z-50">
+        <div className="hidden sm:block fixed top-6 right-6 z-50">
           <button
             type="submit"
             form="edit-form"
             disabled={saving}
-            className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed border-2 border-white"
+            className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed border-2 border-white"
           >
             <div className="flex items-center gap-2">
               {saving ? (
@@ -235,6 +247,27 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
           </button>
         </div>
 
+        {/* Mobile Save Button */}
+        <div className="sm:hidden sticky top-28 z-40 mb-4">
+          <button
+            type="submit"
+            form="edit-form"
+            disabled={saving}
+            className="w-full px-6 py-3 min-h-11 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl font-semibold transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed border border-white/60"
+          >
+            <span className="inline-flex items-center justify-center gap-2">
+              {saving ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              ) : (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+              {saving ? t('saving') : tCommon('save')}
+            </span>
+          </button>
+        </div>
+
         <form id="edit-form" onSubmit={handleSubmit} className="space-y-8">
           {/* Basic Information */}
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-100">
@@ -244,23 +277,32 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
                 <label className="block text-sm font-medium text-gray-700 mb-2">{t('projectRequired')}</label>
                 <input
                   type="text"
+                  list="existing-session-names"
                   value={formData.project}
                   onChange={(e) => setFormData(prev => ({ ...prev, project: e.target.value }))}
                   placeholder={t('projectPlaceholder')}
+                  autoComplete="off"
                   className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   required
                 />
+                <datalist id="existing-session-names">
+                  {existingProjectNames.map(name => (
+                    <option key={name} value={name} />
+                  ))}
+                </datalist>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">{t('nameRequired')}</label>
-                <input
-                  type="text"
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('yearOptional')}</label>
+                <select
                   value={formData.name}
                   onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder={t('namePlaceholder')}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                />
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                >
+                  <option value="">{t('noYear')}</option>
+                  {Array.from({ length: 7 }, (_, i) => new Date().getFullYear() - 2 + i).map(year => (
+                    <option key={year} value={String(year)}>{year}</option>
+                  ))}
+                </select>
               </div>
             </div>
           </div>
@@ -279,16 +321,16 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
             {/* Add New Member */}
             <div className="bg-blue-50 p-4 rounded-xl border border-blue-200 mb-4">
               <h3 className="text-sm font-semibold text-gray-700 mb-3">{t('addNewMember')}</h3>
-              <div className="flex gap-3">
+              <div className="flex flex-col sm:flex-row gap-3">
                 <select
                   value={selectedUserId}
                   onChange={(e) => setSelectedUserId(e.target.value)}
-                  className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm bg-white"
+                  className="flex-1 w-full px-4 py-2 min-h-11 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm bg-white"
                 >
                   <option value="">{t('selectUser')}</option>
                   {getAvailableUsers().map(user => (
                     <option key={user._id} value={user._id}>
-                      {user.firstName} {user.lastName} ({user.email}) - {user.role}
+                      {user.firstName} {user.lastName} - {user.role}
                     </option>
                   ))}
                 </select>
@@ -296,7 +338,7 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
                   type="button"
                   onClick={addMember}
                   disabled={!selectedUserId}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full sm:w-auto px-6 py-2 min-h-11 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   + {t('add')}
                 </button>
@@ -326,11 +368,10 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
                           <div>
                             <p className="font-semibold text-gray-900">{user.firstName} {user.lastName}</p>
                             <p className="text-sm text-gray-600">{user.email}</p>
-                            <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium mt-1 ${
-                              user.role === 'admin' ? 'bg-red-100 text-red-800' :
-                              user.role === 'moderator' ? 'bg-blue-100 text-blue-800' :
-                              'bg-gray-100 text-gray-800'
-                            }`}>
+                            <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium mt-1 ${user.role === 'admin' ? 'bg-red-100 text-red-800' :
+                                user.role === 'moderator' ? 'bg-blue-100 text-blue-800' :
+                                  'bg-gray-100 text-gray-800'
+                              }`}>
                               {user.role}
                             </span>
                           </div>

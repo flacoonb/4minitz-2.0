@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import { FileText, Image as ImageIcon, Download, Trash2, File } from 'lucide-react';
+import ConfirmationModal from '@/components/ConfirmationModal';
 
 interface Attachment {
   _id: string;
@@ -22,9 +23,11 @@ interface AttachmentListProps {
 
 export default function AttachmentList({ minuteId, onDelete }: AttachmentListProps) {
   const t = useTranslations('attachments');
+  const tCommon = useTranslations('common');
   const [attachments, setAttachments] = useState<Attachment[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const fetchAttachments = useCallback(async () => {
     try {
@@ -44,15 +47,11 @@ export default function AttachmentList({ minuteId, onDelete }: AttachmentListPro
   }, [fetchAttachments]);
 
   const handleDelete = async (id: string) => {
-    if (!confirm(t('confirmDelete'))) return;
-
     try {
       setDeleting(id);
       const response = await fetch(`/api/attachments?id=${id}`, {
         method: 'DELETE',
-        headers: {
-          'x-user-id': 'demo-user',
-        },
+        credentials: 'include',
       });
 
       if (!response.ok) {
@@ -131,7 +130,7 @@ export default function AttachmentList({ minuteId, onDelete }: AttachmentListPro
               <Download className="w-4 h-4" />
             </a>
             <button
-              onClick={() => handleDelete(attachment._id)}
+              onClick={() => setConfirmDeleteId(attachment._id)}
               disabled={deleting === attachment._id}
               className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
               title={t('delete')}
@@ -145,6 +144,23 @@ export default function AttachmentList({ minuteId, onDelete }: AttachmentListPro
           </div>
         </div>
       ))}
+
+      <ConfirmationModal
+        isOpen={Boolean(confirmDeleteId)}
+        onClose={() => setConfirmDeleteId(null)}
+        onConfirm={() => {
+          if (confirmDeleteId) {
+            handleDelete(confirmDeleteId);
+          }
+          setConfirmDeleteId(null);
+        }}
+        title={t('delete')}
+        message={t('confirmDelete')}
+        confirmText={t('delete')}
+        cancelText={tCommon('cancel')}
+        isProcessing={Boolean(deleting)}
+        type="danger"
+      />
     </div>
   );
 }

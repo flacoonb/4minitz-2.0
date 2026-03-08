@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
+import MeetingSeries from '@/models/MeetingSeries';
+import Task from '@/models/Task';
 import { verifyToken, requirePermission } from '@/lib/auth';
+import { sendWelcomeEmail } from '@/lib/email-service';
 
 export async function GET(
   request: NextRequest,
@@ -94,12 +97,40 @@ export async function PUT(
       );
     }
 
-    // Update fields
-    if (body.firstName) userToUpdate.firstName = body.firstName;
-    if (body.lastName) userToUpdate.lastName = body.lastName;
-    if (body.email) userToUpdate.email = body.email;
-    if (body.username) userToUpdate.username = body.username;
-    if (body.avatar !== undefined) userToUpdate.avatar = body.avatar;
+    // Update fields (with length/format validation)
+    if (body.firstName !== undefined) {
+      if (typeof body.firstName !== 'string' || body.firstName.trim().length === 0 || body.firstName.length > 50) {
+        return NextResponse.json({ error: 'Vorname muss zwischen 1 und 50 Zeichen lang sein' }, { status: 400 });
+      }
+      userToUpdate.firstName = body.firstName.trim();
+    }
+    if (body.lastName !== undefined) {
+      if (typeof body.lastName !== 'string' || body.lastName.trim().length === 0 || body.lastName.length > 50) {
+        return NextResponse.json({ error: 'Nachname muss zwischen 1 und 50 Zeichen lang sein' }, { status: 400 });
+      }
+      userToUpdate.lastName = body.lastName.trim();
+    }
+    if (body.email && body.email !== userToUpdate.email) {
+      userToUpdate.email = body.email;
+      if (isOwnProfile) {
+        userToUpdate.isEmailVerified = false;
+      }
+    }
+    if (body.username !== undefined) {
+      if (typeof body.username !== 'string' || body.username.length < 3 || body.username.length > 30) {
+        return NextResponse.json({ error: 'Benutzername muss zwischen 3 und 30 Zeichen lang sein' }, { status: 400 });
+      }
+      if (!/^[a-zA-Z0-9._-]+$/.test(body.username)) {
+        return NextResponse.json({ error: 'Benutzername darf nur Buchstaben, Zahlen, Punkte, Unterstriche und Bindestriche enthalten' }, { status: 400 });
+      }
+      userToUpdate.username = body.username;
+    }
+    if (body.avatar !== undefined) {
+      if (body.avatar !== null && (typeof body.avatar !== 'string' || body.avatar.length > 500 || !/^https?:\/\/.+/i.test(body.avatar))) {
+        return NextResponse.json({ error: 'Avatar muss eine gültige URL sein' }, { status: 400 });
+      }
+      userToUpdate.avatar = body.avatar;
+    }
 
     // Handle preferences
     if (body.preferences) {
@@ -130,9 +161,24 @@ export async function PUT(
 
     // Only admins can update role and status
     if (!isOwnProfile) {
-      // We already checked permission above
+      // Protect last admin from demotion or deactivation
+      if (userToUpdate.role === 'admin' && (body.role && body.role !== 'admin' || body.isActive === false)) {
+        const adminCount = await User.countDocuments({ role: 'admin', isActive: true });
+        if (adminCount <= 1) {
+          return NextResponse.json(
+            { error: 'Der letzte aktive Admin kann nicht herabgestuft oder deaktiviert werden' },
+            { status: 400 }
+          );
+        }
+      }
       if (body.role) userToUpdate.role = body.role;
-      if (body.isActive !== undefined) userToUpdate.isActive = body.isActive;
+      if (body.isActive !== undefined) {
+        userToUpdate.isActive = body.isActive;
+        // Clear pending approval flag when admin activates a user
+        if (body.isActive === true && userToUpdate.pendingApproval) {
+          userToUpdate.pendingApproval = false;
+        }
+      }
       if (body.isEmailVerified !== undefined) userToUpdate.isEmailVerified = body.isEmailVerified;
     }
 
@@ -158,12 +204,23 @@ export async function PUT(
       userToUpdate.password = body.password; // Will be hashed by pre-save middleware
     }
 
+    // Detect approval (user was inactive, now being activated)
+    const wasApproved = !isOwnProfile && body.isActive === true && userToUpdate.isModified('isActive');
+
     // Update user
     await userToUpdate.save();
-    
-    // Return user without password
-    const userObject = userToUpdate.toObject();
-    const { password: _password, ...userResponse } = userObject;
+
+    // Send welcome email on approval
+    if (wasApproved) {
+      sendWelcomeEmail({
+        email: userToUpdate.email,
+        firstName: userToUpdate.firstName,
+        lastName: userToUpdate.lastName
+      }).catch(() => {});
+    }
+
+    // Return user without sensitive fields (toJSON strips password, tokens, etc.)
+    const userResponse = userToUpdate.toJSON();
 
     return NextResponse.json({
       success: true,
@@ -231,6 +288,39 @@ export async function DELETE(
         { status: 400 }
       );
     }
+
+    // Protect last admin from deletion
+    const userToDelete = await User.findById(id);
+    if (!userToDelete) {
+      return NextResponse.json(
+        { error: 'Benutzer nicht gefunden' },
+        { status: 404 }
+      );
+    }
+
+    if (userToDelete.role === 'admin') {
+      const adminCount = await User.countDocuments({ role: 'admin', isActive: true });
+      if (adminCount <= 1) {
+        return NextResponse.json(
+          { error: 'Der letzte Admin kann nicht gelöscht werden' },
+          { status: 400 }
+        );
+      }
+    }
+
+    // Cascade cleanup: remove user from meeting series
+    const username = userToDelete.username;
+    const userId = userToDelete._id.toString();
+    await MeetingSeries.updateMany(
+      { $or: [{ visibleFor: username }, { moderators: username }, { participants: username }] },
+      { $pull: { visibleFor: username, moderators: username, participants: username, members: { userId } } }
+    );
+
+    // Remove user from task responsibles
+    await Task.updateMany(
+      { responsibles: userId },
+      { $pull: { responsibles: userId } }
+    );
 
     const deletedUser = await User.findByIdAndDelete(id);
     if (!deletedUser) {
