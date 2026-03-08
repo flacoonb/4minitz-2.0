@@ -44,7 +44,6 @@ export async function GET(request: NextRequest) {
       { 
         success: false, 
         error: 'Failed to fetch labels',
-        message: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );
@@ -103,7 +102,7 @@ export async function POST(request: NextRequest) {
       color: body.color,
       description: body.description?.trim() || '',
       icon: body.icon || 'M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z', // Default info icon
-      isSystemLabel: body.isSystemLabel || false,
+      isSystemLabel: authResult.user.role === 'admin' && body.isSystemLabel ? true : false,
       createdBy: userId,
     });
     
@@ -121,7 +120,6 @@ export async function POST(request: NextRequest) {
       { 
         success: false, 
         error: 'Failed to create label',
-        message: error instanceof Error ? error.message : 'Unknown error',
       },
       { status: 500 }
     );

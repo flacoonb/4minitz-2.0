@@ -14,14 +14,14 @@
 ## 🚀 Quick Start
 
 ### 1. Prerequisites
-- Node.js 18+
+- Node.js 24+
 - Docker (optional, for local MongoDB)
 
 ### 2. Installation (Recommended)
 Run this command to download and install 4Minitz automatically:
 
 ```bash
-curl -sL https://raw.githubusercontent.com/flacoonb/4minitz-2.0/main/install.sh | bash
+curl -sL https://raw.githubusercontent.com/flacoonb/4minitz-2.0/main/install.sh | sudo bash
 ```
 
 ### 3. Manual Setup (if already cloned)
@@ -43,7 +43,7 @@ If you prefer manual setup:
 
 ```bash
 # Install dependencies
-npm install
+npm ci
 
 # Start MongoDB (if using Docker)
 docker run -d -p 27017:27017 --name mongodb mongo

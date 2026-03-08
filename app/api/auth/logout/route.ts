@@ -11,7 +11,7 @@ export async function POST(_request: NextRequest) {
 
     // Determine if we should use secure cookies
     const isProduction = process.env.NODE_ENV === 'production';
-    const isHttp = process.env.NEXTAUTH_URL?.startsWith('http://');
+    const isHttp = process.env.APP_URL?.startsWith('http://');
     const useSecureCookies = isProduction && !isHttp && process.env.DISABLE_SECURE_COOKIES !== 'true';
 
     // Clear auth cookie
@@ -26,7 +26,7 @@ export async function POST(_request: NextRequest) {
 
     return response;
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error logging out user:', error);
     return NextResponse.json(
       { error: 'Fehler bei der Abmeldung' },

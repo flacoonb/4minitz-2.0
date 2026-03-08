@@ -1,25 +1,27 @@
-"use client";
+'use client';
 
-import { useEffect } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 
-export default function NewMinuteRedirectPage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+export default function NewMinuteInfoPage() {
   const t = useTranslations('minutes');
-  
-  useEffect(() => {
-    // Redirect to enhanced version with all search params
-    const params = new URLSearchParams(searchParams.toString());
-    router.replace(`/minutes/new-enhanced?${params.toString()}`);
-  }, [router, searchParams]);
 
   return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600 mx-auto mb-4"></div>
-        <p className="text-gray-600">{t('redirectingToEnhanced')}</p>
+    <div className="min-h-[60vh] flex items-center justify-center px-4">
+      <div className="text-center max-w-md">
+        <div className="bg-blue-100 rounded-full p-4 mx-auto mb-4 w-16 h-16 flex items-center justify-center">
+          <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        </div>
+        <h2 className="text-xl font-bold text-gray-900 mb-2">{t('createTitle')}</h2>
+        <p className="text-gray-600 mb-6 text-sm">{t('createInfo')}</p>
+        <Link
+          href="/meeting-series"
+          className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium inline-block"
+        >
+          {t('toSeries')}
+        </Link>
       </div>
     </div>
   );

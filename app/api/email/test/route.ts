@@ -2,27 +2,33 @@ import { NextRequest, NextResponse } from 'next/server';
 import { testEmailConfiguration, sendNewMinutesNotification } from '@/lib/email-service';
 import connectDB from '@/lib/mongodb';
 import Minutes from '@/models/Minutes';
+import { verifyToken } from '@/lib/auth';
 
 // Test email configuration
-export async function GET(_request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
-    const isValid = await testEmailConfiguration();
-    
+    await connectDB();
+
+    const authResult = await verifyToken(request);
+    if (!authResult.success || !authResult.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (authResult.user.role !== 'admin') {
+      return NextResponse.json({ error: 'Admin only' }, { status: 403 });
+    }
+
+    const testResult = await testEmailConfiguration();
+
     return NextResponse.json({
-      success: isValid,
-      message: isValid ? 'Email configuration is valid' : 'Email configuration test failed',
-      config: {
-        host: process.env.SMTP_HOST,
-        port: process.env.SMTP_PORT,
-        secure: process.env.SMTP_SECURE === 'true',
-        hasAuth: !!(process.env.SMTP_USER && process.env.SMTP_PASS),
-      },
+      success: testResult.success,
+      message: testResult.success ? 'Email configuration is valid' : `Email configuration test failed: ${testResult.error}`,
+      error: testResult.error || null,
     });
-  } catch (error) {
+  } catch {
     return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Unknown error' 
+      {
+        success: false,
+        error: 'Email configuration check failed'
       },
       { status: 500 }
     );
@@ -32,6 +38,14 @@ export async function GET(_request: NextRequest) {
 // Send test email
 export async function POST(request: NextRequest) {
   try {
+    const authResult = await verifyToken(request);
+    if (!authResult.success || !authResult.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+    if (authResult.user.role !== 'admin') {
+      return NextResponse.json({ error: 'Admin only' }, { status: 403 });
+    }
+
     const { minuteId, locale = 'de' } = await request.json();
 
     if (!minuteId) {
@@ -57,12 +71,11 @@ export async function POST(request: NextRequest) {
       success: true,
       message: 'Test email sent successfully',
     });
-  } catch (error) {
-    console.error('Test email error:', error);
+  } catch {
     return NextResponse.json(
-      { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'Unknown error' 
+      {
+        success: false,
+        error: 'Failed to send test email'
       },
       { status: 500 }
     );

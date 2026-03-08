@@ -11,6 +11,7 @@ interface Minute {
   meetingSeries_id: any;
   date: string;
   time?: string;
+  endTime?: string;
   location?: string;
   participants: string[];
   participantsWithStatus?: Array<{
@@ -37,8 +38,6 @@ interface InfoItem {
   subject: string;
   details?: string;
   itemType: 'actionItem' | 'infoItem';
-  isComplete?: boolean;
-  // Task management fields
   status?: 'open' | 'in-progress' | 'completed' | 'cancelled';
   priority?: 'high' | 'medium' | 'low';
   dueDate?: string;
@@ -127,21 +126,6 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
 
       const result = await response.json();
       const minuteData = result.data;
-      
-      // Convert duedate to dueDate for display
-      if (minuteData.topics) {
-        minuteData.topics = minuteData.topics.map((topic: any) => ({
-          ...topic,
-          infoItems: topic.infoItems?.map((item: any) => {
-            const updatedItem = { ...item };
-            if (item.duedate !== undefined) {
-              updatedItem.dueDate = item.duedate;
-              delete updatedItem.duedate;
-            }
-            return updatedItem;
-          })
-        }));
-      }
       
       setMinute(minuteData);
     } catch (err) {
@@ -238,53 +222,41 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
       // Fetch PDF settings
       const response = await fetch('/api/pdf-settings');
       const settingsResult = await response.json();
-      
+
       if (!settingsResult.success) {
         throw new Error(t('minutes.pdfSettingsError'));
       }
 
-      // Fetch global settings for date format
+      // Fetch global settings for locale
       try {
         const globalSettingsResponse = await fetch('/api/settings/public');
         const globalSettingsResult = await globalSettingsResponse.json();
-        
+
         if (globalSettingsResult.success && globalSettingsResult.data) {
-           settingsResult.data.dateFormat = globalSettingsResult.data.system?.dateFormat;
            settingsResult.data.locale = globalSettingsResult.data.language?.defaultLanguage;
         }
       } catch (e) {
         console.warn('Could not fetch global settings for PDF export', e);
       }
-      
+
       // Fetch PDF layout settings
-      const layoutResponse = await fetch('/api/pdf-layout-settings');
-      const layoutResult = await layoutResponse.json();
-      const layoutSettings = layoutResult.success ? layoutResult.data : null;
-      
-      // Convert duedate to dueDate for PDF generation
-      const minuteForPdf = {
-        ...minute,
-        topics: minute.topics.map(topic => ({
-          ...topic,
-          infoItems: topic.infoItems?.map(item => {
-            const updatedItem = { ...item } as any;
-            if ((item as any).duedate !== undefined) {
-              updatedItem.dueDate = (item as any).duedate;
-              delete updatedItem.duedate;
-            }
-            return updatedItem;
-          })
-        }))
-      };
-      
+      let layoutSettings = null;
+      try {
+        const layoutResponse = await fetch('/api/pdf-layout-settings');
+        const layoutResult = await layoutResponse.json();
+        layoutSettings = layoutResult.success ? layoutResult.data : null;
+      } catch (e) {
+        console.warn('Could not fetch PDF layout settings', e);
+      }
+
       // Dynamically import PDF generator (client-side only)
       const { generateMinutePdf } = await import('@/lib/pdfGenerator');
-      
-      // Generate PDF with converted data
-      await generateMinutePdf(minuteForPdf, settingsResult.data, allUsers, layoutSettings);
+
+      await generateMinutePdf(minute, settingsResult.data, allUsers, layoutSettings);
     } catch (error) {
       console.error('Error generating PDF:', error);
-      alert(t('minutes.pdfGenerationError'));
+      const errorMsg = error instanceof Error ? error.message : t('minutes.pdfGenerationError');
+      alert(errorMsg);
     } finally {
       setExportingPdf(false);
     }
@@ -312,7 +284,8 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
       });
 
       if (response.ok) {
-        router.push('/minutes');
+        const seriesId = minute?.meetingSeries_id?._id;
+        router.push(seriesId ? `/meeting-series/${seriesId}` : '/meeting-series');
       } else {
         const errorData = await response.json();
         setErrorMessage(`${t('minutes.deleteError')}: ${errorData.error || 'Unbekannter Fehler'}`);
@@ -377,7 +350,7 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
         <div className="text-center">
           <h1 className="text-2xl font-bold text-red-600 mb-4">{t('common.error')}</h1>
           <p className="text-gray-600">{error || t('minutes.notFound')}</p>
-          <Link href="/minutes" className="text-blue-600 hover:text-blue-800 mt-4 inline-block">
+          <Link href="/meeting-series" className="text-blue-600 hover:text-blue-800 mt-4 inline-block">
             {t('minutes.backToOverview')}
           </Link>
         </div>
@@ -386,20 +359,33 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-6 sm:py-8 px-3 sm:px-4">
       <div className="max-w-6xl mx-auto space-y-8">
         {/* Header */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-gray-100">
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-5 sm:p-8 border border-gray-100">
           <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
-            <div className="flex-1">
-              <div className="flex items-center gap-4 mb-4">
-                <Link href="/minutes" className="text-blue-600 hover:text-blue-800 transition-colors">
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-                  </svg>
+            <div className="flex-1 min-w-0">
+              {/* Breadcrumb */}
+              <nav className="flex items-center gap-2 text-sm text-gray-500 mb-3 flex-wrap">
+                <Link href="/meeting-series" className="hover:text-blue-600 transition-colors">
+                  {t('nav.meetingSeries')}
                 </Link>
-                <h1 className="text-3xl font-bold text-gray-900">{t('minutes.details')}</h1>
-              </div>
+                {minute.meetingSeries_id?._id && (
+                  <>
+                    <span className="text-gray-400">›</span>
+                    <Link href={`/meeting-series/${minute.meetingSeries_id._id}`} className="hover:text-blue-600 transition-colors">
+                      {minute.meetingSeries_id.project && minute.meetingSeries_id.name
+                        ? `${minute.meetingSeries_id.project} – ${minute.meetingSeries_id.name}`
+                        : minute.meetingSeries_id.name || minute.meetingSeries_id.project || 'Series'}
+                    </Link>
+                  </>
+                )}
+                <span className="text-gray-400">›</span>
+                <span className="text-gray-900 font-medium">
+                  {new Date(minute.date).toLocaleDateString(locale)}
+                </span>
+              </nav>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 break-words">{t('minutes.details')}</h1>
               
               <div className="space-y-3">
                 <div className="flex items-center gap-3 text-gray-700">
@@ -408,7 +394,9 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
                   </svg>
                   <span className="font-medium">
                     {new Date(minute.date).toLocaleDateString(locale)}
-                    {minute.time && ` • ${formatTime(minute.time)}`}
+                    {minute.time && minute.endTime && ` • ${t('minutes.from')} ${formatTime(minute.time)} ${t('minutes.to')} ${formatTime(minute.endTime)}`}
+                    {minute.time && !minute.endTime && ` • ${formatTime(minute.time)}`}
+                    {minute.endTime && !minute.time && ` • ${t('minutes.to')} ${formatTime(minute.endTime)}`}
                   </span>
                 </div>
                 
@@ -435,11 +423,11 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
             </div>
 
             {/* Action Buttons */}
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col gap-3 w-full lg:w-auto">
               {isModerator && !minute.isFinalized && (
                 <Link
                   href={`/minutes/${minuteId}/edit`}
-                  className="px-6 py-3 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl hover:scale-105"
+                  className="w-full lg:w-auto px-6 py-3 min-h-11 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl lg:hover:scale-105 inline-flex items-center justify-center"
                 >
                   <div className="flex items-center gap-2">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -452,7 +440,7 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
               {isModerator && (
                 <button
                   onClick={handleFinalize}
-                  className={`px-6 py-3 rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl hover:scale-105 ${
+                  className={`w-full lg:w-auto px-6 py-3 min-h-11 rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl lg:hover:scale-105 ${
                     minute.isFinalized
                       ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white'
                       : 'bg-gradient-to-r from-green-500 to-emerald-600 text-white'
@@ -464,7 +452,7 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
               <button
                 onClick={handleExport}
                 disabled={exportingPdf}
-                className="px-6 py-3 bg-gradient-to-r from-gray-500 to-slate-600 text-white rounded-xl font-semibold hover:shadow-lg hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full lg:w-auto px-6 py-3 min-h-11 bg-gradient-to-r from-gray-500 to-slate-600 text-white rounded-xl font-semibold hover:shadow-lg lg:hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <div className="flex items-center gap-2">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -477,7 +465,7 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
                 <button
                   onClick={handleDelete}
                   disabled={minute.isFinalized}
-                  className="px-6 py-3 bg-gradient-to-r from-red-500 to-rose-600 text-white rounded-xl font-semibold hover:shadow-lg hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full lg:w-auto px-6 py-3 min-h-11 bg-gradient-to-r from-red-500 to-rose-600 text-white rounded-xl font-semibold hover:shadow-lg lg:hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   title={minute.isFinalized ? t('minutes.finalizedCantDelete') : t('minutes.delete')}
                 >
                   {t('common.delete')}
@@ -556,7 +544,7 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
         )}
 
         {/* Topics */}
-        <div className="space-y-6">
+        <div className="space-y-5">
           <h2 className="text-2xl font-bold text-gray-900">{t('minutes.topics')}</h2>
           {minute.topics.length === 0 ? (
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 border border-gray-100 text-center">
@@ -565,14 +553,14 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
             </div>
           ) : (
             minute.topics.map((topic, topicIndex) => (
-              <div key={topicIndex} className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-gray-100 hover:shadow-2xl transition-all duration-300">
-                <div className="flex items-start justify-between mb-6">
+              <div key={topicIndex} className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl p-4 sm:p-8 border border-gray-100 hover:shadow-2xl transition-all duration-300">
+                <div className="flex flex-col gap-3 mb-4 sm:mb-6">
                   <div className="flex-1">
-                    <div className="flex items-center gap-3 mb-3">
-                      <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
+                    <div className="flex items-start gap-3 mb-3 min-w-0">
+                      <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-sm shrink-0">
                         {topicIndex + 1}
                       </div>
-                      <h3 className="text-xl font-bold text-gray-900">{topic.subject}</h3>
+                      <h3 className="text-lg sm:text-xl font-bold text-gray-900 leading-tight break-words">{topic.subject}</h3>
                     </div>
                     {topic.responsibles && topic.responsibles.length > 0 && (
                       <div className="flex flex-wrap gap-2 mt-3">
@@ -591,7 +579,7 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
 
                 {/* Info Items */}
                 {topic.infoItems && topic.infoItems.length > 0 && (
-                  <div className="space-y-3">
+                  <div className="space-y-2.5 sm:space-y-3">
                     {topic.infoItems.map((item, itemIndex) => {
                       const getPriorityBadge = () => {
                         const badges = {
@@ -624,34 +612,34 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
                                 : item.priority === 'low' ? 'border-blue-500'
                                 : 'border-orange-500'
                               : 'border-blue-400'
-                          } p-4 rounded-lg shadow-sm hover:shadow-md transition-all`}
+                          } p-3 sm:p-4 rounded-lg shadow-sm hover:shadow-md transition-all`}
                         >
                           {/* Type Label and Title */}
                           <div className="mb-2">
                             {item.itemType === 'actionItem' ? (
                               <div className="flex flex-wrap items-center gap-2 mb-2">
-                                <span className="px-2.5 py-1 rounded-md text-xs font-bold bg-gray-100 text-gray-600 uppercase tracking-wide">
+                                <span className="px-2 py-1 rounded-md text-[11px] sm:text-xs font-bold bg-gray-100 text-gray-600 uppercase tracking-wide">
                                   {t('minutes.actionItem')}
                                 </span>
-                                <span className={`px-2.5 py-1 rounded-md text-xs font-semibold ${priorityBadge.bg} ${priorityBadge.text}`}>
+                                <span className={`px-2 py-1 rounded-md text-[11px] sm:text-xs font-semibold ${priorityBadge.bg} ${priorityBadge.text}`}>
                                   {priorityBadge.icon} {priorityBadge.label}
                                 </span>
-                                <span className={`px-2.5 py-1 rounded-md text-xs font-semibold ${statusBadge.bg} ${statusBadge.text}`}>
+                                <span className={`px-2 py-1 rounded-md text-[11px] sm:text-xs font-semibold ${statusBadge.bg} ${statusBadge.text}`}>
                                   {statusBadge.icon} {statusBadge.label}
                                 </span>
                               </div>
                             ) : (
                               <div className="mb-2">
-                                <span className="px-2.5 py-1 rounded-md text-xs font-bold bg-blue-100 text-blue-700 uppercase tracking-wide">
+                                <span className="px-2 py-1 rounded-md text-[11px] sm:text-xs font-bold bg-blue-100 text-blue-700 uppercase tracking-wide">
                                   ℹ️ {t('minutes.infoItem')}
                                 </span>
                               </div>
                             )}
-                            <h4 className="font-bold text-gray-900 text-base">{item.subject}</h4>
+                            <h4 className="font-bold text-gray-900 text-base leading-tight break-words">{item.subject}</h4>
                           </div>
                           
                           {item.details && (
-                            <p className="text-sm text-gray-700 mb-3 leading-relaxed">{item.details}</p>
+                            <p className="text-sm text-gray-700 mb-3 leading-relaxed break-words">{item.details}</p>
                           )}
 
                           {/* Info Items - Show responsible persons if available */}
@@ -740,35 +728,38 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
 
         {/* Reopening History */}
         {minute.reopeningHistory && minute.reopeningHistory.length > 0 && (
-          <div className="bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 backdrop-blur-sm rounded-2xl shadow-xl p-8 border-2 border-amber-300 hover:shadow-2xl transition-all duration-300 mb-6">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-amber-500 via-orange-500 to-orange-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg">
+          <div className="bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 backdrop-blur-sm rounded-2xl shadow-xl p-4 sm:p-8 border-2 border-amber-300 hover:shadow-2xl transition-all duration-300 mb-6">
+            <div className="flex flex-col min-[420px]:flex-row items-start gap-3 sm:gap-4 min-w-0">
+              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-amber-500 via-orange-500 to-orange-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg">
                 <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
-              <div className="flex-1">
-                <h2 className="text-2xl font-bold text-amber-900 mb-4 flex items-center gap-2">
+              <div className="flex-1 min-w-0">
+                <h2 className="text-xl sm:text-2xl font-bold text-amber-900 mb-3 sm:mb-4 leading-tight break-words">
                   {t('minutes.reopeningHistory')}
                 </h2>
-                <div className="space-y-4">
+                <div className="space-y-3 sm:space-y-4">
                   {minute.reopeningHistory.map((entry, index) => (
-                    <div key={index} className="bg-white rounded-xl p-5 border-l-4 border-amber-500 shadow-md hover:shadow-lg transition-all">
-                      <div className="flex items-start gap-3">
-                        <span className="text-2xl">📝</span>
-                        <div className="flex-1">
-                          <p className="text-sm font-semibold text-amber-900 mb-2">
+                    <div key={index} className="bg-white rounded-xl p-3 sm:p-5 border-l-4 border-amber-500 shadow-md hover:shadow-lg transition-all">
+                      <div className="flex items-start gap-2.5 sm:gap-3 min-w-0">
+                        <span className="text-xl sm:text-2xl shrink-0">📝</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-amber-900 break-words">
                             {t('minutes.reopenedAt')} {new Date(entry.reopenedAt).toLocaleString(locale, {
                               day: '2-digit',
                               month: '2-digit',
                               year: 'numeric',
                               hour: '2-digit',
                               minute: '2-digit'
-                            })} {t('minutes.by')} {allUsers.find(u => u._id === entry.reopenedBy) 
+                            })}
+                          </p>
+                          <p className="text-sm font-semibold text-amber-900 mb-2 break-words">
+                            {t('minutes.by')} {allUsers.find(u => u._id === entry.reopenedBy) 
                               ? `${allUsers.find(u => u._id === entry.reopenedBy)?.firstName} ${allUsers.find(u => u._id === entry.reopenedBy)?.lastName}`
                               : entry.reopenedBy}
                           </p>
-                          <p className="text-sm text-gray-700 italic bg-amber-50 px-3 py-2 rounded-lg border border-amber-200">
+                          <p className="text-sm text-gray-700 italic bg-amber-50 px-3 py-2 rounded-lg border border-amber-200 break-words">
                             {t('minutes.reason')} {entry.reason}
                           </p>
                         </div>
@@ -785,8 +776,8 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
 
       {/* Error Message Toast */}
       {errorMessage && (
-        <div className="fixed top-4 right-4 z-50 animate-in slide-in-from-right">
-          <div className="bg-red-500 text-white px-6 py-4 rounded-xl shadow-2xl flex items-center gap-3 max-w-md">
+        <div className="fixed top-4 inset-x-4 sm:inset-x-auto sm:right-4 z-50 animate-in slide-in-from-right">
+          <div className="bg-red-500 text-white px-4 sm:px-6 py-4 rounded-xl shadow-2xl flex items-start gap-3 w-full sm:w-auto sm:max-w-md">
             <svg className="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
@@ -796,7 +787,7 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
             </div>
             <button
               onClick={() => setErrorMessage(null)}
-              className="text-white hover:text-red-100 transition-colors"
+              className="text-white hover:text-red-100 transition-colors min-h-10 min-w-10 inline-flex items-center justify-center rounded-lg"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -821,16 +812,16 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
             <p className="text-gray-600 mb-6">
               {t('minutes.finalizeConfirmText')}
             </p>
-            <div className="flex gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               <button
                 onClick={() => setShowFinalizeDialog(false)}
-                className="flex-1 px-4 py-3 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-xl font-semibold transition-all"
+                className="w-full sm:flex-1 px-4 py-3 min-h-11 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-xl font-semibold transition-all"
               >
                 {t('common.cancel')}
               </button>
               <button
                 onClick={confirmFinalize}
-                className="flex-1 px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
+                className="w-full sm:flex-1 px-4 py-3 min-h-11 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all"
               >
                 {t('minutes.finalize')}
               </button>
