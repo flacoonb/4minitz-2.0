@@ -11,7 +11,6 @@ import {
   Shield,
   ChevronDown,
   Users as UsersIcon,
-  FileText,
   CalendarDays,
   Menu,
   X
@@ -63,7 +62,6 @@ export default function Navigation() {
 
   const adminItems = [
     { href: '/admin', label: t('adminDashboard'), icon: 'admin-dashboard' },
-    { href: '/admin/templates', label: t('templatesManagement'), icon: 'templates' },
   ];
 
   const isActive = (href: string) => {
@@ -265,14 +263,6 @@ export default function Navigation() {
                       <span className="text-sm text-slate-700 dark:text-slate-300">{t('systemSettings')}</span>
                     </Link>
 
-                    <Link
-                      href="/admin/templates"
-                      className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors min-h-[44px]"
-                      onClick={() => setShowUserMenu(false)}
-                    >
-                      <FileText className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">{t('templatesManagement')}</span>
-                    </Link>
                   </>
                 )}
 

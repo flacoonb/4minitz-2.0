@@ -81,6 +81,7 @@ const ProfilePage = () => {
   const [editMode, setEditMode] = useState(false);
   const router = useRouter();
   const preferencesDebounceRef = useRef<NodeJS.Timeout | null>(null);
+  const calendarInlineMessageRef = useRef<HTMLDivElement | null>(null);
 
   const [profileData, setProfileData] = useState({
     firstName: '',
@@ -114,6 +115,7 @@ const ProfilePage = () => {
   const [loadingCalendarLink, setLoadingCalendarLink] = useState(false);
   const [regeneratingCalendarLink, setRegeneratingCalendarLink] = useState(false);
   const [revokingCalendarLink, setRevokingCalendarLink] = useState(false);
+  const [calendarInlineMessage, setCalendarInlineMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   // Helper to reset profileData from user object
   const resetProfileData = useCallback((u: UserProfile) => {
@@ -424,6 +426,7 @@ const ProfilePage = () => {
     setRegeneratingCalendarLink(true);
     setError('');
     setSuccess('');
+    setCalendarInlineMessage(null);
     try {
       const response = await fetch('/api/users/me/calendar-subscription', {
         method: 'POST',
@@ -436,8 +439,10 @@ const ProfilePage = () => {
       const subscribeUrl = String(payload?.data?.subscribeUrl || '');
       setCalendarSubscribeUrl(subscribeUrl);
       setSuccess(t('preferencesTab.calendar.messages.regenerated'));
+      setCalendarInlineMessage({ type: 'success', text: t('preferencesTab.calendar.messages.regenerated') });
     } catch (err: any) {
       setError(err?.message || t('messages.updateError'));
+      setCalendarInlineMessage({ type: 'error', text: err?.message || t('messages.updateError') });
     } finally {
       setRegeneratingCalendarLink(false);
     }
@@ -447,16 +452,23 @@ const ProfilePage = () => {
     if (!calendarSubscribeUrl) return;
     try {
       await navigator.clipboard.writeText(calendarSubscribeUrl);
-      setSuccess(t('preferencesTab.calendar.messages.copied'));
+      setCalendarInlineMessage({ type: 'success', text: t('preferencesTab.calendar.messages.copied') });
     } catch {
       setError(t('preferencesTab.calendar.messages.copyError'));
+      setCalendarInlineMessage({ type: 'error', text: t('preferencesTab.calendar.messages.copyError') });
     }
   }, [calendarSubscribeUrl, t]);
+
+  useEffect(() => {
+    if (!calendarInlineMessage || !calendarInlineMessageRef.current) return;
+    calendarInlineMessageRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }, [calendarInlineMessage]);
 
   const handleRevokeCalendarLink = useCallback(async () => {
     setRevokingCalendarLink(true);
     setError('');
     setSuccess('');
+    setCalendarInlineMessage(null);
     try {
       const response = await fetch('/api/users/me/calendar-subscription', {
         method: 'DELETE',
@@ -468,8 +480,10 @@ const ProfilePage = () => {
       }
       setCalendarSubscribeUrl('');
       setSuccess(t('preferencesTab.calendar.messages.revoked'));
+      setCalendarInlineMessage({ type: 'success', text: t('preferencesTab.calendar.messages.revoked') });
     } catch (err: any) {
       setError(err?.message || t('messages.updateError'));
+      setCalendarInlineMessage({ type: 'error', text: err?.message || t('messages.updateError') });
     } finally {
       setRevokingCalendarLink(false);
     }
@@ -1076,6 +1090,19 @@ const ProfilePage = () => {
                             {t('preferencesTab.calendar.revoke')}
                           </button>
                         </div>
+
+                        {calendarInlineMessage && (
+                          <div
+                            ref={calendarInlineMessageRef}
+                            className={`text-sm rounded-lg px-3 py-2 border ${
+                              calendarInlineMessage.type === 'success'
+                                ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+                                : 'bg-red-50 border-red-200 text-red-700'
+                            }`}
+                          >
+                            {calendarInlineMessage.text}
+                          </div>
+                        )}
 
                         <p className="text-xs text-slate-500 dark:text-slate-400">
                           {t('preferencesTab.calendar.note')}

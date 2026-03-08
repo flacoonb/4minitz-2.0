@@ -440,100 +440,116 @@ function AdminTemplatesPage() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Globale Protokoll-Vorlagen</h1>
-          <p className="text-gray-600 mt-1">Admins verwalten wiederverwendbare Vorlagen für alle Serien.</p>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 py-6 sm:py-8 px-3 sm:px-4">
+      <div className="max-w-6xl mx-auto space-y-5">
+        <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 rounded-2xl p-4 sm:p-6 border border-blue-100 dark:border-slate-700 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <div>
+              <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent">
+                Globale Protokoll-Vorlagen
+              </h1>
+              <p className="text-sm sm:text-base text-gray-600 dark:text-slate-400 mt-1">
+                Admins verwalten wiederverwendbare Vorlagen für alle Serien.
+              </p>
+            </div>
+            <Link
+              href="/admin"
+              className="inline-flex items-center justify-center px-4 py-2.5 rounded-xl border border-gray-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-gray-700 dark:text-slate-200 hover:bg-gray-50 dark:hover:bg-slate-700 min-h-[44px]"
+            >
+              Zurück zum Admin-Bereich
+            </Link>
+          </div>
         </div>
-        <Link href="/admin/settings" className="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200">
-          Zurück
-        </Link>
-      </div>
 
-      {error && <div className="p-3 rounded-lg border border-red-200 bg-red-50 text-red-700">{error}</div>}
+        {error && <div className="p-3 rounded-xl border border-red-200 dark:border-red-900 bg-red-50 dark:bg-red-950/40 text-red-700 dark:text-red-300">{error}</div>}
 
-      <div className="bg-white border rounded-xl p-5">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xl font-semibold">Vorlagen</h2>
-          <button
-            type="button"
-            onClick={openCreateModal}
-            className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700"
-          >
-            + Neue Vorlage
-          </button>
-        </div>
-        {loading ? (
-          <p className="text-gray-500">Lade Vorlagen...</p>
-        ) : templates.length === 0 ? (
-          <p className="text-gray-500">Noch keine Vorlagen vorhanden.</p>
-        ) : (
-          <div className="space-y-3">
-            {templates.map((template) => (
-              <div key={template._id} className="border rounded-lg p-3 bg-gray-50">
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="font-semibold">{template.name}</p>
-                    {template.description && <p className="text-sm text-gray-600">{template.description}</p>}
-                    <span
-                      className={`inline-block mt-2 px-2 py-0.5 text-xs rounded-full ${
-                        template.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-700'
-                      }`}
-                    >
-                      {template.isActive ? 'Aktiv' : 'Inaktiv'}
-                    </span>
-                  </div>
-                  <div className="flex gap-2">
-                    <button onClick={() => startEdit(template)} className="px-3 py-1.5 bg-white border rounded-lg">
-                      Bearbeiten
-                    </button>
-                    <button
-                      onClick={() => toggleActive(template)}
-                      className="px-3 py-1.5 bg-white border rounded-lg"
-                    >
-                      {template.isActive ? 'Deaktivieren' : 'Aktivieren'}
-                    </button>
-                    <button
-                      onClick={() => removeTemplate(template._id)}
-                      className="px-3 py-1.5 bg-red-600 text-white rounded-lg"
-                    >
-                      Löschen
-                    </button>
+        <div className="bg-white/90 dark:bg-slate-900/80 backdrop-blur-sm border border-gray-100 dark:border-slate-700 rounded-2xl p-5 shadow-sm">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-slate-100">Vorlagen</h2>
+            <button
+              type="button"
+              onClick={openCreateModal}
+              className="inline-flex items-center justify-center px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 min-h-[44px] shadow-md"
+            >
+              + Neue Vorlage
+            </button>
+          </div>
+          {loading ? (
+            <p className="text-gray-500 dark:text-slate-400">Lade Vorlagen...</p>
+          ) : templates.length === 0 ? (
+            <p className="text-gray-500 dark:text-slate-400">Noch keine Vorlagen vorhanden.</p>
+          ) : (
+            <div className="space-y-3">
+              {templates.map((template) => (
+                <div
+                  key={template._id}
+                  className="rounded-xl border border-gray-100 dark:border-slate-700 bg-gradient-to-r from-white to-gray-50 dark:from-slate-900 dark:to-slate-800 p-4 shadow-sm"
+                >
+                  <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                    <div className="min-w-0">
+                      <p className="font-semibold text-gray-900 dark:text-slate-100 break-words">{template.name}</p>
+                      {template.description && <p className="text-sm text-gray-600 dark:text-slate-400 mt-1">{template.description}</p>}
+                      <span
+                        className={`inline-block mt-2 px-2 py-0.5 text-xs rounded-full ${
+                          template.isActive ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300' : 'bg-gray-200 text-gray-700 dark:bg-slate-700 dark:text-slate-300'
+                        }`}
+                      >
+                        {template.isActive ? 'Aktiv' : 'Inaktiv'}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={() => startEdit(template)}
+                        className="px-3 py-2 min-h-[40px] bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 text-sm text-gray-800 dark:text-slate-200"
+                      >
+                        Bearbeiten
+                      </button>
+                      <button
+                        onClick={() => toggleActive(template)}
+                        className="px-3 py-2 min-h-[40px] bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 text-sm text-gray-800 dark:text-slate-200"
+                      >
+                        {template.isActive ? 'Deaktivieren' : 'Aktivieren'}
+                      </button>
+                      <button
+                        onClick={() => removeTemplate(template._id)}
+                        className="px-3 py-2 min-h-[40px] bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm"
+                      >
+                        Löschen
+                      </button>
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+              ))}
+            </div>
+          )}
+        </div>
 
-      {showEditorModal && (
-        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
-          <div className="bg-white w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-xl shadow-2xl border p-5 space-y-4">
+        {showEditorModal && (
+          <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-slate-900 w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl border border-gray-100 dark:border-slate-700 p-5 space-y-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold">{editingTemplate ? 'Vorlage bearbeiten' : 'Neue Vorlage'}</h2>
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-slate-100">{editingTemplate ? 'Vorlage bearbeiten' : 'Neue Vorlage'}</h2>
               <button
                 type="button"
                 onClick={() => {
                   setShowEditorModal(false);
                   closeMentionSuggestions();
                 }}
-                className="px-3 py-2 bg-gray-100 rounded-lg hover:bg-gray-200"
+                className="px-3 py-2 min-h-[40px] bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-slate-200 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-700"
               >
                 Schliessen
               </button>
             </div>
 
-            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" className="w-full px-3 py-2 border rounded-lg" />
-            <input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Beschreibung (optional)" className="w-full px-3 py-2 border rounded-lg" />
-            <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Standard-Titel (optional)" className="w-full px-3 py-2 border rounded-lg" />
+            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" className="w-full px-3 py-2.5 border border-gray-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100" />
+            <input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Beschreibung (optional)" className="w-full px-3 py-2.5 border border-gray-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100" />
+            <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Standard-Titel (optional)" className="w-full px-3 py-2.5 border border-gray-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-800 text-gray-900 dark:text-slate-100" />
             <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <input value={time} onChange={(e) => setTime(e.target.value)} placeholder="Startzeit (z. B. 09:00)" className="w-full px-3 py-2 border rounded-lg" />
-              <input value={endTime} onChange={(e) => setEndTime(e.target.value)} placeholder="Endzeit (z. B. 10:30)" className="w-full px-3 py-2 border rounded-lg" />
-              <input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Ort (optional)" className="w-full px-3 py-2 border rounded-lg" />
+              <input value={time} onChange={(e) => setTime(e.target.value)} placeholder="Startzeit (z. B. 09:00)" className="w-full px-3 py-2.5 border border-gray-300 rounded-xl" />
+              <input value={endTime} onChange={(e) => setEndTime(e.target.value)} placeholder="Endzeit (z. B. 10:30)" className="w-full px-3 py-2.5 border border-gray-300 rounded-xl" />
+              <input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Ort (optional)" className="w-full px-3 py-2.5 border border-gray-300 rounded-xl" />
             </div>
-            <textarea value={globalNote} onChange={(e) => setGlobalNote(e.target.value)} placeholder="Globaler Hinweis (optional)" className="w-full px-3 py-2 border rounded-lg min-h-[80px]" />
+            <textarea value={globalNote} onChange={(e) => setGlobalNote(e.target.value)} placeholder="Globaler Hinweis (optional)" className="w-full px-3 py-2.5 border border-gray-300 rounded-xl min-h-[80px]" />
 
             <div className="space-y-3">
               <div className="inline-flex rounded-lg border border-gray-200 overflow-hidden">
@@ -567,28 +583,28 @@ function AdminTemplatesPage() {
 
               {editorMode === 'visual' ? (
                 <div className="space-y-3">
-                  <button type="button" onClick={addTopic} className="px-3 py-2 text-sm bg-gray-100 border rounded-lg hover:bg-gray-200">+ Traktandum</button>
+                  <button type="button" onClick={addTopic} className="px-3 py-2 text-sm bg-gray-100 border border-gray-200 rounded-lg hover:bg-gray-200 min-h-[40px]">+ Traktandum</button>
                   {topics.map((topic, topicIndex) => (
-                    <div key={`topic-${topicIndex}`} className="border rounded-lg p-3 space-y-3 bg-gray-50">
+                    <div key={`topic-${topicIndex}`} className="border border-gray-200 rounded-xl p-3 space-y-3 bg-gray-50/80">
                       <div className="flex gap-2">
-                        <input value={topic.subject} onChange={(e) => updateTopic(topicIndex, 'subject', e.target.value)} placeholder="Traktandum" className="flex-1 px-3 py-2 border rounded-lg" />
-                        <button type="button" onClick={() => removeTopic(topicIndex)} className="px-3 py-2 text-sm bg-red-600 text-white rounded-lg">Löschen</button>
+                        <input value={topic.subject} onChange={(e) => updateTopic(topicIndex, 'subject', e.target.value)} placeholder="Traktandum" className="flex-1 px-3 py-2 border border-gray-300 rounded-lg" />
+                        <button type="button" onClick={() => removeTopic(topicIndex)} className="px-3 py-2 text-sm bg-red-600 text-white rounded-lg min-h-[40px]">Löschen</button>
                       </div>
                       <div className="flex gap-2">
                         <button type="button" onClick={() => addItem(topicIndex, 'infoItem')} className="px-3 py-1.5 text-xs bg-blue-100 text-blue-800 rounded">+ Info</button>
                         <button type="button" onClick={() => addItem(topicIndex, 'actionItem')} className="px-3 py-1.5 text-xs bg-amber-100 text-amber-800 rounded">+ Aufgabe</button>
                       </div>
                       {(topic.infoItems || []).map((item, itemIndex) => (
-                        <div key={`item-${itemIndex}`} className="bg-white border rounded-lg p-3 space-y-2">
+                        <div key={`item-${itemIndex}`} className="bg-white border border-gray-200 rounded-xl p-3 space-y-2 shadow-sm">
                           <div className="flex gap-2">
-                            <select value={item.itemType} onChange={(e) => updateItem(topicIndex, itemIndex, { itemType: e.target.value as 'actionItem' | 'infoItem' })} className="px-2 py-2 border rounded-lg text-sm">
+                            <select value={item.itemType} onChange={(e) => updateItem(topicIndex, itemIndex, { itemType: e.target.value as 'actionItem' | 'infoItem' })} className="px-2 py-2 border border-gray-300 rounded-lg text-sm">
                               <option value="infoItem">Info</option>
                               <option value="actionItem">Aufgabe</option>
                             </select>
-                            <input value={item.subject} onChange={(e) => updateItem(topicIndex, itemIndex, { subject: e.target.value })} placeholder="Betreff" className="flex-1 px-3 py-2 border rounded-lg" />
+                            <input value={item.subject} onChange={(e) => updateItem(topicIndex, itemIndex, { subject: e.target.value })} placeholder="Betreff" className="flex-1 px-3 py-2 border border-gray-300 rounded-lg" />
                             <button type="button" onClick={() => removeItem(topicIndex, itemIndex)} className="px-3 py-2 text-xs bg-red-100 text-red-700 rounded">Entfernen</button>
                           </div>
-                          <textarea value={item.details || ''} onChange={(e) => updateItem(topicIndex, itemIndex, { details: e.target.value })} placeholder="Details" className="w-full px-3 py-2 border rounded-lg min-h-[70px]" />
+                          <textarea value={item.details || ''} onChange={(e) => updateItem(topicIndex, itemIndex, { details: e.target.value })} placeholder="Details" className="w-full px-3 py-2 border border-gray-300 rounded-lg min-h-[70px]" />
                           <div>
                             <p className="text-xs text-gray-600 mb-1">Verantwortliche (Mehrfachauswahl)</p>
                             <select
@@ -599,7 +615,7 @@ function AdminTemplatesPage() {
                                   responsibles: Array.from(e.target.selectedOptions).map((option) => option.value),
                                 })
                               }
-                              className="w-full px-3 py-2 border rounded-lg min-h-[110px]"
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg min-h-[110px]"
                             >
                               {allUsers.map((user) => (
                                 <option key={user._id} value={user.username}>
@@ -610,21 +626,21 @@ function AdminTemplatesPage() {
                           </div>
                           {item.itemType === 'actionItem' && (
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                              <select value={item.status || 'open'} onChange={(e) => updateItem(topicIndex, itemIndex, { status: e.target.value as 'open' | 'in-progress' | 'completed' | 'cancelled' })} className="px-3 py-2 border rounded-lg">
+                              <select value={item.status || 'open'} onChange={(e) => updateItem(topicIndex, itemIndex, { status: e.target.value as 'open' | 'in-progress' | 'completed' | 'cancelled' })} className="px-3 py-2 border border-gray-300 rounded-lg">
                                 <option value="open">Offen</option>
                                 <option value="in-progress">In Arbeit</option>
                                 <option value="completed">Erledigt</option>
                                 <option value="cancelled">Abgebrochen</option>
                               </select>
-                              <select value={item.priority || 'medium'} onChange={(e) => updateItem(topicIndex, itemIndex, { priority: e.target.value as 'high' | 'medium' | 'low' })} className="px-3 py-2 border rounded-lg">
+                              <select value={item.priority || 'medium'} onChange={(e) => updateItem(topicIndex, itemIndex, { priority: e.target.value as 'high' | 'medium' | 'low' })} className="px-3 py-2 border border-gray-300 rounded-lg">
                                 <option value="high">Hoch</option>
                                 <option value="medium">Mittel</option>
                                 <option value="low">Tief</option>
                               </select>
-                              <input type="date" value={item.dueDate || ''} onChange={(e) => updateItem(topicIndex, itemIndex, { dueDate: e.target.value })} className="px-3 py-2 border rounded-lg" />
+                              <input type="date" value={item.dueDate || ''} onChange={(e) => updateItem(topicIndex, itemIndex, { dueDate: e.target.value })} className="px-3 py-2 border border-gray-300 rounded-lg" />
                             </div>
                           )}
-                          <textarea value={item.notes || ''} onChange={(e) => updateItem(topicIndex, itemIndex, { notes: e.target.value })} placeholder={item.itemType === 'actionItem' ? 'Beschluss' : 'Information'} className="w-full px-3 py-2 border rounded-lg min-h-[60px]" />
+                          <textarea value={item.notes || ''} onChange={(e) => updateItem(topicIndex, itemIndex, { notes: e.target.value })} placeholder={item.itemType === 'actionItem' ? 'Beschluss' : 'Information'} className="w-full px-3 py-2 border border-gray-300 rounded-lg min-h-[60px]" />
                         </div>
                       ))}
                     </div>
@@ -633,15 +649,15 @@ function AdminTemplatesPage() {
               ) : (
                 <div className="space-y-3">
                   <div className="flex flex-wrap gap-2">
-                    <button type="button" onClick={() => insertMarkdownSnippet('## Neues Traktandum')} className="px-3 py-1.5 text-xs bg-gray-100 border rounded-md">Traktandum</button>
-                    <button type="button" onClick={() => insertMarkdownSnippet(buildInfoTemplate())} className="px-3 py-1.5 text-xs bg-gray-100 border rounded-md">Info</button>
-                    <button type="button" onClick={() => insertMarkdownSnippet(buildTaskTemplate('open'))} className="px-3 py-1.5 text-xs bg-gray-100 border rounded-md">Aufgabe offen</button>
-                    <button type="button" onClick={() => insertMarkdownSnippet(buildTaskTemplate('in-progress'))} className="px-3 py-1.5 text-xs bg-gray-100 border rounded-md">Aufgabe in Arbeit</button>
-                    <button type="button" onClick={() => insertMarkdownSnippet(buildTaskTemplate('done'))} className="px-3 py-1.5 text-xs bg-gray-100 border rounded-md">Aufgabe erledigt</button>
-                    <button type="button" onClick={() => insertMarkdownSnippet('!high')} className="px-3 py-1.5 text-xs bg-gray-100 border rounded-md">Prio</button>
-                    <button type="button" onClick={() => insertMarkdownSnippet('due:2026-03-20')} className="px-3 py-1.5 text-xs bg-gray-100 border rounded-md">Fällig</button>
-                    <button type="button" onClick={() => insertMarkdownSnippet('@userId')} className="px-3 py-1.5 text-xs bg-gray-100 border rounded-md">Verantwortlich</button>
-                    <button type="button" onClick={() => insertMarkdownSnippet('  beschluss: Kommentar')} className="px-3 py-1.5 text-xs bg-gray-100 border rounded-md">Beschluss/Info</button>
+                    <button type="button" onClick={() => insertMarkdownSnippet('## Neues Traktandum')} className="px-3 py-1.5 text-xs bg-gray-100 border border-gray-200 rounded-md hover:bg-gray-200">Traktandum</button>
+                    <button type="button" onClick={() => insertMarkdownSnippet(buildInfoTemplate())} className="px-3 py-1.5 text-xs bg-gray-100 border border-gray-200 rounded-md hover:bg-gray-200">Info</button>
+                    <button type="button" onClick={() => insertMarkdownSnippet(buildTaskTemplate('open'))} className="px-3 py-1.5 text-xs bg-gray-100 border border-gray-200 rounded-md hover:bg-gray-200">Aufgabe offen</button>
+                    <button type="button" onClick={() => insertMarkdownSnippet(buildTaskTemplate('in-progress'))} className="px-3 py-1.5 text-xs bg-gray-100 border border-gray-200 rounded-md hover:bg-gray-200">Aufgabe in Arbeit</button>
+                    <button type="button" onClick={() => insertMarkdownSnippet(buildTaskTemplate('done'))} className="px-3 py-1.5 text-xs bg-gray-100 border border-gray-200 rounded-md hover:bg-gray-200">Aufgabe erledigt</button>
+                    <button type="button" onClick={() => insertMarkdownSnippet('!high')} className="px-3 py-1.5 text-xs bg-gray-100 border border-gray-200 rounded-md hover:bg-gray-200">Prio</button>
+                    <button type="button" onClick={() => insertMarkdownSnippet('due:2026-03-20')} className="px-3 py-1.5 text-xs bg-gray-100 border border-gray-200 rounded-md hover:bg-gray-200">Fällig</button>
+                    <button type="button" onClick={() => insertMarkdownSnippet('@userId')} className="px-3 py-1.5 text-xs bg-gray-100 border border-gray-200 rounded-md hover:bg-gray-200">Verantwortlich</button>
+                    <button type="button" onClick={() => insertMarkdownSnippet('  beschluss: Kommentar')} className="px-3 py-1.5 text-xs bg-gray-100 border border-gray-200 rounded-md hover:bg-gray-200">Beschluss/Info</button>
                   </div>
                   <div className="relative">
                     <textarea
@@ -674,10 +690,10 @@ function AdminTemplatesPage() {
                           closeMentionSuggestions();
                         }
                       }}
-                      className="w-full px-3 py-2 border rounded-lg min-h-[260px] font-mono text-sm"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-xl min-h-[260px] font-mono text-sm"
                     />
                     {mentionSuggestions.length > 0 && mentionMenuPosition && (
-                      <div className="absolute z-30 bg-white border border-gray-200 rounded-lg shadow-lg max-h-56 overflow-auto w-64" style={{ top: mentionMenuPosition.top, left: mentionMenuPosition.left }}>
+                      <div className="absolute z-30 bg-white border border-gray-200 rounded-xl shadow-lg max-h-56 overflow-auto w-64" style={{ top: mentionMenuPosition.top, left: mentionMenuPosition.left }}>
                         {mentionSuggestions.map((candidate, index) => (
                           <button
                             key={`${candidate.value}-${index}`}
@@ -709,7 +725,7 @@ function AdminTemplatesPage() {
               <button
                 onClick={saveTemplate}
                 disabled={saving || !name.trim()}
-                className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50"
+                className="px-4 py-2.5 min-h-[44px] bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50"
               >
                 {saving ? 'Speichern...' : editingTemplate ? 'Änderungen speichern' : 'Vorlage erstellen'}
               </button>
@@ -718,14 +734,15 @@ function AdminTemplatesPage() {
                   setShowEditorModal(false);
                   closeMentionSuggestions();
                 }}
-                className="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200"
+                className="px-4 py-2.5 min-h-[44px] bg-gray-100 rounded-xl hover:bg-gray-200"
               >
                 Abbrechen
               </button>
             </div>
           </div>
         </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

@@ -3,6 +3,7 @@ import crypto from 'crypto';
 import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
 import { verifyToken } from '@/lib/auth';
+import { getAppUrl } from '@/lib/email-service';
 
 function getRequestBaseUrl(request: NextRequest): string {
   const forwardedProto = request.headers.get('x-forwarded-proto')?.split(',')[0]?.trim();
@@ -28,6 +29,14 @@ function buildIcalUrl(baseUrl: string, token: string): string {
   return `${baseUrl.replace(/\/+$/, '')}/api/calendar/ical/${token}`;
 }
 
+async function resolvePublicBaseUrl(request: NextRequest): Promise<string> {
+  const configured = String((await getAppUrl()) || '').trim();
+  if (configured) {
+    return configured.replace(/\/+$/, '');
+  }
+  return getRequestBaseUrl(request).replace(/\/+$/, '');
+}
+
 export async function GET(request: NextRequest) {
   try {
     await connectDB();
@@ -48,7 +57,7 @@ export async function GET(request: NextRequest) {
       await user.save();
     }
 
-    const baseUrl = getRequestBaseUrl(request);
+    const baseUrl = await resolvePublicBaseUrl(request);
     return NextResponse.json({
       success: true,
       data: {
@@ -80,7 +89,7 @@ export async function POST(request: NextRequest) {
     user.calendarFeedTokenCreatedAt = new Date();
     await user.save();
 
-    const baseUrl = getRequestBaseUrl(request);
+    const baseUrl = await resolvePublicBaseUrl(request);
     return NextResponse.json({
       success: true,
       data: {
