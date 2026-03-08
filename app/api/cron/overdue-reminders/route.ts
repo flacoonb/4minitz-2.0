@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Minutes from '@/models/Minutes';
 import { sendOverdueReminder } from '@/lib/email-service';
+import { isEmailIdentifier, lookupUsersByIdentifiers, normalizeIdentifier } from '@/lib/user-identifiers';
 
 /**
  * GET /api/cron/overdue-reminders
@@ -68,17 +69,27 @@ export async function GET(request: NextRequest) {
     const results = {
       sent: 0,
       failed: 0,
+      skippedNoEmail: 0,
       users: Object.keys(overdueByUser).length,
       totalItems: 0,
     };
 
-    for (const [userEmail, items] of Object.entries(overdueByUser)) {
+    const userLookup = await lookupUsersByIdentifiers(Object.keys(overdueByUser), '_id email username');
+
+    for (const [identifier, items] of Object.entries(overdueByUser)) {
       results.totalItems += items.length;
+      const user = userLookup.get(normalizeIdentifier(identifier)) as any;
+      const targetEmail = (user?.email || (isEmailIdentifier(identifier) ? identifier : '')).trim().toLowerCase();
+      if (!targetEmail) {
+        results.skippedNoEmail++;
+        continue;
+      }
+
       try {
-        await sendOverdueReminder(userEmail, items, 'de');
+        await sendOverdueReminder(targetEmail, items, 'de');
         results.sent++;
       } catch (error) {
-        console.error(`Failed to send reminder to ${userEmail}:`, error);
+        console.error(`Failed to send reminder to ${targetEmail}:`, error);
         results.failed++;
       }
     }

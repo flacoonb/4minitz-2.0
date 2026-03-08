@@ -2,9 +2,13 @@ import nodemailer from 'nodemailer';
 import { IMinutes, ITopic, IInfoItem } from '@/models/Minutes';
 import { IMeetingSeries } from '@/models/MeetingSeries';
 import Settings from '@/models/Settings';
-import User from '@/models/User';
 import PendingNotification from '@/models/PendingNotification';
 import { decrypt } from '@/lib/crypto';
+import {
+  isEmailIdentifier,
+  lookupUsersByIdentifiers,
+  normalizeIdentifier,
+} from '@/lib/user-identifiers';
 
 // Email Configuration
 const EMAIL_CONFIG = {
@@ -265,24 +269,30 @@ export async function sendNewMinutesNotification(
     throw new Error('Meeting series information required');
   }
 
-  const allRecipients = [
+  const recipientIdentifiers = [
     ...(minute.meetingSeries.visibleFor || []),
     ...(minute.participants || []),
-  ].filter((email, index, self) => self.indexOf(email) === index); // Remove duplicates
+  ]
+    .map((value) => String(value || '').trim())
+    .filter(Boolean)
+    .filter((value, index, self) => self.indexOf(value) === index);
 
-  if (allRecipients.length === 0) {
+  if (recipientIdentifiers.length === 0) {
     return;
   }
 
-  // Check for digest settings
-  const users = await User.find({ email: { $in: allRecipients } });
-  const userMap = new Map(users.map(u => [u.email, u]));
+  const userMap = await lookupUsersByIdentifiers(recipientIdentifiers);
   
   const directRecipients: string[] = [];
   const digestPromises: Promise<any>[] = [];
+  const handledEmails = new Set<string>();
 
-  for (const email of allRecipients) {
-    const user = userMap.get(email);
+  for (const identifier of recipientIdentifiers) {
+    const user = userMap.get(normalizeIdentifier(identifier)) as any;
+    const targetEmail = (user?.email || (isEmailIdentifier(identifier) ? identifier : '')).trim().toLowerCase();
+    if (!targetEmail || handledEmails.has(targetEmail)) continue;
+    handledEmails.add(targetEmail);
+
     // Check if user has digest enabled (and is not null)
     const digestEnabled = user?.notificationSettings?.enableDigestEmails;
 
@@ -298,8 +308,8 @@ export async function sendNewMinutesNotification(
            topicCount: minute.topics?.length || 0
          }
        }));
-    } else {
-       directRecipients.push(email);
+    } else if (targetEmail) {
+       directRecipients.push(targetEmail);
     }
   }
 
@@ -382,15 +392,23 @@ export async function sendActionItemAssignedNotification(
     return;
   }
 
-  // Check for digest settings
-  const users = await User.find({ email: { $in: actionItem.responsibles } });
-  const userMap = new Map(users.map(u => [u.email, u]));
+  const responsibleIdentifiers = (actionItem.responsibles || [])
+    .map((value) => String(value || '').trim())
+    .filter(Boolean)
+    .filter((value, index, self) => self.indexOf(value) === index);
+
+  const userMap = await lookupUsersByIdentifiers(responsibleIdentifiers);
   
   const directRecipients: string[] = [];
   const digestPromises: Promise<any>[] = [];
+  const handledEmails = new Set<string>();
 
-  for (const email of actionItem.responsibles) {
-    const user = userMap.get(email);
+  for (const identifier of responsibleIdentifiers) {
+    const user = userMap.get(normalizeIdentifier(identifier)) as any;
+    const targetEmail = (user?.email || (isEmailIdentifier(identifier) ? identifier : '')).trim().toLowerCase();
+    if (!targetEmail || handledEmails.has(targetEmail)) continue;
+    handledEmails.add(targetEmail);
+
     const digestEnabled = user?.notificationSettings?.enableDigestEmails;
 
     if (digestEnabled && user) {
@@ -406,8 +424,8 @@ export async function sendActionItemAssignedNotification(
            dueDate: actionItem.dueDate
          }
        }));
-    } else {
-       directRecipients.push(email);
+    } else if (targetEmail) {
+       directRecipients.push(targetEmail);
     }
   }
 

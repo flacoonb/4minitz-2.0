@@ -71,7 +71,8 @@ export async function PATCH(
 
     // Check if user is assigned to this task
     const userId = authResult.user._id.toString();
-    if (!item.responsibles?.includes(userId)) {
+    const username = authResult.user.username;
+    if (!item.responsibles?.includes(userId) && !item.responsibles?.includes(username)) {
       return NextResponse.json(
         { error: 'You are not assigned to this task' },
         { status: 403 }
@@ -101,7 +102,7 @@ export async function PATCH(
     if (item.externalTaskId) {
       const taskUpdate: any = {};
       if (status !== undefined) taskUpdate.status = status;
-      if (notes !== undefined) taskUpdate.notes = notes;
+      if (notes !== undefined) taskUpdate.details = notes;
       
       await Task.findByIdAndUpdate(item.externalTaskId, taskUpdate);
     }

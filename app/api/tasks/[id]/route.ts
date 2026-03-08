@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Task from '@/models/Task';
 import Minutes from '@/models/Minutes';
+import MeetingSeries from '@/models/MeetingSeries';
 import { verifyToken } from '@/lib/auth';
+import { hasPermission } from '@/lib/permissions';
 import { updateTaskSchema, validateBody } from '@/lib/validations';
 
 interface RouteContext {
@@ -30,6 +32,9 @@ export async function PATCH(
 
     const { id: taskId } = await context.params;
     const userId = authResult.user._id.toString();
+    const username = authResult.user.username;
+    const isAdmin = authResult.user.role === 'admin';
+    const canModerateAllMeetings = await hasPermission(authResult.user, 'canModerateAllMeetings');
     const body = await request.json();
     const validation = validateBody(updateTaskSchema, body);
     if (!validation.success) {
@@ -42,6 +47,27 @@ export async function PATCH(
     const task = await Task.findById(taskId);
 
     if (task) {
+      const isResponsible = Array.isArray(task.responsibles)
+        ? task.responsibles.some((responsible: string) => {
+            const value = String(responsible);
+            return value === userId || value === username;
+          })
+        : false;
+
+      let isSeriesModerator = false;
+      if (task.meetingSeriesId) {
+        const series = await MeetingSeries.findById(task.meetingSeriesId).select('moderators').lean();
+        isSeriesModerator = Boolean(
+          series &&
+            Array.isArray((series as any).moderators) &&
+            ((series as any).moderators.includes(userId) || (series as any).moderators.includes(username))
+        );
+      }
+
+      if (!isAdmin && !canModerateAllMeetings && !isSeriesModerator && !isResponsible) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
+
       // Update Task collection
       const taskUpdate: Record<string, unknown> = {};
       if (status !== undefined) taskUpdate.status = status;
@@ -86,10 +112,31 @@ export async function PATCH(
       return NextResponse.json({ error: 'Task not found' }, { status: 404 });
     }
 
+    let isSeriesModerator = false;
+    if (minute.meetingSeries_id) {
+      const series = await MeetingSeries.findById(minute.meetingSeries_id).select('moderators').lean();
+      isSeriesModerator = Boolean(
+        series &&
+          Array.isArray((series as any).moderators) &&
+          ((series as any).moderators.includes(userId) || (series as any).moderators.includes(username))
+      );
+    }
+
     let taskUpdated = false;
     for (const topic of minute.topics) {
       const item = topic.infoItems?.find((i: any) => i._id?.toString() === taskId);
       if (item) {
+        const isResponsible = Array.isArray(item.responsibles)
+          ? item.responsibles.some((responsible: string) => {
+              const value = String(responsible);
+              return value === userId || value === username;
+            })
+          : false;
+
+        if (!isAdmin && !canModerateAllMeetings && !isSeriesModerator && !isResponsible) {
+          return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+        }
+
         if (status !== undefined) {
           item.status = status;
           if (status === 'completed') {

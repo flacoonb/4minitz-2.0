@@ -14,6 +14,43 @@ import PdfLayoutSettings from '@/models/PdfLayoutSettings';
 import AuditLog from '@/models/AuditLog';
 import PendingNotification from '@/models/PendingNotification';
 
+function sanitizeUsers(users: any[], includeSensitive: boolean) {
+  if (includeSensitive) return users;
+  return users.map((user) => {
+    const {
+      password,
+      passwordResetTokenHash,
+      passwordResetExpires,
+      emailVerificationToken,
+      emailVerificationExpires,
+      ...safeUser
+    } = user;
+    void password;
+    void passwordResetTokenHash;
+    void passwordResetExpires;
+    void emailVerificationToken;
+    void emailVerificationExpires;
+    return safeUser;
+  });
+}
+
+function sanitizeSettings(settings: any[], includeSensitive: boolean) {
+  if (includeSensitive) return settings;
+  return settings.map((entry) => {
+    if (!entry?.smtpSettings?.auth?.pass) return entry;
+    return {
+      ...entry,
+      smtpSettings: {
+        ...entry.smtpSettings,
+        auth: {
+          ...entry.smtpSettings.auth,
+          pass: '__REDACTED__',
+        },
+      },
+    };
+  });
+}
+
 async function verifyAdmin(request: NextRequest) {
   const authResult = await verifyToken(request);
   if (!authResult.success || !authResult.user) {
@@ -28,6 +65,8 @@ async function verifyAdmin(request: NextRequest) {
 export async function GET(request: NextRequest) {
   try {
     await connectDB();
+    const { searchParams } = new URL(request.url);
+    const includeSensitive = searchParams.get('includeSensitive') === 'true';
 
     const auth = await verifyAdmin(request);
     if ('error' in auth) return auth.error;
@@ -62,16 +101,20 @@ export async function GET(request: NextRequest) {
     const fileSafeTimestamp = exportedAt.toISOString().replace(/[:.]/g, '-');
     const filename = `4minitz-backup-${fileSafeTimestamp}.json`;
 
+    const safeSettings = sanitizeSettings(settings, includeSensitive);
+    const safeUsers = sanitizeUsers(users, includeSensitive);
+
     const payload = {
       metadata: {
         app: '4minitz-2.0',
         exportedAt: exportedAt.toISOString(),
         exportedBy: auth.user.username,
         formatVersion: 1,
+        sensitiveDataIncluded: includeSensitive,
       },
       data: {
-        settings,
-        users,
+        settings: safeSettings,
+        users: safeUsers,
         meetingSeries,
         minutes,
         tasks,
@@ -115,6 +158,7 @@ export async function GET(request: NextRequest) {
       headers: {
         'Content-Type': 'application/json; charset=utf-8',
         'Content-Disposition': `attachment; filename="${filename}"`,
+        'X-Backup-Sensitive': includeSensitive ? 'true' : 'false',
       },
     });
   } catch (error) {
@@ -122,4 +166,3 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
-

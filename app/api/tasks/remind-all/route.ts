@@ -2,10 +2,14 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Task from '@/models/Task';
 import MeetingSeries from '@/models/MeetingSeries';
-import User from '@/models/User';
 import Settings from '@/models/Settings';
 import { verifyToken } from '@/lib/auth';
 import { sendPendingTasksReminder } from '@/lib/email-service';
+import {
+  isEmailIdentifier,
+  lookupUsersByIdentifiers,
+  normalizeIdentifier,
+} from '@/lib/user-identifiers';
 
 export async function POST(request: NextRequest) {
   try {
@@ -67,33 +71,42 @@ export async function POST(request: NextRequest) {
       task.responsibles.forEach((r: string) => responsibleIds.add(r));
     });
 
-    // Fetch users to get emails
-    const users = await User.find({ _id: { $in: Array.from(responsibleIds) } }).select('-password');
-    const userMap = new Map(users.map(u => [u._id.toString(), u]));
+    const userLookup = await lookupUsersByIdentifiers(
+      Array.from(responsibleIds),
+      '_id email username firstName lastName preferences'
+    );
 
     for (const task of tasks) {
       const series = seriesMap.get(task.meetingSeriesId);
 
       for (const respId of task.responsibles) {
-        const respUser = userMap.get(respId.toString());
-        if (respUser && respUser.email) {
-          if (!tasksByUser[respUser.email]) {
-            tasksByUser[respUser.email] = {
-              user: respUser,
-              tasks: []
-            };
-          }
-          
-          tasksByUser[respUser.email].tasks.push({
-            subject: task.subject,
-            dueDate: task.dueDate,
-            priority: task.priority,
-            meetingSeries: series ? {
-                name: series.name,
-                project: series.project
-            } : null
-          });
+        const resolvedUser = userLookup.get(normalizeIdentifier(String(respId))) as any;
+        const targetEmail = (resolvedUser?.email || (isEmailIdentifier(String(respId)) ? String(respId) : ''))
+          .trim()
+          .toLowerCase();
+        if (!targetEmail) continue;
+
+        if (!tasksByUser[targetEmail]) {
+          tasksByUser[targetEmail] = {
+            user: resolvedUser || {
+              email: targetEmail,
+              firstName: '',
+              lastName: '',
+              preferences: {},
+            },
+            tasks: []
+          };
         }
+        
+        tasksByUser[targetEmail].tasks.push({
+          subject: task.subject,
+          dueDate: task.dueDate,
+          priority: task.priority,
+          meetingSeries: series ? {
+              name: series.name,
+              project: series.project
+          } : null
+        });
       }
     }
 

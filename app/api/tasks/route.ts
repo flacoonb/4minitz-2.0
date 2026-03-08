@@ -23,6 +23,7 @@ export async function GET(request: NextRequest) {
     }
 
     const userId = authResult.user._id.toString();
+    const username = authResult.user.username;
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status'); // open, in-progress, completed, cancelled
     const priority = searchParams.get('priority'); // high, medium, low
@@ -30,7 +31,7 @@ export async function GET(request: NextRequest) {
 
     // Build query
     const query: any = {
-      responsibles: userId
+      responsibles: { $in: [userId, username] }
     };
 
     const validStatuses = ['open', 'in-progress', 'completed', 'cancelled'];
