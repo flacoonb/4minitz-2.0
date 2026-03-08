@@ -1114,6 +1114,8 @@
           "headerText": "Header Text",
           "headerTextPlaceholder": "e.g. Meeting Minutes",
           "showFooter": "Show Footer",
+          "footerLeftText": "Footer left text",
+          "footerLeftTextPlaceholder": "e.g. Confidential",
           "footerText": "Footer Text",
           "footerTextPlaceholder": "e.g. Confidential",
           "showPageNumbers": "Show Page Numbers"

@@ -13,6 +13,7 @@ interface PdfSettings {
   companyName: string;
   headerText: string;
   showHeader: boolean;
+  footerLeftText: string;
   footerText: string;
   showPageNumbers: boolean;
   showFooter: boolean;
@@ -76,6 +77,7 @@ export default function PdfConfigPage() {
     companyName: '',
     headerText: '',
     showHeader: true,
+    footerLeftText: 'Vertraulich',
     footerText: '',
     showPageNumbers: true,
     showFooter: true,
@@ -499,6 +501,17 @@ export default function PdfConfigPage() {
                 
                 {contentSettings.showFooter && (
                   <>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">{t('content.headerFooter.footerLeftText')}</label>
+                      <input
+                        type="text"
+                        value={contentSettings.footerLeftText || ''}
+                        onChange={(e) => setContentSettings({ ...contentSettings, footerLeftText: e.target.value })}
+                        placeholder={t('content.headerFooter.footerLeftTextPlaceholder')}
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">{t('content.headerFooter.footerText')}</label>
                       <input

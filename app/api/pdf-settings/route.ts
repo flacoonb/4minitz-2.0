@@ -22,7 +22,8 @@ export async function GET(request: NextRequest) {
       settings = await PdfSettings.create({
         companyName: '4Minitz 2.0',
         headerText: 'Meeting Protokoll',
-        footerText: 'Vertraulich',
+        footerLeftText: 'Vertraulich',
+        footerText: '',
         isActive: true
       });
     }

@@ -12,6 +12,7 @@ const PdfSettingsSchema = new mongoose.Schema({
   showHeader: { type: Boolean, default: true },
   
   // Footer
+  footerLeftText: { type: String, default: 'Vertraulich' },
   footerText: { type: String, default: '' },
   showPageNumbers: { type: Boolean, default: true },
   showFooter: { type: Boolean, default: true },

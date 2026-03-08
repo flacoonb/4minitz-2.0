@@ -18,6 +18,7 @@ interface PdfSettings {
   companyName: string;
   headerText: string;
   showHeader: boolean;
+  footerLeftText?: string;
   footerText: string;
   showPageNumbers: boolean;
   showFooter: boolean;
@@ -210,8 +211,13 @@ export async function generateMinutePdf(
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
-  const margin = 20;
-  let yPosition = margin;
+  const marginTop = layoutSettings?.pageMargins?.top ?? 20;
+  const marginRight = layoutSettings?.pageMargins?.right ?? 20;
+  const marginBottom = layoutSettings?.pageMargins?.bottom ?? 22;
+  const marginLeft = layoutSettings?.pageMargins?.left ?? 20;
+  const contentWidth = pageWidth - marginLeft - marginRight;
+  const pageBottomLimit = pageHeight - marginBottom;
+  let yPosition = marginTop;
 
   // Set font
   doc.setFont(settings.fontFamily);
@@ -222,26 +228,72 @@ export async function generateMinutePdf(
   // i18n labels
   const locale = settings.locale || 'de-DE';
   const labels = getLabels(locale);
+  const primaryRgb = hexToRgb(settings.primaryColor || '#3b82f6');
+  const secondaryRgb = hexToRgb(settings.secondaryColor || '#e2e8f0');
+
+  const softenColor = (rgb: [number, number, number], amount: number): [number, number, number] => {
+    const clamp = (value: number) => Math.max(0, Math.min(255, Math.round(value)));
+    return [
+      clamp(rgb[0] + (255 - rgb[0]) * amount),
+      clamp(rgb[1] + (255 - rgb[1]) * amount),
+      clamp(rgb[2] + (255 - rgb[2]) * amount),
+    ];
+  };
+
+  const subtleLineRgb = softenColor(secondaryRgb, 0.28);
+  const softHeaderFillRgb = softenColor(secondaryRgb, 0.5);
+  const pageFrameInset = 8;
+
+  const drawPageFrame = () => {
+    doc.setDrawColor(subtleLineRgb[0], subtleLineRgb[1], subtleLineRgb[2]);
+    doc.setLineWidth(0.3);
+    doc.roundedRect(
+      pageFrameInset,
+      pageFrameInset,
+      pageWidth - pageFrameInset * 2,
+      pageHeight - pageFrameInset * 2,
+      1.5,
+      1.5
+    );
+  };
+
+  const beginNewPage = () => {
+    doc.addPage();
+    yPosition = marginTop;
+    drawPageFrame();
+    if (!minute.isFinalized) {
+      addDraftWatermark(doc, labels.draft);
+    }
+  };
+
+  const ensurePageSpace = (requiredHeight: number) => {
+    if (yPosition + requiredHeight > pageBottomLimit) {
+      beginNewPage();
+      return true;
+    }
+    return false;
+  };
 
   // Add draft watermark if not finalized
+  drawPageFrame();
   if (!minute.isFinalized) {
     addDraftWatermark(doc, labels.draft);
   }
 
   // ===== HEADER SECTION WITH BORDER =====
-  const headerHeight = 70;
+  const headerHeight = 64;
   
   // Draw outer border
-  doc.setDrawColor(0, 0, 0);
-  doc.setLineWidth(0.5);
-  doc.rect(margin, yPosition, pageWidth - 2 * margin, headerHeight);
+  doc.setDrawColor(subtleLineRgb[0], subtleLineRgb[1], subtleLineRgb[2]);
+  doc.setLineWidth(0.35);
+  doc.rect(marginLeft, yPosition, contentWidth, headerHeight);
   
   // Right section - Attendance table
   const attendanceWidth = 90;
-  doc.line(pageWidth - margin - attendanceWidth, yPosition, pageWidth - margin - attendanceWidth, yPosition + headerHeight);
+  doc.line(pageWidth - marginRight - attendanceWidth, yPosition, pageWidth - marginRight - attendanceWidth, yPosition + headerHeight);
   
   // Left section - Logo and Protocol info
-  const leftSectionWidth = pageWidth - 2 * margin - attendanceWidth;
+  const leftSectionWidth = contentWidth - attendanceWidth;
   
   // Logo area constraints (max half the left section width, 2/3 of header height)
   const logoMaxWidth = (leftSectionWidth / 2) - 10;
@@ -291,11 +343,11 @@ export async function generateMinutePdf(
       }
 
       // Calculate X position based on setting
-      let logoX = margin + 5;
+      let logoX = marginLeft + 5;
       if (settings.logoPosition === 'center') {
-        logoX = margin + (leftSectionWidth - logoWidth) / 2;
+        logoX = marginLeft + (leftSectionWidth - logoWidth) / 2;
       } else if (settings.logoPosition === 'right') {
-        logoX = margin + leftSectionWidth - logoWidth - 5;
+        logoX = marginLeft + leftSectionWidth - logoWidth - 5;
       }
 
       // Center vertically within the logo area
@@ -313,21 +365,32 @@ export async function generateMinutePdf(
       console.warn('Could not add logo to PDF:', error);
     }
   }
+
+  // Keep text block in the left section under the logo.
+  const titleX = marginLeft + 5;
+  const attendanceDividerX = pageWidth - marginRight - attendanceWidth;
+  const titleMaxWidth = Math.max(40, attendanceDividerX - titleX - 4);
   
   // Title "Protokoll" or custom header text
-  doc.setFontSize(24);
+  let titleFontSize = 20;
+  doc.setFontSize(titleFontSize);
   doc.setFont(settings.fontFamily, 'bold');
-  doc.setTextColor(0, 0, 0);
+  doc.setTextColor(primaryRgb[0], primaryRgb[1], primaryRgb[2]);
   
   const titleText = (settings.showHeader && settings.headerText) ? settings.headerText : labels.protocol;
-  doc.text(titleText, margin + 5, yPosition + 55);
+  while (titleFontSize > 14 && doc.getTextWidth(titleText) > titleMaxWidth) {
+    titleFontSize -= 1;
+    doc.setFontSize(titleFontSize);
+  }
+  doc.text(titleText, titleX, yPosition + 49);
   
   // Company Name (if set)
   if (settings.companyName) {
-    doc.setFontSize(10);
+    doc.setFontSize(9);
     doc.setFont(settings.fontFamily, 'normal');
     doc.setTextColor(100, 100, 100);
-    doc.text(settings.companyName, margin + 5, yPosition + 45);
+    const companyLine = doc.splitTextToSize(settings.companyName, titleMaxWidth)[0];
+    doc.text(companyLine, titleX, yPosition + 41);
   }
   
   // Meeting series and protocol name below "Protokoll" (left-aligned)
@@ -339,35 +402,38 @@ export async function generateMinutePdf(
     doc.setFontSize(11);
     doc.setFont(settings.fontFamily, 'normal');
     doc.setTextColor(0, 0, 0);
-    doc.text(protocolName, margin + 5, yPosition + 65);
+    const protocolLine = doc.splitTextToSize(protocolName, titleMaxWidth)[0];
+    doc.text(protocolLine, titleX, yPosition + 57);
   }
   
   // Attendance header in right section
   doc.setFontSize(9);
   doc.setFont(settings.fontFamily, 'bold');
   doc.setTextColor(0, 0, 0);
-  doc.text(labels.attendance, pageWidth - margin - attendanceWidth + 5, yPosition + 8);
+  doc.text(labels.attendance, pageWidth - marginRight - attendanceWidth + 5, yPosition + 8);
   
   // Attendance columns with better formatting
-  const colAX = pageWidth - margin - 32;
-  const colEX = pageWidth - margin - 20;
-  const colNeX = pageWidth - margin - 8;
+  const colAX = pageWidth - marginRight - 32;
+  const colEX = pageWidth - marginRight - 20;
+  const colNeX = pageWidth - marginRight - 8;
   
   // Draw column headers with borders
   doc.setFontSize(7);
   doc.setFont(settings.fontFamily, 'bold');
-  const headerY = yPosition + 14;
+  const headerY = yPosition + 13;
+  doc.setFillColor(softHeaderFillRgb[0], softHeaderFillRgb[1], softHeaderFillRgb[2]);
+  doc.roundedRect(pageWidth - marginRight - attendanceWidth + 3, headerY - 4, attendanceWidth - 6, 4.8, 1, 1, 'F');
   
   // Column headers
-  doc.text(labels.present, colAX - 0.5, headerY);
-  doc.text(labels.excused, colEX - 0.5, headerY);
-  doc.text(labels.absent, colNeX - 1.5, headerY);
+  doc.text(labels.present, colAX - 0.5, headerY - 0.1);
+  doc.text(labels.excused, colEX - 0.5, headerY - 0.1);
+  doc.text(labels.absent, colNeX - 1.5, headerY - 0.1);
   
   // List participants with checkboxes
   doc.setFont(settings.fontFamily, 'normal');
   doc.setFontSize(8);
   doc.setTextColor(0, 0, 0);
-  let attendanceY = yPosition + 20;
+  let attendanceY = yPosition + 18;
   
   // Use participantsWithStatus if available, otherwise fall back to participants
   const participantsList = minute.participantsWithStatus || 
@@ -385,7 +451,7 @@ export async function generateMinutePdf(
       ? `${participantUser.firstName} ${participantUser.lastName}`
       : getUserInitials(participant.userId, allUsers);
     
-    doc.text(participantName, pageWidth - margin - attendanceWidth + 5, attendanceY);
+    doc.text(participantName, pageWidth - marginRight - attendanceWidth + 5, attendanceY);
     
     // Draw checkboxes based on attendance status
     doc.setLineWidth(0.3);
@@ -425,7 +491,7 @@ export async function generateMinutePdf(
   
   if (participantsList.length > maxParticipants) {
     doc.setFontSize(7);
-    doc.text(`+${participantsList.length - maxParticipants} ${labels.more}`, pageWidth - margin - attendanceWidth + 5, attendanceY);
+    doc.text(`+${participantsList.length - maxParticipants} ${labels.more}`, pageWidth - marginRight - attendanceWidth + 5, attendanceY);
     attendanceY += 5;
   }
 
@@ -434,17 +500,17 @@ export async function generateMinutePdf(
     attendanceY += 1;
     doc.setFontSize(8);
     doc.setFont(settings.fontFamily, 'bold');
-    doc.text(labels.guests, pageWidth - margin - attendanceWidth + 5, attendanceY);
+    doc.text(labels.guests, pageWidth - marginRight - attendanceWidth + 5, attendanceY);
     attendanceY += 4;
     
     doc.setFont(settings.fontFamily, 'normal');
     const guestLines = doc.splitTextToSize(minute.participantsAdditional, attendanceWidth - 10);
     
-    const maxGuestY = yPosition + headerHeight - 8;
+    const maxGuestY = yPosition + headerHeight - 10;
     
     for (const line of guestLines) {
       if (attendanceY > maxGuestY) break;
-      doc.text(line, pageWidth - margin - attendanceWidth + 5, attendanceY);
+      doc.text(line, pageWidth - marginRight - attendanceWidth + 5, attendanceY);
       attendanceY += 4;
     }
   }
@@ -454,19 +520,19 @@ export async function generateMinutePdf(
   doc.setTextColor(100, 100, 100);
   const legendText = `${labels.legendPresent}; ${labels.legendExcused}; ${labels.legendAbsent}`;
   const legendLines = doc.splitTextToSize(legendText, attendanceWidth - 10);
-  doc.text(legendLines, pageWidth - margin - attendanceWidth + 5, yPosition + headerHeight - 5);
+  doc.text(legendLines, pageWidth - marginRight - attendanceWidth + 5, yPosition + headerHeight - 5);
   
-  yPosition += headerHeight + 5;
+  yPosition += headerHeight + 4;
   
   // ===== INFO BOX (Ort, Datum, Zeit) =====
   doc.setTextColor(0, 0, 0);
   const infoBoxHeight = 15;
-  doc.rect(margin, yPosition, pageWidth - 2 * margin, infoBoxHeight);
+  doc.rect(marginLeft, yPosition, contentWidth, infoBoxHeight);
   
   // Divide into 3 columns
-  const col1X = margin;
-  const col2X = margin + (pageWidth - 2 * margin) / 3;
-  const col3X = margin + 2 * (pageWidth - 2 * margin) / 3;
+  const col1X = marginLeft;
+  const col2X = marginLeft + contentWidth / 3;
+  const col3X = marginLeft + (2 * contentWidth) / 3;
   
   doc.line(col2X, yPosition, col2X, yPosition + infoBoxHeight);
   doc.line(col3X, yPosition, col3X, yPosition + infoBoxHeight);
@@ -499,73 +565,49 @@ export async function generateMinutePdf(
 
   // ===== TOPICS AS NUMBERED SECTIONS =====
   minute.topics.forEach((topic, topicIndex) => {
-    // Calculate total height needed for this topic
-    const calculateTopicHeight = () => {
-      let estimatedHeight = 0;
-      
-      // Title bar height
-      const topicTitleElement = layoutSettings?.elements?.find((e) => e.id === 'topic-title');
-      const titleBarHeight = topicTitleElement?.size?.height || 10;
-      estimatedHeight += titleBarHeight;
-      
-      // Estimate height for all items
-      const allItems = (topic.infoItems || []);
-      
-      allItems.forEach(() => {
-        // Rough estimate: ~25-30 per item (subject + details + spacing)
-        estimatedHeight += 30;
-      });
-      
-      estimatedHeight += 10; // Bottom padding
-      
-      return estimatedHeight;
-    };
-    
-    const topicHeight = calculateTopicHeight();
-    
-    // Check if entire topic fits on current page, otherwise start new page
-    if (yPosition + topicHeight > pageHeight - 40) {
-      doc.addPage();
-      yPosition = margin;
-      
-      // Add draft watermark on new page
-      if (!minute.isFinalized) {
-        addDraftWatermark(doc, labels.draft);
-      }
-    }
+    // Only require space for title + minimal content. Item-level breaks are handled precisely below.
+    const topicTitleElement = layoutSettings?.elements?.find((e) => e.id === 'topic-title');
+    const minTopicSpace = (topicTitleElement?.size?.height || 10) + 10;
+    ensurePageSpace(minTopicSpace);
 
     // Section number and title with border
     const sectionNumber = topicIndex + 1;
     
     // Get topic title settings from layout
-    const topicTitleElement = layoutSettings?.elements?.find((e) => e.id === 'topic-title');
-    const topicBgColor = topicTitleElement?.style?.backgroundColor || '#F3F4F6';
+    const topicBgColor = topicTitleElement?.style?.backgroundColor || (settings.secondaryColor || '#F3F4F6');
     const topicFontSize = topicTitleElement?.style?.fontSize || 11;
     const topicBorderWidth = topicTitleElement?.style?.borderWidth || 0.5;
     
     // Draw section border
-    doc.setDrawColor(0, 0, 0);
+    doc.setDrawColor(secondaryRgb[0], secondaryRgb[1], secondaryRgb[2]);
     doc.setLineWidth(topicBorderWidth);
     
     // Title bar with background color
     const titleBarHeight = topicTitleElement?.size?.height || 10;
     
-    // Fill background
-    if (topicBgColor && topicBgColor !== '#FFFFFF') {
-      const bgRgb = hexToRgb(topicBgColor);
-      doc.setFillColor(bgRgb[0], bgRgb[1], bgRgb[2]);
-      doc.rect(margin, yPosition, pageWidth - 2 * margin, titleBarHeight, 'FD');
-    } else {
-      doc.rect(margin, yPosition, pageWidth - 2 * margin, titleBarHeight);
-    }
-    
-    // Section title
-    doc.setFontSize(topicFontSize);
-    doc.setFont(settings.fontFamily, 'bold');
-    doc.setTextColor(0, 0, 0);
-    doc.text(`${sectionNumber}. ${topic.subject}`, margin + 2, yPosition + 7);
-    
-    yPosition += titleBarHeight;
+    const drawTopicHeader = () => {
+      const topicSubject = (topic.subject || '').trim();
+      // Avoid duplicated numbering like "1. 1. Begruessung".
+      const normalizedSubject = topicSubject.replace(/^\d+(?:[.)]|\.\d+)?\s+/, '');
+      const topicTitle = `${sectionNumber}. ${normalizedSubject || topicSubject || 'Untitled'}`;
+      // Fill background
+      if (topicBgColor && topicBgColor !== '#FFFFFF') {
+        const bgRgb = hexToRgb(topicBgColor);
+        doc.setFillColor(bgRgb[0], bgRgb[1], bgRgb[2]);
+        doc.roundedRect(marginLeft, yPosition, contentWidth, titleBarHeight, 1, 1, 'FD');
+      } else {
+        doc.setDrawColor(subtleLineRgb[0], subtleLineRgb[1], subtleLineRgb[2]);
+        doc.roundedRect(marginLeft, yPosition, contentWidth, titleBarHeight, 1, 1);
+      }
+      doc.setFontSize(topicFontSize);
+      doc.setFont(settings.fontFamily, 'bold');
+      doc.setTextColor(0, 0, 0);
+      const titleCenterY = yPosition + titleBarHeight / 2;
+      doc.text(topicTitle, marginLeft + 2.5, titleCenterY, { baseline: 'middle' });
+      yPosition += titleBarHeight;
+    };
+
+    drawTopicHeader();
     
     // Content area start position
     let contentStartY = yPosition;
@@ -576,50 +618,60 @@ export async function generateMinutePdf(
       topic.infoItems.forEach((item, itemIndex) => {
         const subLetter = toAlphabetSuffix(itemIndex);
         
-        // Calculate estimated height for this item
+        const labelWidth = layoutSettings?.elements?.find((e) => e.id === 'item-label')?.size?.width || 12;
+        const responsibleColumnWidth = 35;
+        const contentWidth = pageWidth - marginLeft - marginRight - labelWidth - responsibleColumnWidth - 12;
+
+        // Calculate a tighter, text-aware item height to avoid premature page breaks.
         const calculateItemHeight = () => {
-          let estimatedHeight = 0;
-          
-          // Label and subject (minimum 2 lines)
-          estimatedHeight += 10;
-          
-          // Details if present
-          if (item.details) {
-            const detailLines = Math.ceil(item.details.length / 80); // Rough estimate
-            estimatedHeight += detailLines * 4;
+          let estimatedHeight = (layoutSettings?.itemSpacing || 5) + 6; // top spacing + subject baseline
+
+          const cleanedSubject = (item.subject || '').trim();
+          const autoLabel = `${sectionNumber}${subLetter}`;
+          const subjectText = cleanedSubject === autoLabel ? '' : cleanedSubject;
+          if (subjectText) {
+            const subjectLines = doc.splitTextToSize(subjectText, contentWidth);
+            estimatedHeight += Math.max(subjectLines.length - 1, 0) * 4.5 + 6;
+          } else {
+            estimatedHeight += 2;
           }
-          
-          // Due date if present
+
           if (item.itemType === 'actionItem' && item.dueDate) {
             estimatedHeight += 5;
           }
-          
-          // Notes if present
-          if (item.notes && item.notes.length > 0) {
-            estimatedHeight += item.notes.length * 4;
+
+          if (item.details) {
+            const detailLines = doc.splitTextToSize(item.details, contentWidth);
+            estimatedHeight += detailLines.length * 4 + 1;
           }
-          
-          // Spacing and separator
-          estimatedHeight += 10;
-          
+
+          if (item.itemType === 'actionItem') {
+            const hasTaskInfo =
+              (settings.includeStatusBadges && !!item.status) ||
+              (settings.includePriorityBadges && !!item.priority);
+            if (hasTaskInfo) estimatedHeight += 5;
+          }
+
+          if (settings.includeNotes) {
+            if (item.notes) {
+              const noteLines = doc.splitTextToSize(`${labels.note} ${item.notes}`, contentWidth);
+              estimatedHeight += noteLines.length * 4;
+            }
+          }
+
+          estimatedHeight += 9; // separator area
           return estimatedHeight;
         };
-        
+
         const itemHeight = calculateItemHeight();
-        
-        // Check if item fits on current page, otherwise start new page
-        if (yPosition + itemHeight > pageHeight - 40) {
-          // Close current border before page break
-          doc.rect(margin, contentStartY, pageWidth - 2 * margin, yPosition - contentStartY);
-          doc.addPage();
-          yPosition = margin;
-          
-          // Add draft watermark on new page
-          if (!minute.isFinalized) {
-            addDraftWatermark(doc, labels.draft);
+
+        if (yPosition + itemHeight > pageBottomLimit) {
+          // Close current border before page break (if there is content to close)
+          if (yPosition > contentStartY) {
+            doc.rect(marginLeft, contentStartY, contentWidth + labelWidth + responsibleColumnWidth + 12, yPosition - contentStartY);
           }
-          
-          // Continue border on new page without repeating the title
+          beginNewPage();
+          // Continue section content directly on next page without repeating topic header.
           contentStartY = yPosition;
         }
 
@@ -627,16 +679,13 @@ export async function generateMinutePdf(
         yPosition = itemStartY;
         
         // Label on the LEFT side (outside the main content) with color coding
-        const labelWidth = layoutSettings?.elements?.find((e) => e.id === 'item-label')?.size?.width || 12;
-        const labelX = margin + 2;
+        const labelX = marginLeft + 2;
         
         // Responsible column on the right
-        const responsibleColumnWidth = 35;
-        const responsibleX = pageWidth - margin - responsibleColumnWidth;
+        const responsibleX = pageWidth - marginRight - responsibleColumnWidth;
         
         // Main content area (between label and responsibles)
-        const contentX = margin + labelWidth + 6;
-        const contentWidth = pageWidth - 2 * margin - labelWidth - responsibleColumnWidth - 12;
+        const contentX = marginLeft + labelWidth + 6;
         
         // Color-coded label on the left with rounded background
         doc.setFontSize(8);
@@ -647,7 +696,7 @@ export async function generateMinutePdf(
         const labelTextWidth = doc.getTextWidth(labelText);
         
         // Get colors from layout settings
-        const infoColor = layoutSettings?.labelColors?.info || '#3B82F6';
+        const infoColor = layoutSettings?.labelColors?.info || (settings.primaryColor || '#3B82F6');
         const taskColor = layoutSettings?.labelColors?.task || '#F97316';
         
         if (item.itemType === 'infoItem') {
@@ -769,13 +818,6 @@ export async function generateMinutePdf(
             doc.text(line, contentX, yPosition);
             yPosition += 4;
           });
-        } else if (settings.includeNotes && !item.notes) {
-          // Show "Notiz: keine" if no notes
-          doc.setFontSize(8);
-          doc.setFont(settings.fontFamily, 'italic');
-          doc.setTextColor(120, 120, 120);
-          doc.text(labels.noNote, contentX, yPosition);
-          yPosition += 4;
         }
 
         // Separator line between items (with more spacing)
@@ -783,30 +825,30 @@ export async function generateMinutePdf(
         
         // Get separator settings from layout
         const separatorElement = layoutSettings?.elements?.find((e) => e.id === 'separator');
-        const separatorColor = separatorElement?.style?.borderColor || '#E6E6E6';
+        const separatorColor = separatorElement?.style?.borderColor || (settings.secondaryColor || '#E6E6E6');
         const separatorWidth = separatorElement?.style?.borderWidth || 0.3;
         const separatorRgb = hexToRgb(separatorColor);
         
         doc.setDrawColor(separatorRgb[0], separatorRgb[1], separatorRgb[2]);
         doc.setLineWidth(separatorWidth);
-        doc.line(contentX, yPosition, pageWidth - margin - 4, yPosition);
-        yPosition += 5;
+        doc.line(contentX, yPosition, pageWidth - marginRight - 4, yPosition);
+        yPosition += 4;
       });
     } else {
       // Empty section
-      yPosition += 8;
+      yPosition += 6;
       doc.setFontSize(9);
       doc.setFont(settings.fontFamily, 'italic');
       doc.setTextColor(150, 150, 150);
-      doc.text(labels.noEntries, margin + 4, yPosition);
+      doc.text(labels.noEntries, marginLeft + 4, yPosition);
       yPosition += 5;
     }
 
     // Close section border
     contentHeight = yPosition - contentStartY + 3;
-    doc.rect(margin, contentStartY, pageWidth - 2 * margin, contentHeight);
+    doc.rect(marginLeft, contentStartY, contentWidth, contentHeight);
     
-    yPosition += 5;
+    yPosition += Math.max(3, layoutSettings?.sectionSpacing || 4);
   });
 
   // Global Note
@@ -820,27 +862,20 @@ export async function generateMinutePdf(
     : '';
 
   if (cleanGlobalNote) {
-    if (yPosition > pageHeight - 50) {
-      doc.addPage();
-      yPosition = margin;
-      
-      // Add draft watermark on new page
-      if (!minute.isFinalized) {
-        addDraftWatermark(doc, labels.draft);
-      }
-    }
+    ensurePageSpace(16);
 
     // Draw border for global notes
-    doc.setDrawColor(0, 0, 0);
+    doc.setDrawColor(secondaryRgb[0], secondaryRgb[1], secondaryRgb[2]);
     doc.setLineWidth(0.5);
     
     const titleBarHeight = 10;
-    doc.rect(margin, yPosition, pageWidth - 2 * margin, titleBarHeight);
+    doc.setFillColor(softHeaderFillRgb[0], softHeaderFillRgb[1], softHeaderFillRgb[2]);
+    doc.roundedRect(marginLeft, yPosition, contentWidth, titleBarHeight, 1, 1, 'FD');
     
     doc.setFontSize(11);
     doc.setFont(settings.fontFamily, 'bold');
     doc.setTextColor(0, 0, 0);
-    doc.text(labels.generalNotes, margin + 2, yPosition + 7);
+    doc.text(labels.generalNotes, marginLeft + 2, yPosition + 7);
     
     yPosition += titleBarHeight;
     const notesStartY = yPosition;
@@ -848,37 +883,23 @@ export async function generateMinutePdf(
     yPosition += 3;
     doc.setFontSize(baseFontSize - 1);
     doc.setFont(settings.fontFamily, 'normal');
-    const splitNote = doc.splitTextToSize(cleanGlobalNote, pageWidth - 2 * margin - 8);
+    const splitNote = doc.splitTextToSize(cleanGlobalNote, contentWidth - 8);
     splitNote.forEach((line: string) => {
-      if (yPosition > pageHeight - 30) {
-        doc.rect(margin, notesStartY, pageWidth - 2 * margin, yPosition - notesStartY);
-        doc.addPage();
-        yPosition = margin;
-        
-        // Add draft watermark on new page
-        if (!minute.isFinalized) {
-          addDraftWatermark(doc, labels.draft);
-        }
+      if (yPosition + 6 > pageBottomLimit) {
+        doc.rect(marginLeft, notesStartY, contentWidth, yPosition - notesStartY);
+        beginNewPage();
       }
-      doc.text(line, margin + 4, yPosition);
+      doc.text(line, marginLeft + 4, yPosition);
       yPosition += 4;
     });
     
     yPosition += 3;
-    doc.rect(margin, notesStartY, pageWidth - 2 * margin, yPosition - notesStartY);
+    doc.rect(marginLeft, notesStartY, contentWidth, yPosition - notesStartY);
   }
 
   // Reopening History
   if (minute.reopeningHistory && minute.reopeningHistory.length > 0) {
-    if (yPosition > pageHeight - 60) {
-      doc.addPage();
-      yPosition = margin;
-      
-      // Add draft watermark on new page
-      if (!minute.isFinalized) {
-        addDraftWatermark(doc, labels.draft);
-      }
-    }
+    ensurePageSpace(20);
 
     yPosition += 10;
 
@@ -894,13 +915,13 @@ export async function generateMinutePdf(
     doc.setLineWidth(0.5);
     
     // Draw header background and border
-    doc.rect(margin, yPosition, pageWidth - 2 * margin, titleBarHeight, 'FD');
+    doc.rect(marginLeft, yPosition, contentWidth, titleBarHeight, 'FD');
     
     // Title
     doc.setFontSize(9);
     doc.setFont(settings.fontFamily, 'bold');
     doc.setTextColor(amber900[0], amber900[1], amber900[2]);
-    doc.text(labels.reopeningHistory, margin + 3, yPosition + 5);
+    doc.text(labels.reopeningHistory, marginLeft + 3, yPosition + 5);
     
     yPosition += titleBarHeight;
     const contentStartY = yPosition;
@@ -910,18 +931,11 @@ export async function generateMinutePdf(
 
     minute.reopeningHistory.forEach((entry, _index) => {
       // Check for page break
-      if (yPosition > pageHeight - 30) {
+      if (yPosition + 10 > pageBottomLimit) {
         // Close current box
         doc.setDrawColor(amber500[0], amber500[1], amber500[2]);
-        doc.rect(margin, contentStartY, pageWidth - 2 * margin, yPosition - contentStartY);
-        
-        doc.addPage();
-        yPosition = margin;
-        
-        // Add draft watermark on new page
-        if (!minute.isFinalized) {
-          addDraftWatermark(doc, labels.draft);
-        }
+        doc.rect(marginLeft, contentStartY, contentWidth, yPosition - contentStartY);
+        beginNewPage();
         
         // Restart content box on new page
         // For simplicity, just continue the box
@@ -942,9 +956,9 @@ export async function generateMinutePdf(
       
       // Bullet point
       doc.setFillColor(amber500[0], amber500[1], amber500[2]);
-      doc.circle(margin + 8, yPosition - 1, 0.8, 'F');
+      doc.circle(marginLeft + 8, yPosition - 1, 0.8, 'F');
       
-      doc.text(`${date} • ${entry.reopenedBy}`, margin + 12, yPosition);
+      doc.text(`${date} • ${entry.reopenedBy}`, marginLeft + 12, yPosition);
       yPosition += 5;
 
       // Reason text
@@ -952,9 +966,9 @@ export async function generateMinutePdf(
       doc.setFontSize(9);
       doc.setTextColor(31, 41, 55); // Gray-800
       
-      const reasonLines = doc.splitTextToSize(entry.reason, pageWidth - 2 * margin - 24);
+      const reasonLines = doc.splitTextToSize(entry.reason, contentWidth - 24);
       reasonLines.forEach((line: string) => {
-        doc.text(line, margin + 12, yPosition);
+        doc.text(line, marginLeft + 12, yPosition);
         yPosition += 4.5;
       });
 
@@ -964,15 +978,17 @@ export async function generateMinutePdf(
     
     // Close the content box
     doc.setDrawColor(amber500[0], amber500[1], amber500[2]);
-    doc.rect(margin, contentStartY, pageWidth - 2 * margin, yPosition - contentStartY);
+    doc.rect(marginLeft, contentStartY, contentWidth, yPosition - contentStartY);
   }
 
   // Footer with page numbers (simple style)
   const pageCount = doc.getNumberOfPages();
-  if (settings.showPageNumbers || settings.footerText) {
+  if (settings.showFooter && (settings.showPageNumbers || settings.footerText || settings.footerLeftText)) {
     doc.setFontSize(8);
     doc.setFont(settings.fontFamily, 'normal');
     doc.setTextColor(80, 80, 80);
+    const footerTextY = pageHeight - Math.max(8, marginBottom - 2);
+    const footerLineY = footerTextY - 5;
 
     for (let i = 1; i <= pageCount; i++) {
       doc.setPage(i);
@@ -980,18 +996,18 @@ export async function generateMinutePdf(
       // Draw a thin line above footer
       doc.setDrawColor(200, 200, 200);
       doc.setLineWidth(0.2);
-      doc.line(margin, pageHeight - 15, pageWidth - margin, pageHeight - 15);
+      doc.line(marginLeft, footerLineY, pageWidth - marginRight, footerLineY);
       
       // "Confidential" on the left
       doc.setFontSize(8);
       doc.setTextColor(150, 150, 150);
-      doc.text(labels.confidential, margin, pageHeight - 10);
+      doc.text((settings.footerLeftText || labels.confidential).trim(), marginLeft, footerTextY);
       
       // Custom footer text in center if provided
       if (settings.footerText) {
         const footerWidth = doc.getTextWidth(settings.footerText);
         doc.setTextColor(80, 80, 80);
-        doc.text(settings.footerText, (pageWidth - footerWidth) / 2, pageHeight - 10);
+        doc.text(settings.footerText, (pageWidth - footerWidth) / 2, footerTextY);
       }
       
       // Page numbers on the right
@@ -999,7 +1015,7 @@ export async function generateMinutePdf(
         const pageText = labels.pageOf(i, pageCount);
         const textWidth = doc.getTextWidth(pageText);
         doc.setTextColor(80, 80, 80);
-        doc.text(pageText, pageWidth - margin - textWidth, pageHeight - 10);
+        doc.text(pageText, pageWidth - marginRight - textWidth, footerTextY);
       }
     }
   }

@@ -1114,6 +1114,8 @@
           "headerText": "Kopfzeile Text",
           "headerTextPlaceholder": "z.B. Meeting Protokoll",
           "showFooter": "Fußzeile anzeigen",
+          "footerLeftText": "Fußzeile links",
+          "footerLeftTextPlaceholder": "z.B. Vertraulich",
           "footerText": "Fußzeile Text",
           "footerTextPlaceholder": "z.B. Vertraulich",
           "showPageNumbers": "Seitenzahlen anzeigen"
