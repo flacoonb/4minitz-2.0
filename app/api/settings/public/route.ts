@@ -7,7 +7,7 @@ export async function GET(_request: NextRequest) {
     await connectDB();
 
     // Get current settings (no authentication required for public settings)
-    const settings = await Settings.findOne({}).sort({ version: -1 });
+    const settings = await Settings.findOne({}).sort({ updatedAt: -1 });
 
     if (!settings) {
       return NextResponse.json({
@@ -15,19 +15,21 @@ export async function GET(_request: NextRequest) {
         data: {
           system: {
             organizationName: '4Minitz 2.0',
-            organizationLogo: null
+            organizationLogo: null,
+            agendaItemLabelMode: 'topic-alpha'
           }
         }
       });
     }
 
-    // Return only public settings
+    // Return only public settings (no sensitive data)
     const publicSettings = {
       system: {
         organizationName: settings.systemSettings?.organizationName || '4Minitz 2.0',
         organizationLogo: settings.systemSettings?.organizationLogo,
-        allowRegistration: settings.systemSettings?.allowRegistration,
-        theme: settings.systemSettings?.theme,
+        allowRegistration: settings.memberSettings?.allowSelfRegistration ?? false,
+        requireAdminApproval: settings.memberSettings?.requireAdminApproval ?? true,
+        agendaItemLabelMode: settings.memberSettings?.agendaItemLabelMode || 'topic-alpha',
         dateFormat: settings.systemSettings?.dateFormat || 'DD.MM.YYYY',
         timeFormat: settings.systemSettings?.timeFormat || '24h'
       },
@@ -36,12 +38,14 @@ export async function GET(_request: NextRequest) {
       }
     };
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       success: true,
       data: publicSettings
     });
+    response.headers.set('Cache-Control', 'public, max-age=300, stale-while-revalidate=600');
+    return response;
 
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error fetching public settings:', error);
     return NextResponse.json(
       { error: 'Fehler beim Laden der Einstellungen' },
