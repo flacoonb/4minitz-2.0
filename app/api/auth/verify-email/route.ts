@@ -55,11 +55,19 @@ export async function GET(request: NextRequest) {
         user.emailVerificationExpires = undefined;
         await user.save();
 
-        // Redirect to login page with success message
-        const loginUrl = new URL('/auth/login', request.url);
-        loginUrl.searchParams.set('verified', 'true');
+        // Return JSON by default (used by /auth/verify-email page fetch flow).
+        // Optional redirect mode kept for backward compatibility.
+        const redirectToLogin = searchParams.get('redirect') === 'true';
+        if (redirectToLogin) {
+            const loginUrl = new URL('/auth/login', request.url);
+            loginUrl.searchParams.set('verified', 'true');
+            return NextResponse.redirect(loginUrl);
+        }
 
-        return NextResponse.redirect(loginUrl);
+        return NextResponse.json({
+            success: true,
+            message: 'E-Mail erfolgreich verifiziert'
+        });
 
     } catch {
         return NextResponse.json({ error: t('serverError') }, { status: 500 });

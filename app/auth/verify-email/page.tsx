@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useTranslations } from 'next-intl';
@@ -9,28 +9,41 @@ export default function VerifyEmailPage() {
     const t = useTranslations('auth.verifyEmail');
     const router = useRouter();
     const searchParams = useSearchParams();
+    const token = searchParams.get('token');
+    const hasRequestedRef = useRef(false);
     const [status, setStatus] = useState<'loading' | 'success' | 'error'>('loading');
     const [message, setMessage] = useState('');
 
     useEffect(() => {
-        const token = searchParams.get('token');
-
         if (!token) {
             // eslint-disable-next-line react-hooks/set-state-in-effect
             setStatus('error');
             setMessage(t('missingToken'));
             return;
         }
+        if (hasRequestedRef.current) {
+            return;
+        }
+        hasRequestedRef.current = true;
+
+        let isCancelled = false;
 
         // Verify the email
         fetch(`/api/auth/verify-email?token=${token}`, {
             credentials: 'include'
         })
-            .then(res => res.json())
+            .then(async (res) => {
+                const contentType = res.headers.get('content-type') || '';
+                if (contentType.includes('application/json')) {
+                    return res.json();
+                }
+                return { success: false, error: t('errorText') };
+            })
             .then(data => {
+                if (isCancelled) return;
                 if (data.success) {
                     setStatus('success');
-                    setMessage(data.message);
+                    setMessage(data.message || t('successText'));
                     // Redirect to login after 3 seconds
                     setTimeout(() => {
                         router.push('/auth/login');
@@ -41,11 +54,15 @@ export default function VerifyEmailPage() {
                 }
             })
             .catch(_err => {
+                if (isCancelled) return;
                 setStatus('error');
                 setMessage(t('errorText'));
             });
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [searchParams, router]);
+
+        return () => {
+            isCancelled = true;
+        };
+    }, [token, router, t]);
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center p-4">
