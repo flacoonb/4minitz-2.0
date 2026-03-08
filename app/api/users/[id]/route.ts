@@ -4,7 +4,8 @@ import User from '@/models/User';
 import MeetingSeries from '@/models/MeetingSeries';
 import Task from '@/models/Task';
 import { verifyToken, requirePermission } from '@/lib/auth';
-import { sendWelcomeEmail } from '@/lib/email-service';
+import { sendVerificationEmail, sendWelcomeEmail } from '@/lib/email-service';
+import crypto from 'crypto';
 
 export async function GET(
   request: NextRequest,
@@ -110,10 +111,27 @@ export async function PUT(
       }
       userToUpdate.lastName = body.lastName.trim();
     }
-    if (body.email && body.email !== userToUpdate.email) {
-      userToUpdate.email = body.email;
-      if (isOwnProfile) {
+    let emailChanged = false;
+    let emailVerificationToken: string | null = null;
+    let verificationMailSent = false;
+
+    if (body.email !== undefined) {
+      if (typeof body.email !== 'string' || body.email.trim().length === 0) {
+        return NextResponse.json({ error: 'E-Mail ist erforderlich' }, { status: 400 });
+      }
+      const normalizedEmail = body.email.trim().toLowerCase();
+      const emailRegex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,})+$/;
+      if (!emailRegex.test(normalizedEmail)) {
+        return NextResponse.json({ error: 'Ungültige E-Mail-Adresse' }, { status: 400 });
+      }
+
+      if (normalizedEmail !== userToUpdate.email) {
+        emailChanged = true;
+        userToUpdate.email = normalizedEmail;
         userToUpdate.isEmailVerified = false;
+        emailVerificationToken = crypto.randomBytes(32).toString('hex');
+        userToUpdate.emailVerificationToken = crypto.createHash('sha256').update(emailVerificationToken).digest('hex');
+        userToUpdate.emailVerificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
       }
     }
     if (body.username !== undefined) {
@@ -179,7 +197,9 @@ export async function PUT(
           userToUpdate.pendingApproval = false;
         }
       }
-      if (body.isEmailVerified !== undefined) userToUpdate.isEmailVerified = body.isEmailVerified;
+      if (body.isEmailVerified !== undefined && !emailChanged) {
+        userToUpdate.isEmailVerified = body.isEmailVerified;
+      }
     }
 
     // Handle password update
@@ -219,13 +239,36 @@ export async function PUT(
       }).catch(() => {});
     }
 
+    // Send email verification when address changes
+    if (emailChanged && emailVerificationToken) {
+      try {
+        await sendVerificationEmail(
+          {
+            email: userToUpdate.email,
+            firstName: userToUpdate.firstName,
+            lastName: userToUpdate.lastName,
+          },
+          emailVerificationToken
+        );
+        verificationMailSent = true;
+      } catch {
+        verificationMailSent = false;
+      }
+    }
+
     // Return user without sensitive fields (toJSON strips password, tokens, etc.)
     const userResponse = userToUpdate.toJSON();
 
     return NextResponse.json({
       success: true,
-      message: 'Benutzer erfolgreich aktualisiert',
-      data: userResponse
+      message: emailChanged
+        ? verificationMailSent
+          ? 'Profil aktualisiert. Bitte bestätigen Sie die neue E-Mail-Adresse über den Link in der E-Mail.'
+          : 'Profil aktualisiert. Die neue E-Mail-Adresse muss bestätigt werden; Versand der Verifizierungs-E-Mail ist fehlgeschlagen.'
+        : 'Benutzer erfolgreich aktualisiert',
+      emailChanged,
+      emailVerificationSent: verificationMailSent,
+      data: userResponse,
     });
 
   } catch (error: any) {

@@ -60,9 +60,8 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
   const t = useTranslations();
   const locale = useLocale();
   const router = useRouter();
-  const { user } = useAuth();
+  const { user, hasPermission } = useAuth();
   const [minute, setMinute] = useState<Minute | null>(null);
-  const isModerator = user && minute?.meetingSeries_id?.moderators?.includes(user.username);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [minuteId, setMinuteId] = useState<string | null>(null);
@@ -74,6 +73,42 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [timeFormat, setTimeFormat] = useState<'12h' | '24h'>('24h');
+
+  const userId = user?._id || '';
+  const username = user?.username || '';
+  const seriesData = (minute?.meetingSeries_id || {}) as any;
+  const seriesModerators: string[] = Array.isArray(seriesData.moderators) ? seriesData.moderators : [];
+  const seriesParticipants: string[] = Array.isArray(seriesData.participants) ? seriesData.participants : [];
+  const seriesVisibleFor: string[] = Array.isArray(seriesData.visibleFor) ? seriesData.visibleFor : [];
+  const seriesMembers = Array.isArray(seriesData.members) ? seriesData.members : [];
+  const minuteParticipants: string[] = Array.isArray((minute as any)?.participants) ? (minute as any).participants : [];
+  const minuteVisibleFor: string[] = Array.isArray((minute as any)?.visibleFor) ? (minute as any).visibleFor : [];
+
+  const isSeriesModerator =
+    !!user && (seriesModerators.includes(username) || seriesModerators.includes(userId));
+  const isSeriesMember =
+    !!user && seriesMembers.some((member: any) => member?.userId === userId);
+  const isSeriesParticipant =
+    !!user &&
+    (seriesParticipants.includes(username) ||
+      seriesParticipants.includes(userId) ||
+      seriesVisibleFor.includes(username) ||
+      seriesVisibleFor.includes(userId) ||
+      isSeriesMember);
+  const isMinuteDirectlyVisible =
+    !!user &&
+    (minuteParticipants.includes(username) ||
+      minuteParticipants.includes(userId) ||
+      minuteVisibleFor.includes(username) ||
+      minuteVisibleFor.includes(userId));
+
+  const canEditMinute =
+    hasPermission('canEditAllMinutes') ||
+    isSeriesModerator ||
+    isSeriesParticipant ||
+    isMinuteDirectlyVisible;
+  const canFinalizeMinute = hasPermission('canEditAllMinutes');
+  const canDeleteMinute = hasPermission('canDeleteMinutes');
 
   useEffect(() => {
     const getParams = async () => {
@@ -424,7 +459,7 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
 
             {/* Action Buttons */}
             <div className="flex flex-col gap-3 w-full lg:w-auto">
-              {isModerator && !minute.isFinalized && (
+              {canEditMinute && !minute.isFinalized && (
                 <Link
                   href={`/minutes/${minuteId}/edit`}
                   className="w-full lg:w-auto px-6 py-3 min-h-11 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl lg:hover:scale-105 inline-flex items-center justify-center"
@@ -437,7 +472,7 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
                   </div>
                 </Link>
               )}
-              {isModerator && (
+              {canFinalizeMinute && (
                 <button
                   onClick={handleFinalize}
                   className={`w-full lg:w-auto px-6 py-3 min-h-11 rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl lg:hover:scale-105 ${
@@ -461,7 +496,7 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
                   {exportingPdf ? t('minutes.exportingPDF') : t('minutes.exportPDF')}
                 </div>
               </button>
-              {isModerator && (
+              {canDeleteMinute && (
                 <button
                   onClick={handleDelete}
                   disabled={minute.isFinalized}

@@ -184,7 +184,7 @@ const ProfilePage = () => {
       const updatedUser = await response.json();
       setUser(updatedUser.data);
       updateUser(updatedUser.data);
-      setSuccess(t('messages.updateSuccess'));
+      setSuccess(updatedUser.message || t('messages.updateSuccess'));
       setEditMode(false);
     } catch (err: any) {
       setError(err.message);
