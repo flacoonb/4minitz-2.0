@@ -11,6 +11,9 @@ export interface RolePermissions {
   canAssignModerators: boolean;
   canExportData: boolean;
   canAccessReports: boolean;
+  canManageGlobalTemplates: boolean;
+  canManageSeriesTemplates: boolean;
+  canUseTemplates: boolean;
 }
 
 export interface ISettings extends Document {
@@ -82,7 +85,10 @@ const RolePermissionsSchema = new Schema({
   canManageUsers: { type: Boolean, default: false },
   canAssignModerators: { type: Boolean, default: false },
   canExportData: { type: Boolean, default: false },
-  canAccessReports: { type: Boolean, default: false }
+  canAccessReports: { type: Boolean, default: false },
+  canManageGlobalTemplates: { type: Boolean, default: false },
+  canManageSeriesTemplates: { type: Boolean, default: false },
+  canUseTemplates: { type: Boolean, default: false }
 }, { _id: false });
 
 const SettingsSchema = new Schema<ISettings>({

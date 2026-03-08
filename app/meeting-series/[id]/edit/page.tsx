@@ -208,13 +208,21 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
       <div className="max-w-6xl mx-auto space-y-8">
         {/* Header */}
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-5 sm:p-8 border border-gray-100">
-          <div className="flex items-center gap-4 mb-6">
-            <Link href={`/meeting-series/${seriesId}`} className="text-blue-600 hover:text-blue-800 transition-colors">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
+          <div className="flex items-center justify-between gap-4 mb-6">
+            <div className="flex items-center gap-4">
+              <Link href={`/meeting-series/${seriesId}`} className="text-blue-600 hover:text-blue-800 transition-colors">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </Link>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 break-words">{t('editSeries')}</h1>
+            </div>
+            <Link
+              href={`/meeting-series/${seriesId}/templates`}
+              className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors text-sm font-medium"
+            >
+              {t('manageSeriesTemplates')}
             </Link>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 break-words">{t('editSeries')}</h1>
           </div>
         </div>
 

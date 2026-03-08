@@ -3,6 +3,7 @@ import connectDB from '@/lib/mongodb';
 import Task from '@/models/Task';
 import MeetingSeries from '@/models/MeetingSeries';
 import { verifyToken } from '@/lib/auth';
+import { hasPermission } from '@/lib/permissions';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -40,9 +41,16 @@ export async function POST(request: NextRequest, context: RouteContext) {
     }
 
     const username = authResult.user.username;
-    const hasTargetAccess = targetSeries.visibleFor?.includes(username) ||
+    const userId = authResult.user._id.toString();
+    const canViewAllMeetings = await hasPermission(authResult.user, 'canViewAllMeetings');
+    const hasTargetAccess = canViewAllMeetings ||
+      targetSeries.visibleFor?.includes(username) ||
+      targetSeries.visibleFor?.includes(userId) ||
       targetSeries.moderators?.includes(username) ||
-      authResult.user.role === 'admin';
+      targetSeries.moderators?.includes(userId) ||
+      targetSeries.participants?.includes(username) ||
+      targetSeries.participants?.includes(userId) ||
+      targetSeries.members?.some((m: any) => m.userId === userId);
     if (!hasTargetAccess) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
@@ -53,9 +61,14 @@ export async function POST(request: NextRequest, context: RouteContext) {
       return NextResponse.json({ error: 'Source series not found' }, { status: 404 });
     }
 
-    const hasSourceAccess = sourceSeries.visibleFor?.includes(username) ||
+    const hasSourceAccess = canViewAllMeetings ||
+      sourceSeries.visibleFor?.includes(username) ||
+      sourceSeries.visibleFor?.includes(userId) ||
       sourceSeries.moderators?.includes(username) ||
-      authResult.user.role === 'admin';
+      sourceSeries.moderators?.includes(userId) ||
+      sourceSeries.participants?.includes(username) ||
+      sourceSeries.participants?.includes(userId) ||
+      sourceSeries.members?.some((m: any) => m.userId === userId);
     if (!hasSourceAccess) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
@@ -84,7 +97,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
     const alreadyImportedSourceIds = new Set(alreadyImported.map((t) => (t as any).sourceTaskId));
 
     // Create new tasks for the target series
-    const userId = authResult.user._id.toString();
+    const creatorUserId = authResult.user._id.toString();
     const newTasks = [];
 
     for (const task of sourceTasks) {
@@ -102,7 +115,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
         responsibles: task.responsibles,
         meetingSeriesId: targetSeriesId,
         sourceTaskId: taskId,
-        createdBy: userId,
+        createdBy: creatorUserId,
       });
     }
 

@@ -14,6 +14,8 @@ interface MeetingSeries {
   description?: string;
   moderators: string[];
   participants: string[];
+  visibleFor?: string[];
+  members?: { userId: string }[];
   createdAt: string;
 }
 
@@ -33,6 +35,13 @@ interface Minute {
   finalized: boolean;
   isFinalized: boolean;
   topics: any[];
+}
+
+interface MinutesTemplate {
+  _id: string;
+  name: string;
+  description?: string;
+  scope: 'global' | 'series';
 }
 
 export default function MeetingSeriesPage() {
@@ -61,12 +70,28 @@ export default function MeetingSeriesPage() {
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<string | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showTemplateModal, setShowTemplateModal] = useState(false);
+  const [templates, setTemplates] = useState<MinutesTemplate[]>([]);
+  const [selectedTemplateId, setSelectedTemplateId] = useState<string>('');
+  const [loadingTemplates, setLoadingTemplates] = useState(false);
+  const [templatesError, setTemplatesError] = useState<string | null>(null);
 
   // Check permissions
-  const isModerator = series?.moderators?.includes(user?.username || '') || false;
+  const username = user?.username || '';
+  const userId = user?._id || '';
+  const isModerator = series?.moderators?.includes(username) || series?.moderators?.includes(userId) || false;
+  const isParticipant =
+    series?.participants?.includes(username) ||
+    series?.participants?.includes(userId) ||
+    series?.visibleFor?.includes(username) ||
+    series?.visibleFor?.includes(userId) ||
+    series?.members?.some((member) => member.userId === userId) ||
+    false;
   const canEditSeries = hasPermission('canModerateAllMeetings') || isModerator;
   const canDeleteSeries = hasPermission('canModerateAllMeetings') || isModerator; // Using moderate permission for delete as well
-  const canCreateMinute = hasPermission('canModerateAllMeetings') || isModerator;
+  const canCreateMinute =
+    hasPermission('canCreateMeetings') &&
+    (hasPermission('canModerateAllMeetings') || isModerator || isParticipant);
 
   const fetchData = useCallback(async () => {
     setLoading(true);
@@ -105,7 +130,7 @@ export default function MeetingSeriesPage() {
     fetchData();
   }, [seriesId, user?._id, fetchData]);
 
-  const createNewProtocol = async () => {
+  const createNewProtocol = async (templateId?: string) => {
     if (!series) return;
 
     setCreating(true);
@@ -124,7 +149,8 @@ export default function MeetingSeriesPage() {
           participants: series.participants || [],
           topics: [],
           globalNote: '',
-          isFinalized: false
+          isFinalized: false,
+          templateId: templateId || undefined
         })
       });
 
@@ -185,6 +211,31 @@ export default function MeetingSeriesPage() {
         setAllSeries(others);
       }
     } catch { /* ignore */ }
+  };
+
+  const openTemplateModal = async () => {
+    if (!series) return;
+    setShowTemplateModal(true);
+    setSelectedTemplateId('');
+    setTemplatesError(null);
+    setLoadingTemplates(true);
+    try {
+      const response = await fetch(
+        `/api/minutes-templates?meetingSeriesId=${series._id}`,
+        { credentials: 'include' }
+      );
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.error || t('templateLoadError'));
+      }
+      const result = await response.json();
+      setTemplates(result.data || []);
+    } catch (err) {
+      setTemplatesError(err instanceof Error ? err.message : t('templateLoadError'));
+      setTemplates([]);
+    } finally {
+      setLoadingTemplates(false);
+    }
   };
 
   const loadSourceTasks = async (sourceId: string) => {
@@ -321,6 +372,17 @@ export default function MeetingSeriesPage() {
               )}
               {canEditSeries && (
                 <Link
+                  href={`/meeting-series/${series._id}/templates`}
+                  className="inline-flex w-full md:w-auto justify-center items-center gap-2 px-6 py-3 min-h-11 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-xl shadow-lg hover:shadow-xl md:hover:scale-105 transition-all"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2a4 4 0 014-4h4m0 0l-3-3m3 3l-3 3M5 7h14" />
+                  </svg>
+                  {t('manageSeriesTemplates')}
+                </Link>
+              )}
+              {canEditSeries && (
+                <Link
                   href={`/meeting-series/${series._id}/edit`}
                   className="inline-flex w-full md:w-auto justify-center items-center gap-2 px-6 py-3 min-h-11 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl shadow-lg hover:shadow-xl md:hover:scale-105 transition-all"
                 >
@@ -401,7 +463,7 @@ export default function MeetingSeriesPage() {
         {!hasDraft && canCreateMinute && (
           <div className="mt-6 pt-6 border-t border-gray-200">
             <button
-              onClick={createNewProtocol}
+              onClick={openTemplateModal}
               disabled={creating}
               className="w-full inline-flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all font-medium text-lg disabled:opacity-50 disabled:cursor-not-allowed"
             >
@@ -567,6 +629,114 @@ export default function MeetingSeriesPage() {
                   )}
                 </button>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {showTemplateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[85vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-200">
+              <div className="flex items-center justify-between gap-3">
+                <h2 className="text-xl font-bold text-gray-900">{t('chooseTemplateTitle')}</h2>
+                <button
+                  onClick={() => setShowTemplateModal(false)}
+                  className="text-gray-400 hover:text-gray-600 transition-colors min-h-10 min-w-10 inline-flex items-center justify-center rounded-lg"
+                >
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+              <p className="text-sm text-gray-600 mt-1">{t('chooseTemplateHint')}</p>
+            </div>
+
+            <div className="p-6 space-y-4">
+              {loadingTemplates && (
+                <div className="flex justify-center py-4">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                </div>
+              )}
+
+              {templatesError && (
+                <div className="p-3 rounded-lg text-sm bg-red-50 text-red-700 border border-red-200">
+                  {templatesError}
+                </div>
+              )}
+
+              {!loadingTemplates && (
+                <div className="space-y-2">
+                  <label
+                    className={`flex items-start gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                      selectedTemplateId === '' ? 'border-blue-400 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <input
+                      type="radio"
+                      checked={selectedTemplateId === ''}
+                      onChange={() => setSelectedTemplateId('')}
+                      className="mt-1 h-4 w-4 text-blue-600"
+                    />
+                    <div>
+                      <p className="font-semibold text-gray-900">{t('templateNone')}</p>
+                      <p className="text-sm text-gray-600">{t('templateNoneHint')}</p>
+                    </div>
+                  </label>
+
+                  {templates.map((template) => (
+                    <label
+                      key={template._id}
+                      className={`flex items-start gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                        selectedTemplateId === template._id
+                          ? 'border-blue-400 bg-blue-50'
+                          : 'border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <input
+                        type="radio"
+                        checked={selectedTemplateId === template._id}
+                        onChange={() => setSelectedTemplateId(template._id)}
+                        className="mt-1 h-4 w-4 text-blue-600"
+                      />
+                      <div className="min-w-0">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <p className="font-semibold text-gray-900">{template.name}</p>
+                          <span className="px-2 py-0.5 text-xs rounded-full bg-gray-100 text-gray-700">
+                            {template.scope === 'global' ? t('templateGlobal') : t('templateSeries')}
+                          </span>
+                        </div>
+                        {template.description && (
+                          <p className="text-sm text-gray-600 mt-1">{template.description}</p>
+                        )}
+                      </div>
+                    </label>
+                  ))}
+
+                  {!templatesError && templates.length === 0 && (
+                    <p className="text-sm text-gray-500">{t('noTemplatesAvailable')}</p>
+                  )}
+                </div>
+              )}
+            </div>
+
+            <div className="p-6 border-t border-gray-200 flex justify-end gap-3">
+              <button
+                onClick={() => setShowTemplateModal(false)}
+                className="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                {tCommon('cancel')}
+              </button>
+              <button
+                onClick={() => {
+                  setShowTemplateModal(false);
+                  createNewProtocol(selectedTemplateId || undefined);
+                }}
+                disabled={creating}
+                className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors disabled:opacity-50"
+              >
+                {creating ? t('creatingMinute') : t('createMinute')}
+              </button>
             </div>
           </div>
         </div>

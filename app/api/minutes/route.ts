@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/mongodb';
 import Minutes from '@/models/Minutes';
 import MeetingSeries from '@/models/MeetingSeries';
+import MinutesTemplate from '@/models/MinutesTemplate';
 import { sendNewMinutesNotification } from '@/lib/email-service';
 import mongoose from 'mongoose';
 import { verifyToken } from '@/lib/auth';
@@ -162,7 +163,19 @@ export async function POST(request: NextRequest) {
 
     const userId = authResult.user._id.toString();
     const body = await request.json();
-    const { meetingSeries_id, date, participants, topics, agendaItems, globalNote } = body;
+    const {
+      meetingSeries_id,
+      date,
+      participants,
+      topics,
+      agendaItems,
+      globalNote,
+      title,
+      time,
+      endTime,
+      location,
+      templateId,
+    } = body;
 
     // Validate required fields
     if (!meetingSeries_id || !date) {
@@ -215,21 +228,81 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    let resolvedTemplate: any = null;
+    if (templateId) {
+      if (!mongoose.isValidObjectId(templateId)) {
+        return NextResponse.json({ error: 'Invalid templateId' }, { status: 400 });
+      }
+
+      const canUseTemplates = await hasPermission(authResult.user, 'canUseTemplates' as any);
+      const canManageGlobalTemplates = await hasPermission(authResult.user, 'canManageGlobalTemplates' as any);
+      const canManageSeriesTemplates = await hasPermission(authResult.user, 'canManageSeriesTemplates' as any);
+      const isAdmin = authResult.user.role === 'admin';
+      if (!isAdmin && !canUseTemplates && !canManageGlobalTemplates && !canManageSeriesTemplates) {
+        return NextResponse.json({ error: 'Forbidden: no template permission' }, { status: 403 });
+      }
+
+      resolvedTemplate = await MinutesTemplate.findById(templateId).lean();
+      if (!resolvedTemplate || !resolvedTemplate.isActive) {
+        return NextResponse.json({ error: 'Template not found' }, { status: 404 });
+      }
+
+      if (resolvedTemplate.scope === 'series') {
+        if (resolvedTemplate.meetingSeriesId?.toString() !== meetingSeries_id.toString()) {
+          return NextResponse.json(
+            { error: 'Series template can only be used in its own meeting series' },
+            { status: 400 }
+          );
+        }
+
+        const userIdValue = authResult.user._id.toString();
+        const isSeriesModerator =
+          meetingSeries.moderators.includes(username) ||
+          meetingSeries.moderators.includes(userIdValue);
+        const isSeriesParticipant =
+          meetingSeries.visibleFor?.includes(username) ||
+          meetingSeries.visibleFor?.includes(userIdValue) ||
+          meetingSeries.participants.includes(username) ||
+          meetingSeries.participants.includes(userIdValue) ||
+          meetingSeries.members?.some((m: any) => m.userId === userIdValue);
+        const canModerateAll = await hasPermission(authResult.user, 'canModerateAllMeetings');
+
+        if (!isAdmin && !canModerateAll && !isSeriesModerator && !isSeriesParticipant) {
+          return NextResponse.json({ error: 'Forbidden: no access to series template' }, { status: 403 });
+        }
+      }
+    }
+
     // Derive visibility from meeting series members
     const visibleFor = [
       ...new Set([...meetingSeries.moderators, ...meetingSeries.participants])
     ];
+
+    const hasManualTopics = Array.isArray(processedTopics) && processedTopics.length > 0;
+    const templateContent = resolvedTemplate?.content || {};
+    const finalTopics = hasManualTopics ? processedTopics : (templateContent.topics || []);
+    const finalGlobalNote = globalNote ?? templateContent.globalNote ?? '';
+    const finalTitle = title ?? templateContent.title ?? '';
+    const finalTime = time ?? templateContent.time ?? '';
+    const finalEndTime = endTime ?? templateContent.endTime ?? '';
+    const finalLocation = location ?? templateContent.location ?? '';
 
     // Create new minute
     const minute = await Minutes.create({
       meetingSeries_id,
       date: new Date(date),
       participants: participants || [],
-      topics: processedTopics,
-      globalNote: globalNote || '',
+      topics: finalTopics,
+      globalNote: finalGlobalNote,
+      title: finalTitle,
+      time: finalTime,
+      endTime: finalEndTime,
+      location: finalLocation,
       isFinalized: false,
       createdBy: userId,
       visibleFor,
+      templateId: resolvedTemplate?._id?.toString(),
+      templateNameSnapshot: resolvedTemplate?.name || '',
     });
 
     // Populate meetingSeries for email

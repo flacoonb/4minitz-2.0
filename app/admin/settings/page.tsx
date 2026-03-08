@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import { withAdminAuth } from '@/contexts/AuthContext';
 import ConfirmationModal from '@/components/ConfirmationModal';
@@ -38,6 +39,9 @@ interface RolePermissions {
   canAssignModerators: boolean;
   canExportData: boolean;
   canAccessReports: boolean;
+  canManageGlobalTemplates: boolean;
+  canManageSeriesTemplates: boolean;
+  canUseTemplates: boolean;
 }
 
 interface SystemSettings {
@@ -810,6 +814,12 @@ const AdminSettings = () => {
                   <p className="text-slate-600 mb-6">
                     {t('system.description')}
                   </p>
+                  <Link
+                    href="/admin/templates"
+                    className="inline-flex items-center gap-2 px-4 py-2 mb-4 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                  >
+                    {t('system.manageTemplates')}
+                  </Link>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

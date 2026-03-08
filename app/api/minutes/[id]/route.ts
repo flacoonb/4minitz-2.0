@@ -106,6 +106,7 @@ export async function PUT(
     }
 
     const userId = authResult.user._id.toString();
+    const username = authResult.user.username;
 
     const minute = await Minutes.findById(id);
 
@@ -116,8 +117,38 @@ export async function PUT(
       );
     }
 
+    const series = await MeetingSeries.findById(minute.meetingSeries_id).lean();
+    if (!series) {
+      return NextResponse.json(
+        { error: 'Meeting series not found' },
+        { status: 404 }
+      );
+    }
+
     // Check permissions for finalized minutes — requires canEditAllMinutes
     const canEditAll = await hasPermission(authResult.user, 'canEditAllMinutes');
+
+    const isSeriesModerator = series.moderators?.includes(username) || series.moderators?.includes(userId);
+    const isSeriesMember = Array.isArray(series.members) && series.members.some((member: any) => member.userId === userId);
+    const isSeriesParticipant =
+      series.visibleFor?.includes(username) ||
+      series.visibleFor?.includes(userId) ||
+      series.participants?.includes(username) ||
+      series.participants?.includes(userId) ||
+      isSeriesMember;
+    const isMinuteDirectlyVisible =
+      minute.visibleFor?.includes(username) ||
+      minute.visibleFor?.includes(userId) ||
+      minute.participants?.includes(username) ||
+      minute.participants?.includes(userId);
+
+    if (!canEditAll && !isSeriesModerator && !isSeriesParticipant && !isMinuteDirectlyVisible) {
+      return NextResponse.json(
+        { error: 'Forbidden' },
+        { status: 403 }
+      );
+    }
+
     if (minute.isFinalized && !canEditAll) {
       return NextResponse.json(
         { error: 'Fehlende Berechtigung zum Bearbeiten finalisierter Protokolle' },

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useTranslations, useLocale } from 'next-intl';
@@ -22,6 +22,11 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import {
+  getMinutesMarkdownTemplate,
+  parseMinutesMarkdown,
+  serializeTopicsToMarkdown,
+} from '@/lib/minutesMarkdown';
 
 interface SortableTopicProps {
   id: string;
@@ -484,7 +489,9 @@ function SortableInfoItem({
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z" />
                     </svg>
                     <div className="flex-1">
-                      <p className="text-xs font-semibold text-gray-700 mb-1">{t('note')}</p>
+                      <p className="text-xs font-semibold text-gray-700 mb-1">
+                        {item.itemType === 'actionItem' ? t('resolutionLabel') : t('informationLabel')}
+                      </p>
                       <p className="text-sm text-gray-800">{item.notes}</p>
                     </div>
                   </div>
@@ -936,12 +943,12 @@ function SortableInfoItem({
         {/* Notes - Available for both types */}
         <div className="bg-white/70 backdrop-blur-sm p-3 rounded-lg border border-white/50">
           <label className="block text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">
-            📝 {t('additionalNotes')}
+            📝 {item.itemType === 'actionItem' ? t('resolutionLabel') : t('informationLabel')}
           </label>
           <textarea
             value={item.notes || ''}
             onChange={(e) => updateInfoItem(topicIndex, itemIndex, 'notes', e.target.value)}
-            placeholder={t('additionalNotesPlaceholder')}
+            placeholder={item.itemType === 'actionItem' ? t('resolutionPlaceholder') : t('informationPlaceholder')}
             className="w-full min-h-[96px] px-3 py-2.5 text-sm leading-snug border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white resize-y"
             rows={4}
           />
@@ -1008,6 +1015,51 @@ interface User {
   firstName: string;
   lastName: string;
   role: 'admin' | 'moderator' | 'user';
+}
+
+interface MentionCandidate {
+  value: string;
+  label: string;
+}
+
+function getTextareaCaretCoordinates(
+  textarea: HTMLTextAreaElement,
+  caretPosition: number
+): { top: number; left: number } {
+  const mirror = document.createElement('div');
+  const style = window.getComputedStyle(textarea);
+
+  mirror.style.position = 'absolute';
+  mirror.style.visibility = 'hidden';
+  mirror.style.whiteSpace = 'pre-wrap';
+  mirror.style.wordWrap = 'break-word';
+  mirror.style.overflowWrap = 'break-word';
+  mirror.style.boxSizing = style.boxSizing;
+  mirror.style.width = `${textarea.clientWidth}px`;
+  mirror.style.font = style.font;
+  mirror.style.fontFamily = style.fontFamily;
+  mirror.style.fontSize = style.fontSize;
+  mirror.style.fontWeight = style.fontWeight;
+  mirror.style.lineHeight = style.lineHeight;
+  mirror.style.letterSpacing = style.letterSpacing;
+  mirror.style.padding = style.padding;
+  mirror.style.border = style.border;
+
+  const before = textarea.value.slice(0, caretPosition);
+  const after = textarea.value.slice(caretPosition) || ' ';
+  mirror.textContent = before;
+
+  const marker = document.createElement('span');
+  marker.textContent = after[0];
+  mirror.appendChild(marker);
+  document.body.appendChild(mirror);
+
+  const top = marker.offsetTop - textarea.scrollTop;
+  const left = marker.offsetLeft - textarea.scrollLeft;
+
+  document.body.removeChild(mirror);
+
+  return { top, left };
 }
 
 interface Participant {
@@ -1079,6 +1131,15 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
   const [newGuestName, setNewGuestName] = useState('');
   const [showGuestInput, setShowGuestInput] = useState(false);
   const [agendaItemLabelMode, setAgendaItemLabelMode] = useState<'manual' | 'topic-alpha'>('topic-alpha');
+  const [editorMode, setEditorMode] = useState<'visual' | 'markdown'>('visual');
+  const [markdownText, setMarkdownText] = useState('');
+  const [markdownWarnings, setMarkdownWarnings] = useState<string[]>([]);
+  const [markdownImportInfo, setMarkdownImportInfo] = useState<string | null>(null);
+  const [mentionSuggestions, setMentionSuggestions] = useState<MentionCandidate[]>([]);
+  const [mentionStartIndex, setMentionStartIndex] = useState<number | null>(null);
+  const [mentionCaretIndex, setMentionCaretIndex] = useState<number | null>(null);
+  const [selectedMentionIndex, setSelectedMentionIndex] = useState(0);
+  const [mentionMenuPosition, setMentionMenuPosition] = useState<{ top: number; left: number } | null>(null);
   const [confirmDialog, setConfirmDialog] = useState<{
     message: string;
     onConfirm: () => void;
@@ -1086,6 +1147,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
 
   // Use a ref to track imported task IDs to prevent duplicates
   const importedTaskIdsRef = useRef<Set<string>>(new Set());
+  const markdownTextareaRef = useRef<HTMLTextAreaElement | null>(null);
 
   // Use a ref to track if an import is currently in progress
   const importInProgressRef = useRef<boolean>(false);
@@ -1287,6 +1349,101 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
     setHasUnsavedChanges(true);
   }, [formData]);
 
+  useEffect(() => {
+    if (editorMode !== 'markdown') return;
+    setMarkdownText(serializeTopicsToMarkdown(formData.topics as any));
+    closeMentionSuggestions();
+  }, [editorMode, formData.topics]);
+
+  const mentionCandidates = useMemo(() => {
+    const seen = new Set<string>();
+    const result: MentionCandidate[] = [];
+
+    allUsers.forEach((user) => {
+      const value = (user.username || user._id || '').trim();
+      if (!value || seen.has(value)) return;
+      seen.add(value);
+      result.push({
+        value,
+        label: `${user.firstName} ${user.lastName} (@${value})`,
+      });
+    });
+
+    meetingSeriesMembers.forEach((member) => {
+      const value = (member.userId || '').trim();
+      if (!value || seen.has(value)) return;
+      seen.add(value);
+      if (value.startsWith('guest:')) {
+        const guestName = value.replace('guest:', '').trim();
+        result.push({
+          value,
+          label: guestName ? `${guestName} (@${value})` : `Guest (@${value})`,
+        });
+      } else {
+        result.push({
+          value,
+          label: `@${value}`,
+        });
+      }
+    });
+
+    return result;
+  }, [allUsers, meetingSeriesMembers]);
+
+  const closeMentionSuggestions = () => {
+    setMentionSuggestions([]);
+    setMentionStartIndex(null);
+    setMentionCaretIndex(null);
+    setSelectedMentionIndex(0);
+    setMentionMenuPosition(null);
+  };
+
+  const updateMentionSuggestions = (text: string, caretPos: number) => {
+    const textarea = markdownTextareaRef.current;
+    if (!textarea) {
+      closeMentionSuggestions();
+      return;
+    }
+
+    const before = text.slice(0, caretPos);
+    const atIndex = before.lastIndexOf('@');
+    if (atIndex === -1) {
+      closeMentionSuggestions();
+      return;
+    }
+
+    const prefix = before.slice(atIndex + 1);
+    if (prefix.includes(' ') || prefix.includes('\n') || prefix.includes('\t')) {
+      closeMentionSuggestions();
+      return;
+    }
+
+    const query = prefix.trim().toLowerCase();
+    const suggestions = mentionCandidates
+      .filter((candidate) => {
+        if (!query) return true;
+        return (
+          candidate.value.toLowerCase().includes(query) ||
+          candidate.label.toLowerCase().includes(query)
+        );
+      })
+      .slice(0, 8);
+
+    if (suggestions.length === 0) {
+      closeMentionSuggestions();
+      return;
+    }
+
+    setMentionSuggestions(suggestions);
+    setMentionStartIndex(atIndex);
+    setMentionCaretIndex(caretPos);
+    setSelectedMentionIndex(0);
+    const caret = getTextareaCaretCoordinates(textarea, caretPos);
+    const dropdownTop = Math.max(8, caret.top + 24);
+    const dropdownLeft = Math.max(8, Math.min(caret.left, textarea.clientWidth - 260));
+    setMentionMenuPosition({ top: dropdownTop, left: dropdownLeft });
+  };
+
   // Initialize importedTaskIdsRef with already imported tasks from formData
   useEffect(() => {
     const importedIds = new Set<string>();
@@ -1461,6 +1618,94 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
     setShowGuestInput(false);
   };
 
+  const importMarkdownToTopics = () => {
+    closeMentionSuggestions();
+    const parsed = parseMinutesMarkdown(markdownText);
+    if (parsed.topics.length === 0) {
+      setError(t('markdownNoTopicsError'));
+      setMarkdownWarnings(parsed.warnings);
+      return;
+    }
+
+    setFormData((prev) => ({
+      ...prev,
+      topics: parsed.topics as Topic[],
+    }));
+    setMarkdownWarnings(parsed.warnings);
+    setMarkdownImportInfo(
+      t('markdownImportSuccess', {
+        topicCount: parsed.topics.length,
+        entryCount: parsed.topics.reduce((sum, topic) => sum + (topic.infoItems?.length || 0), 0),
+      })
+    );
+    setError(null);
+  };
+
+  const resetMarkdownTemplate = () => {
+    setMarkdownText(getMinutesMarkdownTemplate());
+    setMarkdownWarnings([]);
+    setMarkdownImportInfo(null);
+    closeMentionSuggestions();
+  };
+
+  const insertMarkdownSnippet = (snippet: string) => {
+    const textarea = markdownTextareaRef.current;
+    const currentValue = markdownText;
+    const selectionStart = textarea?.selectionStart ?? currentValue.length;
+    const selectionEnd = textarea?.selectionEnd ?? currentValue.length;
+
+    const beforeRaw = currentValue.slice(0, selectionStart);
+    const afterRaw = currentValue.slice(selectionEnd);
+    const before = beforeRaw.length > 0 && !beforeRaw.endsWith('\n') ? `${beforeRaw}\n` : beforeRaw;
+    const after = afterRaw.length > 0 && !afterRaw.startsWith('\n') ? `\n${afterRaw}` : afterRaw;
+    const insertion = snippet.endsWith('\n') ? snippet : `${snippet}\n`;
+    const newValue = `${before}${insertion}${after}`;
+    const cursorPosition = before.length + insertion.length;
+
+    setMarkdownText(newValue);
+    setMarkdownImportInfo(null);
+
+    requestAnimationFrame(() => {
+      if (!markdownTextareaRef.current) return;
+      markdownTextareaRef.current.focus();
+      markdownTextareaRef.current.setSelectionRange(cursorPosition, cursorPosition);
+    });
+  };
+
+  const buildInfoTemplate = () =>
+    ['- [i] Informationstitel @userId', '  Details zur Information', '  information: Kontext oder Info'].join('\n');
+
+  const buildTaskTemplate = (status: 'open' | 'in-progress' | 'done') => {
+    const token = status === 'open' ? ' ' : status === 'in-progress' ? '~' : 'x';
+    const dueDate = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    return [
+      `- [${token}] Aufgabentitel !medium due:${dueDate} @userId`,
+      '  Details zur Aufgabe',
+      '  beschluss: Nächster Schritt / Kommentar',
+    ].join('\n');
+  };
+
+  const applyMentionSuggestion = (candidate: MentionCandidate) => {
+    if (mentionStartIndex === null || mentionCaretIndex === null) return;
+    const currentValue = markdownText;
+    const before = currentValue.slice(0, mentionStartIndex);
+    const after = currentValue.slice(mentionCaretIndex);
+    const insertion = `@${candidate.value}`;
+    const needsSpace = after.length > 0 && !after.startsWith(' ') && !after.startsWith('\n');
+    const nextValue = `${before}${insertion}${needsSpace ? ' ' : ''}${after}`;
+    const nextCursor = before.length + insertion.length + (needsSpace ? 1 : 0);
+
+    setMarkdownText(nextValue);
+    setMarkdownImportInfo(null);
+    closeMentionSuggestions();
+
+    requestAnimationFrame(() => {
+      if (!markdownTextareaRef.current) return;
+      markdownTextareaRef.current.focus();
+      markdownTextareaRef.current.setSelectionRange(nextCursor, nextCursor);
+    });
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!minuteId) return;
@@ -1473,6 +1718,17 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
       location: (formData.location || '').trim(),
       title: (formData.title || '').trim(),
     };
+
+    if (editorMode === 'markdown') {
+      const parsed = parseMinutesMarkdown(markdownText);
+      if (parsed.topics.length === 0) {
+        setError(t('markdownNoTopicsError'));
+        setMarkdownWarnings(parsed.warnings);
+        return;
+      }
+      dataToSave.topics = parsed.topics as Topic[];
+      setMarkdownWarnings(parsed.warnings);
+    }
 
     setSaving(true);
     try {
@@ -2035,65 +2291,273 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
             </div>
           )}
 
-          {/* Topics */}
-          <div className="space-y-6">
-            <div className="sticky top-2 sm:top-6 z-30 bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg p-4 border border-gray-100 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-100">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <h2 className="text-2xl font-bold text-gray-900">{t('topics')}</h2>
-              <button
-                type="button"
-                onClick={addTopic}
-                className="w-full sm:w-auto px-4 py-2.5 min-h-11 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all border-2 border-white inline-flex items-center justify-center gap-2 text-center"
-              >
-                <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                <span className="leading-tight">{t('addTopic')}</span>
-              </button>
+              <div className="inline-flex rounded-lg border border-gray-300 overflow-hidden">
+                <button
+                  type="button"
+                  onClick={() => setEditorMode('visual')}
+                  className={`px-4 py-2 text-sm font-semibold transition-colors ${
+                    editorMode === 'visual' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  {t('visualMode')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setEditorMode('markdown')}
+                  className={`px-4 py-2 text-sm font-semibold transition-colors ${
+                    editorMode === 'markdown' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  {t('markdownMode')}
+                </button>
+              </div>
             </div>
-
-            <DndContext
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleDragEndTopic}
-            >
-              <SortableContext
-                items={formData.topics.map((_, i) => `topic-${i}`)}
-                strategy={verticalListSortingStrategy}
-              >
-                {formData.topics.map((topic, topicIndex) => (
-                  <SortableTopic
-                    key={`topic-${topicIndex}`}
-                    id={`topic-${topicIndex}`}
-                    topicIndex={topicIndex}
-                    topic={topic}
-                    meetingSeriesMembers={meetingSeriesMembers}
-                    allUsers={allUsers}
-                    updateTopic={updateTopic}
-                    deleteTopic={deleteTopic}
-                    addInfoItem={addInfoItem}
-                    updateInfoItem={updateInfoItem}
-                    deleteInfoItem={deleteInfoItem}
-                    handleDragEndInfoItem={handleDragEndInfoItem}
-                    agendaItemLabelMode={agendaItemLabelMode}
-                  />
-                ))}
-              </SortableContext>
-            </DndContext>
+            <p className="text-sm text-gray-600 mt-3">{t('editorModeHint')}</p>
           </div>
 
-          {/* Add Topic Button */}
-          <div className="flex justify-center">
-            <button
-              type="button"
-              onClick={addTopic}
-              className="inline-flex w-full sm:w-auto justify-center items-center gap-2 px-5 sm:px-8 py-3.5 min-h-11 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl sm:hover:scale-105 text-center"
-            >
-              <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
-              </svg>
-              <span className="leading-tight">{formData.topics.length === 0 ? t('createFirstTopic') : t('addAnotherTopic')}</span>
-            </button>
-          </div>
+          {editorMode === 'visual' ? (
+            <>
+              {/* Topics */}
+              <div className="space-y-6">
+                <div className="sticky top-2 sm:top-6 z-30 bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg p-4 border border-gray-100 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+                  <h2 className="text-2xl font-bold text-gray-900">{t('topics')}</h2>
+                  <button
+                    type="button"
+                    onClick={addTopic}
+                    className="w-full sm:w-auto px-4 py-2.5 min-h-11 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all border-2 border-white inline-flex items-center justify-center gap-2 text-center"
+                  >
+                    <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                    </svg>
+                    <span className="leading-tight">{t('addTopic')}</span>
+                  </button>
+                </div>
+
+                <DndContext
+                  sensors={sensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleDragEndTopic}
+                >
+                  <SortableContext
+                    items={formData.topics.map((_, i) => `topic-${i}`)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {formData.topics.map((topic, topicIndex) => (
+                      <SortableTopic
+                        key={`topic-${topicIndex}`}
+                        id={`topic-${topicIndex}`}
+                        topicIndex={topicIndex}
+                        topic={topic}
+                        meetingSeriesMembers={meetingSeriesMembers}
+                        allUsers={allUsers}
+                        updateTopic={updateTopic}
+                        deleteTopic={deleteTopic}
+                        addInfoItem={addInfoItem}
+                        updateInfoItem={updateInfoItem}
+                        deleteInfoItem={deleteInfoItem}
+                        handleDragEndInfoItem={handleDragEndInfoItem}
+                        agendaItemLabelMode={agendaItemLabelMode}
+                      />
+                    ))}
+                  </SortableContext>
+                </DndContext>
+              </div>
+
+              {/* Add Topic Button */}
+              <div className="flex justify-center">
+                <button
+                  type="button"
+                  onClick={addTopic}
+                  className="inline-flex w-full sm:w-auto justify-center items-center gap-2 px-5 sm:px-8 py-3.5 min-h-11 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl sm:hover:scale-105 text-center"
+                >
+                  <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                  </svg>
+                  <span className="leading-tight">{formData.topics.length === 0 ? t('createFirstTopic') : t('addAnotherTopic')}</span>
+                </button>
+              </div>
+            </>
+          ) : (
+            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-100 space-y-4">
+              <div className="text-sm text-gray-700 whitespace-pre-line bg-gray-50 border border-gray-200 rounded-lg p-3">
+                {t('markdownLegend')}
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => insertMarkdownSnippet('## Neues Traktandum')}
+                  className="px-3 py-1.5 text-xs sm:text-sm font-semibold bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  {t('markdownInsertTopic')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => insertMarkdownSnippet(buildInfoTemplate())}
+                  className="px-3 py-1.5 text-xs sm:text-sm font-semibold bg-white border border-blue-300 text-blue-700 rounded-lg hover:bg-blue-50 transition-colors"
+                >
+                  {t('markdownInsertInfo')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => insertMarkdownSnippet(buildTaskTemplate('open'))}
+                  className="px-3 py-1.5 text-xs sm:text-sm font-semibold bg-white border border-orange-300 text-orange-700 rounded-lg hover:bg-orange-50 transition-colors"
+                >
+                  {t('markdownInsertTaskOpen')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => insertMarkdownSnippet(buildTaskTemplate('in-progress'))}
+                  className="px-3 py-1.5 text-xs sm:text-sm font-semibold bg-white border border-indigo-300 text-indigo-700 rounded-lg hover:bg-indigo-50 transition-colors"
+                >
+                  {t('markdownInsertTaskInProgress')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => insertMarkdownSnippet(buildTaskTemplate('done'))}
+                  className="px-3 py-1.5 text-xs sm:text-sm font-semibold bg-white border border-green-300 text-green-700 rounded-lg hover:bg-green-50 transition-colors"
+                >
+                  {t('markdownInsertTaskDone')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => insertMarkdownSnippet('!high')}
+                  className="px-3 py-1.5 text-xs sm:text-sm font-semibold bg-white border border-red-300 text-red-700 rounded-lg hover:bg-red-50 transition-colors"
+                >
+                  {t('markdownInsertPriority')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => insertMarkdownSnippet('due:2026-03-20')}
+                  className="px-3 py-1.5 text-xs sm:text-sm font-semibold bg-white border border-purple-300 text-purple-700 rounded-lg hover:bg-purple-50 transition-colors"
+                >
+                  {t('markdownInsertDueDate')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => insertMarkdownSnippet('@userId')}
+                  className="px-3 py-1.5 text-xs sm:text-sm font-semibold bg-white border border-teal-300 text-teal-700 rounded-lg hover:bg-teal-50 transition-colors"
+                >
+                  {t('markdownInsertResponsible')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => insertMarkdownSnippet('  beschluss: Kommentar')}
+                  className="px-3 py-1.5 text-xs sm:text-sm font-semibold bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  {t('markdownInsertNote')}
+                </button>
+              </div>
+              <div className="relative">
+                <textarea
+                  ref={markdownTextareaRef}
+                  value={markdownText}
+                  onChange={(e) => {
+                    const nextValue = e.target.value;
+                    const caretPos = e.target.selectionStart ?? nextValue.length;
+                    setMarkdownText(nextValue);
+                    setMarkdownImportInfo(null);
+                    updateMentionSuggestions(nextValue, caretPos);
+                  }}
+                  onKeyUp={(e) => {
+                    const target = e.currentTarget;
+                    const caretPos = target.selectionStart ?? markdownText.length;
+                    updateMentionSuggestions(target.value, caretPos);
+                  }}
+                  onClick={(e) => {
+                    const target = e.currentTarget;
+                    const caretPos = target.selectionStart ?? markdownText.length;
+                    updateMentionSuggestions(target.value, caretPos);
+                  }}
+                  onScroll={(e) => {
+                    if (mentionSuggestions.length === 0) return;
+                    const target = e.currentTarget;
+                    const caretPos = target.selectionStart ?? markdownText.length;
+                    updateMentionSuggestions(target.value, caretPos);
+                  }}
+                  onKeyDown={(e) => {
+                    if (mentionSuggestions.length === 0) return;
+                    if (e.key === 'ArrowDown') {
+                      e.preventDefault();
+                      setSelectedMentionIndex((prev) =>
+                        prev + 1 >= mentionSuggestions.length ? 0 : prev + 1
+                      );
+                      return;
+                    }
+                    if (e.key === 'ArrowUp') {
+                      e.preventDefault();
+                      setSelectedMentionIndex((prev) =>
+                        prev - 1 < 0 ? mentionSuggestions.length - 1 : prev - 1
+                      );
+                      return;
+                    }
+                    if (e.key === 'Enter' || e.key === 'Tab') {
+                      e.preventDefault();
+                      applyMentionSuggestion(mentionSuggestions[selectedMentionIndex]);
+                      return;
+                    }
+                    if (e.key === 'Escape') {
+                      e.preventDefault();
+                      closeMentionSuggestions();
+                    }
+                  }}
+                  placeholder={getMinutesMarkdownTemplate()}
+                  className="w-full min-h-[320px] px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+                />
+                {mentionSuggestions.length > 0 && mentionMenuPosition && (
+                  <div
+                    className="absolute mt-1 w-64 max-h-52 overflow-y-auto bg-white border border-gray-300 rounded-lg shadow-lg z-20"
+                    style={{ top: mentionMenuPosition.top, left: mentionMenuPosition.left }}
+                  >
+                    {mentionSuggestions.map((candidate, index) => (
+                      <button
+                        key={candidate.value}
+                        type="button"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => applyMentionSuggestion(candidate)}
+                        className={`w-full text-left px-3 py-2 text-sm transition-colors ${
+                          index === selectedMentionIndex
+                            ? 'bg-blue-50 text-blue-800'
+                            : 'text-gray-700 hover:bg-gray-50'
+                        }`}
+                      >
+                        {candidate.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div className="flex flex-col sm:flex-row gap-2">
+                <button
+                  type="button"
+                  onClick={importMarkdownToTopics}
+                  className="w-full sm:w-auto px-4 py-2.5 min-h-11 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                >
+                  {t('importMarkdown')}
+                </button>
+                <button
+                  type="button"
+                  onClick={resetMarkdownTemplate}
+                  className="w-full sm:w-auto px-4 py-2.5 min-h-11 bg-gray-100 text-gray-700 rounded-lg font-semibold hover:bg-gray-200 transition-colors"
+                >
+                  {t('loadMarkdownTemplate')}
+                </button>
+              </div>
+              {markdownImportInfo && (
+                <p className="text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg px-3 py-2">
+                  {markdownImportInfo}
+                </p>
+              )}
+              {markdownWarnings.length > 0 && (
+                <div className="text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2">
+                  <p className="font-semibold mb-1">{t('markdownWarningsTitle')}</p>
+                  <p>{markdownWarnings.slice(0, 3).join(' ')}</p>
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Reopening History */}
           {minute?.reopeningHistory && minute.reopeningHistory.length > 0 && (
