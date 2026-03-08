@@ -83,7 +83,7 @@ const UserSchema: Schema<IUser> = new Schema(
       maxlength: [30, 'Benutzername darf maximal 30 Zeichen lang sein'],
       validate: {
         validator: (username: string) => {
-          return /^[a-zA-Z0-9._-]+$/.test(username);
+          return /^[\p{L}\p{N}._-]+$/u.test(username);
         },
         message: 'Benutzername darf nur Buchstaben, Zahlen, Punkte, Unterstriche und Bindestriche enthalten'
       }

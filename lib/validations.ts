@@ -11,7 +11,7 @@ export const loginSchema = z.object({
 });
 
 export const registerSchema = z.object({
-  username: requiredString(50).regex(/^[a-zA-Z0-9._-]+$/, 'Invalid username format'),
+  username: requiredString(50).regex(/^[\p{L}\p{N}._-]+$/u, 'Invalid username format'),
   email: z.string().email().max(200),
   password: requiredString(200).min(8, 'Password must be at least 8 characters'),
   firstName: requiredString(100),

@@ -120,7 +120,7 @@ export async function PUT(
       if (typeof body.username !== 'string' || body.username.length < 3 || body.username.length > 30) {
         return NextResponse.json({ error: 'Benutzername muss zwischen 3 und 30 Zeichen lang sein' }, { status: 400 });
       }
-      if (!/^[a-zA-Z0-9._-]+$/.test(body.username)) {
+      if (!/^[\p{L}\p{N}._-]+$/u.test(body.username)) {
         return NextResponse.json({ error: 'Benutzername darf nur Buchstaben, Zahlen, Punkte, Unterstriche und Bindestriche enthalten' }, { status: 400 });
       }
       userToUpdate.username = body.username;
