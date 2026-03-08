@@ -63,16 +63,22 @@ function getClientIp(request: NextRequest): string {
     const directIp = ((request as any).ip as string | undefined)?.trim();
     if (directIp) return sanitizeKeyPart(directIp);
 
+    // Never trust forwarding headers unless explicitly enabled.
+    const trustProxyHeaders = process.env.TRUST_PROXY_HEADERS === 'true';
+    if (!trustProxyHeaders) {
+        return 'unknown';
+    }
+
     // Trusted reverse proxies often provide x-real-ip.
     const realIp = request.headers.get('x-real-ip')?.trim();
     if (realIp) return sanitizeKeyPart(realIp);
 
-    // For x-forwarded-for, prefer right-most element (closest trusted proxy hop).
+    // For x-forwarded-for, prefer left-most element (original client IP).
     const xff = request.headers.get('x-forwarded-for');
     if (xff) {
         const parts = xff.split(',').map((part) => part.trim()).filter(Boolean);
         if (parts.length > 0) {
-            return sanitizeKeyPart(parts[parts.length - 1]);
+            return sanitizeKeyPart(parts[0]);
         }
     }
 
