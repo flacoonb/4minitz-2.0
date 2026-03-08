@@ -105,7 +105,7 @@ export default function DashboardPage() {
   const fetchDashboard = useCallback(async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/dashboard', { credentials: 'include' });
+      const response = await fetch('/api/dashboard', { credentials: 'include', cache: 'no-store' });
 
       if (!response.ok) {
         throw new Error(t('errors.fetchDashboardFailed'));
@@ -127,7 +127,7 @@ export default function DashboardPage() {
       if (taskFilter.priority) params.append('priority', taskFilter.priority);
       if (taskFilter.overdue !== undefined) params.append('overdue', String(taskFilter.overdue));
 
-      const response = await fetch(`/api/tasks?${params.toString()}`, { credentials: 'include' });
+      const response = await fetch(`/api/tasks?${params.toString()}`, { credentials: 'include', cache: 'no-store' });
       if (response.ok) {
         const result = await response.json();
         let data = (result.data || []).map((task: Task) => ({

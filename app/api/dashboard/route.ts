@@ -22,14 +22,20 @@ export async function GET(request: NextRequest) {
     const username = authResult.user.username;
     const userObjectId = authResult.user._id.toString();
 
-    // Get all meeting series where user has access (uses usernames)
-    const meetingSeries = await MeetingSeries.find({
-      $or: [
-        { visibleFor: username },
-        { moderators: username },
-        { participants: username },
-      ],
-    }).lean();
+    // Resolve series access robustly for both legacy (username) and current (userId/member) storage.
+    const meetingSeriesQuery =
+      authResult.user.role === 'admin'
+        ? {}
+        : {
+            $or: [
+              { visibleFor: { $in: [username, userObjectId] } },
+              { moderators: { $in: [username, userObjectId] } },
+              { participants: { $in: [username, userObjectId] } },
+              { 'members.userId': userObjectId },
+            ],
+          };
+
+    const meetingSeries = await MeetingSeries.find(meetingSeriesQuery).lean();
 
     const seriesIds = meetingSeries.map(s => s._id);
 
@@ -57,7 +63,13 @@ export async function GET(request: NextRequest) {
 
     // Filter for overdue/upcoming (usually only for tasks assigned to user)
     // responsibles stores user ObjectIds, not usernames
-    const userOpenTasks = openTasks.filter(t => t.responsibles?.includes(userObjectId));
+    const userOpenTasks = openTasks.filter(t =>
+      Array.isArray(t.responsibles) &&
+      t.responsibles.some((responsible: any) => {
+        const value = String(responsible);
+        return value === userObjectId || value === username;
+      })
+    );
 
     userOpenTasks.forEach(task => {
       if (task.dueDate) {
