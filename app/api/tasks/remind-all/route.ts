@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
     });
 
     // Fetch users to get emails
-    const users = await User.find({ _id: { $in: Array.from(responsibleIds) } });
+    const users = await User.find({ _id: { $in: Array.from(responsibleIds) } }).select('-password');
     const userMap = new Map(users.map(u => [u._id.toString(), u]));
 
     for (const task of tasks) {

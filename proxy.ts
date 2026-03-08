@@ -1,27 +1,39 @@
 import { NextRequest, NextResponse } from 'next/server';
 
-export function proxy(request: NextRequest) {
-  // Get locale from cookie or default to 'en'
-  const locale = request.cookies.get('NEXT_LOCALE')?.value || 'en';
-  
-  // Add locale to request headers for server components
-  const requestHeaders = new Headers(request.headers);
-  requestHeaders.set('x-locale', locale);
+const MUTATION_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
-  return NextResponse.next({
-    request: {
-      headers: requestHeaders,
-    },
-  });
+export function proxy(request: NextRequest) {
+  // CSRF Protection: Verify Origin header on state-changing API requests
+  if (
+    request.nextUrl.pathname.startsWith('/api/') &&
+    MUTATION_METHODS.has(request.method)
+  ) {
+    const origin = request.headers.get('origin');
+    const host = request.headers.get('host');
+
+    // Allow requests without Origin header (same-origin non-CORS requests, e.g. server-side)
+    // But if Origin is present, it must match the host
+    if (origin) {
+      try {
+        const originHost = new URL(origin).host;
+        if (originHost !== host) {
+          return NextResponse.json(
+            { error: 'CSRF validation failed' },
+            { status: 403 }
+          );
+        }
+      } catch {
+        return NextResponse.json(
+          { error: 'Invalid origin' },
+          { status: 403 }
+        );
+      }
+    }
+  }
+
+  return NextResponse.next();
 }
 
 export const config = {
-  matcher: [
-    // Match all pathnames except for
-    // - api routes
-    // - _next/static (static files)
-    // - _next/image (image optimization files)
-    // - favicon.ico (favicon file)
-    '/((?!api|_next/static|_next/image|favicon.ico).*)',
-  ],
+  matcher: '/api/:path*',
 };

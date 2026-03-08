@@ -1,23 +1,25 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 # 4Minitz 2.0 - Setup Script
 # Dieses Script richtet die komplette Entwicklungsumgebung ein
 
-set -e  # Exit on error
+set -euo pipefail
 
 echo "🚀 4Minitz 2.0 Setup"
 echo "======================="
 echo ""
 
 # Check Node.js
+NODE_MAJOR_REQUIRED=24
+
 if ! command -v node &> /dev/null; then
-    echo "❌ Node.js nicht gefunden. Bitte installieren Sie Node.js 18+"
+    echo "❌ Node.js nicht gefunden. Bitte installieren Sie Node.js ${NODE_MAJOR_REQUIRED}+"
     exit 1
 fi
 
 NODE_VERSION=$(node -v | cut -d'v' -f2 | cut -d'.' -f1)
-if [ "$NODE_VERSION" -lt 18 ]; then
-    echo "⚠️  Node.js Version $NODE_VERSION ist zu alt. Mindestens v18 erforderlich."
+if [ "$NODE_VERSION" -lt "$NODE_MAJOR_REQUIRED" ]; then
+    echo "⚠️  Node.js Version $NODE_VERSION ist zu alt. Mindestens v${NODE_MAJOR_REQUIRED} erforderlich."
     exit 1
 fi
 
@@ -34,7 +36,11 @@ fi
 
 echo ""
 echo "📦 Installiere Dependencies..."
-npm install
+if [ -f package-lock.json ]; then
+    npm ci
+else
+    npm install
+fi
 
 echo ""
 echo "📂 Erstelle Upload-Verzeichnis..."
@@ -49,7 +55,11 @@ if [ ! -f .env.local ]; then
 # MongoDB Connection
 MONGODB_URI=mongodb://localhost:27017/4minitz-next
 
-# NextAuth Configuration
+# Auth / Security
+JWT_SECRET=change-this-to-a-random-secret-min-32-chars
+ENCRYPTION_SECRET=change-this-to-a-random-secret-min-32-chars
+
+# Legacy compatibility (still used as fallback in some places)
 NEXTAUTH_SECRET=change-this-to-a-random-secret-min-32-chars
 NEXTAUTH_URL=http://localhost:3000
 
@@ -61,6 +71,7 @@ SMTP_SECURE=false
 FROM_EMAIL=noreply@4minitz.local
 
 # App URL
+APP_URL=http://localhost:3000
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 EOF
     echo "✅ .env.local erstellt"
@@ -101,6 +112,7 @@ if [ "$SKIP_DOCKER" = false ]; then
     if [ "$USE_DOCKER" = true ]; then
         echo "🐳 Starte/erstelle MongoDB Docker Container..."
 
+        if [ "$ENABLE_AUTH" = true ]; then
             # Ensure we have root credentials (ask user if not provided earlier)
             if [ -z "${ROOT_USER:-}" ]; then
                 read -p "Root-Benutzername für MongoDB (admin) [root]: " ROOT_USER
@@ -110,10 +122,11 @@ if [ "$SKIP_DOCKER" = false ]; then
                 read -s -p "Root-Passwort für MongoDB: " ROOT_PASS
                 echo ""
             fi
+        fi
 
-        if docker ps -a | grep -q mongodb-4minitz; then
+        if docker container inspect mongodb-4minitz >/dev/null 2>&1; then
             echo "ℹ️  MongoDB Container existiert bereits"
-            if ! docker ps | grep -q mongodb-4minitz; then
+            if ! docker ps --filter "name=^mongodb-4minitz$" --format '{{.Names}}' | grep -qx "mongodb-4minitz"; then
                 echo "🔄 Starte MongoDB..."
                 docker start mongodb-4minitz
             fi
@@ -220,7 +233,7 @@ echo ""
 read -p "📊 Möchten Sie Beispieldaten erstellen? (y/n) " -n 1 -r
 echo ""
 if [[ $REPLY =~ ^[Yy]$ ]]; then
-    npx tsx scripts/sample-data.ts
+    npx --yes tsx scripts/sample-data.ts
     echo "✅ Beispieldaten erstellt"
 fi
 

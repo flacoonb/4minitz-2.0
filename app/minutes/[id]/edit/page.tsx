@@ -9,6 +9,7 @@ import {
   closestCenter,
   KeyboardSensor,
   PointerSensor,
+  TouchSensor,
   useSensor,
   useSensors,
   DragEndEvent,
@@ -34,6 +35,7 @@ interface SortableTopicProps {
   updateInfoItem: (topicIndex: number, itemIndex: number, field: keyof InfoItem, value: any) => void;
   deleteInfoItem: (topicIndex: number, itemIndex: number) => void;
   handleDragEndInfoItem: (topicIndex: number) => (event: DragEndEvent) => void;
+  agendaItemLabelMode: 'manual' | 'topic-alpha';
 }
 
 function SortableTopic({
@@ -48,10 +50,10 @@ function SortableTopic({
   updateInfoItem,
   deleteInfoItem,
   handleDragEndInfoItem,
+  agendaItemLabelMode,
 }: SortableTopicProps) {
   const t = useTranslations('minutes');
   const tCommon = useTranslations('common');
-  const _locale = useLocale();
   const {
     attributes,
     listeners,
@@ -65,26 +67,10 @@ function SortableTopic({
     transition,
   };
 
-  const getUserById = (userId: string): User | undefined => {
-    return allUsers.find(u => u._id === userId);
-  };
-
-  // Helper function to get user initials
-  const getUserInitials = (userId: string): string => {
-    const user = getUserById(userId);
-    if (!user) return '?';
-    return `${user.firstName.charAt(0).toUpperCase()}${user.lastName.charAt(0).toUpperCase()}`;
-  };
-
-  // Helper function to format multiple users as initials
-  const _formatUsersAsInitials = (userIds: string[]): string => {
-    return userIds.map(id => getUserInitials(id)).join(', ');
-  };
-
   return (
-    <div ref={setNodeRef} style={style} className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl p-6 border border-gray-100">
-      <div className="flex justify-between items-start mb-4">
-        <div className="flex items-center gap-3 flex-1 mr-4">
+    <div ref={setNodeRef} style={style} className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl p-4 sm:p-6 border border-gray-100">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-3 mb-4">
+        <div className="flex items-start gap-3 flex-1 min-w-0">
           {/* Drag Handle */}
           <button
             type="button"
@@ -98,9 +84,9 @@ function SortableTopic({
             </svg>
           </button>
 
-          <div className="flex-1">
+          <div className="flex-1 min-w-0">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              {t('topic')} {topicIndex + 1}
+              {t('topic')} {topicIndex + 1} *
             </label>
             <input
               type="text"
@@ -117,7 +103,7 @@ function SortableTopic({
         <button
           type="button"
           onClick={() => deleteTopic(topicIndex)}
-          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+          className="self-start sm:self-auto p-2 min-h-10 min-w-10 text-red-600 hover:bg-red-50 rounded-lg transition-colors inline-flex items-center justify-center"
           title={tCommon('delete')}
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -136,6 +122,7 @@ function SortableTopic({
         updateInfoItem={updateInfoItem}
         deleteInfoItem={deleteInfoItem}
         handleDragEndInfoItem={handleDragEndInfoItem}
+        agendaItemLabelMode={agendaItemLabelMode}
       />
     </div>
   );
@@ -150,6 +137,7 @@ interface SortableInfoItemsProps {
   updateInfoItem: (topicIndex: number, itemIndex: number, field: keyof InfoItem, value: any) => void;
   deleteInfoItem: (topicIndex: number, itemIndex: number) => void;
   handleDragEndInfoItem: (topicIndex: number) => (event: DragEndEvent) => void;
+  agendaItemLabelMode: 'manual' | 'topic-alpha';
 }
 
 function SortableInfoItems({
@@ -161,25 +149,39 @@ function SortableInfoItems({
   updateInfoItem,
   deleteInfoItem,
   handleDragEndInfoItem,
+  agendaItemLabelMode,
 }: SortableInfoItemsProps) {
   const t = useTranslations('minutes');
   const itemIds = infoItems.map((_, i) => `item-${topicIndex}-${i}`);
+  const itemsContainerRef = React.useRef<HTMLDivElement | null>(null);
+  const pendingScrollItemIdRef = React.useRef<string | null>(null);
+
+  useEffect(() => {
+    const targetId = pendingScrollItemIdRef.current;
+    if (!targetId) return;
+
+    requestAnimationFrame(() => {
+      const newItem = itemsContainerRef.current?.querySelector<HTMLElement>(`[data-info-item-id="${targetId}"]`);
+      if (!newItem) return;
+
+      pendingScrollItemIdRef.current = null;
+      newItem.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }, [itemIds]);
 
   const sensors = useSensors(
-    useSensor(PointerSensor)
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 8 },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 200, tolerance: 5 },
+    })
   );
 
   return (
     <div className="space-y-3">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
         <label className="text-sm font-medium text-gray-700">{t('infoItems')}</label>
-        <button
-          type="button"
-          onClick={() => addInfoItem(topicIndex)}
-          className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-        >
-          + {t('add')}
-        </button>
       </div>
 
       <DndContext
@@ -188,7 +190,7 @@ function SortableInfoItems({
         onDragEnd={handleDragEndInfoItem(topicIndex)}
       >
         <SortableContext items={itemIds} strategy={verticalListSortingStrategy}>
-          <div className="space-y-2 min-h-[50px] p-2 border-2 border-dashed border-gray-200 rounded-lg">
+            <div ref={itemsContainerRef} className="space-y-2 min-h-[50px] p-2 border-2 border-dashed border-gray-200 rounded-lg">
             {infoItems.map((item, itemIndex) => (
               <SortableInfoItem
                 key={`item-${topicIndex}-${itemIndex}`}
@@ -200,6 +202,7 @@ function SortableInfoItems({
                 allUsers={allUsers}
                 updateInfoItem={updateInfoItem}
                 deleteInfoItem={deleteInfoItem}
+                agendaItemLabelMode={agendaItemLabelMode}
               />
             ))}
             {infoItems.length === 0 && (
@@ -210,6 +213,18 @@ function SortableInfoItems({
           </div>
         </SortableContext>
       </DndContext>
+      <div className="flex justify-end">
+        <button
+          type="button"
+          onClick={() => {
+            pendingScrollItemIdRef.current = `item-${topicIndex}-${infoItems.length}`;
+            addInfoItem(topicIndex);
+          }}
+          className="w-full sm:w-auto min-h-11 px-4 py-2.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-sm font-semibold transition-colors"
+        >
+          + {t('add')}
+        </button>
+      </div>
     </div>
   );
 }
@@ -223,6 +238,7 @@ interface SortableInfoItemProps {
   allUsers: User[];
   updateInfoItem: (topicIndex: number, itemIndex: number, field: keyof InfoItem, value: any) => void;
   deleteInfoItem: (topicIndex: number, itemIndex: number) => void;
+  agendaItemLabelMode: 'manual' | 'topic-alpha';
 }
 
 function SortableInfoItem({
@@ -234,6 +250,7 @@ function SortableInfoItem({
   allUsers,
   updateInfoItem,
   deleteInfoItem,
+  agendaItemLabelMode,
 }: SortableInfoItemProps) {
   const t = useTranslations('minutes');
   const tCommon = useTranslations('common');
@@ -254,14 +271,40 @@ function SortableInfoItem({
   };
 
   const getUserById = (userId: string): User | undefined => {
-    return allUsers.find(u => u._id === userId);
+    return allUsers.find(u => u._id === userId || u.username === userId);
   };
 
   // Helper function to get user initials
   const getUserInitials = (userId: string): string => {
     const user = getUserById(userId);
-    if (!user) return '?';
-    return `${user.firstName.charAt(0).toUpperCase()}${user.lastName.charAt(0).toUpperCase()}`;
+    if (user) {
+      return `${user.firstName.charAt(0).toUpperCase()}${user.lastName.charAt(0).toUpperCase()}`;
+    }
+
+    if (userId.startsWith('guest:')) {
+      const guestName = userId.replace('guest:', '').trim();
+      if (!guestName) return 'G';
+      const initials = guestName
+        .split(' ')
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((part) => part.charAt(0).toUpperCase())
+        .join('');
+      return initials || 'G';
+    }
+
+    // Fallback for legacy/non-id values (e.g. plain names/usernames)
+    const fallbackInitials = userId
+      .replace(/^guest:/, '')
+      .trim()
+      .split(' ')
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part.charAt(0).toUpperCase())
+      .join('');
+    if (fallbackInitials) return fallbackInitials;
+
+    return '?';
   };
 
   // Helper function to format multiple users as initials
@@ -269,15 +312,28 @@ function SortableInfoItem({
     return userIds.map(id => getUserInitials(id)).join(', ');
   };
 
+  const toAlphabetSuffix = (index: number): string => {
+    let n = index + 1;
+    let result = '';
+    while (n > 0) {
+      const remainder = (n - 1) % 26;
+      result = String.fromCharCode(97 + remainder) + result;
+      n = Math.floor((n - 1) / 26);
+    }
+    return result;
+  };
+
+  const automaticEntryLabel = `${topicIndex + 1}${toAlphabetSuffix(itemIndex)}`;
+  const shouldUseAutomaticLabel = agendaItemLabelMode === 'topic-alpha';
+  const isAutoGeneratedSubject = shouldUseAutomaticLabel && (item.subject?.trim() === automaticEntryLabel);
+  const displayTitle = shouldUseAutomaticLabel
+    ? ((item.subject?.trim() && !isAutoGeneratedSubject) ? `${automaticEntryLabel} ${item.subject.trim()}` : automaticEntryLabel)
+    : (item.subject?.trim() || (item.itemType === 'infoItem' ? `(${t('info')})` : t('task')));
+
   // Color schemes based on type and priority
   const getItemColors = () => {
     if (item.itemType === 'actionItem') {
-      const priorityColors = {
-        high: 'from-red-50 to-pink-50 border-red-300',
-        medium: 'from-orange-50 to-amber-50 border-orange-300',
-        low: 'from-blue-50 to-cyan-50 border-blue-300',
-      };
-      return priorityColors[item.priority || 'medium'];
+      return 'from-orange-50 to-amber-50 border-orange-300';
     }
     return 'from-gray-50 to-slate-50 border-gray-300';
   };
@@ -309,16 +365,16 @@ function SortableInfoItem({
     return (
       <div
         ref={setNodeRef}
-        style={style}
+        style={{ ...style, scrollMarginTop: '130px' }}
+        data-info-item-card="true"
+        data-info-item-id={id}
         className={`bg-white border-l-4 ${item.itemType === 'actionItem'
-          ? item.priority === 'high' ? 'border-red-500'
-            : item.priority === 'low' ? 'border-blue-500'
-              : 'border-orange-500'
+          ? 'border-orange-500'
           : 'border-blue-400'
           } p-4 rounded-lg shadow-sm hover:shadow-md transition-all`}
       >
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex items-start gap-2 flex-1">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+          <div className="flex items-start gap-2 flex-1 min-w-0">
             <button
               type="button"
               {...attributes}
@@ -331,7 +387,7 @@ function SortableInfoItem({
               </svg>
             </button>
 
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               {/* Type Label and Title */}
               <div className="mb-2">
                 {item.itemType === 'actionItem' ? (
@@ -353,7 +409,7 @@ function SortableInfoItem({
                     </span>
                   </div>
                 )}
-                <h4 className="font-bold text-gray-900 text-base">{item.subject}</h4>
+                <h4 className="font-bold text-gray-900 text-base break-words">{displayTitle}</h4>
               </div>
 
               {item.details && (
@@ -437,11 +493,11 @@ function SortableInfoItem({
             </div>
           </div>
 
-          <div className="flex gap-1 flex-shrink-0">
+          <div className="flex gap-1 flex-shrink-0 self-end sm:self-auto">
             <button
               type="button"
               onClick={() => setIsEditing(true)}
-              className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+              className="p-1.5 min-h-10 min-w-10 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors inline-flex items-center justify-center"
               title={tCommon('edit')}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -451,7 +507,7 @@ function SortableInfoItem({
             <button
               type="button"
               onClick={() => deleteInfoItem(topicIndex, itemIndex)}
-              className="p-1.5 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+              className="p-1.5 min-h-10 min-w-10 text-red-600 hover:bg-red-50 rounded-lg transition-colors inline-flex items-center justify-center"
               title={tCommon('delete')}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -468,13 +524,15 @@ function SortableInfoItem({
   return (
     <div
       ref={setNodeRef}
-      style={style}
+      style={{ ...style, scrollMarginTop: '130px' }}
+      data-info-item-card="true"
+      data-info-item-id={id}
       className={`bg-gradient-to-br ${getItemColors()} p-4 rounded-xl border-2 shadow-sm hover:shadow-md transition-all`}
     >
       <div className="space-y-3">
         {/* Header: Drag Handle, Type Badge, Save/Delete Buttons */}
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <button
               type="button"
               {...attributes}
@@ -489,7 +547,7 @@ function SortableInfoItem({
 
             {/* Type Badge */}
             {item.itemType === 'actionItem' ? (
-              <div className="flex items-center gap-1.5">
+              <div className="flex flex-wrap items-center gap-1.5">
                 <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${getPriorityBadge().bg} ${getPriorityBadge().text}`}>
                   {getPriorityBadge().icon} {getPriorityBadge().label}
                 </span>
@@ -504,12 +562,12 @@ function SortableInfoItem({
             )}
           </div>
 
-          <div className="flex gap-1">
+          <div className="flex gap-1 self-end sm:self-auto">
 
             <button
               type="button"
               onClick={() => deleteInfoItem(topicIndex, itemIndex)}
-              className="p-1.5 text-red-600 hover:bg-red-100 rounded-lg transition-colors"
+                className="p-1.5 min-h-10 min-w-10 text-red-600 hover:bg-red-100 rounded-lg transition-colors inline-flex items-center justify-center"
               title={tCommon('delete')}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -568,7 +626,7 @@ function SortableInfoItem({
           <label className="block text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">
             {t('step1SelectType')}
           </label>
-          <div className="grid grid-cols-2 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <button
               type="button"
               onClick={() => updateInfoItem(topicIndex, itemIndex, 'itemType', 'infoItem')}
@@ -600,20 +658,40 @@ function SortableInfoItem({
           </div>
         </div>
 
-        {/* Step 2: Title */}
-        <div className="bg-white/70 backdrop-blur-sm p-3 rounded-lg border border-white/50">
-          <label className="block text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">
-            {t(item.itemType === 'actionItem' ? 'step2TitleAction' : 'step2TitleInfo')}
-          </label>
-          <input
-            type="text"
-            value={item.subject}
-            onChange={(e) => updateInfoItem(topicIndex, itemIndex, 'subject', e.target.value)}
-            placeholder={t(item.itemType === 'actionItem' ? 'step2PlaceholderAction' : 'step2PlaceholderInfo')}
-            className="w-full px-3 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm font-semibold bg-white"
-            required
-          />
-        </div>
+        {/* Step 2: Title / Automatic Label */}
+        {agendaItemLabelMode === 'manual' ? (
+          <div className="bg-white/70 backdrop-blur-sm p-3 rounded-lg border border-white/50">
+            <label className="block text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">
+              {t(item.itemType === 'actionItem' ? 'step2TitleAction' : 'step2TitleInfo')}
+            </label>
+            <input
+              type="text"
+              value={item.subject}
+              onChange={(e) => updateInfoItem(topicIndex, itemIndex, 'subject', e.target.value)}
+              placeholder={t(item.itemType === 'actionItem' ? 'step2PlaceholderAction' : 'step2PlaceholderInfo')}
+              className="w-full px-3 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm font-semibold bg-white"
+              required={item.itemType === 'actionItem' && agendaItemLabelMode === 'manual'}
+            />
+          </div>
+        ) : (
+          <div className="bg-white/70 backdrop-blur-sm p-3 rounded-lg border border-white/50">
+            <label className="block text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">
+              {`${t('topic')} ${topicIndex + 1} – ${t('infoItems')}`}
+            </label>
+            <div className="grid grid-cols-1 min-[520px]:grid-cols-[120px_minmax(0,1fr)] gap-2">
+              <div className="w-full px-3 py-2.5 border-2 border-dashed border-indigo-300 rounded-lg bg-indigo-50 text-indigo-800 text-sm font-bold">
+                {automaticEntryLabel}
+              </div>
+              <input
+                type="text"
+                value={isAutoGeneratedSubject ? '' : (item.subject || '')}
+                onChange={(e) => updateInfoItem(topicIndex, itemIndex, 'subject', e.target.value)}
+                placeholder={t(item.itemType === 'actionItem' ? 'step2PlaceholderAction' : 'step2PlaceholderInfo')}
+                className="w-full px-3 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm font-semibold bg-white"
+              />
+            </div>
+          </div>
+        )}
 
         {/* Step 3: Content */}
         <div className="bg-white/70 backdrop-blur-sm p-3 rounded-lg border border-white/50">
@@ -633,15 +711,15 @@ function SortableInfoItem({
         {item.itemType === 'actionItem' && (
           <div className="space-y-3">
             {/* Priority, Due Date, Status */}
-            <div className="bg-white/70 backdrop-blur-sm p-3 rounded-lg border border-white/50">
-              <label className="block text-xs font-semibold text-gray-600 mb-3 uppercase tracking-wide">
+            <div className="bg-white/70 backdrop-blur-sm p-2.5 sm:p-3 rounded-lg border border-white/50">
+              <label className="block text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">
                 {t('step4Title')}
               </label>
 
-              <div className="space-y-3">
+              <div className="space-y-2.5">
                 {/* Priority */}
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1.5">
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
                     🔥 {t('urgency')}
                   </label>
                   <div className="grid grid-cols-3 gap-2">
@@ -657,13 +735,13 @@ function SortableInfoItem({
                           key={priority}
                           type="button"
                           onClick={() => updateInfoItem(topicIndex, itemIndex, 'priority', priority)}
-                          className={`p-2.5 rounded-lg border-2 transition-all ${(item.priority || 'medium') === priority
+                          className={`min-h-11 p-2 rounded-lg border-2 transition-all ${(item.priority || 'medium') === priority
                             ? `${colors.bg} ${colors.border} shadow-md`
                             : 'bg-white border-gray-300 hover:border-gray-400'
                             }`}
                         >
-                          <div className={`text-center text-sm font-semibold ${(item.priority || 'medium') === priority ? colors.text : 'text-gray-600'}`}>
-                            <div className="text-lg mb-0.5">{colors.icon}</div>
+                          <div className={`text-center text-xs sm:text-sm font-semibold ${(item.priority || 'medium') === priority ? colors.text : 'text-gray-600'}`}>
+                            <div className="text-base sm:text-lg mb-0.5">{colors.icon}</div>
                             {colors.label}
                           </div>
                         </button>
@@ -674,20 +752,20 @@ function SortableInfoItem({
 
                 {/* Due Date */}
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1.5">
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
                     📅 {t('dueDate')}
                   </label>
                   <input
                     type="date"
                     value={item.dueDate?.split('T')[0] || ''}
                     onChange={(e) => updateInfoItem(topicIndex, itemIndex, 'dueDate', e.target.value)}
-                    className="w-full px-3 py-2.5 text-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                    className="w-full px-3 py-2 text-sm min-h-10 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
                   />
                 </div>
 
                 {/* Status */}
                 <div>
-                  <label className="block text-xs font-medium text-gray-700 mb-1.5">
+                  <label className="block text-xs font-medium text-gray-700 mb-1">
                     📊 {t('status')}
                   </label>
                   <div className="grid grid-cols-2 gap-2">
@@ -704,14 +782,14 @@ function SortableInfoItem({
                           key={status}
                           type="button"
                           onClick={() => updateInfoItem(topicIndex, itemIndex, 'status', status)}
-                          className={`p-2 rounded-lg border-2 transition-all ${(item.status || 'open') === status
+                          className={`w-full min-h-10 p-2 rounded-lg border-2 transition-all ${(item.status || 'open') === status
                             ? `${statusConfig.bg} ${statusConfig.border} shadow-md`
                             : 'bg-white border-gray-300 hover:border-gray-400'
                             }`}
                         >
-                          <div className={`text-center text-xs font-semibold ${(item.status || 'open') === status ? statusConfig.text : 'text-gray-600'}`}>
-                            <span className="text-base mr-1">{statusConfig.icon}</span>
-                            {statusConfig.label}
+                          <div className={`flex flex-col items-center justify-center text-center text-xs font-semibold leading-tight ${(item.status || 'open') === status ? statusConfig.text : 'text-gray-600'}`}>
+                            <span className="text-sm leading-none">{statusConfig.icon}</span>
+                            <span className="mt-0.5">{statusConfig.label}</span>
                           </div>
                         </button>
                       );
@@ -724,31 +802,31 @@ function SortableInfoItem({
         )}
 
         {/* Responsible Persons - Available for both Info and Action Items */}
-        <div className="bg-white/70 backdrop-blur-sm p-4 rounded-lg border border-white/50">
-          <div className="flex items-center gap-2 mb-3">
+        <div className="bg-white/70 backdrop-blur-sm p-3 sm:p-4 rounded-lg border border-white/50">
+            <div className="flex flex-col min-[360px]:flex-row min-[360px]:items-start gap-2 mb-3">
             <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
               <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
             </div>
-            <div className="flex-1">
+            <div className="flex-1 min-w-0">
               <label className="block text-sm font-bold text-gray-800">
                 {t(item.itemType === 'actionItem' ? 'responsiblesTitleAction' : 'responsiblesTitleInfo')}
               </label>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-gray-500 break-words">
                 {t(item.itemType === 'actionItem' ? 'responsiblesHelpAction' : 'responsiblesHelpInfo')}
               </p>
             </div>
             {item.responsibles && item.responsibles.length > 0 && (
-              <span className="px-2.5 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-semibold">
+              <span className="self-start min-[360px]:self-center px-2 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-semibold">
                 {t('selectedCount', { count: item.responsibles.length })}
               </span>
             )}
           </div>
 
-          <div className="space-y-1 max-h-48 overflow-y-auto border-2 border-indigo-200 rounded-lg p-2.5 bg-gradient-to-br from-indigo-50/50 to-purple-50/50">
+          <div className="space-y-1.5 max-h-60 overflow-y-auto [scrollbar-gutter:stable] border-2 border-indigo-200 rounded-lg p-2 bg-gradient-to-br from-indigo-50/50 to-purple-50/50">
             {/* Alle Option */}
-            <label className="flex items-center gap-3 p-2.5 bg-white hover:bg-indigo-50 rounded-lg cursor-pointer transition-all border border-transparent hover:border-indigo-300 group">
+            <label className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-2 p-2.5 bg-white hover:bg-indigo-50 rounded-lg cursor-pointer transition-all border border-transparent hover:border-indigo-300 group">
               <div className="relative">
                 <input
                   type="checkbox"
@@ -767,11 +845,11 @@ function SortableInfoItem({
                   className="w-5 h-5 text-indigo-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-indigo-500 cursor-pointer"
                 />
               </div>
-              <div className="flex-1">
+              <div className="flex-1 min-w-0">
                 <span className="text-sm font-bold text-indigo-700 group-hover:text-indigo-800">
                   ✓ {t('selectAll')}
                 </span>
-                <p className="text-xs text-gray-500">{t('addAllMembers')}</p>
+                <p className="text-xs text-gray-500 break-words">{t('addAllMembers')}</p>
               </div>
             </label>
 
@@ -779,6 +857,14 @@ function SortableInfoItem({
 
             {meetingSeriesMembers.map(member => {
               const user = getUserById(member.userId);
+              const isGuestMember = member.userId.startsWith('guest:');
+              const guestDisplayName = isGuestMember ? member.userId.replace('guest:', '').trim() : '';
+              const guestInitials = guestDisplayName
+                .split(' ')
+                .filter(Boolean)
+                .slice(0, 2)
+                .map((part) => part.charAt(0).toUpperCase())
+                .join('');
               // if (!user) return null;
 
               const isSelected = item.responsibles?.includes(member.userId) || false;
@@ -786,7 +872,7 @@ function SortableInfoItem({
               return (
                 <label
                   key={member.userId}
-                  className={`flex items-center gap-3 p-2.5 rounded-lg cursor-pointer transition-all border ${isSelected
+                  className={`grid grid-cols-[auto_minmax(0,1fr)] min-[360px]:grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-1.5 sm:gap-2 p-2.5 rounded-lg cursor-pointer transition-all border ${isSelected
                     ? 'bg-indigo-100 border-indigo-300 shadow-sm'
                     : 'bg-white hover:bg-gray-50 border-transparent hover:border-gray-300'
                     }`}
@@ -810,25 +896,28 @@ function SortableInfoItem({
                       className="w-5 h-5 text-indigo-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-indigo-500 cursor-pointer"
                     />
                   </div>
-                  <div className="flex-1 flex items-center gap-2">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold text-white ${isSelected ? 'bg-gradient-to-br from-indigo-500 to-purple-600' : 'bg-gradient-to-br from-gray-400 to-gray-500'
+                  <div className="min-w-0 flex items-start gap-1.5 sm:gap-2">
+                    <div className={`w-6 h-6 mt-0.5 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0 ${isSelected ? 'bg-gradient-to-br from-indigo-500 to-purple-600' : 'bg-gradient-to-br from-gray-400 to-gray-500'
                       }`}>
-                      {user ? (user.firstName.charAt(0).toUpperCase() + user.lastName.charAt(0).toUpperCase()) : '?'}
+                      {user
+                        ? (user.firstName.charAt(0).toUpperCase() + user.lastName.charAt(0).toUpperCase())
+                        : (isGuestMember ? (guestInitials || 'G') : '?')}
                     </div>
-                    <div className="flex-1">
-                      <span className={`text-sm font-semibold ${isSelected ? 'text-indigo-900' : 'text-gray-700'}`}>
-                        {user ? `${user.firstName} ${user.lastName}` : `${t('userId')}: ${member.userId}`}
+                    <div className="flex-1 min-w-0">
+                <span className={`block text-sm font-semibold leading-tight truncate ${isSelected ? 'text-indigo-900' : 'text-gray-700'}`}>
+                        {user
+                          ? `${user.firstName} ${user.lastName}`
+                          : (isGuestMember
+                            ? (guestDisplayName || t('guest'))
+                            : `${t('userId')}: ${member.userId}`)}
                       </span>
-                      {user?.email && (
-                        <p className="text-xs text-gray-500">{user.email}</p>
-                      )}
                     </div>
+                  </div>
                     {isSelected && (
-                      <svg className="w-5 h-5 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
+                      <svg className="hidden min-[360px]:block w-5 h-5 text-indigo-600 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                         <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                       </svg>
                     )}
-                  </div>
                 </label>
               );
             })}
@@ -853,22 +942,23 @@ function SortableInfoItem({
             value={item.notes || ''}
             onChange={(e) => updateInfoItem(topicIndex, itemIndex, 'notes', e.target.value)}
             placeholder={t('additionalNotesPlaceholder')}
-            className="w-full px-3 py-2.5 text-sm border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white resize-none"
-            rows={2}
+            className="w-full min-h-[96px] px-3 py-2.5 text-sm leading-snug border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white resize-y"
+            rows={4}
           />
         </div>
 
         {/* Save Button at the bottom */}
-        <div className="flex justify-end pt-4 border-t border-white/30">
+        <div className="flex justify-center pt-4 border-t border-white/30">
           <button
             type="button"
             onClick={() => {
-              if (item.subject) {
+              const canSave = agendaItemLabelMode === 'topic-alpha' || item.itemType !== 'actionItem' || Boolean(item.subject?.trim());
+              if (canSave) {
                 setIsEditing(false);
               }
             }}
-            disabled={!item.subject}
-            className="px-6 py-2.5 bg-green-500 text-white rounded-lg font-bold hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm flex items-center gap-2 shadow-md"
+            disabled={agendaItemLabelMode !== 'topic-alpha' && item.itemType === 'actionItem' && !item.subject?.trim()}
+            className="w-full sm:w-auto px-6 py-2.5 min-h-11 bg-green-500 text-white rounded-lg font-bold hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm inline-flex items-center justify-center gap-2 shadow-md"
             title={t('saveButton')}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -886,9 +976,6 @@ interface InfoItem {
   subject: string;
   details?: string;
   itemType: 'actionItem' | 'infoItem';
-  isComplete?: boolean;
-  isOpen?: boolean;
-  // Task management fields
   status?: 'open' | 'in-progress' | 'completed' | 'cancelled';
   priority?: 'high' | 'medium' | 'low';
   dueDate?: string;
@@ -933,6 +1020,7 @@ interface Minute {
   meetingSeries_id: any;
   date: string;
   time?: string;
+  endTime?: string;
   location?: string;
   participants: string[];
   participantsWithStatus?: Participant[];
@@ -949,6 +1037,7 @@ interface Minute {
 interface FormData {
   date: string;
   time?: string;
+  endTime?: string;
   location?: string;
   title?: string;
   participants: string[];
@@ -960,6 +1049,7 @@ interface FormData {
 export default function EditMinutePage({ params }: { params: Promise<{ id: string }> }) {
   const t = useTranslations('minutes');
   const tCommon = useTranslations('common');
+  const tNav = useTranslations('nav');
   const locale = useLocale();
   const router = useRouter();
   const [minute, setMinute] = useState<Minute | null>(null);
@@ -970,6 +1060,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
   const [formData, setFormData] = useState<FormData>({
     date: '',
     time: '',
+    endTime: '',
     location: '',
     participants: [],
     participantsWithStatus: [],
@@ -987,6 +1078,11 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [newGuestName, setNewGuestName] = useState('');
   const [showGuestInput, setShowGuestInput] = useState(false);
+  const [agendaItemLabelMode, setAgendaItemLabelMode] = useState<'manual' | 'topic-alpha'>('topic-alpha');
+  const [confirmDialog, setConfirmDialog] = useState<{
+    message: string;
+    onConfirm: () => void;
+  } | null>(null);
 
   // Use a ref to track imported task IDs to prevent duplicates
   const importedTaskIdsRef = useRef<Set<string>>(new Set());
@@ -998,7 +1094,12 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
   const currentlyProcessingTaskIdRef = useRef<string | null>(null);
 
   const sensors = useSensors(
-    useSensor(PointerSensor),
+    useSensor(PointerSensor, {
+      activationConstraint: { distance: 8 },
+    }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: 200, tolerance: 5 },
+    }),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
@@ -1033,20 +1134,6 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
           const result = await response.json();
           const minuteData = result.data;
 
-          // Convert duedate to dueDate for all infoItems
-          if (minuteData.topics) {
-            minuteData.topics = minuteData.topics.map((topic: any) => ({
-              ...topic,
-              infoItems: topic.infoItems?.map((item: any) => {
-                const updatedItem = { ...item };
-                if (item.duedate !== undefined) {
-                  updatedItem.dueDate = item.duedate;
-                  delete updatedItem.duedate;
-                }
-                return updatedItem;
-              })
-            }));
-          }
 
           setMinute(minuteData);
 
@@ -1098,6 +1185,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
               setFormData({
                 date: minuteData.date?.split('T')[0] || '',
                 time: minuteData.time || '',
+                endTime: minuteData.endTime || '',
                 location: minuteData.location || '',
                 title: minuteData.title || '',
                 participants: minuteData.participants && minuteData.participants.length > 0
@@ -1117,6 +1205,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
           setFormData({
             date: minuteData.date?.split('T')[0] || '',
             time: minuteData.time || '',
+            endTime: minuteData.endTime || '',
             location: minuteData.location || '',
             title: minuteData.title || '',
             participants: minuteData.participants || [],
@@ -1137,19 +1226,33 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
     }
   }, [minuteId, t]);
 
+  useEffect(() => {
+    const loadPublicSettings = async () => {
+      try {
+        const response = await fetch('/api/settings/public', { credentials: 'include' });
+        if (!response.ok) return;
+        const result = await response.json();
+        const mode = result?.data?.system?.agendaItemLabelMode;
+        if (mode === 'manual' || mode === 'topic-alpha') {
+          setAgendaItemLabelMode(mode);
+        }
+      } catch {
+        // Fallback to default mode
+      }
+    };
+
+    loadPublicSettings();
+  }, []);
+
   const fetchPendingTasks = useCallback(async () => {
     if (!minute?.meetingSeries_id || !minuteId) return;
 
     setLoadingPendingTasks(true);
     try {
       const seriesId = minute.meetingSeries_id._id || minute.meetingSeries_id;
-      console.log('=== Fetching pending tasks ===');
-      console.log('Series ID:', seriesId);
-      console.log('Current Minute ID:', minuteId);
 
       // Include minuteId to filter out already imported tasks
       const url = `/api/meeting-series/${seriesId}/pending-tasks?minuteId=${minuteId}`;
-      console.log('Fetching from URL:', url);
 
       const response = await fetch(url, {
         credentials: 'include', // Cookie-based authentication
@@ -1157,11 +1260,6 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
 
       if (response.ok) {
         const result = await response.json();
-        console.log('Pending tasks response:', result);
-        console.log('Tasks count:', result.data?.length || 0);
-        if (result.debug) {
-          console.log('Debug info from API:', result.debug);
-        }
         setPendingTasks(result.data || []);
         setShowPendingTasks(true); // Always set to true after loading, regardless of results
       }
@@ -1179,8 +1277,13 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
     }
   }, [minute, minuteId, fetchPendingTasks]); // Run when minute is loaded or changes
 
-  // Track unsaved changes
+  // Track unsaved changes (skip the initial load)
+  const isInitialLoad = useRef(true);
   useEffect(() => {
+    if (isInitialLoad.current) {
+      isInitialLoad.current = false;
+      return;
+    }
     setHasUnsavedChanges(true);
   }, [formData]);
 
@@ -1197,7 +1300,6 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
 
     if (importedIds.size > 0) {
       importedTaskIdsRef.current = importedIds;
-      console.log('Initialized importedTaskIdsRef with existing imports:', Array.from(importedIds));
     }
   }, [formData.topics]); // Re-run when topics change
 
@@ -1217,90 +1319,59 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
   const importPendingTask = (e: React.MouseEvent<HTMLButtonElement>, task: any) => {
     const taskId = task._id || task.id;
 
-    console.log('=== importPendingTask called ===');
-    console.log('Task ID:', taskId);
-
     // ULTRA-FAST GUARD: Check if this exact task is CURRENTLY being processed in this very moment
     if (currentlyProcessingTaskIdRef.current === taskId) {
-      console.log('🚫 ULTRA-FAST BLOCK: This task is being processed RIGHT NOW!');
-      console.log('Currently processing:', currentlyProcessingTaskIdRef.current);
       return; // Silent block - no alert needed
     }
 
     // Set as currently processing IMMEDIATELY
     currentlyProcessingTaskIdRef.current = taskId;
-    console.log('🔒 Locked task for processing:', taskId);
-
-    console.log('Task ID type:', typeof taskId);
-    console.log('Task ID length:', taskId?.length);
-    console.log('Task._id:', task._id, 'type:', typeof task._id);
-    console.log('Task.id:', task.id, 'type:', typeof task.id);
 
     // FIRST GUARD: Check if this specific task is already being imported or was imported
     const hasTask = importedTaskIdsRef.current.has(taskId);
-    console.log('Has task in Set?', hasTask);
-    console.log('Set contents:', Array.from(importedTaskIdsRef.current));
-    console.log('Set size:', importedTaskIdsRef.current.size);
 
     if (hasTask) {
-      console.log('⚠️ BLOCKED: Task already imported:', taskId);
       currentlyProcessingTaskIdRef.current = null; // Release ultra-fast lock
       return;
     }
 
     // Add to imported set IMMEDIATELY - this is our PRIMARY guard
     importedTaskIdsRef.current.add(taskId);
-    console.log('✓ Added task to importedTaskIdsRef:', taskId);
-    console.log('Set after add:', Array.from(importedTaskIdsRef.current));
-    console.log('Set size after add:', importedTaskIdsRef.current.size);
 
     // SECOND GUARD: Check if ANY import is in progress
     if (importInProgressRef.current) {
-      console.log('⚠️ BLOCKED: Another import is already in progress');
       // Don't remove from imported set - we want to keep it marked as imported
       return;
     }
 
     // Set import in progress flag
     importInProgressRef.current = true;
-    console.log('✓ Import lock acquired');
-
-    console.log('Task to import:', task);
 
     // Also check formData state as backup
     const existingIds: string[] = [];
-    formData.topics.forEach((topic, topicIndex) => {
-      topic.infoItems?.forEach((item, itemIndex) => {
+    formData.topics.forEach((topic) => {
+      topic.infoItems?.forEach((item) => {
         if (item.originalTaskId) {
           existingIds.push(item.originalTaskId);
-          console.log(`Found existing import in state: Topic ${topicIndex}, Item ${itemIndex}, ID: ${item.originalTaskId}`);
         }
       });
     });
-    console.log('Already imported task IDs (from state):', existingIds);
 
     const isAlreadyImportedInState = formData.topics.some(topic =>
       topic.infoItems?.some(item => item.originalTaskId === taskId)
     );
 
-    console.log('Is already imported in state?', isAlreadyImportedInState);
-
     if (isAlreadyImportedInState) {
-      console.log('=== importPendingTask aborted (duplicate in state) ===');
       // Remove from ref since state already has it
       importedTaskIdsRef.current.delete(taskId);
       importInProgressRef.current = false; // Release lock
       currentlyProcessingTaskIdRef.current = null; // Release ultra-fast lock
-      console.log('✓ Import lock released (duplicate in state)');
       return;
     }
 
     // Remove task from pending list IMMEDIATELY to prevent double clicks
-    console.log('Removing task from pending list (immediate)');
     setPendingTasks(prev => {
       const filtered = prev.filter(t => (t._id || t.id) !== taskId);
-      console.log('Pending tasks before removal:', prev.length);
-      console.log('Pending tasks after removal:', filtered.length);
       return filtered;
     });
 
@@ -1310,19 +1381,16 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
       details: task.details,
       itemType: 'actionItem',
       priority: task.priority || 'medium',
-      dueDate: task.duedate ? new Date(task.duedate).toISOString().split('T')[0] : undefined,
+      dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : undefined,
       responsibles: task.responsibles || [],
       status: task.status || 'open',
       notes: task.notes,
-      isOpen: true,
       parentMinutesId: task.parentMinutesId,
       parentItemId: task.parentItemId || taskId, // Link to parent (root) or previous task
       isImported: true, // Mark as imported
       originalTaskId: taskId, // Store original task ID
       externalTaskId: task.externalTaskId, // Link to Central Task Registry
     };
-
-    console.log('Creating new InfoItem with originalTaskId:', newInfoItem.originalTaskId);
 
     setFormData(prev => {
       const topics = [...prev.topics];
@@ -1333,7 +1401,6 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
       );
 
       if (alreadyExists) {
-        console.log('⚠️ Task already exists in formData - skipping add (StrictMode protection)');
         return prev; // Return unchanged state
       }
 
@@ -1341,7 +1408,6 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
       const pendenzenIndex = topics.findIndex(t => t.subject === 'Pendenzen aus letztem Protokoll');
 
       if (pendenzenIndex === -1) {
-        console.log('Creating new "Pendenzen aus letztem Protokoll" topic');
         // Create new topic at the beginning
         topics.unshift({
           subject: 'Pendenzen aus letztem Protokoll',
@@ -1349,13 +1415,11 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
           infoItems: [newInfoItem],
         });
       } else {
-        console.log('Adding to existing "Pendenzen aus letztem Protokoll" topic at index:', pendenzenIndex);
         // Add to existing topic
         if (!topics[pendenzenIndex].infoItems) {
           topics[pendenzenIndex].infoItems = [];
         }
         topics[pendenzenIndex].infoItems!.push(newInfoItem);
-        console.log('Total items in topic now:', topics[pendenzenIndex].infoItems!.length);
       }
 
       return { ...prev, topics };
@@ -1365,11 +1429,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
     setTimeout(() => {
       importInProgressRef.current = false;
       currentlyProcessingTaskIdRef.current = null; // Release ultra-fast lock
-      console.log('✓ Import lock released (successful import)');
-      console.log('✓ Ultra-fast lock released');
     }, 100);
-
-    console.log('=== importPendingTask completed successfully ===');
   };
 
   const addGuest = () => {
@@ -1391,6 +1451,11 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
         { userId: guestId, attendance: 'present' }
       ]
     }));
+    setMeetingSeriesMembers(prev =>
+      prev.some((member) => member.userId === guestId)
+        ? prev
+        : [...prev, { userId: guestId }]
+    );
     
     setNewGuestName('');
     setShowGuestInput(false);
@@ -1400,11 +1465,13 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
     e.preventDefault();
     if (!minuteId) return;
 
-    // Prepare data for saving - convert empty strings to undefined
+    // Keep explicit empty strings so users can clear optional fields.
     const dataToSave = {
       ...formData,
-      time: formData.time?.trim() || undefined,
-      location: formData.location?.trim() || undefined,
+      time: (formData.time || '').trim(),
+      endTime: (formData.endTime || '').trim(),
+      location: (formData.location || '').trim(),
+      title: (formData.title || '').trim(),
     };
 
     setSaving(true);
@@ -1437,11 +1504,6 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
     return allUsers.find(u => u._id === userId);
   };
 
-  const _getUserDisplayName = (userId: string): string => {
-    const user = getUserById(userId);
-    return user ? `${user.firstName} ${user.lastName}` : userId;
-  };
-
   const addTopic = () => {
     setFormData(prev => ({
       ...prev,
@@ -1471,7 +1533,6 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
                 subject: '',
                 details: '',
                 itemType: 'infoItem' as const,
-                isComplete: false,
                 status: 'open',
                 priority: 'medium',
                 responsibles: []
@@ -1537,28 +1598,36 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
   };
 
   const deleteTopic = (topicIndex: number) => {
-    if (confirm(t('confirmDeleteTopic'))) {
-      setFormData(prev => ({
-        ...prev,
-        topics: prev.topics.filter((_, i) => i !== topicIndex)
-      }));
-    }
+    setConfirmDialog({
+      message: t('confirmDeleteTopic'),
+      onConfirm: () => {
+        setFormData(prev => ({
+          ...prev,
+          topics: prev.topics.filter((_, i) => i !== topicIndex)
+        }));
+        setConfirmDialog(null);
+      },
+    });
   };
 
   const deleteInfoItem = (topicIndex: number, itemIndex: number) => {
-    if (confirm(t('confirmDeleteInfoItem'))) {
-      setFormData(prev => ({
-        ...prev,
-        topics: prev.topics.map((topic, i) =>
-          i === topicIndex
-            ? {
-              ...topic,
-              infoItems: topic.infoItems?.filter((_, j) => j !== itemIndex) || []
-            }
-            : topic
-        )
-      }));
-    }
+    setConfirmDialog({
+      message: t('confirmDeleteInfoItem'),
+      onConfirm: () => {
+        setFormData(prev => ({
+          ...prev,
+          topics: prev.topics.map((topic, i) =>
+            i === topicIndex
+              ? {
+                ...topic,
+                infoItems: topic.infoItems?.filter((_, j) => j !== itemIndex) || []
+              }
+              : topic
+          )
+        }));
+        setConfirmDialog(null);
+      },
+    });
   };
 
   if (loading) {
@@ -1575,7 +1644,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
         <div className="text-center">
           <h1 className="text-2xl font-bold text-red-600 mb-4">{tCommon('error')}</h1>
           <p className="text-gray-600">{error || t('notFound')}</p>
-          <Link href="/minutes" className="text-blue-600 hover:text-blue-800 mt-4 inline-block">
+          <Link href="/meeting-series" className="text-blue-600 hover:text-blue-800 mt-4 inline-block">
             {t('backToOverview')}
           </Link>
         </div>
@@ -1584,22 +1653,37 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-8 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-6 sm:py-8 px-3 sm:px-4">
       <div className="max-w-6xl mx-auto space-y-8">
         {/* Header */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-8 border border-gray-100">
-          <div className="flex items-center gap-4 mb-6">
-            <Link href={`/minutes/${minuteId}`} className="text-blue-600 hover:text-blue-800 transition-colors">
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
+        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-5 sm:p-8 border border-gray-100">
+          {/* Breadcrumb */}
+          <nav className="flex items-center gap-2 text-sm text-gray-500 mb-3 flex-wrap">
+            <Link href="/meeting-series" className="hover:text-blue-600 transition-colors">
+              {tNav('meetingSeries')}
             </Link>
-            <h1 className="text-3xl font-bold text-gray-900">{t('editMinute')}</h1>
-          </div>
+            {minute?.meetingSeries_id?._id && (
+              <>
+                <span className="text-gray-400">›</span>
+                <Link href={`/meeting-series/${minute.meetingSeries_id._id}`} className="hover:text-blue-600 transition-colors">
+                  {minute.meetingSeries_id.project && minute.meetingSeries_id.name
+                    ? `${minute.meetingSeries_id.project} – ${minute.meetingSeries_id.name}`
+                    : minute.meetingSeries_id.name || minute.meetingSeries_id.project || 'Series'}
+                </Link>
+              </>
+            )}
+            <span className="text-gray-400">›</span>
+            <Link href={`/minutes/${minuteId}`} className="hover:text-blue-600 transition-colors">
+              {minute?.date ? new Date(minute.date).toLocaleDateString() : 'Protokoll'}
+            </Link>
+            <span className="text-gray-400">›</span>
+            <span className="text-gray-900 font-medium">{tCommon('edit')}</span>
+          </nav>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-6 break-words">{t('editMinute')}</h1>
         </div>
 
         {/* Sticky Save Button */}
-        <div className="fixed top-6 right-6 z-50">
+        <div className="hidden sm:block fixed top-6 right-6 z-50">
           <button
             type="submit"
             form="edit-form"
@@ -1616,6 +1700,27 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
               )}
               <span className="hidden sm:inline">{saving ? t('saving') : tCommon('save')}</span>
             </div>
+          </button>
+        </div>
+
+        {/* Mobile Save Button */}
+        <div className="sm:hidden sticky top-28 z-50">
+          <button
+            type="submit"
+            form="edit-form"
+            disabled={saving}
+            className="w-full px-6 py-3 min-h-11 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-semibold transition-all shadow-lg disabled:opacity-50 disabled:cursor-not-allowed border border-white/60"
+          >
+            <span className="inline-flex items-center justify-center gap-2">
+              {saving ? (
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+              ) : (
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              )}
+              {saving ? t('saving') : tCommon('save')}
+            </span>
           </button>
         </div>
 
@@ -1636,7 +1741,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-100">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">{t('date')}</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">{t('date')} *</label>
                 <input
                   type="date"
                   value={formData.date}
@@ -1685,21 +1790,21 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
                 const guestName = isGuest ? participant.userId.replace('guest:', '') : '';
 
                 return (
-                  <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-xl border border-gray-200 hover:bg-gray-100 transition-colors">
-                    <div className="flex items-center gap-3">
+                  <div key={index} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200 hover:bg-gray-100 transition-colors">
+                    <div className="flex items-center gap-3 min-w-0">
                       <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${isGuest ? 'bg-gradient-to-br from-orange-400 to-pink-500' : 'bg-gradient-to-br from-blue-400 to-indigo-500'}`}>
                         {user ? user.firstName.charAt(0).toUpperCase() : (isGuest ? guestName.charAt(0).toUpperCase() : '?')}
                       </div>
-                      <div>
-                        <p className="font-semibold text-gray-900">
+                      <div className="min-w-0">
+                        <p className="font-semibold text-gray-900 break-words">
                           {user ? `${user.firstName} ${user.lastName}` : (isGuest ? `${guestName} (${t('guest')})` : `${t('userId')}: ${participant.userId}`)}
                         </p>
                         {user && (
-                          <p className="text-sm text-gray-600">{user.email} • {user.role}</p>
+                          <p className="text-sm text-gray-600 break-all">{user.email} • {user.role}</p>
                         )}
                       </div>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="w-full sm:w-auto grid grid-cols-1 min-[480px]:grid-cols-2 lg:flex gap-2">
                       <button
                         type="button"
                         onClick={() => {
@@ -1707,7 +1812,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
                           updated[index] = { ...updated[index], attendance: 'present' };
                           setFormData(prev => ({ ...prev, participantsWithStatus: updated }));
                         }}
-                        className={`px-4 py-2 rounded-lg font-medium transition-all ${participant.attendance === 'present'
+                        className={`w-full lg:w-auto px-4 py-2.5 min-h-10 rounded-lg font-medium text-sm transition-all ${participant.attendance === 'present'
                           ? 'bg-green-500 text-white shadow-md'
                           : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                           }`}
@@ -1721,7 +1826,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
                           updated[index] = { ...updated[index], attendance: 'excused' };
                           setFormData(prev => ({ ...prev, participantsWithStatus: updated }));
                         }}
-                        className={`px-4 py-2 rounded-lg font-medium transition-all ${participant.attendance === 'excused'
+                        className={`w-full lg:w-auto px-4 py-2.5 min-h-10 rounded-lg font-medium text-sm transition-all ${participant.attendance === 'excused'
                           ? 'bg-yellow-500 text-white shadow-md'
                           : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                           }`}
@@ -1735,7 +1840,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
                           updated[index] = { ...updated[index], attendance: 'absent' };
                           setFormData(prev => ({ ...prev, participantsWithStatus: updated }));
                         }}
-                        className={`px-4 py-2 rounded-lg font-medium transition-all ${participant.attendance === 'absent'
+                        className={`w-full lg:w-auto px-4 py-2.5 min-h-10 rounded-lg font-medium text-sm transition-all ${participant.attendance === 'absent'
                           ? 'bg-red-500 text-white shadow-md'
                           : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                           }`}
@@ -1746,15 +1851,24 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
                         <button
                           type="button"
                           onClick={() => {
+                            const guestId = participant.userId;
                             const updatedStatus = formData.participantsWithStatus.filter((_, i) => i !== index);
                             const updatedParticipants = formData.participants.filter(p => p !== guestName);
                             setFormData(prev => ({ 
                               ...prev, 
                               participantsWithStatus: updatedStatus,
-                              participants: updatedParticipants
+                              participants: updatedParticipants,
+                              topics: prev.topics.map((topic) => ({
+                                ...topic,
+                                infoItems: topic.infoItems?.map((item) => ({
+                                  ...item,
+                                  responsibles: item.responsibles?.filter((id) => id !== guestId) || []
+                                })) || []
+                              }))
                             }));
+                            setMeetingSeriesMembers(prev => prev.filter((member) => member.userId !== guestId));
                           }}
-                          className="px-3 py-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors"
+                          className="w-full lg:w-auto px-3 py-2.5 min-h-10 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors flex items-center justify-center"
                           title={t('removeGuest')}
                         >
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1781,13 +1895,13 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
                   {t('addGuest')}
                 </button>
               ) : (
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col min-[420px]:flex-row items-stretch gap-2">
                   <input
                     type="text"
                     value={newGuestName}
                     onChange={(e) => setNewGuestName(e.target.value)}
                     placeholder={t('guestNamePlaceholder')}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full min-[420px]:flex-1 px-3 py-2.5 min-h-11 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
@@ -1800,7 +1914,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
                     type="button"
                     onClick={addGuest}
                     disabled={!newGuestName.trim()}
-                    className="px-3 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50"
+                    className="w-full min-[420px]:w-auto px-3 py-2.5 min-h-11 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 whitespace-nowrap"
                   >
                     {t('add')}
                   </button>
@@ -1810,7 +1924,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
                       setShowGuestInput(false);
                       setNewGuestName('');
                     }}
-                    className="px-3 py-2 text-gray-600 hover:bg-gray-100 rounded-lg text-sm"
+                    className="w-full min-[420px]:w-auto px-3 py-2.5 min-h-11 text-gray-600 hover:bg-gray-100 rounded-lg text-sm whitespace-nowrap"
                   >
                     {tCommon('cancel')}
                   </button>
@@ -1821,15 +1935,15 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
 
           {/* Pending Tasks from Previous Minutes */}
           {!minute.isFinalized && (!showPendingTasks || (showPendingTasks && pendingTasks.length > 0)) && (
-            <div className="bg-gradient-to-br from-amber-50 to-yellow-50 border-2 border-amber-200 rounded-2xl shadow-lg p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
+            <div className="bg-gradient-to-br from-amber-50 to-yellow-50 border-2 border-amber-200 rounded-2xl shadow-lg p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+                <div className="flex items-center gap-3 min-w-0">
                   <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-600 rounded-xl flex items-center justify-center">
                     <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
-                  <div>
+                  <div className="min-w-0">
                     <h2 className="text-xl font-bold text-gray-900">{t('pendingTasksTitle')}</h2>
                     <p className="text-sm text-gray-600">{t('pendingTasksSubtitle')}</p>
                   </div>
@@ -1839,7 +1953,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
                     type="button"
                     onClick={fetchPendingTasks}
                     disabled={loadingPendingTasks}
-                    className="px-4 py-2 bg-amber-500 text-white rounded-lg font-medium hover:bg-amber-600 transition-colors disabled:opacity-50"
+                    className="w-full sm:w-auto px-4 py-2.5 min-h-10 bg-amber-500 text-white rounded-lg font-medium hover:bg-amber-600 transition-colors disabled:opacity-50"
                   >
                     {loadingPendingTasks ? tCommon('loading') : t('loadPendingTasks')}
                   </button>
@@ -1857,10 +1971,10 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
                         const taskId = task._id || task.id;
                         return (
                           <div key={taskId} className="bg-white rounded-xl border-2 border-amber-300 p-4 hover:shadow-md transition-all">
-                            <div className="flex items-start justify-between gap-4">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-2">
-                                  <h3 className="font-semibold text-gray-900">{task.subject}</h3>
+                            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex flex-wrap items-center gap-2 mb-2">
+                                  <h3 className="font-semibold text-gray-900 break-words">{task.subject}</h3>
                                   <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${task.status === 'in-progress' ? 'bg-yellow-100 text-yellow-800' :
                                     'bg-red-100 text-red-800'
                                     }`}>
@@ -1884,8 +1998,8 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
 
                                 <div className="flex flex-wrap gap-2 text-xs text-gray-600 mb-2">
                                   <span>📋 {t('topicLabel')} {task.topicSubject}</span>
-                                  {task.duedate && (
-                                    <span>• ⏰ {t('dueLabel')} {new Date(task.duedate).toLocaleDateString(locale)}</span>
+                                  {task.dueDate && (
+                                    <span>• ⏰ {t('dueLabel')} {new Date(task.dueDate).toLocaleDateString(locale)}</span>
                                   )}
                                   {task.responsibles && task.responsibles.length > 0 && (
                                     <span>• 👤 {task.responsibles.length} {t('responsibles')}</span>
@@ -1903,7 +2017,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
                               <button
                                 type="button"
                                 onClick={(e) => importPendingTask(e, task)}
-                                className="px-4 py-2 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 transition-colors flex items-center gap-2 whitespace-nowrap"
+                                className="w-full sm:w-auto px-4 py-2.5 min-h-10 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 transition-colors inline-flex items-center justify-center gap-2"
                               >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -1923,14 +2037,17 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
 
           {/* Topics */}
           <div className="space-y-6">
-            <div className="sticky top-6 z-40 bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg p-4 border border-gray-100 flex justify-between items-center">
+            <div className="sticky top-2 sm:top-6 z-30 bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg p-4 border border-gray-100 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
               <h2 className="text-2xl font-bold text-gray-900">{t('topics')}</h2>
               <button
                 type="button"
                 onClick={addTopic}
-                className="px-4 py-2 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all border-2 border-white"
+                className="w-full sm:w-auto px-4 py-2.5 min-h-11 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all border-2 border-white inline-flex items-center justify-center gap-2 text-center"
               >
-                + {t('addTopic')}
+                <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                <span className="leading-tight">{t('addTopic')}</span>
               </button>
             </div>
 
@@ -1957,6 +2074,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
                     updateInfoItem={updateInfoItem}
                     deleteInfoItem={deleteInfoItem}
                     handleDragEndInfoItem={handleDragEndInfoItem}
+                    agendaItemLabelMode={agendaItemLabelMode}
                   />
                 ))}
               </SortableContext>
@@ -1968,12 +2086,12 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
             <button
               type="button"
               onClick={addTopic}
-              className="inline-flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl hover:scale-105"
+              className="inline-flex w-full sm:w-auto justify-center items-center gap-2 px-5 sm:px-8 py-3.5 min-h-11 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl sm:hover:scale-105 text-center"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
               </svg>
-              {formData.topics.length === 0 ? t('createFirstTopic') : t('addAnotherTopic')}
+              <span className="leading-tight">{formData.topics.length === 0 ? t('createFirstTopic') : t('addAnotherTopic')}</span>
             </button>
           </div>
 
@@ -2023,7 +2141,52 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
               rows={4}
             />
           </div>
+
+          {/* Protocol End Time (always at bottom) */}
+          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-100">
+            <label className="block text-sm font-medium text-gray-700 mb-2">{t('endTime')}</label>
+            <input
+              type="time"
+              value={formData.endTime || ''}
+              onChange={(e) => setFormData(prev => ({ ...prev, endTime: e.target.value }))}
+              placeholder="HH:MM"
+              className="w-full sm:max-w-xs px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
         </form>
+
+        {/* Confirm Dialog Modal */}
+        {confirmDialog && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[9999]">
+            <div className="bg-white rounded-xl shadow-2xl p-6 max-w-sm mx-4">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="bg-red-100 rounded-full p-2">
+                  <svg className="w-5 h-5 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                  </svg>
+                </div>
+                <h3 className="text-lg font-bold text-gray-900">{t('confirmTitle')}</h3>
+              </div>
+              <p className="text-gray-600 text-sm mb-6">{confirmDialog.message}</p>
+              <div className="flex gap-3 justify-end">
+                <button
+                  type="button"
+                  onClick={() => setConfirmDialog(null)}
+                  className="px-5 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-medium text-sm"
+                >
+                  {t('cancel')}
+                </button>
+                <button
+                  type="button"
+                  onClick={confirmDialog.onConfirm}
+                  className="px-5 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium text-sm"
+                >
+                  {t('delete')}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

@@ -91,14 +91,14 @@ async function createSampleData() {
             infoItems: [
               {
                 subject: 'Complete user authentication feature',
-                isOpen: false,
+                status: 'completed',
                 itemType: 'actionItem' as const,
                 priority: 'high',
                 responsibles: ['alice@example.com'],
               },
               {
                 subject: 'Deploy to staging environment',
-                isOpen: false,
+                status: 'completed',
                 itemType: 'actionItem' as const,
                 responsibles: ['bob@example.com'],
               },
@@ -112,10 +112,10 @@ async function createSampleData() {
             infoItems: [
               {
                 subject: 'Implement dashboard redesign',
-                isOpen: true,
+                status: 'open',
                 itemType: 'actionItem' as const,
                 priority: 'medium',
-                duedate: new Date('2024-11-10'),
+                dueDate: new Date('2024-11-10'),
                 responsibles: ['alice@example.com', 'bob@example.com'],
               },
             ],
@@ -139,10 +139,10 @@ async function createSampleData() {
             infoItems: [
               {
                 subject: 'Complete API integration',
-                isOpen: true,
+                status: 'open',
                 itemType: 'actionItem' as const,
                 priority: 'high',
-                duedate: new Date('2024-11-12'),
+                dueDate: new Date('2024-11-12'),
                 responsibles: ['charlie@example.com'],
               },
             ],
@@ -155,14 +155,14 @@ async function createSampleData() {
             infoItems: [
               {
                 subject: 'Fix login redirect issue',
-                isOpen: true,
+                status: 'open',
                 itemType: 'actionItem' as const,
                 priority: 'high',
                 responsibles: ['alice@example.com'],
               },
               {
                 subject: 'Update documentation',
-                isOpen: true,
+                status: 'open',
                 itemType: 'actionItem' as const,
                 priority: 'low',
                 responsibles: ['bob@example.com'],

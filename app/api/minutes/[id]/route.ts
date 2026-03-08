@@ -3,9 +3,9 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectToDatabase from '@/lib/mongodb';
 import Minutes from '@/models/Minutes';
 import MeetingSeries from '@/models/MeetingSeries';
-import Settings from '@/models/Settings';
 import Task from '@/models/Task';
 import { verifyToken } from '@/lib/auth';
+import { requirePermission, hasPermission } from '@/lib/permissions';
 import { logAction } from '@/lib/audit';
 
 export async function GET(
@@ -21,7 +21,6 @@ export async function GET(
     const authResult = await verifyToken(request);
     const username = authResult.success && authResult.user ? authResult.user.username : null;
     const userId = authResult.success && authResult.user ? authResult.user._id.toString() : null;
-    const userRole = authResult.success && authResult.user ? authResult.user.role : null;
 
     const minute = await Minutes.findOne({ _id: id })
       .populate({ path: 'meetingSeries_id', model: MeetingSeries })
@@ -33,20 +32,11 @@ export async function GET(
         { status: 404 }
       );
     }
-    
-    // Check permissions via Settings
-    const settings = await Settings.findOne({}).sort({ version: -1 });
-    let canViewAll = false;
 
-    if (settings && settings.roles && userRole && (settings.roles as any)[userRole]) {
-      const rolePermissions = (settings.roles as any)[userRole];
-      if (rolePermissions.canViewAllMinutes !== undefined) {
-        canViewAll = rolePermissions.canViewAllMinutes;
-      } else {
-        // Default: Admin gets access, others don't (strict separation from canViewAllMeetings)
-        canViewAll = (userRole === 'admin');
-      }
-    }
+    // Check permissions via centralized permission system
+    const canViewAll = authResult.user
+      ? await hasPermission(authResult.user, 'canViewAllMinutes')
+      : false;
 
     // Check visibility: public minutes are allowed for unauthenticated users.
     const series = minute.meetingSeries_id as any;
@@ -100,19 +90,11 @@ export async function PUT(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const fs = require('fs');
-  const logFile = '/tmp/api-debug.log';
-  
   try {
     await connectToDatabase();
-    
+
     const { id } = await params;
     const body = await request.json();
-
-    fs.appendFileSync(logFile, `\n[${new Date().toISOString()}] API PUT called for ${id}\n`);
-    fs.appendFileSync(logFile, `Body time: ${body.time}\n`);
-    fs.appendFileSync(logFile, `Body location: ${body.location}\n`);
-    fs.appendFileSync(logFile, `Body keys: ${Object.keys(body).join(', ')}\n`);
 
     // Verify authentication
     const authResult = await verifyToken(request);
@@ -124,10 +106,9 @@ export async function PUT(
     }
 
     const userId = authResult.user._id.toString();
-    const userRole = authResult.user.role;
 
     const minute = await Minutes.findById(id);
-    
+
     if (!minute) {
       return NextResponse.json(
         { error: 'Minute not found' },
@@ -135,28 +116,54 @@ export async function PUT(
       );
     }
 
-    // Check permissions for finalized minutes
-    if (minute.isFinalized && userRole === 'user') {
+    // Check permissions for finalized minutes — requires canEditAllMinutes
+    const canEditAll = await hasPermission(authResult.user, 'canEditAllMinutes');
+    if (minute.isFinalized && !canEditAll) {
       return NextResponse.json(
-        { error: 'Forbidden: Nur Administratoren und Moderatoren dürfen finalisierte Protokolle bearbeiten' },
+        { error: 'Fehlende Berechtigung zum Bearbeiten finalisierter Protokolle' },
         { status: 403 }
       );
     }
 
     // Check permissions for finalization/reopening
     if (body.isFinalized !== undefined && body.isFinalized !== minute.isFinalized) {
-      if (userRole === 'user') {
+      if (!canEditAll) {
         return NextResponse.json(
-          { error: 'Forbidden: Nur Administratoren und Moderatoren dürfen Protokolle finalisieren oder wiedereröffnen' },
+          { error: 'Fehlende Berechtigung zum Finalisieren oder Wiedereröffnen von Protokollen' },
           { status: 403 }
         );
       }
     }
 
-    // Convert dueDate to duedate for all infoItems AND sync with Task collection
-    if (body.topics) {
-      // We need to process topics sequentially to handle async Task operations
-      for (const topic of body.topics) {
+    const toAlphabetSuffix = (index: number): string => {
+      let n = index + 1;
+      let result = '';
+      while (n > 0) {
+        const remainder = (n - 1) % 26;
+        result = String.fromCharCode(97 + remainder) + result;
+        n = Math.floor((n - 1) / 26);
+      }
+      return result;
+    };
+
+    const topicsToPersist = Array.isArray(body.topics)
+      ? body.topics.map((topic: any, topicIndex: number) => ({
+          ...topic,
+          infoItems: Array.isArray(topic.infoItems)
+            ? topic.infoItems.map((item: any, itemIndex: number) => {
+                const autoLabel = `${topicIndex + 1}${toAlphabetSuffix(itemIndex)}`;
+                return {
+                  ...item,
+                  subject: (item.subject || '').trim() || autoLabel,
+                };
+              })
+            : topic.infoItems,
+        }))
+      : body.topics;
+
+    // Sync infoItems with Central Task Registry
+    if (topicsToPersist) {
+      for (const topic of topicsToPersist) {
         // Ensure topic has an ID for linking tasks
         if (!topic._id) {
           topic._id = new mongoose.Types.ObjectId().toString();
@@ -165,23 +172,15 @@ export async function PUT(
         if (topic.infoItems) {
           for (let i = 0; i < topic.infoItems.length; i++) {
             const item = topic.infoItems[i];
-            
-            // 1. Fix dueDate naming
-            if (item.dueDate !== undefined) {
-              item.duedate = item.dueDate;
-              delete item.dueDate;
-            }
 
-            // 2. Sync Action Items with Central Task Registry
             if (item.itemType === 'actionItem') {
               try {
-                // Prepare task data
                 const taskData = {
                   subject: item.subject,
                   details: item.details,
                   status: item.status || 'open',
                   priority: item.priority || 'medium',
-                  dueDate: item.duedate,
+                  dueDate: item.dueDate,
                   responsibles: item.responsibles || [],
                   meetingSeriesId: minute.meetingSeries_id.toString(),
                   minutesId: id,
@@ -192,21 +191,28 @@ export async function PUT(
                 let taskId = item.externalTaskId;
 
                 if (taskId) {
-                  // Update existing task
                   await Task.findByIdAndUpdate(taskId, taskData);
                 } else {
-                  // Create new task
                   const newTask = await Task.create({
                     ...taskData,
                     createdBy: userId,
                     createdAt: new Date()
                   });
                   taskId = newTask._id;
-                  // Update the item with the new externalTaskId
                   item.externalTaskId = taskId;
                 }
-              } catch (err) {
-                console.error('Error syncing task:', err);
+              } catch (taskErr) {
+                // Task sync failure is non-fatal — minute save continues
+                console.error('Task sync failed (non-fatal):', taskErr);
+              }
+            } else if (item.itemType === 'infoItem' && item.externalTaskId) {
+              // Item was changed from actionItem to infoItem — clean up orphaned task
+              try {
+                await Task.findByIdAndDelete(item.externalTaskId);
+                item.externalTaskId = undefined;
+              } catch (cleanupErr) {
+                // Cleanup failure is non-fatal
+                console.error('Task cleanup failed (non-fatal):', cleanupErr);
               }
             }
           }
@@ -214,18 +220,41 @@ export async function PUT(
       }
     }
 
-    // Build update object with explicit field setting
+    const hasField = (field: string) => Object.prototype.hasOwnProperty.call(body, field);
+
+    // Build update object for partial updates only.
+    // Important for finalize/reopen calls that intentionally send only status fields.
     const updateData: any = {
-      date: body.date ? new Date(body.date) : minute.date,
-      participants: body.participants,
-      participantsWithStatus: body.participantsWithStatus,
-      topics: body.topics,
-      globalNote: body.globalNote,
-      time: body.time || '', // Set to empty string if undefined/null
-      location: body.location || '', // Set to empty string if undefined/null
-      title: body.title || '', // Set to empty string if undefined/null
       updatedAt: new Date()
     };
+
+    if (hasField('date') && body.date) {
+      updateData.date = new Date(body.date);
+    }
+    if (hasField('participants')) {
+      updateData.participants = body.participants;
+    }
+    if (hasField('participantsWithStatus')) {
+      updateData.participantsWithStatus = body.participantsWithStatus;
+    }
+    if (hasField('topics')) {
+      updateData.topics = topicsToPersist;
+    }
+    if (hasField('globalNote')) {
+      updateData.globalNote = body.globalNote;
+    }
+    if (hasField('time')) {
+      updateData.time = body.time || '';
+    }
+    if (hasField('endTime')) {
+      updateData.endTime = body.endTime || '';
+    }
+    if (hasField('location')) {
+      updateData.location = body.location || '';
+    }
+    if (hasField('title')) {
+      updateData.title = body.title || '';
+    }
 
     // Handle finalization status
     if (body.isFinalized !== undefined) {
@@ -267,23 +296,24 @@ export async function PUT(
           });
 
           if (importedTaskIds.length > 0) {
-            // We need to update nested arrays, so we use arrayFilters
+            // Close original tasks by finding and updating them directly
             for (const originalId of importedTaskIds) {
-              await Minutes.updateMany(
-                { "topics.infoItems._id": originalId },
-                { 
-                  $set: { 
-                    "topics.$[t].infoItems.$[i].isOpen": false,
-                    "topics.$[t].infoItems.$[i].status": "completed"
-                  } 
-                },
-                {
-                  arrayFilters: [
-                    { "t.infoItems._id": originalId },
-                    { "i._id": originalId }
-                  ]
+              const sourceMinute = await Minutes.findOne({ "topics.infoItems._id": originalId });
+              if (sourceMinute) {
+                let modified = false;
+                for (const topic of sourceMinute.topics) {
+                  if (!topic.infoItems) continue;
+                  for (const item of topic.infoItems) {
+                    if (item._id?.toString() === originalId) {
+                      item.status = 'completed';
+                      modified = true;
+                    }
+                  }
                 }
-              );
+                if (modified) {
+                  await sourceMinute.save();
+                }
+              }
             }
           }
         }
@@ -351,21 +381,62 @@ export async function DELETE(
       );
     }
 
-    // Check role - only admin and moderator can delete minutes
-    if (authResult.user.role === 'user') {
+    // Check permission - only users with canDeleteMinutes can delete
+    const permResult = await requirePermission(authResult.user, 'canDeleteMinutes');
+    if (!permResult.success) {
       return NextResponse.json(
-        { error: 'Forbidden: Nur Administratoren und Moderatoren dürfen Protokolle löschen' },
+        { error: 'Fehlende Berechtigung zum Löschen von Protokollen' },
         { status: 403 }
       );
     }
 
     const minute = await Minutes.findById(id);
-    
+
     if (!minute) {
       return NextResponse.json(
         { error: 'Minute not found' },
         { status: 404 }
       );
+    }
+
+    // Clean up associated tasks — only delete if not referenced elsewhere
+    const taskIds: string[] = [];
+    minute.topics?.forEach((topic: any) => {
+      topic.infoItems?.forEach((item: any) => {
+        if (item.externalTaskId) taskIds.push(item.externalTaskId.toString());
+      });
+    });
+    if (taskIds.length > 0) {
+      // Check if any of these tasks are referenced in other minutes
+      const otherMinutes = await Minutes.find({
+        _id: { $ne: id },
+        'topics.infoItems.externalTaskId': { $in: taskIds },
+      }).select('_id topics.infoItems.externalTaskId').lean();
+
+      const referencedElsewhere = new Set<string>();
+      otherMinutes.forEach((m: any) => {
+        m.topics?.forEach((t: any) => {
+          t.infoItems?.forEach((i: any) => {
+            if (i.externalTaskId) referencedElsewhere.add(i.externalTaskId.toString());
+          });
+        });
+      });
+
+      const toDelete = taskIds.filter(tid => !referencedElsewhere.has(tid));
+      const toReassign = taskIds.filter(tid => referencedElsewhere.has(tid));
+
+      if (toDelete.length > 0) {
+        await Task.deleteMany({ _id: { $in: toDelete } });
+      }
+      // Reassign tasks that are still referenced to keep them accessible
+      for (const tid of toReassign) {
+        const refMinute = otherMinutes.find((m: any) =>
+          m.topics?.some((t: any) => t.infoItems?.some((i: any) => i.externalTaskId?.toString() === tid))
+        );
+        if (refMinute) {
+          await Task.findByIdAndUpdate(tid, { minutesId: refMinute._id.toString() });
+        }
+      }
     }
 
     await Minutes.findByIdAndDelete(id);
