@@ -341,13 +341,19 @@ export async function generateMinutePdf(
   // Use participantsWithStatus if available, otherwise fall back to participants.
   const participantsList = minute.participantsWithStatus ||
     minute.participants.map((p) => ({ userId: p, attendance: 'present' as const }));
-  const attendanceWidth = 90;
+  // Keep more horizontal space for "Name (Funktion)" in attendance rows.
+  const attendanceWidth = 94;
   const legendText = `${labels.legendPresent}; ${labels.legendExcused}; ${labels.legendAbsent}`;
+  const attendanceNameFontSize = 8;
+  const legendFontSize = 6;
+  doc.setFont(settings.fontFamily, 'normal');
+  doc.setFontSize(legendFontSize);
   const legendLines = doc.splitTextToSize(legendText, attendanceWidth - 10);
+  doc.setFontSize(attendanceNameFontSize);
   const functionLabelsByUserId = buildUserFunctionLabelMap(clubFunctions);
   const participantRows = participantsList.map((participant) => {
     const participantName = getUserDisplayName(participant.userId, allUsers, functionLabelsByUserId);
-    const nameLines = doc.splitTextToSize(participantName, attendanceWidth - 40);
+    const nameLines = doc.splitTextToSize(participantName, attendanceWidth - 20);
     return {
       participant,
       participantName,
@@ -519,9 +525,11 @@ export async function generateMinutePdf(
   doc.text(labels.attendance, pageWidth - marginRight - attendanceWidth + 5, yPosition + 8);
   
   // Attendance columns with better formatting
-  const colAX = pageWidth - marginRight - 32;
-  const colEX = pageWidth - marginRight - 20;
-  const colNeX = pageWidth - marginRight - 8;
+  const checkboxColumnSpacing = 5;
+  const checkboxGroupRight = pageWidth - marginRight - 6;
+  const colNeX = checkboxGroupRight;
+  const colEX = colNeX - checkboxColumnSpacing;
+  const colAX = colEX - checkboxColumnSpacing;
   
   // Draw column headers with borders
   doc.setFontSize(7);
