@@ -176,6 +176,36 @@ export default function AdminDashboard() {
             </div>
           </Link>
 
+          {/* Club Functions */}
+          <Link
+            href="/admin/club-functions"
+            className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6 border-l-4 border-emerald-500"
+          >
+            <div className="flex items-start">
+              <div className="flex-shrink-0">
+                <svg
+                  className="h-8 w-8 text-emerald-500"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  />
+                </svg>
+              </div>
+              <div className="ml-4">
+                <h3 className="text-lg font-semibold text-gray-900">{t('clubFunctions.title')}</h3>
+                <p className="text-gray-600 text-sm mt-1">
+                  {t('clubFunctions.description')}
+                </p>
+              </div>
+            </div>
+          </Link>
+
           {/* Back to Dashboard */}
           <Link
             href="/dashboard"

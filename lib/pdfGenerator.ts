@@ -39,6 +39,14 @@ interface User {
   lastName: string;
 }
 
+interface ClubFunctionEntry {
+  _id: string;
+  name: string;
+  token: string;
+  isActive: boolean;
+  assignedUserId?: string;
+}
+
 interface IParticipant {
   userId: string;
   attendance: 'present' | 'excused' | 'absent' | 'guest';
@@ -100,6 +108,22 @@ function getUserInitials(userId: string, allUsers: User[]): string {
   if (user) {
     return `${user.firstName.charAt(0).toUpperCase()}${user.lastName.charAt(0).toUpperCase()}`;
   }
+
+  if (userId.startsWith('function:')) {
+    const functionName = userId
+      .replace(/^function:/, '')
+      .split('-')
+      .filter(Boolean)
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(' ');
+    const initials = functionName
+      .split(' ')
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part.charAt(0).toUpperCase())
+      .join('');
+    return initials || 'F';
+  }
   
   // Fallback: If userId is not a MongoID (24 hex chars), assume it's a name
   const isMongoId = /^[0-9a-fA-F]{24}$/.test(userId);
@@ -119,6 +143,38 @@ function getUserInitials(userId: string, allUsers: User[]): string {
 // Helper to format users as initials
 function formatUsersAsInitials(userIds: string[], allUsers: User[]): string {
   return userIds.map(id => getUserInitials(id, allUsers)).join(', ');
+}
+
+function buildUserFunctionLabelMap(clubFunctions: ClubFunctionEntry[] = []): Map<string, string> {
+  const labelsByUserId = new Map<string, string[]>();
+  for (const fn of clubFunctions) {
+    const assignedUserId = String(fn.assignedUserId || '').trim();
+    const functionName = String(fn.name || '').trim();
+    if (!assignedUserId || !functionName) continue;
+    const existing = labelsByUserId.get(assignedUserId) || [];
+    existing.push(functionName);
+    labelsByUserId.set(assignedUserId, existing);
+  }
+
+  const labelMap = new Map<string, string>();
+  for (const [userId, names] of labelsByUserId.entries()) {
+    const uniqueNames = Array.from(new Set(names));
+    labelMap.set(userId, uniqueNames.join(', '));
+  }
+  return labelMap;
+}
+
+function getUserDisplayName(
+  userId: string,
+  allUsers: User[],
+  functionLabelsByUserId: Map<string, string>
+): string {
+  const user = allUsers.find((entry) => entry._id === userId);
+  if (!user) return userId;
+  const fullName = `${user.firstName} ${user.lastName}`.trim();
+  const functionLabel = functionLabelsByUserId.get(userId);
+  if (!functionLabel) return fullName || userId;
+  return `${fullName || userId} (${functionLabel})`;
 }
 
 // i18n labels for PDF content
@@ -206,7 +262,8 @@ export async function generateMinutePdf(
   minute: Minute,
   settings: PdfSettings,
   allUsers: User[],
-  layoutSettings?: IPdfLayoutSettings
+  layoutSettings?: IPdfLayoutSettings,
+  clubFunctions: ClubFunctionEntry[] = []
 ): Promise<void> {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
@@ -287,12 +344,22 @@ export async function generateMinutePdf(
   const attendanceWidth = 90;
   const legendText = `${labels.legendPresent}; ${labels.legendExcused}; ${labels.legendAbsent}`;
   const legendLines = doc.splitTextToSize(legendText, attendanceWidth - 10);
+  const functionLabelsByUserId = buildUserFunctionLabelMap(clubFunctions);
+  const participantRows = participantsList.map((participant) => {
+    const participantName = getUserDisplayName(participant.userId, allUsers, functionLabelsByUserId);
+    const nameLines = doc.splitTextToSize(participantName, attendanceWidth - 40);
+    return {
+      participant,
+      participantName,
+      nameLines: nameLines.length > 0 ? nameLines : [participantName],
+    };
+  });
 
   // Expand header height dynamically so all attendance lines and guests fit.
   const guestLines = minute.participantsAdditional
     ? doc.splitTextToSize(minute.participantsAdditional, attendanceWidth - 10)
     : [];
-  const participantsHeight = participantsList.length * 5;
+  const participantsHeight = participantRows.reduce((sum, row) => sum + row.nameLines.length * 4.2 + 1, 0);
   const guestsHeight = guestLines.length > 0 ? 1 + 4 + guestLines.length * 4 : 0;
   const legendHeight = legendLines.length * 3.5;
   const attendanceContentHeight = 18 + participantsHeight + guestsHeight + 2 + legendHeight + 4;
@@ -475,49 +542,49 @@ export async function generateMinutePdf(
   let attendanceY = yPosition + 18;
   const hasGuests = !!minute.participantsAdditional;
 
-  for (let i = 0; i < participantsList.length; i++) {
-    const participant = participantsList[i];
-    const participantUser = allUsers.find(u => u._id === participant.userId);
-    const participantName = participantUser
-      ? `${participantUser.firstName} ${participantUser.lastName}`
-      : participant.userId;
-    
-    doc.text(participantName, pageWidth - marginRight - attendanceWidth + 5, attendanceY);
+  for (let i = 0; i < participantRows.length; i++) {
+    const row = participantRows[i];
+    const participant = row.participant;
+
+    row.nameLines.forEach((line: string, lineIndex: number) => {
+      doc.text(line, pageWidth - marginRight - attendanceWidth + 5, attendanceY + lineIndex * 4.2);
+    });
     
     // Draw checkboxes based on attendance status
     doc.setLineWidth(0.3);
+    const checkY = attendanceY;
     
     // Anwesend (present) checkbox
-    doc.rect(colAX - 2, attendanceY - 3, 3, 3);
+    doc.rect(colAX - 2, checkY - 3, 3, 3);
     if (participant.attendance === 'present') {
       doc.setFontSize(8);
       doc.setFont(settings.fontFamily, 'bold');
-      doc.text('x', colAX - 0.5, attendanceY - 0.3, { align: 'center' });
+      doc.text('x', colAX - 0.5, checkY - 0.3, { align: 'center' });
       doc.setFont(settings.fontFamily, 'normal');
       doc.setFontSize(8);
     }
     
     // Entschuldigt (excused) checkbox
-    doc.rect(colEX - 2, attendanceY - 3, 3, 3);
+    doc.rect(colEX - 2, checkY - 3, 3, 3);
     if (participant.attendance === 'excused') {
       doc.setFontSize(8);
       doc.setFont(settings.fontFamily, 'bold');
-      doc.text('x', colEX - 0.5, attendanceY - 0.3, { align: 'center' });
+      doc.text('x', colEX - 0.5, checkY - 0.3, { align: 'center' });
       doc.setFont(settings.fontFamily, 'normal');
       doc.setFontSize(8);
     }
     
     // Nicht entschuldigt (absent/not excused) checkbox
-    doc.rect(colNeX - 2, attendanceY - 3, 3, 3);
+    doc.rect(colNeX - 2, checkY - 3, 3, 3);
     if (participant.attendance === 'absent') {
       doc.setFontSize(8);
       doc.setFont(settings.fontFamily, 'bold');
-      doc.text('x', colNeX - 0.5, attendanceY - 0.3, { align: 'center' });
+      doc.text('x', colNeX - 0.5, checkY - 0.3, { align: 'center' });
       doc.setFont(settings.fontFamily, 'normal');
       doc.setFontSize(8);
     }
     
-    attendanceY += 5;
+    attendanceY += row.nameLines.length * 4.2 + 1;
   }
   
   // Guests

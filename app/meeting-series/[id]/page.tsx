@@ -71,6 +71,13 @@ interface UserDirectoryEntry {
   email?: string;
 }
 
+interface ClubFunctionEntry {
+  _id: string;
+  name: string;
+  assignedUserId?: string;
+  isActive?: boolean;
+}
+
 export default function MeetingSeriesPage() {
   const params = useParams() as { id: string };
   const router = useRouter();
@@ -116,6 +123,7 @@ export default function MeetingSeriesPage() {
   const [eventNote, setEventNote] = useState('');
   const [selectedInviteeIds, setSelectedInviteeIds] = useState<string[]>([]);
   const [eventToDelete, setEventToDelete] = useState<MeetingEvent | null>(null);
+  const [functionNamesByUserId, setFunctionNamesByUserId] = useState<Record<string, string[]>>({});
 
   // Check permissions
   const username = user?.username || '';
@@ -178,6 +186,34 @@ export default function MeetingSeriesPage() {
     if (!series?.members?.length) return;
     setSelectedInviteeIds(series.members.map((member) => member.userId));
   }, [series?._id, series?.members]);
+
+  useEffect(() => {
+    const fetchFunctions = async () => {
+      try {
+        const response = await fetch('/api/club-functions?includeInactive=true', {
+          credentials: 'include',
+        });
+        if (!response.ok) return;
+        const payload = await response.json().catch(() => ({}));
+        const data: ClubFunctionEntry[] = Array.isArray(payload?.data) ? payload.data : [];
+        const map: Record<string, string[]> = {};
+        for (const entry of data) {
+          const userIdValue = String(entry.assignedUserId || '').trim();
+          const fnName = String(entry.name || '').trim();
+          if (!userIdValue || !fnName) continue;
+          map[userIdValue] = map[userIdValue] || [];
+          map[userIdValue].push(fnName);
+        }
+        Object.keys(map).forEach((userIdValue) => {
+          map[userIdValue] = Array.from(new Set(map[userIdValue])).sort((a, b) => a.localeCompare(b));
+        });
+        setFunctionNamesByUserId(map);
+      } catch {
+        setFunctionNamesByUserId({});
+      }
+    };
+    fetchFunctions();
+  }, []);
 
   useEffect(() => {
     let isCancelled = false;
@@ -249,7 +285,9 @@ export default function MeetingSeriesPage() {
     const userEntry = userDirectory[userIdValue];
     if (!userEntry) return userIdValue;
     const fullName = `${userEntry.firstName || ''} ${userEntry.lastName || ''}`.trim();
-    return fullName || userEntry.username || userEntry.email || userIdValue;
+    const fnNames = functionNamesByUserId[userIdValue] || [];
+    const fnLabel = fnNames.length > 0 ? ` (${fnNames.join(', ')})` : '';
+    return (fullName || userEntry.username || userEntry.email || userIdValue) + fnLabel;
   };
 
   const formatEventDateTime = (event: MeetingEvent) => {

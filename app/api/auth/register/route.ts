@@ -8,6 +8,29 @@ import { sendWelcomeEmail, sendVerificationEmail, getTransporter, getFromEmail }
 import crypto from 'crypto';
 import { getTranslations } from 'next-intl/server';
 
+async function generateInternalUsername(email: string): Promise<string> {
+  const localPart = String(email.split('@')[0] || 'user');
+  const base = localPart
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]+/g, '-')
+    .replace(/-{2,}/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 18) || 'user';
+
+  for (let attempt = 0; attempt < 30; attempt += 1) {
+    const suffix = crypto.randomBytes(3).toString('hex');
+    const candidate = `${base}-${suffix}`;
+    const exists = await User.exists({
+      $or: [{ username: candidate }, { usernameHistory: candidate }],
+    });
+    if (!exists) return candidate;
+  }
+
+  return `user-${Date.now().toString(36)}-${crypto.randomBytes(2).toString('hex')}`;
+}
+
 // POST - Register new user
 export async function POST(request: NextRequest) {
   const t = await getTranslations('errors');
@@ -32,11 +55,12 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    const { email, username, password, firstName, lastName } = validation.data;
+    const { email, password, firstName, lastName } = validation.data;
     const role = 'user';
-    const normalizedUsername = username.trim();
+    const normalizedEmail = email.trim().toLowerCase();
+    const normalizedUsername = await generateInternalUsername(normalizedEmail);
     const accountRateLimit = checkRateLimitByKey(
-      `register-account:${email.toLowerCase()}:${normalizedUsername.toLowerCase()}`,
+      `register-account:${normalizedEmail}`,
       5,
       60 * 60 * 1000
     );
@@ -44,13 +68,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: t('tooManyRegisterAttempts') },
         { status: 429 }
-      );
-    }
-
-    if (/^[a-fA-F0-9]{24}$/.test(normalizedUsername)) {
-      return NextResponse.json(
-        { error: 'Username ist reserviert' },
-        { status: 400 }
       );
     }
 
@@ -69,11 +86,11 @@ export async function POST(request: NextRequest) {
 
     // Check if user already exists
     const existingUser = await User.findOne({
-      $or: [{ email }, { username: normalizedUsername }, { usernameHistory: normalizedUsername }]
+      $or: [{ email: normalizedEmail }, { username: normalizedUsername }, { usernameHistory: normalizedUsername }]
     });
 
     if (existingUser) {
-      const errorMsg = existingUser.email === email ? t('emailInUse') : t('usernameInUse');
+      const errorMsg = existingUser.email === normalizedEmail ? t('emailInUse') : t('usernameInUse');
       return NextResponse.json(
         { error: errorMsg },
         { status: 409 }
@@ -87,7 +104,7 @@ export async function POST(request: NextRequest) {
     // Generate verification token before save to avoid half-initialized user in DB
     let verificationToken: string | null = null;
     const userFields: Record<string, unknown> = {
-      email,
+      email: normalizedEmail,
       username: normalizedUsername,
       password, // Will be hashed by pre-save middleware
       firstName,

@@ -8,6 +8,7 @@ import MeetingSeries from '@/models/MeetingSeries';
 import { verifyToken } from '@/lib/auth';
 import { hasPermission } from '@/lib/permissions';
 import { createMeetingSeriesSchema, validateBody } from '@/lib/validations';
+import { sanitizeResponsibles, validateFunctionResponsibles } from '@/lib/club-functions';
 
 /**
  * GET /api/meeting-series
@@ -124,6 +125,16 @@ export async function POST(request: NextRequest) {
 
     // Create new meeting series
     // Note: moderators, participants, visibleFor should contain usernames, not IDs
+    const clubFunctions = sanitizeResponsibles(body.clubFunctions);
+    const functionValidation = await validateFunctionResponsibles(clubFunctions);
+    if (!functionValidation.valid) {
+      return NextResponse.json(
+        { success: false, error: functionValidation.error || 'Ungültige Vereinsfunktion' },
+        { status: 400 }
+      );
+    }
+    const members = Array.isArray(body.members) ? body.members : [];
+
     const newSeries = await MeetingSeries.create({
       project: validated.project,
       name: validated.name || '',
@@ -132,7 +143,8 @@ export async function POST(request: NextRequest) {
       participants: validated.participants || [],
       informedUsers: body.informedUsers || [],
       additionalResponsibles: body.additionalResponsibles || [],
-      members: body.members || [],
+      clubFunctions,
+      members,
       availableLabels: body.availableLabels || [
         { name: 'Important', color: '#FF0000', isDefaultLabel: true },
         { name: 'Decision', color: '#00FF00', isDefaultLabel: true },

@@ -36,12 +36,20 @@ interface User {
   lastLogin?: string;
 }
 
+interface ClubFunctionEntry {
+  _id: string;
+  name: string;
+  isActive: boolean;
+  assignedUserId?: string;
+}
+
 const PAGE_LIMIT = 10;
 
 const UserManagement = () => {
   const t = useTranslations('admin.users');
   // tCommon removed
   const [users, setUsers] = useState<User[]>([]);
+  const [functionNamesByUserId, setFunctionNamesByUserId] = useState<Record<string, string[]>>({});
   // users removed — server-side search handles filtering
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -63,7 +71,6 @@ const UserManagement = () => {
   });
 
   const [newUser, setNewUser] = useState({
-    username: '',
     email: '',
     firstName: '',
     lastName: '',
@@ -72,7 +79,6 @@ const UserManagement = () => {
   });
 
   const [editUser, setEditUser] = useState({
-    username: '',
     email: '',
     firstName: '',
     lastName: '',
@@ -105,6 +111,27 @@ const UserManagement = () => {
 
       const data = await response.json();
       setUsers(data.data);
+      try {
+        const fnResponse = await fetch('/api/club-functions?includeInactive=true', { credentials: 'include' });
+        if (fnResponse.ok) {
+          const fnPayload = await fnResponse.json();
+          const entries: ClubFunctionEntry[] = Array.isArray(fnPayload?.data) ? fnPayload.data : [];
+          const map: Record<string, string[]> = {};
+          for (const entry of entries) {
+            const userId = String(entry.assignedUserId || '').trim();
+            const name = String(entry.name || '').trim();
+            if (!userId || !name) continue;
+            map[userId] = map[userId] || [];
+            map[userId].push(name);
+          }
+          Object.keys(map).forEach((userId) => {
+            map[userId] = Array.from(new Set(map[userId])).sort((a, b) => a.localeCompare(b));
+          });
+          setFunctionNamesByUserId(map);
+        }
+      } catch {
+        setFunctionNamesByUserId({});
+      }
       setPagination({
         page: data.pagination.page,
         total: data.pagination.total,
@@ -154,7 +181,7 @@ const UserManagement = () => {
 
       setSuccess('Benutzer erfolgreich erstellt');
       setShowCreateModal(false);
-      setNewUser({ username: '', email: '', firstName: '', lastName: '', password: '', role: 'user' });
+      setNewUser({ email: '', firstName: '', lastName: '', password: '', role: 'user' });
       fetchUsers(pagination.page);
     } catch (err: any) {
       setError(err.message);
@@ -273,6 +300,19 @@ const UserManagement = () => {
     }
   };
 
+  const getFunctionLabel = (userId: string): string => {
+    const names = functionNamesByUserId[userId] || [];
+    if (names.length === 0) return '';
+    return names.join(', ');
+  };
+
+  const getUserDisplayName = (entry: User): string => {
+    const fullName = `${entry.firstName || ''} ${entry.lastName || ''}`.trim();
+    const fn = getFunctionLabel(entry._id);
+    if (!fn) return fullName || entry.email;
+    return `${fullName || entry.email} (${fn})`;
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
       <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8">
@@ -383,12 +423,11 @@ const UserManagement = () => {
                         />
                       ) : (
                         <div className="w-10 h-10 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold shrink-0">
-                          {user.firstName[0]?.toUpperCase() || user.username[0]?.toUpperCase()}
+                          {user.firstName[0]?.toUpperCase() || user.email[0]?.toUpperCase()}
                         </div>
                       )}
                       <div className="min-w-0 flex-1">
-                        <div className="font-semibold text-slate-800 break-words">{user.firstName} {user.lastName}</div>
-                        <div className="text-sm text-slate-500 break-all">@{user.username}</div>
+                        <div className="font-semibold text-slate-800 break-words">{getUserDisplayName(user)}</div>
                         <div className="text-sm text-slate-800 break-all mt-1">{user.email}</div>
                         <div className="mt-1 flex items-center gap-1 text-xs text-green-600">
                           <CheckCircle2 className="w-3 h-3" />
@@ -410,7 +449,6 @@ const UserManagement = () => {
                         onClick={() => {
                           setSelectedUser(user);
                           setEditUser({
-                            username: user.username,
                             email: user.email,
                             firstName: user.firstName,
                             lastName: user.lastName,
@@ -466,14 +504,13 @@ const UserManagement = () => {
                               />
                             ) : (
                               <div className="w-10 h-10 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold">
-                                {user.firstName[0]?.toUpperCase() || user.username[0]?.toUpperCase()}
+                                {user.firstName[0]?.toUpperCase() || user.email[0]?.toUpperCase()}
                               </div>
                             )}
                             <div className="min-w-0">
                               <div className="font-semibold text-slate-800 break-words">
-                                {user.firstName} {user.lastName}
+                                {getUserDisplayName(user)}
                               </div>
-                              <div className="text-sm text-slate-500 break-all">@{user.username}</div>
                             </div>
                           </div>
                         </td>
@@ -544,7 +581,6 @@ const UserManagement = () => {
                               onClick={() => {
                                 setSelectedUser(user);
                                 setEditUser({
-                                  username: user.username,
                                   email: user.email,
                                   firstName: user.firstName,
                                   lastName: user.lastName,
@@ -617,16 +653,6 @@ const UserManagement = () => {
               </div>
               <form onSubmit={handleCreateUser} className="p-6 space-y-4">
                 <p className="text-xs text-slate-500 mb-2">Alle Felder sind Pflichtfelder.</p>
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">{t('fields.username')}</label>
-                  <input
-                    type="text"
-                    value={newUser.username}
-                    onChange={(e) => setNewUser({...newUser, username: e.target.value})}
-                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    required
-                  />
-                </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">{t('fields.email')}</label>
                   <input
@@ -711,16 +737,6 @@ const UserManagement = () => {
                 <h2 className="text-xl font-semibold text-slate-800">{t('modals.edit.title')}</h2>
               </div>
               <form onSubmit={handleUpdateUser} className="p-6 space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-2">{t('fields.username')}</label>
-                  <input
-                    type="text"
-                    value={editUser.username}
-                    onChange={(e) => setEditUser({...editUser, username: e.target.value})}
-                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                    required
-                  />
-                </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">{t('fields.email')}</label>
                   <input

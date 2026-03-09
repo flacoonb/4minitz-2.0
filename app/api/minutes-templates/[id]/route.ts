@@ -5,6 +5,12 @@ import connectDB from '@/lib/mongodb';
 import { hasPermission } from '@/lib/permissions';
 import MeetingSeries from '@/models/MeetingSeries';
 import MinutesTemplate from '@/models/MinutesTemplate';
+import {
+  applyResponsibleSnapshotsToTopics,
+  extractResponsibleValuesFromTopics,
+  sanitizeResponsibles,
+  validateFunctionResponsibles,
+} from '@/lib/club-functions';
 
 function normalizeDateValue(input: unknown): Date | undefined {
   if (typeof input !== 'string' || !input.trim()) return undefined;
@@ -12,7 +18,7 @@ function normalizeDateValue(input: unknown): Date | undefined {
   return Number.isNaN(parsed.getTime()) ? undefined : parsed;
 }
 
-function sanitizeTemplateContent(raw: any) {
+async function sanitizeTemplateContent(raw: any) {
   const topics = Array.isArray(raw?.topics) ? raw.topics : [];
   const sanitizedTopics = topics
     .map((topic: any) => {
@@ -38,9 +44,7 @@ function sanitizeTemplateContent(raw: any) {
                     ? item.priority
                     : 'medium',
                 dueDate: normalizeDateValue(item?.dueDate),
-                responsibles: Array.isArray(item?.responsibles)
-                  ? item.responsibles.filter((entry: unknown) => typeof entry === 'string' && entry.trim())
-                  : [],
+                responsibles: sanitizeResponsibles(item?.responsibles),
                 notes: typeof item?.notes === 'string' ? item.notes : '',
               };
             })
@@ -49,13 +53,13 @@ function sanitizeTemplateContent(raw: any) {
       if (!subject) return null;
       return {
         subject,
-        responsibles: Array.isArray(topic?.responsibles)
-          ? topic.responsibles.filter((entry: unknown) => typeof entry === 'string' && entry.trim())
-          : [],
+        responsibles: sanitizeResponsibles(topic?.responsibles),
         infoItems,
       };
     })
     .filter(Boolean);
+
+  const topicsWithSnapshots = await applyResponsibleSnapshotsToTopics(sanitizedTopics as any[]);
 
   return {
     title: typeof raw?.title === 'string' ? raw.title : '',
@@ -63,8 +67,31 @@ function sanitizeTemplateContent(raw: any) {
     endTime: typeof raw?.endTime === 'string' ? raw.endTime : '',
     location: typeof raw?.location === 'string' ? raw.location : '',
     globalNote: typeof raw?.globalNote === 'string' ? raw.globalNote : '',
-    topics: sanitizedTopics,
+    topics: topicsWithSnapshots,
   };
+}
+
+function collectInactiveFunctionIds(content: any): string[] {
+  const ids = new Set<string>();
+  const topics = Array.isArray(content?.topics) ? content.topics : [];
+  for (const topic of topics) {
+    const topicSnapshots = Array.isArray(topic?.responsibleSnapshots) ? topic.responsibleSnapshots : [];
+    for (const snapshot of topicSnapshots) {
+      if (snapshot?.functionId && snapshot?.isActive === false) {
+        ids.add(String(snapshot.functionId));
+      }
+    }
+    const items = Array.isArray(topic?.infoItems) ? topic.infoItems : [];
+    for (const item of items) {
+      const itemSnapshots = Array.isArray(item?.responsibleSnapshots) ? item.responsibleSnapshots : [];
+      for (const snapshot of itemSnapshots) {
+        if (snapshot?.functionId && snapshot?.isActive === false) {
+          ids.add(String(snapshot.functionId));
+        }
+      }
+    }
+  }
+  return Array.from(ids);
 }
 
 async function getSeriesAccess(user: any, meetingSeriesId: string) {
@@ -195,7 +222,14 @@ export async function PUT(
     if (body.description !== undefined) updateData.description = body.description;
     if (body.isActive !== undefined) updateData.isActive = Boolean(body.isActive);
     if (body.content !== undefined) {
-      const sanitizedContent = sanitizeTemplateContent(body.content);
+      const sanitizedContent = await sanitizeTemplateContent(body.content);
+      const validation = await validateFunctionResponsibles(
+        extractResponsibleValuesFromTopics(sanitizedContent.topics as any[]),
+        { allowInactiveIds: collectInactiveFunctionIds(template.content) }
+      );
+      if (!validation.valid) {
+        return NextResponse.json({ error: validation.error || 'Ungültige Vereinsfunktion' }, { status: 400 });
+      }
       const hasEntries = sanitizedContent.topics.some((topic: any) => (topic.infoItems || []).length > 0);
       if (!hasEntries) {
         return NextResponse.json(

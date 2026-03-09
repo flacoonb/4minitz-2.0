@@ -5,6 +5,12 @@ import connectDB from '@/lib/mongodb';
 import { hasPermission } from '@/lib/permissions';
 import MeetingSeries from '@/models/MeetingSeries';
 import MinutesTemplate from '@/models/MinutesTemplate';
+import {
+  applyResponsibleSnapshotsToTopics,
+  extractResponsibleValuesFromTopics,
+  sanitizeResponsibles,
+  validateFunctionResponsibles,
+} from '@/lib/club-functions';
 
 type SeriesAccessResult = {
   exists: boolean;
@@ -18,7 +24,7 @@ function normalizeDateValue(input: unknown): Date | undefined {
   return Number.isNaN(parsed.getTime()) ? undefined : parsed;
 }
 
-function sanitizeTemplateContent(raw: any) {
+async function sanitizeTemplateContent(raw: any) {
   const topics = Array.isArray(raw?.topics) ? raw.topics : [];
   const sanitizedTopics = topics
     .map((topic: any) => {
@@ -44,9 +50,7 @@ function sanitizeTemplateContent(raw: any) {
                     ? item.priority
                     : 'medium',
                 dueDate: normalizeDateValue(item?.dueDate),
-                responsibles: Array.isArray(item?.responsibles)
-                  ? item.responsibles.filter((entry: unknown) => typeof entry === 'string' && entry.trim())
-                  : [],
+                responsibles: sanitizeResponsibles(item?.responsibles),
                 notes: typeof item?.notes === 'string' ? item.notes : '',
               };
             })
@@ -55,13 +59,13 @@ function sanitizeTemplateContent(raw: any) {
       if (!subject) return null;
       return {
         subject,
-        responsibles: Array.isArray(topic?.responsibles)
-          ? topic.responsibles.filter((entry: unknown) => typeof entry === 'string' && entry.trim())
-          : [],
+        responsibles: sanitizeResponsibles(topic?.responsibles),
         infoItems,
       };
     })
     .filter(Boolean);
+
+  const topicsWithSnapshots = await applyResponsibleSnapshotsToTopics(sanitizedTopics as any[]);
 
   return {
     title: typeof raw?.title === 'string' ? raw.title : '',
@@ -69,7 +73,7 @@ function sanitizeTemplateContent(raw: any) {
     endTime: typeof raw?.endTime === 'string' ? raw.endTime : '',
     location: typeof raw?.location === 'string' ? raw.location : '',
     globalNote: typeof raw?.globalNote === 'string' ? raw.globalNote : '',
-    topics: sanitizedTopics,
+    topics: topicsWithSnapshots,
   };
 }
 
@@ -219,7 +223,13 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const sanitizedContent = sanitizeTemplateContent(content);
+    const sanitizedContent = await sanitizeTemplateContent(content);
+    const validation = await validateFunctionResponsibles(
+      extractResponsibleValuesFromTopics(sanitizedContent.topics as any[])
+    );
+    if (!validation.valid) {
+      return NextResponse.json({ error: validation.error || 'Ungültige Vereinsfunktion' }, { status: 400 });
+    }
     const hasEntries = sanitizedContent.topics.some((topic: any) => (topic.infoItems || []).length > 0);
     if (!hasEntries) {
       return NextResponse.json(

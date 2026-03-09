@@ -20,6 +20,13 @@ export interface IMember {
   addedAt?: Date;
 }
 
+export interface IFunctionAssignment {
+  functionToken: string;
+  userId: string;
+  assignedAt?: Date;
+  isActive?: boolean;
+}
+
 // Interface for MeetingSeries document
 export interface IMeetingSeries extends Document {
   project: string;
@@ -35,6 +42,8 @@ export interface IMeetingSeries extends Document {
   moderators: string[];
   participants: string[];
   additionalResponsibles?: string[];
+  clubFunctions?: string[];
+  functionAssignments?: IFunctionAssignment[];
   
   // Members
   members: IMember[];
@@ -79,6 +88,27 @@ const MemberSchema = new Schema<IMember>({
   },
 });
 
+const FunctionAssignmentSchema = new Schema<IFunctionAssignment>({
+  functionToken: {
+    type: String,
+    required: true,
+    trim: true,
+  },
+  userId: {
+    type: String,
+    required: true,
+    trim: true,
+  },
+  assignedAt: {
+    type: Date,
+    default: Date.now,
+  },
+  isActive: {
+    type: Boolean,
+    default: true,
+  },
+}, { _id: false });
+
 // MeetingSeries Schema
 const MeetingSeriesSchema = new Schema<IMeetingSeries>(
   {
@@ -115,6 +145,13 @@ const MeetingSeriesSchema = new Schema<IMeetingSeries>(
     additionalResponsibles: [{
       type: String,
     }],
+    clubFunctions: [{
+      type: String,
+    }],
+    functionAssignments: {
+      type: [FunctionAssignmentSchema],
+      default: [],
+    },
     
     // Members
     members: [MemberSchema],

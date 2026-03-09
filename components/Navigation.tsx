@@ -21,6 +21,7 @@ export default function Navigation() {
   const { user: currentUser, loading, logout, hasPermission } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [assignedFunctionNames, setAssignedFunctionNames] = useState<string[]>([]);
   const userMenuRef = useRef<HTMLDivElement>(null);
   const mobileMenuRef = useRef<HTMLDivElement>(null);
   const t = useTranslations('nav');
@@ -46,12 +47,52 @@ export default function Navigation() {
     };
   }, [showUserMenu, mobileMenuOpen]);
 
+  useEffect(() => {
+    const loadAssignedFunctions = async () => {
+      if (!currentUser?._id) {
+        setAssignedFunctionNames([]);
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/club-functions?includeInactive=true', {
+          credentials: 'include',
+        });
+        if (!response.ok) {
+          setAssignedFunctionNames([]);
+          return;
+        }
+
+        const payload = await response.json().catch(() => ({}));
+        const entries = Array.isArray(payload?.data) ? payload.data : [];
+        const matches = entries.filter((entry: any) => String(entry?.assignedUserId || '') === currentUser._id);
+        const activeNames = matches
+          .filter((entry: any) => entry?.isActive)
+          .map((entry: any) => String(entry?.name || '').trim())
+          .filter(Boolean);
+        const fallbackNames = matches
+          .map((entry: any) => String(entry?.name || '').trim())
+          .filter(Boolean);
+        const names = activeNames.length > 0 ? activeNames : fallbackNames;
+        setAssignedFunctionNames(Array.from(new Set(names)));
+      } catch {
+        setAssignedFunctionNames([]);
+      }
+    };
+
+    loadAssignedFunctions();
+  }, [currentUser?._id]);
+
   const canAccessPlanning = Boolean(
     currentUser &&
       (currentUser.role === 'admin' ||
         currentUser.role === 'moderator' ||
         hasPermission('canCreateMeetings'))
   );
+
+  const functionDisplay = assignedFunctionNames.length > 0
+    ? assignedFunctionNames.join(', ')
+    : t('noFunctionAssigned');
 
   const navItems = [
     { href: '/dashboard', label: t('dashboard'), icon: 'dashboard' },
@@ -197,14 +238,14 @@ export default function Navigation() {
             >
               <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
                 {(currentUser.firstName && currentUser.firstName[0] ? currentUser.firstName[0].toUpperCase() : '') ||
-                 (currentUser.username && currentUser.username[0] ? currentUser.username[0].toUpperCase() : '?')}
+                 (currentUser.email && currentUser.email[0] ? currentUser.email[0].toUpperCase() : '?')}
               </div>
               <div className="hidden md:block text-left">
                 <div className="text-sm font-semibold text-slate-800 dark:text-slate-200">
                   {currentUser.firstName || ''} {currentUser.lastName || ''}
                 </div>
                 <div className="text-xs text-slate-500 dark:text-slate-400">
-                  {tRoles(currentUser.role)}
+                  {t('functionLabel')}: {functionDisplay}
                 </div>
               </div>
               <ChevronDown className={`w-4 h-4 text-slate-600 dark:text-slate-400 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
@@ -217,7 +258,9 @@ export default function Navigation() {
                   <div className="font-semibold text-slate-800 dark:text-slate-200">
                     {currentUser.firstName} {currentUser.lastName}
                   </div>
-                  <div className="text-sm text-slate-500 dark:text-slate-400">@{currentUser.username}</div>
+                  <div className="text-sm text-slate-500 dark:text-slate-400">
+                    {t('functionLabel')}: {functionDisplay}
+                  </div>
                   <div className="text-xs text-slate-400 dark:text-slate-500 mt-1">
                     {tRoles(currentUser.role)}
                   </div>

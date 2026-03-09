@@ -36,7 +36,9 @@
     "login": "Login",
     "register": "Register",
     "tasks": "Tasks",
-    "planning": "Planning"
+    "planning": "Planning",
+    "functionLabel": "Function",
+    "noFunctionAssigned": "No function assigned"
   },
   "planning": {
     "title": "Meeting Planning",
@@ -605,8 +607,10 @@
       "title": "Login",
       "subtitle": "Sign in to your account",
       "usernamePlaceholder": "Enter your username",
+      "emailPlaceholder": "name@example.com",
       "passwordPlaceholder": "Enter your password",
       "usernameLabel": "Username or Email",
+      "emailLabel": "Email Address",
       "passwordLabel": "Password",
       "loginButton": "Login",
       "loggingIn": "Logging in...",
@@ -829,6 +833,30 @@
     "templates": {
       "title": "Minutes templates",
       "description": "Create and manage global templates centrally"
+    },
+    "clubFunctions": {
+      "title": "Club functions",
+      "description": "Manage function history with active/inactive states",
+      "subtitle": "Keep statute changes historically correct in minutes.",
+      "back": "Back to admin area",
+      "createTitle": "Create new function",
+      "name": "Function name",
+      "namePlaceholder": "e.g. Head of Sports",
+      "descriptionPlaceholder": "Optional note about this function",
+      "descriptionField": "Description",
+      "create": "Create function",
+      "listTitle": "Existing functions",
+      "loading": "Loading functions...",
+      "empty": "No functions created yet.",
+      "active": "Active",
+      "inactive": "Inactive",
+      "deactivate": "Deactivate",
+      "reactivate": "Reactivate",
+      "assignedTo": "Assigned to:",
+      "noAssignment": "No person assigned",
+      "loadError": "Failed to load functions.",
+      "createError": "Failed to create function.",
+      "updateError": "Failed to update function."
     },
     "backToDashboard": {
       "title": "Back to Dashboard",
@@ -1297,6 +1325,8 @@
       "saving": "Saving...",
       "firstName": "First Name",
       "lastName": "Last Name",
+      "function": "Function",
+      "noFunctionAssigned": "No function assigned",
       "username": "Username",
       "avatar": "Avatar URL",
       "email": "Email Address",

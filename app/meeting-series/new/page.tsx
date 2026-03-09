@@ -19,6 +19,12 @@ interface User {
   role: 'admin' | 'moderator' | 'user';
 }
 
+interface ClubFunctionEntry {
+  _id: string;
+  name: string;
+  assignedUserId?: string;
+}
+
 export default function NewMeetingSeriesPage() {
   const t = useTranslations('meetingSeriesNew');
   const router = useRouter();
@@ -38,6 +44,7 @@ export default function NewMeetingSeriesPage() {
 
   // Users list
   const [allUsers, setAllUsers] = useState<User[]>([]);
+  const [clubFunctions, setClubFunctions] = useState<ClubFunctionEntry[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<string>('');
 
   // Existing session names for autocomplete
@@ -62,6 +69,7 @@ export default function NewMeetingSeriesPage() {
   useEffect(() => {
     if (user && user.role !== 'user') {
       fetchUsers();
+      fetchClubFunctions();
       fetchExistingNames();
     }
   }, [user]);
@@ -96,6 +104,20 @@ export default function NewMeetingSeriesPage() {
     }
   };
 
+  const fetchClubFunctions = async () => {
+    try {
+      const response = await fetch('/api/club-functions?includeInactive=true', {
+        credentials: 'include',
+      });
+      if (response.ok) {
+        const result = await response.json();
+        setClubFunctions(result.data || []);
+      }
+    } catch {
+      setClubFunctions([]);
+    }
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -106,6 +128,20 @@ export default function NewMeetingSeriesPage() {
 
   const getUserById = (userId: string): User | undefined => {
     return allUsers.find(u => u._id === userId);
+  };
+
+  const getUserFunctionLabel = (userId: string): string => {
+    const names = clubFunctions
+      .filter((entry) => String(entry.assignedUserId || '') === userId)
+      .map((entry) => String(entry.name || '').trim())
+      .filter(Boolean);
+    return Array.from(new Set(names)).join(', ');
+  };
+
+  const getUserDisplayName = (entry: User): string => {
+    const fullName = `${entry.firstName} ${entry.lastName}`.trim();
+    const fn = getUserFunctionLabel(entry._id);
+    return fn ? `${fullName} (${fn})` : fullName;
   };
 
   const addMember = () => {
@@ -121,7 +157,7 @@ export default function NewMeetingSeriesPage() {
   const removeMember = (userId: string) => {
     setFormData(prev => ({
       ...prev,
-      members: prev.members.filter(m => m.userId !== userId)
+      members: prev.members.filter(m => m.userId !== userId),
     }));
   };
 
@@ -376,7 +412,7 @@ export default function NewMeetingSeriesPage() {
                     .filter(user => !formData.members.some(m => m.userId === user._id))
                     .map(user => (
                       <option key={user._id} value={user._id}>
-                        {user.firstName} {user.lastName} ({user.email})
+                        {getUserDisplayName(user)}
                       </option>
                     ))
                   }
@@ -408,7 +444,7 @@ export default function NewMeetingSeriesPage() {
                           </div>
                           <div className="min-w-0">
                             <p className="font-medium text-gray-900 break-words">
-                              {user ? `${user.firstName} ${user.lastName}` : member.userId}
+                              {user ? getUserDisplayName(user) : member.userId}
                             </p>
                             {user && (
                               <p className="text-sm text-gray-600 break-all">{user.email}</p>

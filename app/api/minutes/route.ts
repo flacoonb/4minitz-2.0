@@ -3,10 +3,19 @@ import connectToDatabase from '@/lib/mongodb';
 import Minutes from '@/models/Minutes';
 import MeetingSeries from '@/models/MeetingSeries';
 import MinutesTemplate from '@/models/MinutesTemplate';
+import User from '@/models/User';
 import { sendNewMinutesNotification } from '@/lib/email-service';
 import mongoose from 'mongoose';
 import { verifyToken } from '@/lib/auth';
 import { requirePermission, hasPermission } from '@/lib/permissions';
+import {
+  applyResponsibleSnapshotsToTopics,
+  buildFunctionAssignmentMap,
+  extractResponsibleValuesFromTopics,
+  validateAssignmentsForResponsibles,
+  validateFunctionResponsibles,
+} from '@/lib/club-functions';
+import ClubFunction from '@/models/ClubFunction';
 
 /**
  * GET /api/minutes
@@ -287,7 +296,42 @@ export async function POST(request: NextRequest) {
 
     const hasManualTopics = Array.isArray(processedTopics) && processedTopics.length > 0;
     const templateContent = resolvedTemplate?.content || {};
-    const finalTopics = hasManualTopics ? processedTopics : (templateContent.topics || []);
+    const finalTopicsRaw = hasManualTopics ? processedTopics : (templateContent.topics || []);
+    const functionValidation = await validateFunctionResponsibles(
+      extractResponsibleValuesFromTopics(finalTopicsRaw)
+    );
+    if (!functionValidation.valid) {
+      return NextResponse.json(
+        { error: functionValidation.error || 'Ungültige Vereinsfunktion in Verantwortlichen' },
+        { status: 400 }
+      );
+    }
+    const functionTokens = extractResponsibleValuesFromTopics(finalTopicsRaw).filter((value) => value.startsWith('function:'));
+    const functionSlugs = functionTokens.map((value) => value.replace(/^function:/, ''));
+    const assignedFunctions = await ClubFunction.find({ slug: { $in: functionSlugs } })
+      .select('slug assignedUserId')
+      .lean();
+    const assignmentMap = buildFunctionAssignmentMap(assignedFunctions as any[]);
+    const assignmentValidation = validateAssignmentsForResponsibles(
+      extractResponsibleValuesFromTopics(finalTopicsRaw),
+      assignmentMap
+    );
+    if (!assignmentValidation.valid) {
+      return NextResponse.json(
+        { error: assignmentValidation.error || 'Vereinsfunktion ohne Personenzuordnung' },
+        { status: 400 }
+      );
+    }
+    const assignmentUserIds = Array.from(new Set(assignedFunctions.map((fn: any) => String(fn.assignedUserId || '')).filter(Boolean)));
+    const assignmentUsers = assignmentUserIds.length > 0
+      ? await User.find({ _id: { $in: assignmentUserIds } })
+          .select('_id firstName lastName username')
+          .lean()
+      : [];
+    const finalTopics = await applyResponsibleSnapshotsToTopics(
+      finalTopicsRaw,
+      assignmentUsers as any[]
+    );
     const finalGlobalNote = globalNote ?? templateContent.globalNote ?? '';
     const finalTitle = title ?? templateContent.title ?? '';
     const finalTime = time ?? templateContent.time ?? '';

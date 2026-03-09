@@ -6,7 +6,6 @@ import Link from 'next/link';
 import { useTranslations } from 'next-intl';
 import {
   UserPlus,
-  User,
   Mail,
   Lock,
   Eye,
@@ -20,7 +19,6 @@ const RegisterPage = () => {
   const t = useTranslations('auth.register');
   const tErrors = useTranslations('errors');
   const [formData, setFormData] = useState({
-    username: '',
     email: '',
     firstName: '',
     lastName: '',
@@ -64,11 +62,6 @@ const RegisterPage = () => {
   };
 
   const validateForm = () => {
-    if (!formData.username.trim()) {
-      setError(tErrors('required'));
-      return false;
-    }
-
     if (!formData.email.trim()) {
       setError(tErrors('required'));
       return false;
@@ -187,26 +180,6 @@ const RegisterPage = () => {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Username Field */}
-            <div>
-              <label htmlFor="username" className="block text-sm font-semibold text-slate-700 mb-2">
-                {t('usernameLabel')}
-              </label>
-              <div className="relative">
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
-                <input
-                  type="text"
-                  id="username"
-                  name="username"
-                  value={formData.username}
-                  onChange={handleInputChange}
-                  className="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white/50"
-                  placeholder={t('usernamePlaceholder')}
-                  required
-                />
-              </div>
-            </div>
-
             {/* Email Field */}
             <div>
               <label htmlFor="email" className="block text-sm font-semibold text-slate-700 mb-2">

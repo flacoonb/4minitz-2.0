@@ -3,6 +3,30 @@ import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
 import { verifyToken } from '@/lib/auth';
 import { hasPermission, requirePermission } from '@/lib/permissions';
+import crypto from 'crypto';
+
+async function generateInternalUsername(email: string): Promise<string> {
+  const localPart = String(email.split('@')[0] || 'user');
+  const base = localPart
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9._-]+/g, '-')
+    .replace(/-{2,}/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 18) || 'user';
+
+  for (let attempt = 0; attempt < 30; attempt += 1) {
+    const suffix = crypto.randomBytes(3).toString('hex');
+    const candidate = `${base}-${suffix}`;
+    const exists = await User.exists({
+      $or: [{ username: candidate }, { usernameHistory: candidate }],
+    });
+    if (!exists) return candidate;
+  }
+
+  return `user-${Date.now().toString(36)}-${crypto.randomBytes(2).toString('hex')}`;
+}
 
 // GET - Get all users
 export async function GET(request: NextRequest) {
@@ -142,28 +166,33 @@ export async function POST(request: NextRequest) {
     } = body;
 
     // Validation
-    if (!email || !username || !password || !firstName || !lastName) {
+    if (!email || !password || !firstName || !lastName) {
       return NextResponse.json(
         { error: 'Alle Pflichtfelder müssen ausgefüllt werden' },
         { status: 400 }
       );
     }
 
-    const normalizedUsername = String(username).trim();
-    if (/^[a-fA-F0-9]{24}$/.test(normalizedUsername)) {
+    const normalizedEmail = String(email).trim().toLowerCase();
+    const requestedUsername = typeof username === 'string' ? username.trim() : '';
+    if (requestedUsername && /^[a-fA-F0-9]{24}$/.test(requestedUsername)) {
       return NextResponse.json(
         { error: 'Benutzername ist reserviert' },
         { status: 400 }
       );
     }
+    const normalizedUsername =
+      requestedUsername.length >= 3
+        ? requestedUsername
+        : await generateInternalUsername(normalizedEmail);
 
     // Check if user already exists
     const existingUser = await User.findOne({
-      $or: [{ email }, { username: normalizedUsername }, { usernameHistory: normalizedUsername }]
+      $or: [{ email: normalizedEmail }, { username: normalizedUsername }, { usernameHistory: normalizedUsername }]
     });
 
     if (existingUser) {
-      const field = existingUser.email === email ? 'E-Mail' : 'Benutzername';
+      const field = existingUser.email === normalizedEmail ? 'E-Mail' : 'Benutzername';
       return NextResponse.json(
         { error: `${field} wird bereits verwendet` },
         { status: 409 }
@@ -172,7 +201,7 @@ export async function POST(request: NextRequest) {
 
     // Create new user
     const newUser = new User({
-      email,
+      email: normalizedEmail,
       username: normalizedUsername,
       password,
       firstName,

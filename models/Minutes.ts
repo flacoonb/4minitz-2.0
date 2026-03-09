@@ -16,6 +16,7 @@ export interface ITopic {
   _id?: string;
   subject: string;
   responsibles: string[];
+  responsibleSnapshots?: IResponsibleSnapshot[];
   isOpen: boolean;
   isNew?: boolean;
   isRecurring?: boolean;
@@ -32,6 +33,7 @@ export interface IInfoItem {
   priority?: 'high' | 'medium' | 'low';
   dueDate?: Date;
   responsibles: string[];
+  responsibleSnapshots?: IResponsibleSnapshot[];
   labels?: string[];
   // Extended fields for task management
   status?: 'open' | 'in-progress' | 'completed' | 'cancelled';
@@ -46,6 +48,13 @@ export interface IInfoItem {
   isImported?: boolean; // Mark if this task was imported from previous protocol
   originalTaskId?: string; // Original task ID to prevent duplicate imports
   externalTaskId?: string | mongoose.Types.ObjectId; // Reference to Central Task Registry
+}
+
+export interface IResponsibleSnapshot {
+  value: string;
+  label: string;
+  functionId?: mongoose.Types.ObjectId;
+  isActive?: boolean;
 }
 
 // Interface for Minutes document
@@ -88,6 +97,26 @@ export interface IMinutes extends Document {
   agendaSentAt?: Date;
 }
 
+const ResponsibleSnapshotSchema = new Schema<IResponsibleSnapshot>({
+  value: {
+    type: String,
+    required: true,
+    trim: true,
+  },
+  label: {
+    type: String,
+    required: true,
+    trim: true,
+  },
+  functionId: {
+    type: Schema.Types.ObjectId,
+    ref: 'ClubFunction',
+  },
+  isActive: {
+    type: Boolean,
+  },
+}, { _id: false });
+
 // InfoItem Schema
 const InfoItemSchema = new Schema<IInfoItem>({
   subject: {
@@ -119,6 +148,10 @@ const InfoItemSchema = new Schema<IInfoItem>({
   responsibles: [{
     type: String,
   }],
+  responsibleSnapshots: {
+    type: [ResponsibleSnapshotSchema],
+    default: [],
+  },
   labels: [{
     type: String,
   }],
@@ -174,6 +207,10 @@ const TopicSchema = new Schema<ITopic>({
   responsibles: [{
     type: String,
   }],
+  responsibleSnapshots: {
+    type: [ResponsibleSnapshotSchema],
+    default: [],
+  },
   isOpen: {
     type: Boolean,
     default: true,

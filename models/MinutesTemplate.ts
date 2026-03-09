@@ -11,13 +11,22 @@ interface ITemplateInfoItem {
   priority?: 'high' | 'medium' | 'low';
   dueDate?: Date;
   responsibles?: string[];
+  responsibleSnapshots?: ITemplateResponsibleSnapshot[];
   notes?: string;
 }
 
 interface ITemplateTopic {
   subject: string;
   responsibles?: string[];
+  responsibleSnapshots?: ITemplateResponsibleSnapshot[];
   infoItems?: ITemplateInfoItem[];
+}
+
+interface ITemplateResponsibleSnapshot {
+  value: string;
+  label: string;
+  functionId?: mongoose.Types.ObjectId;
+  isActive?: boolean;
 }
 
 interface ITemplateContent {
@@ -42,6 +51,16 @@ export interface IMinutesTemplate extends Document {
   updatedAt: Date;
 }
 
+const TemplateResponsibleSnapshotSchema = new Schema<ITemplateResponsibleSnapshot>(
+  {
+    value: { type: String, required: true, trim: true },
+    label: { type: String, required: true, trim: true },
+    functionId: { type: Schema.Types.ObjectId, ref: 'ClubFunction' },
+    isActive: { type: Boolean },
+  },
+  { _id: false }
+);
+
 const TemplateInfoItemSchema = new Schema<ITemplateInfoItem>(
   {
     subject: { type: String, required: true, trim: true },
@@ -51,6 +70,7 @@ const TemplateInfoItemSchema = new Schema<ITemplateInfoItem>(
     priority: { type: String, enum: ['high', 'medium', 'low'], default: 'medium' },
     dueDate: { type: Date },
     responsibles: [{ type: String }],
+    responsibleSnapshots: { type: [TemplateResponsibleSnapshotSchema], default: [] },
     notes: { type: String, trim: true },
   },
   { _id: false }
@@ -60,6 +80,7 @@ const TemplateTopicSchema = new Schema<ITemplateTopic>(
   {
     subject: { type: String, required: true, trim: true },
     responsibles: [{ type: String }],
+    responsibleSnapshots: { type: [TemplateResponsibleSnapshotSchema], default: [] },
     infoItems: [TemplateInfoItemSchema],
   },
   { _id: false }

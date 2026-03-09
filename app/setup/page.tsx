@@ -23,7 +23,6 @@ export default function SetupPage() {
     password: '',
     firstName: '',
     lastName: '',
-    username: '',
     // Organization
     organizationName: '',
     // Database
@@ -97,8 +96,7 @@ export default function SetupPage() {
             email: form.email,
             password: form.password,
             firstName: form.firstName,
-            lastName: form.lastName,
-            username: form.username
+            lastName: form.lastName
           },
           systemSettings: {
             organizationName: form.organizationName
@@ -238,20 +236,6 @@ export default function SetupPage() {
                 </div>
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">
-                  Benutzername <span className="text-slate-400 font-normal">(Optional)</span>
-                </label>
-                <div className="relative">
-                  <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                  <input
-                    name="username"
-                    value={form.username}
-                    onChange={onChange}
-                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
-                  />
-                </div>
-              </div>
             </div>
           </div>
 

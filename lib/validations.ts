@@ -6,14 +6,11 @@ const requiredString = (max: number = 500) => safeString(max).min(1);
 
 // Auth schemas
 export const loginSchema = z.object({
-  username: requiredString(100),
+  email: z.string().email().max(200),
   password: requiredString(200),
 });
 
 export const registerSchema = z.object({
-  username: requiredString(50)
-    .regex(/^[\p{L}\p{N}._ -]+$/u, 'Invalid username format')
-    .refine((value) => !/^[a-fA-F0-9]{24}$/.test(value), 'Reserved username format'),
   email: z.string().email().max(200),
   password: requiredString(200).min(8, 'Password must be at least 8 characters'),
   firstName: requiredString(100),

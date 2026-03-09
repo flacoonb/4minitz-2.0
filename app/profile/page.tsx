@@ -52,6 +52,13 @@ interface UserProfile {
   };
 }
 
+interface ClubFunctionEntry {
+  _id: string;
+  name: string;
+  isActive: boolean;
+  assignedUserId?: string;
+}
+
 function urlBase64ToUint8Array(base64String: string): Uint8Array {
   const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
   const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
@@ -94,7 +101,6 @@ const ProfilePage = () => {
     firstName: '',
     lastName: '',
     email: '',
-    username: '',
     avatar: ''
   });
 
@@ -123,6 +129,7 @@ const ProfilePage = () => {
   const [regeneratingCalendarLink, setRegeneratingCalendarLink] = useState(false);
   const [revokingCalendarLink, setRevokingCalendarLink] = useState(false);
   const [calendarInlineMessage, setCalendarInlineMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [assignedFunctionNames, setAssignedFunctionNames] = useState<string[]>([]);
 
   // Helper to reset profileData from user object
   const resetProfileData = useCallback((u: UserProfile) => {
@@ -130,7 +137,6 @@ const ProfilePage = () => {
       firstName: u.firstName || '',
       lastName: u.lastName || '',
       email: u.email || '',
-      username: u.username || '',
       avatar: u.avatar || ''
     });
   }, []);
@@ -174,6 +180,41 @@ const ProfilePage = () => {
 
     fetchUserData();
   }, [router, t, resetProfileData]);
+
+  useEffect(() => {
+    const loadAssignedFunctions = async () => {
+      if (!user?._id) {
+        setAssignedFunctionNames([]);
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/club-functions?includeInactive=true', {
+          credentials: 'include',
+        });
+        if (!response.ok) {
+          setAssignedFunctionNames([]);
+          return;
+        }
+        const payload = await response.json().catch(() => ({}));
+        const entries: ClubFunctionEntry[] = Array.isArray(payload?.data) ? payload.data : [];
+        const matches = entries.filter((entry) => String(entry.assignedUserId || '') === user._id);
+        const activeNames = matches
+          .filter((entry) => entry.isActive)
+          .map((entry) => String(entry.name || '').trim())
+          .filter(Boolean);
+        const fallbackNames = matches
+          .map((entry) => String(entry.name || '').trim())
+          .filter(Boolean);
+        const names = activeNames.length > 0 ? activeNames : fallbackNames;
+        setAssignedFunctionNames(Array.from(new Set(names)));
+      } catch {
+        setAssignedFunctionNames([]);
+      }
+    };
+
+    loadAssignedFunctions();
+  }, [user?._id]);
 
   // Clear error/success when switching tabs
   const handleTabSwitch = useCallback((tab: 'profile' | 'security' | 'preferences') => {
@@ -588,6 +629,10 @@ const ProfilePage = () => {
     }
   };
 
+  const functionDisplay = assignedFunctionNames.length > 0
+    ? assignedFunctionNames.join(', ')
+    : t('profileTab.noFunctionAssigned');
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 flex items-center justify-center">
@@ -664,7 +709,7 @@ const ProfilePage = () => {
                     />
                   ) : (
                     <div className="w-24 h-24 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-2xl">
-                      {user.firstName[0]?.toUpperCase() || user.username[0]?.toUpperCase()}
+                      {user.firstName[0]?.toUpperCase() || user.email[0]?.toUpperCase()}
                     </div>
                   )}
                 </div>
@@ -672,7 +717,9 @@ const ProfilePage = () => {
                 <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-100 mb-1">
                   {user.firstName} {user.lastName}
                 </h2>
-                <p className="text-slate-600 dark:text-slate-400 mb-3">@{user.username}</p>
+                <p className="text-slate-600 dark:text-slate-400 mb-3">
+                  {t('profileTab.function')}: {functionDisplay}
+                </p>
 
                 <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-semibold ${getRoleColor(user.role)}`}>
                   <Shield className="w-4 h-4" />
@@ -773,15 +820,14 @@ const ProfilePage = () => {
                       </div>
 
                       <div>
-                        <label htmlFor="profile-username" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{t('profileTab.username')}</label>
+                        <label htmlFor="profile-function" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{t('profileTab.function')}</label>
                         <input
-                          id="profile-username"
+                          id="profile-function"
                           type="text"
-                          value={profileData.username}
-                          onChange={(e) => setProfileData({ ...profileData, username: e.target.value })}
-                          disabled={!editMode}
-                          autoComplete="username"
-                          className="w-full px-4 py-3 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-slate-50 dark:disabled:bg-slate-800 disabled:text-slate-500 dark:disabled:text-slate-500"
+                          value={functionDisplay}
+                          readOnly
+                          disabled
+                          className="w-full px-4 py-3 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 dark:text-slate-300 rounded-lg disabled:text-slate-500 dark:disabled:text-slate-400"
                         />
                       </div>
 

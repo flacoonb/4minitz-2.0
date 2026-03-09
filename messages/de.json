@@ -36,7 +36,9 @@
     "login": "Anmelden",
     "register": "Registrieren",
     "tasks": "Aufgaben",
-    "planning": "Planung"
+    "planning": "Planung",
+    "functionLabel": "Funktion",
+    "noFunctionAssigned": "Keine Funktion zugeordnet"
   },
   "planning": {
     "title": "Sitzungsplanung",
@@ -605,8 +607,10 @@
       "title": "Anmelden",
       "subtitle": "Melden Sie sich in Ihrem Konto an",
       "usernamePlaceholder": "Geben Sie Ihren Benutzernamen ein",
+      "emailPlaceholder": "name@beispiel.de",
       "passwordPlaceholder": "Geben Sie Ihr Passwort ein",
       "usernameLabel": "Benutzername oder E-Mail",
+      "emailLabel": "E-Mail-Adresse",
       "passwordLabel": "Passwort",
       "loginButton": "Anmelden",
       "loggingIn": "Anmeldung läuft...",
@@ -829,6 +833,30 @@
     "templates": {
       "title": "Protokoll-Vorlagen",
       "description": "Globale Vorlagen zentral erstellen und verwalten"
+    },
+    "clubFunctions": {
+      "title": "Vereinsfunktionen",
+      "description": "Funktionen mit Historie verwalten (aktiv/inaktiv)",
+      "subtitle": "Änderungen durch Statutenwechsel historisch korrekt abbilden.",
+      "back": "Zurück zum Admin-Bereich",
+      "createTitle": "Neue Funktion anlegen",
+      "name": "Funktionsname",
+      "namePlaceholder": "z. B. Leiter Sport",
+      "descriptionPlaceholder": "Optionaler Hinweis zur Funktion",
+      "descriptionField": "Beschreibung",
+      "create": "Funktion anlegen",
+      "listTitle": "Bestehende Funktionen",
+      "loading": "Funktionen werden geladen...",
+      "empty": "Noch keine Funktionen vorhanden.",
+      "active": "Aktiv",
+      "inactive": "Inaktiv",
+      "deactivate": "Deaktivieren",
+      "reactivate": "Reaktivieren",
+      "assignedTo": "Zugeordnet:",
+      "noAssignment": "Keine Person zugeordnet",
+      "loadError": "Funktionen konnten nicht geladen werden.",
+      "createError": "Funktion konnte nicht erstellt werden.",
+      "updateError": "Funktion konnte nicht aktualisiert werden."
     },
     "backToDashboard": {
       "title": "Zurück zum Dashboard",
@@ -1269,6 +1297,8 @@
       "saving": "Speichern...",
       "firstName": "Vorname",
       "lastName": "Nachname",
+      "function": "Funktion",
+      "noFunctionAssigned": "Keine Funktion zugeordnet",
       "username": "Benutzername",
       "avatar": "Avatar URL",
       "email": "E-Mail-Adresse",

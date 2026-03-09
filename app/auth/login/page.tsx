@@ -7,7 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useTranslations } from 'next-intl';
 import {
   LogIn,
-  User,
+  Mail,
   Lock,
   Eye,
   EyeOff,
@@ -19,7 +19,7 @@ const LoginPage = () => {
   const t = useTranslations('auth.login');
   const tErrors = useTranslations('errors');
   const [formData, setFormData] = useState({
-    username: '',
+    email: '',
     password: ''
   });
   const [loading, setLoading] = useState(false);
@@ -89,7 +89,7 @@ const LoginPage = () => {
     setError('');
 
     try {
-      await login(formData.username, formData.password);
+      await login(formData.email, formData.password);
 
       setSuccess(tErrors('loginSuccess'));
 
@@ -139,21 +139,21 @@ const LoginPage = () => {
           )}
 
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Username Field */}
+            {/* Email Field */}
             <div>
-              <label htmlFor="username" className="block text-sm font-semibold text-slate-700 mb-2">
-                {t('usernameLabel')}
+              <label htmlFor="email" className="block text-sm font-semibold text-slate-700 mb-2">
+                {t('emailLabel')}
               </label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
                 <input
-                  type="text"
-                  id="username"
-                  name="username"
-                  value={formData.username}
+                  type="email"
+                  id="email"
+                  name="email"
+                  value={formData.email}
                   onChange={handleInputChange}
                   className="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white/50"
-                  placeholder={t('usernamePlaceholder')}
+                  placeholder={t('emailPlaceholder')}
                   required
                 />
               </div>

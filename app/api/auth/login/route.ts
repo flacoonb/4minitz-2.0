@@ -32,8 +32,9 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-    const { username, password } = validation.data;
-    const accountRateLimit = checkRateLimitByKey(`login-account:${username.toLowerCase()}`, 10, 15 * 60 * 1000);
+    const { email, password } = validation.data;
+    const normalizedEmail = email.toLowerCase().trim();
+    const accountRateLimit = checkRateLimitByKey(`login-account:${normalizedEmail}`, 10, 15 * 60 * 1000);
     if (!accountRateLimit.allowed) {
       return NextResponse.json(
         { error: t('tooManyLoginAttempts') },
@@ -41,14 +42,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Find user by email or username (case-insensitive)
-    const escapedUsername = username.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    const user = await User.findOne({
-      $or: [
-        { email: username.toLowerCase() },
-        { username: { $regex: new RegExp(`^${escapedUsername}$`, 'i') } }
-      ]
-    });
+    // Find user by email only
+    const user = await User.findOne({ email: normalizedEmail });
 
     if (!user) {
       return NextResponse.json(

@@ -10,6 +10,7 @@ import Task from '@/models/Task';
 import Attachment from '@/models/Attachment';
 import { verifyToken } from '@/lib/auth';
 import { hasPermission } from '@/lib/permissions';
+import { sanitizeResponsibles, validateFunctionResponsibles } from '@/lib/club-functions';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -144,9 +145,20 @@ export async function PUT(
       : [];
 
     // Update allowed fields
+    if (body.clubFunctions !== undefined) {
+      const clubFunctions = sanitizeResponsibles(body.clubFunctions);
+      const functionValidation = await validateFunctionResponsibles(clubFunctions);
+      if (!functionValidation.valid) {
+        return NextResponse.json(
+          { success: false, error: functionValidation.error || 'Ungültige Vereinsfunktion' },
+          { status: 400 }
+        );
+      }
+      body.clubFunctions = clubFunctions;
+    }
     const allowedUpdates = [
       'project', 'name', 'participants', 'informedUsers',
-      'additionalResponsibles', 'availableLabels', 'members'
+      'additionalResponsibles', 'availableLabels', 'members', 'clubFunctions'
     ];
 
     allowedUpdates.forEach(field => {

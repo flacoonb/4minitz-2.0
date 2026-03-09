@@ -18,6 +18,12 @@ interface User {
   role: 'admin' | 'moderator' | 'user';
 }
 
+interface ClubFunctionEntry {
+  _id: string;
+  name: string;
+  assignedUserId?: string;
+}
+
 interface MeetingSeries {
   _id: string;
   project: string;
@@ -50,6 +56,7 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
   });
 
   const [allUsers, setAllUsers] = useState<User[]>([]);
+  const [clubFunctions, setClubFunctions] = useState<ClubFunctionEntry[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<string>('');
   const [existingProjectNames, setExistingProjectNames] = useState<string[]>([]);
 
@@ -73,6 +80,20 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
       }
     } catch (err) {
       console.error('Fehler beim Laden der Benutzer:', err);
+    }
+  }, []);
+
+  const fetchClubFunctions = useCallback(async () => {
+    try {
+      const response = await fetch('/api/club-functions?includeInactive=true', {
+        credentials: 'include',
+      });
+      if (response.ok) {
+        const result = await response.json();
+        setClubFunctions(result.data || []);
+      }
+    } catch {
+      setClubFunctions([]);
     }
   }, []);
 
@@ -120,9 +141,10 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
     if (seriesId) {
       fetchSeries();
       fetchUsers();
+      fetchClubFunctions();
       fetchExistingNames();
     }
-  }, [seriesId, fetchSeries, fetchUsers, fetchExistingNames]);
+  }, [seriesId, fetchSeries, fetchUsers, fetchClubFunctions, fetchExistingNames]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -168,12 +190,26 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
   const removeMember = (index: number) => {
     setFormData(prev => ({
       ...prev,
-      members: prev.members.filter((_, i) => i !== index)
+      members: prev.members.filter((_, i) => i !== index),
     }));
   };
 
   const getUserById = (userId: string): User | undefined => {
     return allUsers.find(u => u._id === userId);
+  };
+
+  const getUserFunctionLabel = (userId: string): string => {
+    const names = clubFunctions
+      .filter((entry) => String(entry.assignedUserId || '') === userId)
+      .map((entry) => String(entry.name || '').trim())
+      .filter(Boolean);
+    return Array.from(new Set(names)).join(', ');
+  };
+
+  const getUserDisplayName = (entry: User): string => {
+    const fullName = `${entry.firstName} ${entry.lastName}`.trim();
+    const fn = getUserFunctionLabel(entry._id);
+    return fn ? `${fullName} (${fn})` : fullName;
   };
 
   const getAvailableUsers = (): User[] => {
@@ -338,7 +374,7 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
                   <option value="">{t('selectUser')}</option>
                   {getAvailableUsers().map(user => (
                     <option key={user._id} value={user._id}>
-                      {user.firstName} {user.lastName} - {user.role}
+                      {getUserDisplayName(user)}
                     </option>
                   ))}
                 </select>
@@ -374,14 +410,8 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
                       <div className="flex-1">
                         {user ? (
                           <div>
-                            <p className="font-semibold text-gray-900">{user.firstName} {user.lastName}</p>
+                            <p className="font-semibold text-gray-900">{getUserDisplayName(user)}</p>
                             <p className="text-sm text-gray-600">{user.email}</p>
-                            <span className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium mt-1 ${user.role === 'admin' ? 'bg-red-100 text-red-800' :
-                                user.role === 'moderator' ? 'bg-blue-100 text-blue-800' :
-                                  'bg-gray-100 text-gray-800'
-                              }`}>
-                              {user.role}
-                            </span>
                           </div>
                         ) : (
                           <p className="text-sm text-gray-500">{t('userNotFound')} (ID: {member.userId})</p>
@@ -403,6 +433,7 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
               )}
             </div>
           </div>
+
         </form>
       </div>
     </div>

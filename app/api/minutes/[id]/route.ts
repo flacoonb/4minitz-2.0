@@ -5,9 +5,19 @@ import Minutes from '@/models/Minutes';
 import MeetingSeries from '@/models/MeetingSeries';
 import Task from '@/models/Task';
 import MeetingEvent from '@/models/MeetingEvent';
+import User from '@/models/User';
+import ClubFunction from '@/models/ClubFunction';
 import { verifyToken } from '@/lib/auth';
 import { requirePermission, hasPermission } from '@/lib/permissions';
 import { logAction } from '@/lib/audit';
+import {
+  applyResponsibleSnapshotsToTopics,
+  buildFunctionAssignmentMap,
+  extractResponsibleValuesFromTopics,
+  resolveResponsiblesForTasks,
+  validateAssignmentsForResponsibles,
+  validateFunctionResponsibles,
+} from '@/lib/club-functions';
 
 type AttendanceStatus = 'present' | 'excused' | 'absent';
 
@@ -29,6 +39,29 @@ function computeEventDeadline(event: any): Date | null {
   const deadline = new Date(date);
   deadline.setHours(hours, minutes, 0, 0);
   return deadline;
+}
+
+function collectInactiveFunctionIdsFromMinute(minute: any): string[] {
+  const ids = new Set<string>();
+  const topics = Array.isArray(minute?.topics) ? minute.topics : [];
+  for (const topic of topics) {
+    const topicSnapshots = Array.isArray(topic?.responsibleSnapshots) ? topic.responsibleSnapshots : [];
+    for (const snapshot of topicSnapshots) {
+      if (snapshot?.functionId && snapshot?.isActive === false) {
+        ids.add(String(snapshot.functionId));
+      }
+    }
+    const items = Array.isArray(topic?.infoItems) ? topic.infoItems : [];
+    for (const item of items) {
+      const itemSnapshots = Array.isArray(item?.responsibleSnapshots) ? item.responsibleSnapshots : [];
+      for (const snapshot of itemSnapshots) {
+        if (snapshot?.functionId && snapshot?.isActive === false) {
+          ids.add(String(snapshot.functionId));
+        }
+      }
+    }
+  }
+  return Array.from(ids);
 }
 
 export async function GET(
@@ -252,7 +285,7 @@ export async function PUT(
       return result;
     };
 
-    const topicsToPersist = Array.isArray(body.topics)
+    const topicsToPersistRaw = Array.isArray(body.topics)
       ? body.topics.map((topic: any, topicIndex: number) => ({
           ...topic,
           infoItems: Array.isArray(topic.infoItems)
@@ -266,6 +299,52 @@ export async function PUT(
             : topic.infoItems,
         }))
       : body.topics;
+
+    let topicsToPersist = topicsToPersistRaw;
+    const topicResponsibles = Array.isArray(topicsToPersistRaw)
+      ? extractResponsibleValuesFromTopics(topicsToPersistRaw)
+      : [];
+    const functionSlugs = topicResponsibles
+      .filter((value) => value.startsWith('function:'))
+      .map((value) => value.replace(/^function:/, ''));
+    const assignedFunctions = await ClubFunction.find({ slug: { $in: functionSlugs } })
+      .select('slug assignedUserId')
+      .lean();
+    const assignmentMap = buildFunctionAssignmentMap(assignedFunctions as any[]);
+    if (Array.isArray(topicsToPersistRaw)) {
+      const validation = await validateFunctionResponsibles(
+        extractResponsibleValuesFromTopics(topicsToPersistRaw),
+        { allowInactiveIds: collectInactiveFunctionIdsFromMinute(minute) }
+      );
+      if (!validation.valid) {
+        return NextResponse.json(
+          { error: validation.error || 'Ungültige Vereinsfunktion in Verantwortlichen' },
+          { status: 400 }
+        );
+      }
+      const assignmentValidation = validateAssignmentsForResponsibles(
+        extractResponsibleValuesFromTopics(topicsToPersistRaw),
+        assignmentMap
+      );
+      if (!assignmentValidation.valid) {
+        return NextResponse.json(
+          { error: assignmentValidation.error || 'Vereinsfunktion ohne Personenzuordnung' },
+          { status: 400 }
+        );
+      }
+      const assignmentUserIds = Array.from(
+        new Set(assignedFunctions.map((fn: any) => String(fn.assignedUserId || '')).filter(Boolean))
+      );
+      const assignmentUsers = assignmentUserIds.length > 0
+        ? await User.find({ _id: { $in: assignmentUserIds } })
+            .select('_id firstName lastName username')
+            .lean()
+        : [];
+      topicsToPersist = await applyResponsibleSnapshotsToTopics(
+        topicsToPersistRaw,
+        assignmentUsers as any[]
+      );
+    }
 
     // Sync infoItems with Central Task Registry
     if (topicsToPersist) {
@@ -287,7 +366,7 @@ export async function PUT(
                   status: item.status || 'open',
                   priority: item.priority || 'medium',
                   dueDate: item.dueDate,
-                  responsibles: item.responsibles || [],
+                  responsibles: resolveResponsiblesForTasks(item.responsibles || [], assignmentMap),
                   meetingSeriesId: minute.meetingSeries_id.toString(),
                   minutesId: id,
                   topicId: topic._id,

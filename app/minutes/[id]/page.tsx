@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useTranslations, useLocale } from 'next-intl';
 import { useAuth } from '@/contexts/AuthContext';
+import { humanizeFunctionToken, parseFunctionToken } from '@/lib/club-function-client';
 
 interface Minute {
   _id: string;
@@ -56,6 +57,15 @@ interface User {
   role: 'admin' | 'moderator' | 'user';
 }
 
+interface ClubFunctionEntry {
+  _id: string;
+  name: string;
+  slug: string;
+  isActive: boolean;
+  token: string;
+  assignedUserId?: string;
+}
+
 export default function MinuteDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const t = useTranslations();
   const locale = useLocale();
@@ -66,6 +76,7 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
   const [error, setError] = useState<string | null>(null);
   const [minuteId, setMinuteId] = useState<string | null>(null);
   const [allUsers, setAllUsers] = useState<User[]>([]);
+  const [clubFunctions, setClubFunctions] = useState<ClubFunctionEntry[]>([]);
   const [exportingPdf, setExportingPdf] = useState(false);
   const [showReopenDialog, setShowReopenDialog] = useState(false);
   const [reopenReason, setReopenReason] = useState('');
@@ -143,6 +154,20 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
       }
     } catch (error) {
       console.error('Error fetching users:', error);
+    }
+  }, []);
+
+  const fetchClubFunctions = useCallback(async () => {
+    try {
+      const response = await fetch('/api/club-functions?includeInactive=true', {
+        credentials: 'include',
+      });
+      if (response.ok) {
+        const result = await response.json();
+        setClubFunctions(result.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching club functions:', error);
     }
   }, []);
 
@@ -287,7 +312,7 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
       // Dynamically import PDF generator (client-side only)
       const { generateMinutePdf } = await import('@/lib/pdfGenerator');
 
-      await generateMinutePdf(minute, settingsResult.data, allUsers, layoutSettings);
+      await generateMinutePdf(minute, settingsResult.data, allUsers, layoutSettings, clubFunctions);
     } catch (error) {
       console.error('Error generating PDF:', error);
       const errorMsg = error instanceof Error ? error.message : t('minutes.pdfGenerationError');
@@ -341,8 +366,22 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
   // Helper function to get user initials
   const getUserInitials = (userId: string): string => {
     const user = getUserById(userId);
-    if (!user) return '?';
-    return `${user.firstName.charAt(0).toUpperCase()}${user.lastName.charAt(0).toUpperCase()}`;
+    if (user) {
+      return `${user.firstName.charAt(0).toUpperCase()}${user.lastName.charAt(0).toUpperCase()}`;
+    }
+    const functionSlug = parseFunctionToken(userId);
+    if (functionSlug) {
+      const functionName =
+        clubFunctions.find((entry) => entry.token === userId)?.name || humanizeFunctionToken(userId);
+      const initials = functionName
+        .split(' ')
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((part) => part.charAt(0).toUpperCase())
+        .join('');
+      return initials || 'F';
+    }
+    return '?';
   };
 
   // Helper function to format multiple users as initials
@@ -367,9 +406,10 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
     if (minuteId) {
       fetchMinute();
       fetchUsers();
+      fetchClubFunctions();
       fetchSettings();
     }
-  }, [minuteId, fetchMinute, fetchUsers, fetchSettings]);
+  }, [minuteId, fetchMinute, fetchUsers, fetchClubFunctions, fetchSettings]);
 
   if (loading) {
     return (

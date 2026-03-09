@@ -33,6 +33,14 @@ interface User {
   lastName: string;
 }
 
+interface ClubFunctionEntry {
+  _id: string;
+  name: string;
+  slug: string;
+  isActive: boolean;
+  token: string;
+}
+
 interface MentionCandidate {
   value: string;
   label: string;
@@ -99,6 +107,7 @@ function SeriesTemplatesPage() {
   const [markdown, setMarkdown] = useState('## Traktandum\n- [i] Info');
   const [markdownWarnings, setMarkdownWarnings] = useState<string[]>([]);
   const [allUsers, setAllUsers] = useState<User[]>([]);
+  const [clubFunctions, setClubFunctions] = useState<ClubFunctionEntry[]>([]);
   const [mentionSuggestions, setMentionSuggestions] = useState<MentionCandidate[]>([]);
   const [mentionStartIndex, setMentionStartIndex] = useState<number | null>(null);
   const [mentionCaretIndex, setMentionCaretIndex] = useState<number | null>(null);
@@ -147,6 +156,20 @@ function SeriesTemplatesPage() {
     loadUsers();
   }, []);
 
+  useEffect(() => {
+    const loadClubFunctions = async () => {
+      try {
+        const response = await fetch('/api/club-functions?includeInactive=true', { credentials: 'include' });
+        if (!response.ok) return;
+        const result = await response.json();
+        setClubFunctions(result.data || []);
+      } catch {
+        // optional
+      }
+    };
+    loadClubFunctions();
+  }, []);
+
   const resetForm = () => {
     setEditingId(null);
     setName('');
@@ -192,17 +215,27 @@ function SeriesTemplatesPage() {
   const mentionCandidates = useMemo(() => {
     const seen = new Set<string>();
     const result: MentionCandidate[] = [];
-    allUsers.forEach((user) => {
-      const value = (user.username || user._id || '').trim();
+    clubFunctions.forEach((fn) => {
+      const value = fn.token;
       if (!value || seen.has(value)) return;
       seen.add(value);
       result.push({
         value,
-        label: `${user.firstName} ${user.lastName} (@${value})`,
+        label: `${fn.name} (@${value})${fn.isActive ? '' : ' [inaktiv]'}`,
       });
     });
     return result;
-  }, [allUsers]);
+  }, [clubFunctions]);
+
+  const responsibleOptions = useMemo(
+    () =>
+      clubFunctions.map((fn) => ({
+        value: fn.token,
+        label: `${fn.name} (${fn.token})${fn.isActive ? '' : ' [inaktiv]'}`,
+        disabled: !fn.isActive,
+      })),
+    [clubFunctions]
+  );
 
   const closeMentionSuggestions = () => {
     setMentionSuggestions([]);
@@ -528,9 +561,13 @@ function SeriesTemplatesPage() {
                               }
                               className="w-full px-3 py-2 border rounded-lg min-h-[110px]"
                             >
-                              {allUsers.map((user) => (
-                                <option key={user._id} value={user.username}>
-                                  {user.firstName} {user.lastName} (@{user.username})
+                              {responsibleOptions.map((option) => (
+                                <option
+                                  key={option.value}
+                                  value={option.value}
+                                  disabled={option.disabled && !(item.responsibles || []).includes(option.value)}
+                                >
+                                  {option.label}
                                 </option>
                               ))}
                             </select>
