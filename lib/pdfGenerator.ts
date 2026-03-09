@@ -41,7 +41,7 @@ interface User {
 
 interface IParticipant {
   userId: string;
-  attendance: 'present' | 'excused' | 'absent';
+  attendance: 'present' | 'excused' | 'absent' | 'guest';
 }
 
 interface InfoItem {
@@ -281,7 +281,22 @@ export async function generateMinutePdf(
   }
 
   // ===== HEADER SECTION WITH BORDER =====
-  const headerHeight = 64;
+  // Use participantsWithStatus if available, otherwise fall back to participants.
+  const participantsList = minute.participantsWithStatus ||
+    minute.participants.map((p) => ({ userId: p, attendance: 'present' as const }));
+  const attendanceWidth = 90;
+  const legendText = `${labels.legendPresent}; ${labels.legendExcused}; ${labels.legendAbsent}`;
+  const legendLines = doc.splitTextToSize(legendText, attendanceWidth - 10);
+
+  // Expand header height dynamically so all attendance lines and guests fit.
+  const guestLines = minute.participantsAdditional
+    ? doc.splitTextToSize(minute.participantsAdditional, attendanceWidth - 10)
+    : [];
+  const participantsHeight = participantsList.length * 5;
+  const guestsHeight = guestLines.length > 0 ? 1 + 4 + guestLines.length * 4 : 0;
+  const legendHeight = legendLines.length * 3.5;
+  const attendanceContentHeight = 18 + participantsHeight + guestsHeight + 2 + legendHeight + 4;
+  const headerHeight = Math.max(64, attendanceContentHeight);
   
   // Draw outer border
   doc.setDrawColor(subtleLineRgb[0], subtleLineRgb[1], subtleLineRgb[2]);
@@ -289,7 +304,6 @@ export async function generateMinutePdf(
   doc.rect(marginLeft, yPosition, contentWidth, headerHeight);
   
   // Right section - Attendance table
-  const attendanceWidth = 90;
   doc.line(pageWidth - marginRight - attendanceWidth, yPosition, pageWidth - marginRight - attendanceWidth, yPosition + headerHeight);
   
   // Left section - Logo and Protocol info
@@ -434,22 +448,14 @@ export async function generateMinutePdf(
   doc.setFontSize(8);
   doc.setTextColor(0, 0, 0);
   let attendanceY = yPosition + 18;
-  
-  // Use participantsWithStatus if available, otherwise fall back to participants
-  const participantsList = minute.participantsWithStatus || 
-    minute.participants.map(p => ({ userId: p, attendance: 'present' as const }));
-  
-  // Adjust max participants if guests are present to make space
   const hasGuests = !!minute.participantsAdditional;
-  const maxParticipantsLimit = hasGuests ? 5 : 8;
-  const maxParticipants = Math.min(participantsList.length, maxParticipantsLimit);
-  
-  for (let i = 0; i < maxParticipants; i++) {
+
+  for (let i = 0; i < participantsList.length; i++) {
     const participant = participantsList[i];
     const participantUser = allUsers.find(u => u._id === participant.userId);
-    const participantName = participantUser 
+    const participantName = participantUser
       ? `${participantUser.firstName} ${participantUser.lastName}`
-      : getUserInitials(participant.userId, allUsers);
+      : participant.userId;
     
     doc.text(participantName, pageWidth - marginRight - attendanceWidth + 5, attendanceY);
     
@@ -489,12 +495,6 @@ export async function generateMinutePdf(
     attendanceY += 5;
   }
   
-  if (participantsList.length > maxParticipants) {
-    doc.setFontSize(7);
-    doc.text(`+${participantsList.length - maxParticipants} ${labels.more}`, pageWidth - marginRight - attendanceWidth + 5, attendanceY);
-    attendanceY += 5;
-  }
-
   // Guests
   if (hasGuests && minute.participantsAdditional) {
     attendanceY += 1;
@@ -505,22 +505,18 @@ export async function generateMinutePdf(
     
     doc.setFont(settings.fontFamily, 'normal');
     const guestLines = doc.splitTextToSize(minute.participantsAdditional, attendanceWidth - 10);
-    
-    const maxGuestY = yPosition + headerHeight - 10;
-    
+
     for (const line of guestLines) {
-      if (attendanceY > maxGuestY) break;
       doc.text(line, pageWidth - marginRight - attendanceWidth + 5, attendanceY);
       attendanceY += 4;
     }
   }
   
-  // Legend at bottom of attendance
+  // Legend below attendance list
+  attendanceY += 2;
   doc.setFontSize(6);
   doc.setTextColor(100, 100, 100);
-  const legendText = `${labels.legendPresent}; ${labels.legendExcused}; ${labels.legendAbsent}`;
-  const legendLines = doc.splitTextToSize(legendText, attendanceWidth - 10);
-  doc.text(legendLines, pageWidth - marginRight - attendanceWidth + 5, yPosition + headerHeight - 5);
+  doc.text(legendLines, pageWidth - marginRight - attendanceWidth + 5, attendanceY);
   
   yPosition += headerHeight + 4;
   
