@@ -29,18 +29,80 @@ function buildIcalUrl(baseUrl: string, token: string): string {
   return `${baseUrl.replace(/\/+$/, '')}/api/calendar/ical/${token}`;
 }
 
+function normalizeUrlCandidate(value: string): string {
+  return value.trim().replace(/\/+$/, '');
+}
+
+function isLocalhostLike(urlValue: string): boolean {
+  try {
+    const parsed = new URL(urlValue);
+    const host = parsed.hostname.toLowerCase();
+    return host === 'localhost' || host === '127.0.0.1' || host === '::1';
+  } catch {
+    return false;
+  }
+}
+
+function getFirstPublicCandidate(candidates: string[]): string | null {
+  for (const raw of candidates) {
+    const candidate = normalizeUrlCandidate(raw);
+    if (!candidate) continue;
+    try {
+      const parsed = new URL(candidate);
+      if (!['http:', 'https:'].includes(parsed.protocol)) continue;
+      if (isLocalhostLike(candidate)) continue;
+      return candidate;
+    } catch {
+      // ignore invalid candidate
+    }
+  }
+  return null;
+}
+
 async function resolvePublicBaseUrl(request: NextRequest): Promise<string> {
+  const originHeader = String(request.headers.get('origin') || '');
+  const refererHeader = String(request.headers.get('referer') || '');
+  const envAppUrl = String(process.env.APP_URL || '');
+  const envPublicAppUrl = String(process.env.NEXT_PUBLIC_APP_URL || '');
+  const requestDerived = getRequestBaseUrl(request).replace(/\/+$/, '');
+
+  const refererOrigin = (() => {
+    try {
+      return refererHeader ? new URL(refererHeader).origin : '';
+    } catch {
+      return '';
+    }
+  })();
+
   try {
     const settings = await Settings.findOne({}).sort({ updatedAt: -1 }).select('systemSettings.baseUrl').lean();
     const configured = String((settings as any)?.systemSettings?.baseUrl || '').trim();
+    const preferred = getFirstPublicCandidate([
+      configured,
+      envAppUrl,
+      envPublicAppUrl,
+      originHeader,
+      refererOrigin,
+      requestDerived,
+    ]);
+    if (preferred) {
+      return preferred;
+    }
     if (configured) {
-      return configured.replace(/\/+$/, '');
+      return normalizeUrlCandidate(configured);
     }
   } catch {
     // Ignore settings lookup errors and fallback to request-derived origin.
   }
 
-  return getRequestBaseUrl(request).replace(/\/+$/, '');
+  const fallback = getFirstPublicCandidate([
+    envAppUrl,
+    envPublicAppUrl,
+    originHeader,
+    refererOrigin,
+    requestDerived,
+  ]);
+  return fallback || requestDerived;
 }
 
 export async function GET(request: NextRequest) {
