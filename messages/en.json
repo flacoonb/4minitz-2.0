@@ -1365,6 +1365,7 @@
       "pushNotificationApiMissing": "The Notifications API is not available in this browser",
       "pushPermissionDenied": "Please allow browser notifications to enable push",
       "pushServiceUnavailable": "Browser push service is unreachable. Check browser, network/firewall, or blockers",
+      "pushServiceUnavailableChromium": "Your Chromium build likely lacks a working push backend. Please test with Firefox or Google Chrome",
       "pushInvalidVapid": "Invalid push key (VAPID). Please reset the keys",
       "pushConfigError": "Push notifications are currently unavailable",
       "pushSubscribeError": "Could not enable push notifications",

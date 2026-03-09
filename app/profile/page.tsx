@@ -65,6 +65,13 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
   return outputArray;
 }
 
+function isLikelyChromiumPushBackendIssue(message: string): boolean {
+  if (!/push service error/i.test(message)) return false;
+  if (typeof navigator === 'undefined') return false;
+  const ua = navigator.userAgent || '';
+  return /\bChromium\//i.test(ua) && /\bLinux\b/i.test(ua);
+}
+
 const ProfilePage = () => {
   const t = useTranslations('profile');
   const tRoles = useTranslations('admin.users.roles');
@@ -369,7 +376,11 @@ const ProfilePage = () => {
           });
         } catch (retryError: any) {
           const retryMessage = String(retryError?.message || '');
+          console.error('Push subscription failed:', retryError);
           if (/push service error/i.test(retryMessage)) {
+            if (isLikelyChromiumPushBackendIssue(retryMessage)) {
+              throw new Error(t('messages.pushServiceUnavailableChromium'));
+            }
             throw new Error(t('messages.pushServiceUnavailable'));
           }
           if (/InvalidAccessError|applicationServerKey/i.test(retryMessage)) {

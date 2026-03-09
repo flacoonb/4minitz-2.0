@@ -1337,6 +1337,7 @@
       "pushNotificationApiMissing": "Die Benachrichtigungs-API ist in diesem Browser nicht verfügbar",
       "pushPermissionDenied": "Bitte erlauben Sie Browser-Benachrichtigungen, um Push zu aktivieren",
       "pushServiceUnavailable": "Browser-Pushdienst nicht erreichbar. Prüfen Sie Browser, Netzwerk/Firewall oder Blocker",
+      "pushServiceUnavailableChromium": "Ihr Chromium-Build unterstützt den Push-Backend-Dienst vermutlich nicht. Bitte mit Firefox oder Google Chrome testen",
       "pushInvalidVapid": "Ungültiger Push-Schlüssel (VAPID). Bitte Schlüssel neu setzen",
       "pushConfigError": "Push-Benachrichtigungen sind derzeit nicht verfügbar",
       "pushSubscribeError": "Push-Benachrichtigung konnte nicht aktiviert werden",
