@@ -1,4 +1,5 @@
 import { NextRequest } from 'next/server';
+import crypto from 'crypto';
 
 interface RateLimitStore {
     count: number;
@@ -65,22 +66,37 @@ function getClientIp(request: NextRequest): string {
 
     // Never trust forwarding headers unless explicitly enabled.
     const trustProxyHeaders = process.env.TRUST_PROXY_HEADERS === 'true';
-    if (!trustProxyHeaders) {
-        return 'unknown';
-    }
+    if (trustProxyHeaders) {
+        // Trusted reverse proxies often provide x-real-ip.
+        const realIp = request.headers.get('x-real-ip')?.trim();
+        if (realIp) return sanitizeKeyPart(realIp);
 
-    // Trusted reverse proxies often provide x-real-ip.
-    const realIp = request.headers.get('x-real-ip')?.trim();
-    if (realIp) return sanitizeKeyPart(realIp);
-
-    // For x-forwarded-for, prefer left-most element (original client IP).
-    const xff = request.headers.get('x-forwarded-for');
-    if (xff) {
-        const parts = xff.split(',').map((part) => part.trim()).filter(Boolean);
-        if (parts.length > 0) {
-            return sanitizeKeyPart(parts[0]);
+        // For x-forwarded-for, prefer left-most element (original client IP).
+        const xff = request.headers.get('x-forwarded-for');
+        if (xff) {
+            const parts = xff.split(',').map((part) => part.trim()).filter(Boolean);
+            if (parts.length > 0) {
+                return sanitizeKeyPart(parts[0]);
+            }
         }
     }
 
-    return 'unknown';
+    // Last resort: derive a stable anonymous fingerprint so all clients do not
+    // share the same global "unknown" bucket.
+    const fallbackFingerprint = getAnonymousFingerprint(request);
+    return fallbackFingerprint || 'unknown';
+}
+
+function getAnonymousFingerprint(request: NextRequest): string | null {
+    const userAgent = request.headers.get('user-agent')?.trim() || '';
+    const acceptLanguage = request.headers.get('accept-language')?.trim() || '';
+    const clientHintsUa = request.headers.get('sec-ch-ua')?.trim() || '';
+
+    if (!userAgent && !acceptLanguage && !clientHintsUa) {
+        return null;
+    }
+
+    const raw = `${userAgent}|${acceptLanguage}|${clientHintsUa}`;
+    const hash = crypto.createHash('sha256').update(raw).digest('hex').slice(0, 24);
+    return sanitizeKeyPart(`anon-${hash}`);
 }

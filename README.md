@@ -80,6 +80,7 @@ Use `.env.example` as source of truth. Important keys:
 - `ENCRYPTION_SECRET`
 - `APP_URL`
 - `NEXT_PUBLIC_APP_URL`
+- `STRICT_CSP_MODE` (optional, production CSP toggle)
 - `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `FROM_EMAIL`
 - `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` (for web push)
 - `CRON_SECRET`
@@ -91,6 +92,8 @@ Use `.env.example` as source of truth. Important keys:
 - `npm run start` - start production server
 - `npm run lint` - lint
 - `npm run type-check` - TypeScript check
+- `npm run security:check` - security regression checks for key hardening rules
+- `npm run security:audit` - dependency audit (`npm audit --omit=dev --audit-level=high`)
 - `npm run setup` - interactive setup script
 - `npm run sample-data` - seed sample data
 - `npm run create-demo-user` - create demo user
@@ -120,8 +123,14 @@ messages/     i18n translations
 scripts/      Setup and data helper scripts
 ```
 
+## Security Hardening
+
+- Run `npm run security:check` locally and in CI to catch regressions in security-sensitive files.
+- Keep `STRICT_CSP_MODE=false` unless you verified that strict CSP (`script-src 'self'`) works for your deployment.
+- Scheduled dependency audit runs weekly via GitHub Actions (`Security Audit` workflow).
+
 ## Notes
 
-- CI runs include lint/type-check/build and CodeQL.
+- CI runs include lint/type-check/security-check/build and CodeQL.
 - Dependabot PR auto-merge is configured for compatible updates.
 - Username validation supports international letters (e.g., umlauts).

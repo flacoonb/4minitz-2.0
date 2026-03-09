@@ -12,9 +12,12 @@ const nextConfig: NextConfig = {
     },
   },
   async headers() {
+    const strictCspMode = process.env.STRICT_CSP_MODE === 'true';
     const scriptSrc =
       process.env.NODE_ENV === 'production'
-        ? "script-src 'self' 'unsafe-inline'"
+        ? strictCspMode
+          ? "script-src 'self'"
+          : "script-src 'self' 'unsafe-inline'"
         : "script-src 'self' 'unsafe-inline' 'unsafe-eval'";
     const csp = [
       "default-src 'self'",

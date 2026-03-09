@@ -38,6 +38,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
 
   return (
     <html lang="en">
+      <head>
+        <script src="/chunk-recovery.js" defer />
+      </head>
       <body className={inter.className}>
         <NextIntlClientProvider messages={messages}>
           <AuthProvider>

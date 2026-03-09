@@ -9,6 +9,8 @@
     "lint": "eslint .",
     "test": "echo \"No tests specified yet\" && exit 0",
     "type-check": "tsc --noEmit",
+    "security:check": "node scripts/security-check.mjs",
+    "security:audit": "npm audit --omit=dev --audit-level=high",
     "clean": "rm -rf .next",
     "rebuild": "rm -rf .next && next build",
     "sample-data": "tsx scripts/sample-data.ts",

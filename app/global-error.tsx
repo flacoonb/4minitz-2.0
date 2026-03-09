@@ -23,29 +23,6 @@ export default function GlobalError({
     const lastReload = sessionStorage.getItem(reloadKey);
     const now = Date.now();
 
-    // #region agent log
-    fetch('http://localhost:7346/ingest/15cb3796-5cec-49ee-9297-9fc2187ea845', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Debug-Session-Id': '089733',
-      },
-      body: JSON.stringify({
-        sessionId: '089733',
-        runId: 'initial',
-        hypothesisId: 'H2',
-        location: 'app/global-error.tsx:18-30',
-        message: 'Global error auto-reload evaluated',
-        data: {
-          reloadKey,
-          lastReload,
-          now,
-        },
-        timestamp: Date.now(),
-      }),
-    }).catch(() => {});
-    // #endregion
-
     if (!lastReload || now - parseInt(lastReload, 10) > 30_000) {
       sessionStorage.setItem(reloadKey, String(now));
       window.location.reload();

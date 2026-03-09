@@ -49,6 +49,9 @@ jobs:
       - name: Type Check
         run: npm run type-check --if-present
 
+      - name: Security Check
+        run: npm run security:check
+
       - name: Build
         run: npm run build
 

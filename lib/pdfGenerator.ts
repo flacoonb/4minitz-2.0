@@ -308,6 +308,7 @@ export async function generateMinutePdf(
   
   // Left section - Logo and Protocol info
   const leftSectionWidth = contentWidth - attendanceWidth;
+  let logoBottomY = yPosition + 6;
   
   // Logo area constraints (max half the left section width, 2/3 of header height)
   const logoMaxWidth = (leftSectionWidth / 2) - 10;
@@ -366,6 +367,7 @@ export async function generateMinutePdf(
 
       // Center vertically within the logo area
       const logoY = yPosition + 5 + (logoMaxHeight - logoHeight) / 2;
+      logoBottomY = Math.max(logoBottomY, logoY + logoHeight);
 
       doc.addImage(
         img,
@@ -384,6 +386,12 @@ export async function generateMinutePdf(
   const titleX = marginLeft + 5;
   const attendanceDividerX = pageWidth - marginRight - attendanceWidth;
   const titleMaxWidth = Math.max(40, attendanceDividerX - titleX - 4);
+  const hasVisibleLogo = Boolean(logoUrlToAdd);
+
+  // Place text dynamically below logo area to prevent overlap.
+  const minTextTop = hasVisibleLogo ? logoBottomY + 4 : yPosition + 18;
+  const maxTextTop = yPosition + headerHeight - 18;
+  let textTopY = Math.min(Math.max(minTextTop, yPosition + 18), maxTextTop);
   
   // Title "Protokoll" or custom header text
   let titleFontSize = 20;
@@ -396,28 +404,45 @@ export async function generateMinutePdf(
     titleFontSize -= 1;
     doc.setFontSize(titleFontSize);
   }
-  doc.text(titleText, titleX, yPosition + 49);
+  let titleY = textTopY + 8;
   
   // Company Name (if set)
+  let companyY = textTopY;
   if (settings.companyName) {
     doc.setFontSize(9);
     doc.setFont(settings.fontFamily, 'normal');
     doc.setTextColor(100, 100, 100);
     const companyLine = doc.splitTextToSize(settings.companyName, titleMaxWidth)[0];
-    doc.text(companyLine, titleX, yPosition + 41);
+    doc.text(companyLine, titleX, companyY);
   }
   
   // Meeting series and protocol name below "Protokoll" (left-aligned)
   const sessionName = minute.meetingSeries_id?.project || '';
   const yearName = minute.meetingSeries_id?.name || '';
   const protocolName = yearName ? `${sessionName} – ${yearName}` : sessionName;
+  let protocolY = titleY + 8;
+
+  // Keep text block within header bottom even when header is compact.
+  const textBottomLimit = yPosition + headerHeight - 4;
+  if (protocolName && protocolY > textBottomLimit) {
+    const overflow = protocolY - textBottomLimit;
+    textTopY -= overflow;
+    companyY -= overflow;
+    titleY -= overflow;
+    protocolY -= overflow;
+  }
+
+  doc.setFontSize(titleFontSize);
+  doc.setFont(settings.fontFamily, 'bold');
+  doc.setTextColor(primaryRgb[0], primaryRgb[1], primaryRgb[2]);
+  doc.text(titleText, titleX, titleY);
   
   if (protocolName) {
     doc.setFontSize(11);
     doc.setFont(settings.fontFamily, 'normal');
     doc.setTextColor(0, 0, 0);
     const protocolLine = doc.splitTextToSize(protocolName, titleMaxWidth)[0];
-    doc.text(protocolLine, titleX, yPosition + 57);
+    doc.text(protocolLine, titleX, protocolY);
   }
   
   // Attendance header in right section

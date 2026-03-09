@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
 import { verifyToken } from '@/lib/auth';
-import { requirePermission } from '@/lib/permissions';
+import { hasPermission, requirePermission } from '@/lib/permissions';
 
 // GET - Get all users
 export async function GET(request: NextRequest) {
@@ -21,10 +21,12 @@ export async function GET(request: NextRequest) {
     // Check if user can manage users (admin) — affects which fields are returned
     const permResult = await requirePermission(authResult.user!, 'canManageUsers');
     const isManager = permResult.success;
+    const canCreateMeetings = await hasPermission(authResult.user!, 'canCreateMeetings');
 
     const url = new URL(request.url);
     const page = Math.min(Math.max(parseInt(url.searchParams.get('page') || '1') || 1, 1), 10000);
-    const limit = Math.min(Math.max(parseInt(url.searchParams.get('limit') || '20') || 20, 1), 500);
+    const requestedLimit = Math.min(Math.max(parseInt(url.searchParams.get('limit') || '20') || 20, 1), 500);
+    const limit = isManager ? requestedLimit : Math.min(requestedLimit, canCreateMeetings ? 200 : 20);
     const search = url.searchParams.get('search') || '';
     const role = url.searchParams.get('role') || '';
     const status = url.searchParams.get('status') || '';
@@ -35,6 +37,11 @@ export async function GET(request: NextRequest) {
     // Non-managers only see active users
     if (!isManager) {
       filter.isActive = true;
+    }
+
+    // Regular users without meeting-management capabilities may only view themselves.
+    if (!isManager && !canCreateMeetings) {
+      filter._id = authResult.user!._id;
     }
 
     if (search) {
@@ -65,7 +72,9 @@ export async function GET(request: NextRequest) {
     // Non-managers get limited fields (for autocomplete/participant selection)
     const selectFields = isManager
       ? '-password'
-      : '_id firstName lastName email username role';
+      : canCreateMeetings
+        ? '_id firstName lastName email username role'
+        : '_id firstName lastName username role';
 
     // Get total count
     const total = await User.countDocuments(filter);
