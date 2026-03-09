@@ -140,7 +140,7 @@ function getLabels(locale: string) {
     from: isEn ? 'from' : 'von',
     to: isEn ? 'to' : 'bis',
     notSpecified: isEn ? 'Not specified' : 'Nicht angegeben',
-    guests: isEn ? 'Guests:' : 'Gäste:',
+    guests: isEn ? 'Guests:' : 'Gast:',
     more: isEn ? 'more' : 'weitere',
     noEntries: isEn ? 'No entries' : 'Keine Einträge',
     generalNotes: isEn ? 'General Notes' : 'Allgemeine Notizen',
