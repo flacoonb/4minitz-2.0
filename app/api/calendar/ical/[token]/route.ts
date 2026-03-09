@@ -99,7 +99,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
     }
 
     const user = await User.findOne({ calendarFeedToken: token, isActive: true })
-      .select('_id username role')
+      .select('_id username usernameHistory email role')
       .lean();
 
     if (!user) {
@@ -107,7 +107,12 @@ export async function GET(request: NextRequest, context: RouteContext) {
     }
 
     const userId = String(user._id);
-    const username = String(user.username || '');
+    const username = String(user.username || '').trim();
+    const usernameHistory = Array.isArray((user as any).usernameHistory)
+      ? (user as any).usernameHistory.map((value: unknown) => String(value || '').trim()).filter(Boolean)
+      : [];
+    const userEmail = String((user as any).email || '').trim().toLowerCase();
+    const identityCandidates = Array.from(new Set([userId, username, ...usernameHistory].filter(Boolean)));
     const isAdmin = user.role === 'admin';
     const canViewAllMeetings = await hasPermission(user as any, 'canViewAllMeetings');
 
@@ -117,9 +122,9 @@ export async function GET(request: NextRequest, context: RouteContext) {
     } else {
       seriesDocs = await MeetingSeries.find({
         $or: [
-          { visibleFor: { $in: [username, userId] } },
-          { moderators: { $in: [username, userId] } },
-          { participants: { $in: [username, userId] } },
+          { visibleFor: { $in: identityCandidates } },
+          { moderators: { $in: identityCandidates } },
+          { participants: { $in: identityCandidates } },
           { 'members.userId': userId },
         ],
       })
@@ -139,7 +144,8 @@ export async function GET(request: NextRequest, context: RouteContext) {
         : {
             $or: [
               ...(seriesIds.length > 0 ? [{ meetingSeriesId: { $in: seriesIds } }] : []),
-              { 'invitees.userId': { $in: [userId, username] } },
+              { 'invitees.userId': { $in: identityCandidates } },
+              ...(userEmail ? [{ 'invitees.emailSnapshot': userEmail }] : []),
             ],
           };
     const events = (await MeetingEvent.find(eventQuery)
