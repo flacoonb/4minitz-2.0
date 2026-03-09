@@ -12,7 +12,7 @@ export const loginSchema = z.object({
 
 export const registerSchema = z.object({
   username: requiredString(50)
-    .regex(/^[\p{L}\p{N}._-]+$/u, 'Invalid username format')
+    .regex(/^[\p{L}\p{N}._ -]+$/u, 'Invalid username format')
     .refine((value) => !/^[a-fA-F0-9]{24}$/.test(value), 'Reserved username format'),
   email: z.string().email().max(200),
   password: requiredString(200).min(8, 'Password must be at least 8 characters'),

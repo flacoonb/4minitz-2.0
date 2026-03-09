@@ -158,8 +158,8 @@ export async function PUT(
         return NextResponse.json({ error: 'Benutzername muss zwischen 3 und 30 Zeichen lang sein' }, { status: 400 });
       }
       const normalizedUsername = body.username.trim();
-      if (!/^[\p{L}\p{N}._-]+$/u.test(normalizedUsername)) {
-        return NextResponse.json({ error: 'Benutzername darf nur Buchstaben, Zahlen, Punkte, Unterstriche und Bindestriche enthalten' }, { status: 400 });
+      if (!/^[\p{L}\p{N}._ -]+$/u.test(normalizedUsername)) {
+        return NextResponse.json({ error: 'Benutzername darf nur Buchstaben, Zahlen, Leerzeichen, Punkte, Unterstriche und Bindestriche enthalten' }, { status: 400 });
       }
       if (objectIdLikeUsername.test(normalizedUsername)) {
         return NextResponse.json({ error: 'Benutzername darf nicht wie eine Benutzer-ID aussehen' }, { status: 400 });

@@ -88,7 +88,8 @@ const UserSchema: Schema<IUser> = new Schema(
       validate: {
         validator: (username: string) => {
           // Reserve ObjectId-like values to prevent identifier confusion (username vs userId).
-          return /^[\p{L}\p{N}._-]+$/u.test(username) && !/^[a-fA-F0-9]{24}$/.test(username);
+          // Allow multi-word usernames via spaces, but prevent leading/trailing spaces via trim.
+          return /^[\p{L}\p{N}._ -]+$/u.test(username) && !/^[a-fA-F0-9]{24}$/.test(username);
         },
         message: 'Benutzername ist ungültig oder reserviert'
       }
