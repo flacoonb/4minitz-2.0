@@ -268,6 +268,9 @@ const translations = {
   },
 };
 
+const EMAIL_PRIMARY_BUTTON_STYLE =
+  'display: inline-block; background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%); color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 12px; font-weight: 600; margin-top: 24px; text-align: center; box-shadow: 0 10px 20px -8px rgba(37, 99, 235, 0.45); font-family: Inter, \"Segoe UI\", Roboto, Arial, sans-serif;';
+
 // Helper function to generate email HTML
 export async function generateEmailHTML(content: string): Promise<string> {
   const orgName = await getOrgName();
@@ -279,26 +282,26 @@ export async function generateEmailHTML(content: string): Promise<string> {
         <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
         <title>${orgName}</title>
       </head>
-      <body style="margin: 0; padding: 0; background-color: #f3f4f6; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
-        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f3f4f6;">
+      <body style="margin: 0; padding: 0; background-color: #f1f5f9; font-family: Inter, 'Segoe UI', Roboto, Arial, sans-serif; color: #0f172a;">
+        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f1f5f9;">
           <tr>
-            <td align="center" style="padding: 40px 0;">
-              <table border="0" cellpadding="0" cellspacing="0" width="600" style="background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <td align="center" style="padding: 32px 12px;">
+              <table border="0" cellpadding="0" cellspacing="0" width="620" style="background-color: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 20px 40px -24px rgba(15, 23, 42, 0.35);">
                 <!-- Header -->
                 <tr>
-                  <td align="center" style="background: linear-gradient(135deg, #8b5cf6 0%, #db2777 100%); padding: 30px 0; color: #ffffff;">
-                    <h1 style="margin: 0; font-size: 24px; font-weight: bold; text-shadow: 0 1px 2px rgba(0,0,0,0.1); font-family: 'Segoe UI', sans-serif;">${orgName}</h1>
+                  <td align="center" style="background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%); padding: 28px 24px; color: #ffffff;">
+                    <h1 style="margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.01em; font-family: Inter, 'Segoe UI', Roboto, Arial, sans-serif;">${orgName}</h1>
                   </td>
                 </tr>
                 <!-- Content -->
                 <tr>
-                  <td style="padding: 40px 30px; color: #333333; font-size: 16px; line-height: 1.6;">
+                  <td style="padding: 32px 28px; color: #0f172a; font-size: 15px; line-height: 1.65;">
                     ${content}
                   </td>
                 </tr>
                 <!-- Footer -->
                 <tr>
-                  <td align="center" style="background-color: #f9fafb; padding: 20px; color: #6b7280; font-size: 12px; border-top: 1px solid #e5e7eb;">
+                  <td align="center" style="background-color: #f8fafc; padding: 18px; color: #64748b; font-size: 12px; border-top: 1px solid #e2e8f0;">
                     &copy; ${new Date().getFullYear()} ${orgName}
                   </td>
                 </tr>
@@ -429,7 +432,7 @@ export async function sendNewMinutesNotification(
     ` : ''}
 
     <center>
-      <a href="${minuteUrl}" style="display: inline-block; background: linear-gradient(to right, #9333ea, #db2777); color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; margin-top: 24px; text-align: center; box-shadow: 0 4px 6px -1px rgba(147, 51, 234, 0.3); font-family: sans-serif;">${t.viewButton}</a>
+      <a href="${minuteUrl}" style="${EMAIL_PRIMARY_BUTTON_STYLE}">${t.viewButton}</a>
     </center>
   `;
 
@@ -555,7 +558,7 @@ export async function sendActionItemAssignedNotification(
     </table>
 
     <center>
-      <a href="${minuteUrl}" style="display: inline-block; background: linear-gradient(to right, #9333ea, #db2777); color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; margin-top: 24px; text-align: center; box-shadow: 0 4px 6px -1px rgba(147, 51, 234, 0.3); font-family: sans-serif;">${t.viewButton}</a>
+      <a href="${minuteUrl}" style="${EMAIL_PRIMARY_BUTTON_STYLE}">${t.viewButton}</a>
     </center>
   `;
 
@@ -609,7 +612,7 @@ export async function sendOverdueReminder(
     `).join('')}
 
     <center>
-      <a href="${dashboardUrl}" style="display: inline-block; background: linear-gradient(to right, #9333ea, #db2777); color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; margin-top: 24px; text-align: center; box-shadow: 0 4px 6px -1px rgba(147, 51, 234, 0.3); font-family: sans-serif;">${t.viewButton}</a>
+      <a href="${dashboardUrl}" style="${EMAIL_PRIMARY_BUTTON_STYLE}">${t.viewButton}</a>
     </center>
   `;
 
@@ -645,7 +648,7 @@ export async function sendWelcomeEmail(
     <p>${t.intro}</p>
     
     <center>
-      <a href="${loginUrl}" style="display: inline-block; background: linear-gradient(to right, #9333ea, #db2777); color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; margin-top: 24px; text-align: center; box-shadow: 0 4px 6px -1px rgba(147, 51, 234, 0.3); font-family: sans-serif;">${t.loginButton}</a>
+      <a href="${loginUrl}" style="${EMAIL_PRIMARY_BUTTON_STYLE}">${t.loginButton}</a>
     </center>
   `;
 
@@ -686,7 +689,7 @@ export async function sendVerificationEmail(
     <p>${t.intro}</p>
     
     <center>
-      <a href="${verifyUrl}" style="display: inline-block; background: linear-gradient(to right, #9333ea, #db2777); color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; margin-top: 24px; text-align: center; box-shadow: 0 4px 6px -1px rgba(147, 51, 234, 0.3); font-family: sans-serif;">${t.verifyButton}</a>
+      <a href="${verifyUrl}" style="${EMAIL_PRIMARY_BUTTON_STYLE}">${t.verifyButton}</a>
     </center>
     
     <p style="text-align: center; color: #6b7280; font-size: 14px; margin-top: 20px;">
@@ -749,7 +752,7 @@ export async function sendPendingTasksReminder(
     }).join('')}
 
     <center>
-      <a href="${dashboardUrl}" style="display: inline-block; background: linear-gradient(to right, #9333ea, #db2777); color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; margin-top: 24px; text-align: center; box-shadow: 0 4px 6px -1px rgba(147, 51, 234, 0.3); font-family: sans-serif;">${t.viewButton}</a>
+      <a href="${dashboardUrl}" style="${EMAIL_PRIMARY_BUTTON_STYLE}">${t.viewButton}</a>
     </center>
   `;
 
@@ -832,7 +835,7 @@ export async function sendPasswordResetEmail(
     <p>${t.intro}</p>
 
     <center>
-      <a href="${resetUrl}" style="display: inline-block; background: linear-gradient(to right, #9333ea, #db2777); color: white; padding: 14px 28px; text-decoration: none; border-radius: 8px; font-weight: 600; margin-top: 24px; text-align: center; box-shadow: 0 4px 6px -1px rgba(147, 51, 234, 0.3); font-family: sans-serif;">${t.resetButton}</a>
+      <a href="${resetUrl}" style="${EMAIL_PRIMARY_BUTTON_STYLE}">${t.resetButton}</a>
     </center>
 
     <p style="text-align: center; color: #6b7280; font-size: 14px; margin-top: 20px;">

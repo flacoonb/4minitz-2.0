@@ -79,6 +79,8 @@ export async function GET(request: NextRequest) {
         newActions: 'New Action Items',
         viewDashboard: 'Go to Dashboard'
       };
+      const primaryButtonStyle =
+        'display: inline-block; background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%); color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 12px; font-weight: 600; margin-top: 24px; text-align: center; box-shadow: 0 10px 20px -8px rgba(37, 99, 235, 0.45); font-family: Inter, Segoe UI, Roboto, Arial, sans-serif;';
 
       const newMinutes = items.filter(i => i.type === 'newMinute');
       const newActions = items.filter(i => i.type === 'actionItemAssigned');
@@ -104,7 +106,7 @@ export async function GET(request: NextRequest) {
         htmlBody += `</ul>`;
       }
 
-      htmlBody += `<center><a href="${appUrl}/dashboard" class="button">${t.viewDashboard}</a></center>`;
+      htmlBody += `<center><a href="${appUrl}/dashboard" style="${primaryButtonStyle}">${t.viewDashboard}</a></center>`;
 
       try {
         await transporter.sendMail({
