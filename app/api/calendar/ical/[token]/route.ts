@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
+import mongoose from 'mongoose';
 import User from '@/models/User';
 import MeetingSeries from '@/models/MeetingSeries';
 import MeetingEvent from '@/models/MeetingEvent';
+import Minutes from '@/models/Minutes';
 import { hasPermission } from '@/lib/permissions';
 
 interface CalendarEventItem {
@@ -17,6 +19,20 @@ interface CalendarEventItem {
   status: 'draft' | 'invited' | 'confirmed' | 'cancelled' | 'completed';
   updatedAt?: Date;
   invitees?: Array<{ userId?: string }>;
+}
+
+interface CalendarMinuteItem {
+  _id: string;
+  meetingSeries_id: string | { toString(): string };
+  date: Date;
+  time?: string;
+  endTime?: string;
+  title?: string;
+  location?: string;
+  isFinalized?: boolean;
+  visibleFor?: string[];
+  participants?: string[];
+  updatedAt?: Date;
 }
 
 function escapeIcalText(value: string): string {
@@ -67,6 +83,17 @@ function toUtcStamp(date: Date): string {
   return date.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}Z$/, 'Z');
 }
 
+function toIcalDate(date: Date): string {
+  const parts = parseDateParts(date);
+  return `${parts.year}${pad(parts.month)}${pad(parts.day)}`;
+}
+
+function addDays(date: Date, days: number): Date {
+  const next = new Date(date);
+  next.setDate(next.getDate() + days);
+  return next;
+}
+
 function toSeriesLabel(series: any): string {
   const project = String(series?.project || '').trim();
   const name = String(series?.name || '').trim();
@@ -78,6 +105,10 @@ function mapStatusToSummarySuffix(status: CalendarEventItem['status']): string {
   if (status === 'completed') return ' (Completed)';
   if (status === 'draft') return ' (Draft)';
   return '';
+}
+
+function mapMinuteSuffix(isFinalized: boolean): string {
+  return isFinalized ? ' (Minutes)' : ' (Draft Minutes)';
 }
 
 function normalizeToken(token: string): string {
@@ -153,6 +184,24 @@ export async function GET(request: NextRequest, context: RouteContext) {
       .select('meetingSeriesId title scheduledDate startTime endTime location note status updatedAt invitees')
       .lean()) as unknown as CalendarEventItem[];
 
+    const seriesObjectIds = seriesIds
+      .filter((id) => mongoose.isValidObjectId(id))
+      .map((id) => new mongoose.Types.ObjectId(id));
+    const minutesQuery =
+      isAdmin || canViewAllMeetings
+        ? {}
+        : {
+            $or: [
+              ...(seriesObjectIds.length > 0 ? [{ meetingSeries_id: { $in: seriesObjectIds } }] : []),
+              { visibleFor: { $in: identityCandidates } },
+              { participants: { $in: identityCandidates } },
+            ],
+          };
+    const minutes = (await Minutes.find(minutesQuery)
+      .sort({ date: 1, time: 1 })
+      .select('meetingSeries_id date time endTime title location isFinalized visibleFor participants updatedAt')
+      .lean()) as unknown as CalendarMinuteItem[];
+
     // Backfill series labels for events that are visible via direct invitee match.
     const missingSeriesIds = Array.from(
       new Set(
@@ -204,6 +253,43 @@ export async function GET(request: NextRequest, context: RouteContext) {
       lines.push(`DESCRIPTION:${escapeIcalText(details)}`);
       if (location) lines.push(`LOCATION:${escapeIcalText(location)}`);
       lines.push(`STATUS:${status}`);
+      lines.push(`URL:${escapeIcalText(eventUrl)}`);
+      lines.push('END:VEVENT');
+    }
+
+    for (const minute of minutes) {
+      const meetingSeriesId = String(minute.meetingSeries_id || '').trim();
+      const series = seriesById.get(meetingSeriesId);
+      const seriesLabel = toSeriesLabel(series);
+      const minuteDate = new Date(minute.date);
+      if (Number.isNaN(minuteDate.getTime())) continue;
+      const hasTime = Boolean(String(minute.time || '').trim());
+      const minuteTitle = String(minute.title || '').trim() || 'Minutes';
+      const summary = `${seriesLabel}: ${minuteTitle}${mapMinuteSuffix(Boolean(minute.isFinalized))}`;
+      const details = [`Series: ${seriesLabel}`, `Status: ${minute.isFinalized ? 'finalized' : 'draft'}`].join('\n');
+      const location = String(minute.location || '').trim();
+      const eventUrl = `${baseUrl}/minutes/${minute._id}`;
+      const updatedAt = minute.updatedAt ? new Date(minute.updatedAt) : now;
+
+      lines.push('BEGIN:VEVENT');
+      lines.push(`UID:minutes-${minute._id}@4minitz`);
+      lines.push(`DTSTAMP:${toUtcStamp(updatedAt)}`);
+      if (hasTime) {
+        const startsAt = toIcalLocalDateTime(minuteDate, String(minute.time || '09:00'));
+        const endsAt = toIcalLocalDateTime(
+          minuteDate,
+          String(minute.endTime || addOneHour(String(minute.time || '09:00')))
+        );
+        lines.push(`DTSTART;TZID=Europe/Zurich:${startsAt}`);
+        lines.push(`DTEND;TZID=Europe/Zurich:${endsAt}`);
+      } else {
+        lines.push(`DTSTART;VALUE=DATE:${toIcalDate(minuteDate)}`);
+        lines.push(`DTEND;VALUE=DATE:${toIcalDate(addDays(minuteDate, 1))}`);
+      }
+      lines.push(`SUMMARY:${escapeIcalText(summary)}`);
+      lines.push(`DESCRIPTION:${escapeIcalText(details)}`);
+      if (location) lines.push(`LOCATION:${escapeIcalText(location)}`);
+      lines.push('STATUS:CONFIRMED');
       lines.push(`URL:${escapeIcalText(eventUrl)}`);
       lines.push('END:VEVENT');
     }
