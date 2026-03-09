@@ -101,7 +101,7 @@ function SortableTopic({
               value={topic.subject}
               onChange={(e) => updateTopic(topicIndex, 'subject', e.target.value)}
               placeholder={t('topicTitlePlaceholder')}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent font-semibold"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent font-semibold"
               required
             />
           </div>
@@ -232,7 +232,7 @@ function SortableInfoItems({
             pendingScrollItemIdRef.current = `item-${topicIndex}-${infoItems.length}`;
             addInfoItem(topicIndex);
           }}
-          className="w-full sm:w-auto min-h-11 px-4 py-2.5 bg-blue-50 text-blue-700 hover:bg-blue-100 rounded-lg text-sm font-semibold transition-colors"
+          className="w-full sm:w-auto min-h-11 px-4 py-2.5 bg-[var(--brand-primary-soft)] text-[var(--brand-primary-strong)] hover:bg-[var(--brand-primary-soft)] rounded-lg text-sm font-semibold transition-colors"
         >
           + {t('add')}
         </button>
@@ -415,7 +415,7 @@ function SortableInfoItem({
   const getStatusBadge = () => {
     const badges = {
       open: { bg: 'bg-yellow-100', text: 'text-yellow-800', icon: '○', label: t('open') },
-      'in-progress': { bg: 'bg-blue-100', text: 'text-blue-800', icon: '◐', label: t('inProgress') },
+      'in-progress': { bg: 'bg-[var(--brand-primary-soft)]', text: 'text-[var(--brand-primary-strong)]', icon: '◐', label: t('inProgress') },
       completed: { bg: 'bg-green-100', text: 'text-green-800', icon: '✓', label: t('completed') },
       cancelled: { bg: 'bg-gray-100', text: 'text-gray-800', icon: '✗', label: t('cancelled') },
     };
@@ -444,7 +444,7 @@ function SortableInfoItem({
         data-info-item-id={id}
         className={`bg-white border-l-4 ${item.itemType === 'actionItem'
           ? 'border-orange-500'
-          : 'border-blue-400'
+          : 'border-[var(--brand-primary-border)]'
           } p-4 rounded-lg shadow-sm hover:shadow-md transition-all`}
       >
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
@@ -478,7 +478,7 @@ function SortableInfoItem({
                   </div>
                 ) : (
                   <div className="mb-2">
-                    <span className="px-2.5 py-1 rounded-md text-xs font-bold bg-blue-100 text-blue-700 uppercase tracking-wide">
+                    <span className="px-2.5 py-1 rounded-md text-xs font-bold bg-[var(--brand-primary-soft)] text-[var(--brand-primary-strong)] uppercase tracking-wide">
                       ℹ️ {t('info')}
                     </span>
                   </div>
@@ -492,13 +492,13 @@ function SortableInfoItem({
 
               {/* Info Items - Show responsible persons if available */}
               {item.itemType === 'infoItem' && item.responsibles && item.responsibles.length > 0 && (
-                <div className="mt-3 p-2.5 bg-blue-50 border border-blue-200 rounded-lg">
+                <div className="mt-3 p-2.5 bg-[var(--brand-primary-soft)] border border-[var(--brand-primary-border)] rounded-lg">
                   <div className="flex items-center gap-2 text-sm">
-                    <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-4 h-4 text-[var(--brand-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                     </svg>
-                    <span className="font-semibold text-blue-900">{t('participantsLabel')}</span>
-                    <span className="text-blue-800 font-medium">
+                    <span className="font-semibold text-[var(--brand-primary-strong)]">{t('participantsLabel')}</span>
+                    <span className="text-[var(--brand-primary-strong)] font-medium">
                       {formatUsersAsInitials(item.responsibles)}
                     </span>
                   </div>
@@ -531,16 +531,16 @@ function SortableInfoItem({
                     )}
 
                     {item.responsibles && item.responsibles.length > 0 && (
-                      <div className="p-2.5 bg-indigo-50 border border-indigo-200 rounded-lg">
+                      <div className="p-2.5 bg-[var(--brand-primary-soft)] border border-[var(--brand-primary-border)] rounded-lg">
                         <div className="flex items-center gap-2">
-                          <svg className="w-4 h-4 text-indigo-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <svg className="w-4 h-4 text-[var(--brand-primary)] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                           </svg>
                           <div className="flex-1">
-                            <p className="text-xs font-semibold text-indigo-900">
+                            <p className="text-xs font-semibold text-[var(--brand-primary-strong)]">
                               {t('responsible')}{item.responsibles.length > 1 ? 's' : ''}
                             </p>
-                            <p className="text-sm font-bold text-indigo-800">
+                            <p className="text-sm font-bold text-[var(--brand-primary-strong)]">
                               {formatUsersAsInitials(item.responsibles)}
                             </p>
                           </div>
@@ -573,7 +573,7 @@ function SortableInfoItem({
             <button
               type="button"
               onClick={() => setIsEditing(true)}
-              className="p-1.5 min-h-10 min-w-10 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors inline-flex items-center justify-center"
+              className="p-1.5 min-h-10 min-w-10 text-[var(--brand-primary)] hover:bg-[var(--brand-primary-soft)] rounded-lg transition-colors inline-flex items-center justify-center"
               title={tCommon('edit')}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -707,7 +707,7 @@ function SortableInfoItem({
               type="button"
               onClick={() => updateInfoItem(topicIndex, itemIndex, 'itemType', 'infoItem')}
               className={`p-3 rounded-lg border-2 transition-all ${item.itemType === 'infoItem'
-                ? 'border-blue-500 bg-blue-50 shadow-md'
+                ? 'border-[var(--brand-primary)] bg-[var(--brand-primary-soft)] shadow-md'
                 : 'border-gray-300 bg-white hover:border-gray-400'
                 }`}
             >
@@ -745,7 +745,7 @@ function SortableInfoItem({
               value={item.subject}
               onChange={(e) => updateInfoItem(topicIndex, itemIndex, 'subject', e.target.value)}
               placeholder={t(item.itemType === 'actionItem' ? 'step2PlaceholderAction' : 'step2PlaceholderInfo')}
-              className="w-full px-3 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm font-semibold bg-white"
+              className="w-full px-3 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-[var(--brand-primary)] text-sm font-semibold bg-white"
               required={item.itemType === 'actionItem' && agendaItemLabelMode === 'manual'}
             />
           </div>
@@ -755,7 +755,7 @@ function SortableInfoItem({
               {`${t('topic')} ${topicIndex + 1} – ${t('infoItems')}`}
             </label>
             <div className="grid grid-cols-1 min-[520px]:grid-cols-[120px_minmax(0,1fr)] gap-2">
-              <div className="w-full px-3 py-2.5 border-2 border-dashed border-indigo-300 rounded-lg bg-indigo-50 text-indigo-800 text-sm font-bold">
+              <div className="w-full px-3 py-2.5 border-2 border-dashed border-[var(--brand-primary-border)] rounded-lg bg-[var(--brand-primary-soft)] text-[var(--brand-primary-strong)] text-sm font-bold">
                 {automaticEntryLabel}
               </div>
               <input
@@ -763,7 +763,7 @@ function SortableInfoItem({
                 value={isAutoGeneratedSubject ? '' : (item.subject || '')}
                 onChange={(e) => updateInfoItem(topicIndex, itemIndex, 'subject', e.target.value)}
                 placeholder={t(item.itemType === 'actionItem' ? 'step2PlaceholderAction' : 'step2PlaceholderInfo')}
-                className="w-full px-3 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm font-semibold bg-white"
+                className="w-full px-3 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-[var(--brand-primary)] text-sm font-semibold bg-white"
               />
             </div>
           </div>
@@ -778,7 +778,7 @@ function SortableInfoItem({
             value={item.details || ''}
             onChange={(e) => updateInfoItem(topicIndex, itemIndex, 'details', e.target.value)}
             placeholder={t(item.itemType === 'actionItem' ? 'step3PlaceholderAction' : 'step3PlaceholderInfo')}
-            className="w-full px-3 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm bg-white resize-none"
+            className="w-full px-3 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-[var(--brand-primary)] text-sm bg-white resize-none"
             rows={3}
           />
         </div>
@@ -835,7 +835,7 @@ function SortableInfoItem({
                     type="date"
                     value={item.dueDate?.split('T')[0] || ''}
                     onChange={(e) => updateInfoItem(topicIndex, itemIndex, 'dueDate', e.target.value)}
-                    className="w-full px-3 py-2 text-sm min-h-10 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                    className="w-full px-3 py-2 text-sm min-h-10 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-[var(--brand-primary)] bg-white"
                   />
                 </div>
 
@@ -848,7 +848,7 @@ function SortableInfoItem({
                     {['open', 'in-progress', 'completed', 'cancelled'].map((status) => {
                       const statusConfig = {
                         open: { bg: 'bg-yellow-100 hover:bg-yellow-200', border: 'border-yellow-400', text: 'text-yellow-800', label: t('open'), icon: '○' },
-                        'in-progress': { bg: 'bg-blue-100 hover:bg-blue-200', border: 'border-blue-400', text: 'text-blue-800', label: t('inProgress'), icon: '◐' },
+                        'in-progress': { bg: 'bg-[var(--brand-primary-soft)] hover:bg-[var(--brand-primary-soft)]', border: 'border-[var(--brand-primary-border)]', text: 'text-[var(--brand-primary-strong)]', label: t('inProgress'), icon: '◐' },
                         completed: { bg: 'bg-green-100 hover:bg-green-200', border: 'border-green-400', text: 'text-green-800', label: t('completed'), icon: '✓' },
                         cancelled: { bg: 'bg-gray-100 hover:bg-gray-200', border: 'border-gray-400', text: 'text-gray-800', label: t('cancelled'), icon: '✗' },
                       }[status] as any;
@@ -880,7 +880,7 @@ function SortableInfoItem({
         {/* Responsible Persons - Available for both Info and Action Items */}
         <div className="bg-white/70 backdrop-blur-sm p-3 sm:p-4 rounded-lg border border-white/50">
             <div className="flex flex-col min-[360px]:flex-row min-[360px]:items-start gap-2 mb-3">
-            <div className="w-8 h-8 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 brand-gradient-bg rounded-lg flex items-center justify-center">
               <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
@@ -894,15 +894,15 @@ function SortableInfoItem({
               </p>
             </div>
             {item.responsibles && item.responsibles.length > 0 && (
-              <span className="self-start min-[360px]:self-center px-2 py-1 bg-indigo-100 text-indigo-700 rounded-full text-xs font-semibold">
+              <span className="self-start min-[360px]:self-center px-2 py-1 bg-[var(--brand-primary-soft)] text-[var(--brand-primary-strong)] rounded-full text-xs font-semibold">
                 {t('selectedCount', { count: item.responsibles.length })}
               </span>
             )}
           </div>
 
-          <div className="space-y-1.5 max-h-60 overflow-y-auto [scrollbar-gutter:stable] border-2 border-indigo-200 rounded-lg p-2 bg-gradient-to-br from-indigo-50/50 to-purple-50/50">
+          <div className="space-y-1.5 max-h-60 overflow-y-auto [scrollbar-gutter:stable] border-2 border-[var(--brand-primary-border)] rounded-lg p-2 bg-[var(--brand-primary-soft)]">
             {/* Alle Option */}
-            <label className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-2 p-2.5 bg-white hover:bg-indigo-50 rounded-lg cursor-pointer transition-all border border-transparent hover:border-indigo-300 group">
+            <label className="grid grid-cols-[auto_minmax(0,1fr)] items-start gap-2 p-2.5 bg-white hover:bg-[var(--brand-primary-soft)] rounded-lg cursor-pointer transition-all border border-transparent hover:border-[var(--brand-primary-border)] group">
               <div className="relative">
                 <input
                   type="checkbox"
@@ -917,18 +917,18 @@ function SortableInfoItem({
                       updateInfoItem(topicIndex, itemIndex, 'responsibles', []);
                     }
                   }}
-                  className="w-5 h-5 text-indigo-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-indigo-500 cursor-pointer"
+                  className="w-5 h-5 text-[var(--brand-primary)] border-2 border-gray-300 rounded focus:ring-2 focus:ring-[var(--brand-primary)] cursor-pointer"
                 />
               </div>
               <div className="flex-1 min-w-0">
-                <span className="text-sm font-bold text-indigo-700 group-hover:text-indigo-800">
+                <span className="text-sm font-bold text-[var(--brand-primary-strong)] group-hover:text-[var(--brand-primary-strong)]">
                   ✓ {t('selectAll')}
                 </span>
                 <p className="text-xs text-gray-500 break-words">{t('addAllMembers')}</p>
               </div>
             </label>
 
-            <div className="border-t-2 border-indigo-200 my-2"></div>
+            <div className="border-t-2 border-[var(--brand-primary-border)] my-2"></div>
 
             {responsibleEntries.map((entry) => {
               const isSelected = item.responsibles?.includes(entry.id) || false;
@@ -944,9 +944,9 @@ function SortableInfoItem({
               return (
                 <label
                   key={entry.id}
-                  className={`grid grid-cols-[auto_minmax(0,1fr)] min-[360px]:grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-1.5 sm:gap-2 p-2.5 rounded-lg transition-all border ${
+                    className={`grid grid-cols-[auto_minmax(0,1fr)] min-[360px]:grid-cols-[auto_minmax(0,1fr)_auto] items-start gap-1.5 sm:gap-2 p-2.5 rounded-lg transition-all border ${
                     isSelected
-                      ? 'bg-indigo-100 border-indigo-300 shadow-sm'
+                      ? 'bg-[var(--brand-primary-soft)] border-[var(--brand-primary-border)] shadow-sm'
                       : 'bg-white border-transparent'
                   } ${entry.isActive && entry.hasAssignment ? 'cursor-pointer hover:bg-gray-50 hover:border-gray-300' : 'opacity-70'}`}
                 >
@@ -965,17 +965,17 @@ function SortableInfoItem({
                         }
                         updateInfoItem(topicIndex, itemIndex, 'responsibles', newResponsibles);
                       }}
-                      className="w-5 h-5 text-indigo-600 border-2 border-gray-300 rounded focus:ring-2 focus:ring-indigo-500 cursor-pointer disabled:cursor-not-allowed"
+                      className="w-5 h-5 text-[var(--brand-primary)] border-2 border-gray-300 rounded focus:ring-2 focus:ring-[var(--brand-primary)] cursor-pointer disabled:cursor-not-allowed"
                     />
                   </div>
                   <div className="min-w-0 flex items-start gap-1.5 sm:gap-2">
                     <div className={`w-6 h-6 mt-0.5 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0 ${
-                      isSelected ? 'bg-gradient-to-br from-indigo-500 to-purple-600' : entry.kind === 'guest' ? 'bg-gradient-to-br from-orange-500 to-pink-500' : 'bg-gradient-to-br from-emerald-500 to-teal-600'
+                      isSelected ? 'brand-gradient-bg' : entry.kind === 'guest' ? 'bg-gradient-to-br from-orange-500 to-pink-500' : 'bg-gradient-to-br from-emerald-500 to-teal-600'
                     }`}>
                       {initials}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <span className={`block text-sm font-semibold leading-tight truncate ${isSelected ? 'text-indigo-900' : 'text-gray-700'}`}>
+                      <span className={`block text-sm font-semibold leading-tight truncate ${isSelected ? 'text-[var(--brand-primary-strong)]' : 'text-gray-700'}`}>
                         {entry.label}
                       </span>
                       <span className="block text-xs text-gray-500">
@@ -1009,7 +1009,7 @@ function SortableInfoItem({
             value={item.notes || ''}
             onChange={(e) => updateInfoItem(topicIndex, itemIndex, 'notes', e.target.value)}
             placeholder={item.itemType === 'actionItem' ? t('resolutionPlaceholder') : t('informationPlaceholder')}
-            className="w-full min-h-[96px] px-3 py-2.5 text-sm leading-snug border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white resize-y"
+            className="w-full min-h-[96px] px-3 py-2.5 text-sm leading-snug border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-[var(--brand-primary)] bg-white resize-y"
             rows={4}
           />
         </div>
@@ -1968,19 +1968,19 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div>
+      <div className="min-h-screen brand-page-gradient flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--brand-primary)]"></div>
       </div>
     );
   }
 
   if (error || !minute) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center">
+      <div className="min-h-screen brand-page-gradient flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-red-600 mb-4">{tCommon('error')}</h1>
           <p className="text-gray-600">{error || t('notFound')}</p>
-          <Link href="/meeting-series" className="text-blue-600 hover:text-blue-800 mt-4 inline-block">
+          <Link href="/meeting-series" className="text-[var(--brand-primary)] hover:text-[var(--brand-primary-strong)] mt-4 inline-block">
             {t('backToOverview')}
           </Link>
         </div>
@@ -1989,19 +1989,19 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-6 sm:py-8 px-3 sm:px-4">
+    <div className="min-h-screen brand-page-gradient py-6 sm:py-8 px-3 sm:px-4">
       <div className="max-w-6xl mx-auto space-y-8">
         {/* Header */}
         <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-5 sm:p-8 border border-gray-100">
           {/* Breadcrumb */}
           <nav className="flex items-center gap-2 text-sm text-gray-500 mb-3 flex-wrap">
-            <Link href="/meeting-series" className="hover:text-blue-600 transition-colors">
+            <Link href="/meeting-series" className="hover:text-[var(--brand-primary)] transition-colors">
               {tNav('meetingSeries')}
             </Link>
             {minute?.meetingSeries_id?._id && (
               <>
                 <span className="text-gray-400">›</span>
-                <Link href={`/meeting-series/${minute.meetingSeries_id._id}`} className="hover:text-blue-600 transition-colors">
+                <Link href={`/meeting-series/${minute.meetingSeries_id._id}`} className="hover:text-[var(--brand-primary)] transition-colors">
                   {minute.meetingSeries_id.project && minute.meetingSeries_id.name
                     ? `${minute.meetingSeries_id.project} – ${minute.meetingSeries_id.name}`
                     : minute.meetingSeries_id.name || minute.meetingSeries_id.project || 'Series'}
@@ -2009,7 +2009,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
               </>
             )}
             <span className="text-gray-400">›</span>
-            <Link href={`/minutes/${minuteId}`} className="hover:text-blue-600 transition-colors">
+            <Link href={`/minutes/${minuteId}`} className="hover:text-[var(--brand-primary)] transition-colors">
               {minute?.date ? new Date(minute.date).toLocaleDateString() : 'Protokoll'}
             </Link>
             <span className="text-gray-400">›</span>
@@ -2069,7 +2069,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
               value={formData.title || ''}
               onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
               placeholder={t('minuteTitlePlaceholder')}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
             />
           </div>
 
@@ -2082,7 +2082,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
                   type="date"
                   value={formData.date}
                   onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
                   required
                 />
               </div>
@@ -2093,7 +2093,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
                   value={formData.time || ''}
                   onChange={(e) => setFormData(prev => ({ ...prev, time: e.target.value }))}
                   placeholder="HH:MM"
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
                 />
               </div>
               <div>
@@ -2103,7 +2103,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
                   value={formData.location || ''}
                   onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
                   placeholder={t('locationPlaceholder')}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
                 />
               </div>
             </div>
@@ -2112,7 +2112,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
           {/* Attendance List */}
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-100">
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-indigo-600 rounded-xl flex items-center justify-center">
+              <div className="w-10 h-10 brand-gradient-bg rounded-xl flex items-center justify-center">
                 <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
                 </svg>
@@ -2129,7 +2129,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
                 return (
                   <div key={index} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 p-4 bg-gray-50 rounded-xl border border-gray-200 hover:bg-gray-100 transition-colors">
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${isGuest ? 'bg-gradient-to-br from-orange-400 to-pink-500' : 'bg-gradient-to-br from-blue-400 to-indigo-500'}`}>
+                      <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white font-bold ${isGuest ? 'bg-gradient-to-br from-orange-400 to-pink-500' : 'brand-gradient-bg'}`}>
                         {user ? user.firstName.charAt(0).toUpperCase() : (isGuest ? guestName.charAt(0).toUpperCase() : '?')}
                       </div>
                       <div className="min-w-0">
@@ -2226,7 +2226,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
                 <button
                   type="button"
                   onClick={() => setShowGuestInput(true)}
-                  className="text-sm text-blue-600 hover:text-blue-800 font-medium flex items-center gap-1"
+                  className="text-sm text-[var(--brand-primary)] hover:text-[var(--brand-primary-strong)] font-medium flex items-center gap-1"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -2240,7 +2240,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
                     value={newGuestName}
                     onChange={(e) => setNewGuestName(e.target.value)}
                     placeholder={t('guestNamePlaceholder')}
-                    className="w-full min-[420px]:flex-1 px-3 py-2.5 min-h-11 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full min-[420px]:flex-1 px-3 py-2.5 min-h-11 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
                     onKeyDown={(e) => {
                       if (e.key === 'Enter') {
                         e.preventDefault();
@@ -2253,7 +2253,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
                     type="button"
                     onClick={addGuest}
                     disabled={!newGuestName.trim()}
-                    className="w-full min-[420px]:w-auto px-3 py-2.5 min-h-11 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 disabled:opacity-50 whitespace-nowrap"
+                    className="w-full min-[420px]:w-auto px-3 py-2.5 min-h-11 bg-[var(--brand-primary)] text-white rounded-lg text-sm font-medium hover:bg-[var(--brand-primary-strong)] disabled:opacity-50 whitespace-nowrap"
                   >
                     {t('add')}
                   </button>
@@ -2322,7 +2322,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
                                   {task.priority && (
                                     <span className={`px-2 py-0.5 text-xs font-medium rounded-full ${task.priority === 'high' ? 'bg-red-100 text-red-800' :
                                       task.priority === 'medium' ? 'bg-orange-100 text-orange-800' :
-                                        'bg-blue-100 text-blue-800'
+                                        'bg-[var(--brand-primary-soft)] text-[var(--brand-primary-strong)]'
                                       }`}>
                                       {task.priority === 'high' ? `🔴 ${t('high')}` :
                                         task.priority === 'medium' ? `🟡 ${t('medium')}` :
@@ -2346,9 +2346,9 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
                                 </div>
 
                                 {task.notes && (
-                                  <div className="mt-2 p-2 bg-blue-50 border border-blue-200 rounded-lg">
-                                    <p className="text-xs font-medium text-blue-900 mb-1">💬 {t('lastComment')}</p>
-                                    <p className="text-sm text-blue-800">{task.notes}</p>
+                                  <div className="mt-2 p-2 bg-[var(--brand-primary-soft)] border border-[var(--brand-primary-border)] rounded-lg">
+                                    <p className="text-xs font-medium text-[var(--brand-primary-strong)] mb-1">💬 {t('lastComment')}</p>
+                                    <p className="text-sm text-[var(--brand-primary-strong)]">{task.notes}</p>
                                   </div>
                                 )}
                               </div>
@@ -2382,7 +2382,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
                   type="button"
                   onClick={() => setEditorMode('visual')}
                   className={`px-4 py-2 text-sm font-semibold transition-colors ${
-                    editorMode === 'visual' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'
+                    editorMode === 'visual' ? 'bg-[var(--brand-primary)] text-white' : 'bg-white text-gray-700 hover:bg-gray-50'
                   }`}
                 >
                   {t('visualMode')}
@@ -2391,7 +2391,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
                   type="button"
                   onClick={() => setEditorMode('markdown')}
                   className={`px-4 py-2 text-sm font-semibold transition-colors ${
-                    editorMode === 'markdown' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'
+                    editorMode === 'markdown' ? 'bg-[var(--brand-primary)] text-white' : 'bg-white text-gray-700 hover:bg-gray-50'
                   }`}
                 >
                   {t('markdownMode')}
@@ -2410,7 +2410,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
                   <button
                     type="button"
                     onClick={addTopic}
-                    className="w-full sm:w-auto px-4 py-2.5 min-h-11 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all border-2 border-white inline-flex items-center justify-center gap-2 text-center"
+                    className="w-full sm:w-auto px-4 py-2.5 min-h-11 brand-button-primary rounded-lg font-semibold hover:shadow-lg transition-all border-2 border-white inline-flex items-center justify-center gap-2 text-center"
                   >
                     <svg className="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -2455,7 +2455,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
                 <button
                   type="button"
                   onClick={addTopic}
-                  className="inline-flex w-full sm:w-auto justify-center items-center gap-2 px-5 sm:px-8 py-3.5 min-h-11 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl sm:hover:scale-105 text-center"
+                  className="inline-flex w-full sm:w-auto justify-center items-center gap-2 px-5 sm:px-8 py-3.5 min-h-11 brand-button-primary rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl sm:hover:scale-105 text-center"
                 >
                   <svg className="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -2480,7 +2480,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
                 <button
                   type="button"
                   onClick={() => insertMarkdownSnippet(buildInfoTemplate())}
-                  className="px-3 py-1.5 text-xs sm:text-sm font-semibold bg-white border border-blue-300 text-blue-700 rounded-lg hover:bg-blue-50 transition-colors"
+                  className="px-3 py-1.5 text-xs sm:text-sm font-semibold bg-white border border-[var(--brand-primary-border)] text-[var(--brand-primary-strong)] rounded-lg hover:bg-[var(--brand-primary-soft)] transition-colors"
                 >
                   {t('markdownInsertInfo')}
                 </button>
@@ -2494,7 +2494,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
                 <button
                   type="button"
                   onClick={() => insertMarkdownSnippet(buildTaskTemplate('in-progress'))}
-                  className="px-3 py-1.5 text-xs sm:text-sm font-semibold bg-white border border-indigo-300 text-indigo-700 rounded-lg hover:bg-indigo-50 transition-colors"
+                  className="px-3 py-1.5 text-xs sm:text-sm font-semibold bg-white border border-[var(--brand-primary-border)] text-[var(--brand-primary-strong)] rounded-lg hover:bg-[var(--brand-primary-soft)] transition-colors"
                 >
                   {t('markdownInsertTaskInProgress')}
                 </button>
@@ -2515,7 +2515,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
                 <button
                   type="button"
                   onClick={() => insertMarkdownSnippet('due:2026-03-20')}
-                  className="px-3 py-1.5 text-xs sm:text-sm font-semibold bg-white border border-purple-300 text-purple-700 rounded-lg hover:bg-purple-50 transition-colors"
+                  className="px-3 py-1.5 text-xs sm:text-sm font-semibold bg-white border border-[var(--brand-primary-border)] text-[var(--brand-primary-strong)] rounded-lg hover:bg-[var(--brand-primary-soft)] transition-colors"
                 >
                   {t('markdownInsertDueDate')}
                 </button>
@@ -2588,7 +2588,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
                     }
                   }}
                   placeholder={getMinutesMarkdownTemplate()}
-                  className="w-full min-h-[320px] px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent font-mono text-sm"
+                  className="w-full min-h-[320px] px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent font-mono text-sm"
                 />
                 {mentionSuggestions.length > 0 && mentionMenuPosition && (
                   <div
@@ -2603,7 +2603,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
                         onClick={() => applyMentionSuggestion(candidate)}
                         className={`w-full text-left px-3 py-2 text-sm transition-colors ${
                           index === selectedMentionIndex
-                            ? 'bg-blue-50 text-blue-800'
+                            ? 'bg-[var(--brand-primary-soft)] text-[var(--brand-primary-strong)]'
                             : 'text-gray-700 hover:bg-gray-50'
                         }`}
                       >
@@ -2617,7 +2617,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
                 <button
                   type="button"
                   onClick={importMarkdownToTopics}
-                  className="w-full sm:w-auto px-4 py-2.5 min-h-11 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+                  className="w-full sm:w-auto px-4 py-2.5 min-h-11 bg-[var(--brand-primary)] text-white rounded-lg font-semibold hover:bg-[var(--brand-primary-strong)] transition-colors"
                 >
                   {t('importMarkdown')}
                 </button>
@@ -2685,7 +2685,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
               value={formData.globalNote}
               onChange={(e) => setFormData(prev => ({ ...prev, globalNote: e.target.value }))}
               placeholder={t('globalNotesPlaceholder')}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
               rows={4}
             />
           </div>
@@ -2698,7 +2698,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
               value={formData.endTime || ''}
               onChange={(e) => setFormData(prev => ({ ...prev, endTime: e.target.value }))}
               placeholder="HH:MM"
-              className="w-full sm:max-w-xs px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full sm:max-w-xs px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
             />
           </div>
         </form>

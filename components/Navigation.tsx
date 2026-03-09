@@ -143,7 +143,7 @@ export default function Navigation() {
                   href={item.href}
                   onClick={() => setMobileMenuOpen(false)}
                   className={`block px-4 py-3 text-base font-medium transition-colors ${isActive(item.href)
-                    ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 border-l-4 border-blue-600'
+                    ? 'bg-[var(--brand-primary-soft)] text-[var(--brand-primary)] border-l-4 border-[var(--brand-primary)]'
                     : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-700'
                     }`}
                 >
@@ -160,8 +160,8 @@ export default function Navigation() {
                       href={item.href}
                       onClick={() => setMobileMenuOpen(false)}
                       className={`block px-4 py-3 text-base font-medium transition-colors ${isActive(item.href)
-                        ? 'bg-purple-50 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border-l-4 border-purple-600'
-                        : 'text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-slate-700'
+                        ? 'bg-[var(--brand-primary-soft)] text-[var(--brand-primary)] border-l-4 border-[var(--brand-primary)]'
+                        : 'text-[var(--brand-primary)] hover:bg-[var(--brand-primary-soft)] dark:hover:bg-slate-700'
                         }`}
                     >
                       {item.label}
@@ -182,7 +182,7 @@ export default function Navigation() {
               key={item.href}
               href={item.href}
               className={`group relative px-4 py-2.5 rounded-xl font-medium transition-all duration-200 min-h-[44px] flex items-center min-w-0 ${isActive(item.href)
-                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/50'
+                ? 'brand-button-primary text-white shadow-lg'
                 : 'text-gray-700 dark:text-gray-200 hover:bg-white/80 dark:hover:bg-slate-700 hover:shadow-md'
                 }`}
             >
@@ -205,8 +205,8 @@ export default function Navigation() {
                   key={item.href}
                   href={item.href}
                   className={`group relative px-4 py-2.5 rounded-xl font-medium transition-all duration-200 min-h-[44px] flex items-center min-w-0 ${isActive(item.href)
-                    ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/50'
-                    : 'text-purple-700 dark:text-purple-300 hover:bg-purple-50 dark:hover:bg-slate-700 hover:shadow-md border border-purple-200 dark:border-purple-700'
+                    ? 'brand-button-primary text-white shadow-lg'
+                    : 'text-[var(--brand-primary)] hover:bg-[var(--brand-primary-soft)] dark:hover:bg-slate-700 hover:shadow-md border border-[var(--brand-primary-border)]'
                     }`}
                 >
                   <div className="flex items-center gap-2">
@@ -229,14 +229,14 @@ export default function Navigation() {
       {/* User Menu */}
       <div className="flex items-center gap-3">
         {loading ? (
-          <div className="w-8 h-8 border-2 border-slate-300 border-t-blue-600 rounded-full animate-spin"></div>
+          <div className="w-8 h-8 border-2 border-slate-300 border-t-[var(--brand-primary)] rounded-full animate-spin"></div>
         ) : currentUser ? (
           <div className="relative" ref={userMenuRef}>
             <button
               onClick={() => setShowUserMenu(!showUserMenu)}
               className="flex items-center gap-3 px-3 py-2 rounded-xl bg-white/80 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-700 transition-all shadow-md hover:shadow-lg min-h-[44px]"
             >
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+              <div className="w-8 h-8 brand-gradient-bg rounded-full flex items-center justify-center text-white font-semibold text-sm">
                 {(currentUser.firstName && currentUser.firstName[0] ? currentUser.firstName[0].toUpperCase() : '') ||
                  (currentUser.email && currentUser.email[0] ? currentUser.email[0].toUpperCase() : '?')}
               </div>
@@ -293,7 +293,7 @@ export default function Navigation() {
                       className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors min-h-[44px]"
                       onClick={() => setShowUserMenu(false)}
                     >
-                      <UsersIcon className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                      <UsersIcon className="w-4 h-4 text-[var(--brand-primary)] dark:text-[var(--brand-primary)]" />
                       <span className="text-sm text-slate-700 dark:text-slate-300">{t('userManagement')}</span>
                     </Link>
 
@@ -302,7 +302,7 @@ export default function Navigation() {
                       className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors min-h-[44px]"
                       onClick={() => setShowUserMenu(false)}
                     >
-                      <Shield className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                      <Shield className="w-4 h-4 text-[var(--brand-primary)] dark:text-[var(--brand-primary)]" />
                       <span className="text-sm text-slate-700 dark:text-slate-300">{t('systemSettings')}</span>
                     </Link>
 
@@ -334,7 +334,7 @@ export default function Navigation() {
             </Link>
             <Link
               href="/auth/register"
-              className="px-4 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all shadow-lg min-h-[44px] flex items-center"
+              className="px-4 py-2.5 brand-button-primary rounded-lg transition-all shadow-lg min-h-[44px] flex items-center"
             >
               {t('register')}
             </Link>

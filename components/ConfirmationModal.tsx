@@ -35,8 +35,8 @@ export default function ConfirmationModal({
       button: 'bg-yellow-600 hover:bg-yellow-700 focus:ring-yellow-500'
     },
     info: {
-      icon: 'text-blue-600 bg-blue-100',
-      button: 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500'
+      icon: 'text-[var(--brand-primary)] bg-[var(--brand-primary-soft)]',
+      button: 'bg-[var(--brand-primary)] hover:bg-[var(--brand-primary-strong)] focus:ring-[var(--brand-primary)]'
     }
   };
 

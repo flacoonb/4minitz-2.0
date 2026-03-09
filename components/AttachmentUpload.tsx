@@ -95,7 +95,7 @@ export default function AttachmentUpload({
       <div
         className={`relative border-2 border-dashed rounded-lg p-6 transition-colors ${
           dragActive 
-            ? 'border-blue-500 bg-blue-50' 
+            ? 'border-[var(--brand-primary)] bg-[var(--brand-primary-soft)]' 
             : 'border-gray-300 hover:border-gray-400'
         }`}
         onDragEnter={handleDrag}
@@ -117,7 +117,7 @@ export default function AttachmentUpload({
           
           {uploading ? (
             <div className="text-center">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto mb-2"></div>
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[var(--brand-primary)] mx-auto mb-2"></div>
               <p className="text-sm text-gray-600">{t('uploading')}</p>
             </div>
           ) : (
@@ -125,7 +125,7 @@ export default function AttachmentUpload({
               <div className="text-center">
                 <button
                   onClick={onButtonClick}
-                  className="text-blue-600 hover:text-blue-700 font-medium"
+                  className="text-[var(--brand-primary)] hover:text-[var(--brand-primary-strong)] font-medium"
                 >
                   {t('clickToUpload')}
                 </button>

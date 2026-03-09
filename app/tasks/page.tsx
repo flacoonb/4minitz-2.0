@@ -29,7 +29,12 @@ interface Task {
 
 const STATUS_CONFIG = {
   open: { label: 'Offen', labelEn: 'Open', color: 'bg-yellow-100 text-yellow-800', dot: 'bg-yellow-400' },
-  'in-progress': { label: 'In Arbeit', labelEn: 'In Progress', color: 'bg-blue-100 text-blue-800', dot: 'bg-blue-400' },
+  'in-progress': {
+    label: 'In Arbeit',
+    labelEn: 'In Progress',
+    color: 'bg-[var(--brand-primary-soft)] text-[var(--brand-primary-strong)]',
+    dot: 'bg-[var(--brand-primary)]',
+  },
   completed: { label: 'Erledigt', labelEn: 'Completed', color: 'bg-green-100 text-green-800', dot: 'bg-green-400' },
   cancelled: { label: 'Abgebrochen', labelEn: 'Cancelled', color: 'bg-gray-100 text-gray-600', dot: 'bg-gray-400' },
 };
@@ -189,7 +194,7 @@ export default function TasksPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-6 sm:py-8 px-3 sm:px-4">
+    <div className="min-h-screen brand-page-gradient py-6 sm:py-8 px-3 sm:px-4">
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -209,8 +214,8 @@ export default function TasksPage() {
             <div className="text-2xl font-bold text-yellow-600">{stats.open}</div>
             <div className="text-sm text-gray-500">{t('tasks.statusOpen')}</div>
           </div>
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-blue-100 shadow-sm">
-            <div className="text-2xl font-bold text-blue-600">{stats.inProgress}</div>
+          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-[var(--brand-primary-border)] shadow-sm">
+            <div className="text-2xl font-bold text-[var(--brand-primary)]">{stats.inProgress}</div>
             <div className="text-sm text-gray-500">{t('tasks.statusInProgress')}</div>
           </div>
           <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-red-100 shadow-sm">
@@ -227,12 +232,12 @@ export default function TasksPage() {
               placeholder={t('tasks.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="px-4 py-2 min-h-11 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent flex-1 min-w-0 sm:min-w-[200px]"
+              className="px-4 py-2 min-h-11 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent flex-1 min-w-0 sm:min-w-[200px]"
             />
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-3 py-2 min-h-11 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500"
+              className="px-3 py-2 min-h-11 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-[var(--brand-primary)]"
             >
               <option value="active">{t('tasks.filterActive')}</option>
               <option value="open">{t('tasks.statusOpen')}</option>
@@ -244,7 +249,7 @@ export default function TasksPage() {
             <select
               value={filterPriority}
               onChange={(e) => setFilterPriority(e.target.value)}
-              className="px-3 py-2 min-h-11 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-blue-500"
+              className="px-3 py-2 min-h-11 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-[var(--brand-primary)]"
             >
               <option value="">{t('tasks.allPriorities')}</option>
               <option value="high">{t('tasks.priorityHigh')}</option>
@@ -267,7 +272,7 @@ export default function TasksPage() {
         <div className="space-y-3">
           {loading ? (
             <div className="flex justify-center py-12">
-              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+              <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[var(--brand-primary)]"></div>
             </div>
           ) : filteredTasks.length === 0 ? (
             <div className="bg-white/80 backdrop-blur-sm rounded-xl p-12 border border-gray-100 shadow-sm text-center">
@@ -309,7 +314,7 @@ export default function TasksPage() {
                       {task.meetingSeries && (
                         <Link
                           href={`/meeting-series/${task.meetingSeries._id}`}
-                          className="hover:text-blue-600 transition-colors"
+                          className="hover:text-[var(--brand-primary)] transition-colors"
                         >
                           {getSeriesDisplayName(task)}
                         </Link>
@@ -325,7 +330,7 @@ export default function TasksPage() {
                       {task.minutesId && task.minutesId !== 'central' && (
                         <Link
                           href={`/minutes/${task.minutesId}`}
-                          className="hover:text-blue-600 transition-colors"
+                          className="hover:text-[var(--brand-primary)] transition-colors"
                         >
                           {t('tasks.viewProtocol')}
                         </Link>
@@ -340,7 +345,7 @@ export default function TasksPage() {
                   {/* Edit Button */}
                   <button
                     onClick={() => openTaskModal(task)}
-                    className="w-full sm:w-auto shrink-0 px-3 py-2 min-h-11 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors inline-flex items-center justify-center gap-1"
+                    className="w-full sm:w-auto shrink-0 px-3 py-2 min-h-11 text-sm brand-button-solid rounded-lg transition-colors inline-flex items-center justify-center gap-1"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -388,32 +393,32 @@ export default function TasksPage() {
 
             <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
               {/* Original Task Description (Read-only) */}
-              <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-3 sm:p-4">
+              <div className="bg-[var(--brand-primary-soft)] border-2 border-[var(--brand-primary-border)] rounded-lg p-3 sm:p-4">
                 <div className="flex items-start gap-2 mb-2">
-                  <svg className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-5 h-5 text-[var(--brand-primary)] mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                   </svg>
                   <div className="flex-1">
-                    <h3 className="text-sm font-bold text-blue-900 mb-1">{t('dashboard.originalTask')}</h3>
-                    <p className="text-sm sm:text-base text-blue-800 font-medium">{editingTask.subject}</p>
+                    <h3 className="text-sm font-bold text-[var(--brand-primary-strong)] mb-1">{t('dashboard.originalTask')}</h3>
+                    <p className="text-sm sm:text-base text-[var(--brand-primary-strong)] font-medium">{editingTask.subject}</p>
                     {editingTask.details && (
-                      <p className="text-sm text-blue-700 mt-2 whitespace-pre-wrap">{editingTask.details}</p>
+                      <p className="text-sm text-[var(--brand-primary-strong)] mt-2 whitespace-pre-wrap">{editingTask.details}</p>
                     )}
                   </div>
                 </div>
-                <div className="mt-3 pt-3 border-t border-blue-300 flex flex-wrap gap-2 text-xs">
+                <div className="mt-3 pt-3 border-t border-[var(--brand-primary-border)] flex flex-wrap gap-2 text-xs">
                   {editingTask.minutesDate && (
-                    <span className="text-blue-700">
+                    <span className="text-[var(--brand-primary-strong)]">
                       📅 {t('dashboard.minuteLabel')} {new Date(editingTask.minutesDate).toLocaleDateString(locale)}
                     </span>
                   )}
                   {editingTask.dueDate && (
-                    <span className="text-blue-700">
+                    <span className="text-[var(--brand-primary-strong)]">
                       {editingTask.minutesDate ? '• ' : ''}⏰ {t('dashboard.dueLabel')} {new Date(editingTask.dueDate).toLocaleDateString(locale)}
                     </span>
                   )}
                   {editingTask.priority && (
-                    <span className="text-blue-700">
+                    <span className="text-[var(--brand-primary-strong)]">
                       • {editingTask.priority === 'high' ? `🔴 ${t('priority.high')}` :
                         editingTask.priority === 'medium' ? `🟡 ${t('priority.medium')}` : `🔵 ${t('priority.low')}`}
                     </span>
@@ -484,7 +489,7 @@ export default function TasksPage() {
                   onChange={(e) => setTaskUpdateNotes(e.target.value)}
                   rows={4}
                   placeholder={t('dashboard.commentPlaceholder')}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-[var(--brand-primary)] transition-colors"
                 />
                 <p className="mt-2 text-xs text-gray-500 flex items-start gap-1">
                   <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -506,7 +511,7 @@ export default function TasksPage() {
                 <button
                   onClick={updateTaskStatus}
                   disabled={isUpdating}
-                  className="w-full sm:w-auto px-6 py-2 min-h-11 text-white bg-blue-600 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 inline-flex items-center justify-center gap-2"
+                  className="w-full sm:w-auto px-6 py-2 min-h-11 text-white brand-button-solid rounded-lg transition-colors disabled:opacity-50 inline-flex items-center justify-center gap-2"
                 >
                   {isUpdating ? (
                     <>

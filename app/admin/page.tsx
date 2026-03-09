@@ -7,7 +7,7 @@ export default function AdminDashboard() {
   const t = useTranslations('admin');
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen brand-page-gradient py-8">
       <div className="max-w-6xl mx-auto px-4">
         {/* Header */}
         <div className="mb-8">
@@ -22,12 +22,12 @@ export default function AdminDashboard() {
           {/* Email Configuration */}
           <Link
             href="/admin/email-config"
-            className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6 border-l-4 border-blue-500"
+            className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6 border-l-4 border-[var(--brand-primary)]"
           >
             <div className="flex items-start">
               <div className="flex-shrink-0">
                 <svg
-                  className="h-8 w-8 text-blue-500"
+                  className="h-8 w-8 text-[var(--brand-primary)]"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -83,12 +83,12 @@ export default function AdminDashboard() {
           {/* PDF Config */}
           <Link
             href="/admin/pdf-config"
-            className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6 border-l-4 border-indigo-500"
+            className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6 border-l-4 border-[var(--brand-secondary)]"
           >
             <div className="flex items-start">
               <div className="flex-shrink-0">
                 <svg
-                  className="h-8 w-8 text-indigo-500"
+                  className="h-8 w-8 text-[var(--brand-secondary)]"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -149,12 +149,12 @@ export default function AdminDashboard() {
           {/* Templates */}
           <Link
             href="/admin/templates"
-            className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6 border-l-4 border-purple-500"
+            className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6 border-l-4 border-[var(--brand-primary-strong)]"
           >
             <div className="flex items-start">
               <div className="flex-shrink-0">
                 <svg
-                  className="h-8 w-8 text-purple-500"
+                  className="h-8 w-8 text-[var(--brand-primary-strong)]"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -238,11 +238,11 @@ export default function AdminDashboard() {
         </div>
 
         {/* Info Box */}
-        <div className="mt-8 bg-blue-50 border-l-4 border-blue-400 p-4 rounded">
+        <div className="mt-8 p-4 rounded border-l-4 border-[var(--brand-primary-border)] bg-[var(--brand-primary-soft)]">
           <div className="flex">
             <div className="flex-shrink-0">
               <svg
-                className="h-5 w-5 text-blue-400"
+                className="h-5 w-5 text-[var(--brand-primary)]"
                 viewBox="0 0 20 20"
                 fill="currentColor"
               >
@@ -254,7 +254,7 @@ export default function AdminDashboard() {
               </svg>
             </div>
             <div className="ml-3">
-              <p className="text-sm text-blue-700">
+              <p className="text-sm text-[var(--brand-primary-strong)]">
                 <strong>{t('infoBox.title')}</strong> {t('infoBox.text')}
               </p>
             </div>

@@ -276,14 +276,14 @@ export default function PdfConfigPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen brand-page-gradient flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--brand-primary)]"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4">
+    <div className="min-h-screen brand-page-gradient py-8 px-4">
       {/* Success/Error Message Toast - Fixed at top */}
       {message && (
         <div className="fixed top-4 inset-x-4 sm:inset-x-auto sm:left-1/2 sm:-translate-x-1/2 z-50 animate-in slide-in-from-top">
@@ -338,7 +338,7 @@ export default function PdfConfigPage() {
               onClick={() => setActiveTab('content')}
               className={`shrink-0 pb-3 px-3 sm:px-4 font-semibold transition-all border-b-2 whitespace-nowrap ${
                 activeTab === 'content'
-                  ? 'border-blue-600 text-blue-600'
+                  ? 'border-[var(--brand-primary)] text-[var(--brand-primary)]'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -348,7 +348,7 @@ export default function PdfConfigPage() {
               onClick={() => setActiveTab('layout')}
               className={`shrink-0 pb-3 px-3 sm:px-4 font-semibold transition-all border-b-2 whitespace-nowrap ${
                 activeTab === 'layout'
-                  ? 'border-blue-600 text-blue-600'
+                  ? 'border-[var(--brand-primary)] text-[var(--brand-primary)]'
                   : 'border-transparent text-gray-500 hover:text-gray-700'
               }`}
             >
@@ -363,7 +363,7 @@ export default function PdfConfigPage() {
             {/* Logo & Branding */}
             <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
               <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6 text-[var(--brand-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
                 {t('content.branding.title')}
@@ -376,7 +376,7 @@ export default function PdfConfigPage() {
                       type="checkbox"
                       checked={contentSettings.showLogo}
                       onChange={(e) => setContentSettings({ ...contentSettings, showLogo: e.target.checked })}
-                      className="w-4 h-4 text-blue-600 rounded"
+                      className="w-4 h-4 text-[var(--brand-primary)] rounded"
                     />
                     {t('content.branding.showLogo')}
                   </label>
@@ -395,8 +395,8 @@ export default function PdfConfigPage() {
                             file:mr-4 file:py-2 file:px-4
                             file:rounded-full file:border-0
                             file:text-sm file:font-semibold
-                            file:bg-blue-50 file:text-blue-700
-                            hover:file:bg-blue-100"
+                            file:bg-[var(--brand-primary-soft)] file:text-[var(--brand-primary-strong)]
+                            hover:file:brightness-95"
                         />
                       </div>
                       {contentSettings.logoUrl && (
@@ -420,7 +420,7 @@ export default function PdfConfigPage() {
                           }
                         }}
                         placeholder="https://..."
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)]"
                       />
                     </div>
                     
@@ -429,7 +429,7 @@ export default function PdfConfigPage() {
                       <select
                         value={contentSettings.logoPosition}
                         onChange={(e) => setContentSettings({ ...contentSettings, logoPosition: e.target.value as any })}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)]"
                       >
                         <option value="left">{t('content.branding.positions.left')}</option>
                         <option value="center">{t('content.branding.positions.center')}</option>
@@ -446,7 +446,7 @@ export default function PdfConfigPage() {
                     value={contentSettings.companyName}
                     onChange={(e) => setContentSettings({ ...contentSettings, companyName: e.target.value })}
                     placeholder={t('content.branding.companyNamePlaceholder')}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)]"
                   />
                 </div>
               </div>
@@ -455,7 +455,7 @@ export default function PdfConfigPage() {
             {/* Header & Footer */}
             <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
               <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6 text-[var(--brand-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
                 {t('content.headerFooter.title')}
@@ -468,7 +468,7 @@ export default function PdfConfigPage() {
                       type="checkbox"
                       checked={contentSettings.showHeader}
                       onChange={(e) => setContentSettings({ ...contentSettings, showHeader: e.target.checked })}
-                      className="w-4 h-4 text-blue-600 rounded"
+                      className="w-4 h-4 text-[var(--brand-primary)] rounded"
                     />
                     {t('content.headerFooter.showHeader')}
                   </label>
@@ -482,7 +482,7 @@ export default function PdfConfigPage() {
                       value={contentSettings.headerText}
                       onChange={(e) => setContentSettings({ ...contentSettings, headerText: e.target.value })}
                       placeholder={t('content.headerFooter.headerTextPlaceholder')}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)]"
                     />
                   </div>
                 )}
@@ -493,7 +493,7 @@ export default function PdfConfigPage() {
                       type="checkbox"
                       checked={contentSettings.showFooter}
                       onChange={(e) => setContentSettings({ ...contentSettings, showFooter: e.target.checked })}
-                      className="w-4 h-4 text-blue-600 rounded"
+                      className="w-4 h-4 text-[var(--brand-primary)] rounded"
                     />
                     {t('content.headerFooter.showFooter')}
                   </label>
@@ -508,7 +508,7 @@ export default function PdfConfigPage() {
                         value={contentSettings.footerLeftText || ''}
                         onChange={(e) => setContentSettings({ ...contentSettings, footerLeftText: e.target.value })}
                         placeholder={t('content.headerFooter.footerLeftTextPlaceholder')}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)]"
                       />
                     </div>
 
@@ -519,7 +519,7 @@ export default function PdfConfigPage() {
                         value={contentSettings.footerText}
                         onChange={(e) => setContentSettings({ ...contentSettings, footerText: e.target.value })}
                         placeholder={t('content.headerFooter.footerTextPlaceholder')}
-                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                        className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)]"
                       />
                     </div>
                     
@@ -529,7 +529,7 @@ export default function PdfConfigPage() {
                           type="checkbox"
                           checked={contentSettings.showPageNumbers}
                           onChange={(e) => setContentSettings({ ...contentSettings, showPageNumbers: e.target.checked })}
-                          className="w-4 h-4 text-blue-600 rounded"
+                          className="w-4 h-4 text-[var(--brand-primary)] rounded"
                         />
                         {t('content.headerFooter.showPageNumbers')}
                       </label>
@@ -542,7 +542,7 @@ export default function PdfConfigPage() {
             {/* Content Options */}
             <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
               <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6 text-[var(--brand-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
                 </svg>
                 {t('content.options.title')}
@@ -554,7 +554,7 @@ export default function PdfConfigPage() {
                     type="checkbox"
                     checked={contentSettings.includeResponsibles}
                     onChange={(e) => setContentSettings({ ...contentSettings, includeResponsibles: e.target.checked })}
-                    className="w-4 h-4 text-blue-600 rounded"
+                    className="w-4 h-4 text-[var(--brand-primary)] rounded"
                   />
                   {t('content.options.responsibles')}
                 </label>
@@ -564,7 +564,7 @@ export default function PdfConfigPage() {
                     type="checkbox"
                     checked={contentSettings.includeStatusBadges}
                     onChange={(e) => setContentSettings({ ...contentSettings, includeStatusBadges: e.target.checked })}
-                    className="w-4 h-4 text-blue-600 rounded"
+                    className="w-4 h-4 text-[var(--brand-primary)] rounded"
                   />
                   {t('content.options.statusBadges')}
                 </label>
@@ -574,7 +574,7 @@ export default function PdfConfigPage() {
                     type="checkbox"
                     checked={contentSettings.includePriorityBadges}
                     onChange={(e) => setContentSettings({ ...contentSettings, includePriorityBadges: e.target.checked })}
-                    className="w-4 h-4 text-blue-600 rounded"
+                    className="w-4 h-4 text-[var(--brand-primary)] rounded"
                   />
                   {t('content.options.priorityBadges')}
                 </label>
@@ -584,7 +584,7 @@ export default function PdfConfigPage() {
                     type="checkbox"
                     checked={contentSettings.includeNotes}
                     onChange={(e) => setContentSettings({ ...contentSettings, includeNotes: e.target.checked })}
-                    className="w-4 h-4 text-blue-600 rounded"
+                    className="w-4 h-4 text-[var(--brand-primary)] rounded"
                   />
                   {t('content.options.notes')}
                 </label>
@@ -594,7 +594,7 @@ export default function PdfConfigPage() {
             {/* Colors & Fonts */}
             <div className="bg-white rounded-2xl shadow-lg p-6 border border-gray-100">
               <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
-                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-6 h-6 text-[var(--brand-primary)]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zm0 0h12a2 2 0 002-2v-4a2 2 0 00-2-2h-2.343M11 7.343l1.657-1.657a2 2 0 012.828 0l2.829 2.829a2 2 0 010 2.828l-8.486 8.485M7 17h.01" />
                 </svg>
                 {t('content.style.title')}
@@ -614,7 +614,7 @@ export default function PdfConfigPage() {
                       type="text"
                       value={contentSettings.primaryColor}
                       onChange={(e) => setContentSettings({ ...contentSettings, primaryColor: e.target.value })}
-                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)]"
                     />
                   </div>
                 </div>
@@ -632,7 +632,7 @@ export default function PdfConfigPage() {
                       type="text"
                       value={contentSettings.secondaryColor}
                       onChange={(e) => setContentSettings({ ...contentSettings, secondaryColor: e.target.value })}
-                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                      className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)]"
                     />
                   </div>
                 </div>
@@ -642,7 +642,7 @@ export default function PdfConfigPage() {
                   <select
                     value={contentSettings.fontFamily}
                     onChange={(e) => setContentSettings({ ...contentSettings, fontFamily: e.target.value as any })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)]"
                   >
                     <option value="helvetica">Helvetica</option>
                     <option value="times">Times New Roman</option>
@@ -658,7 +658,7 @@ export default function PdfConfigPage() {
                     max="16"
                     value={contentSettings.fontSize}
                     onChange={(e) => setContentSettings({ ...contentSettings, fontSize: parseInt(e.target.value) })}
-                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)]"
                   />
                 </div>
               </div>
@@ -697,7 +697,7 @@ export default function PdfConfigPage() {
                       onClick={() => setSelectedElement(element.id)}
                       className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
                         selectedElement === element.id
-                          ? 'border-blue-500 bg-blue-50'
+                          ? 'border-[var(--brand-primary)] bg-[var(--brand-primary-soft)]'
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
@@ -925,7 +925,7 @@ export default function PdfConfigPage() {
                   }}>
                     {/* Show margins */}
                     <div 
-                      className="absolute border border-dashed border-blue-300 pointer-events-none"
+                      className="absolute border border-dashed border-[var(--brand-primary-border)] pointer-events-none"
                       style={{
                         top: `${(layoutSettings.pageMargins.top / 297) * 100}%`,
                         left: `${(layoutSettings.pageMargins.left / 210) * 100}%`,
@@ -946,8 +946,8 @@ export default function PdfConfigPage() {
                           key={element.id}
                           className={`absolute cursor-pointer transition-all ${
                             selectedElement === element.id 
-                              ? 'border-2 border-blue-500 shadow-lg z-10' 
-                              : 'border border-gray-400 hover:border-blue-400'
+                              ? 'border-2 border-[var(--brand-primary)] shadow-lg z-10' 
+                              : 'border border-gray-400 hover:border-[var(--brand-primary)]'
                           }`}
                           style={{
                             left: `${left}%`,
@@ -984,7 +984,7 @@ export default function PdfConfigPage() {
           <button
             onClick={handleSave}
             disabled={saving}
-            className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-8 py-3 brand-button-primary rounded-xl font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {saving ? t('save.saving') : t('save.button')}
           </button>

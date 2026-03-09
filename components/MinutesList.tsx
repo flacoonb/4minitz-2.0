@@ -62,7 +62,7 @@ export default function MinutesList({ meetingSeriesId }: MinutesListProps) {
   if (loading) {
     return (
       <div className="flex items-center justify-center p-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--brand-primary)]"></div>
       </div>
     );
   }
@@ -103,7 +103,7 @@ export default function MinutesList({ meetingSeriesId }: MinutesListProps) {
         {meetingSeriesId && (
           <Link
             href={`/meeting-series/${meetingSeriesId}/minutes/new`}
-            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="inline-flex items-center px-4 py-2 brand-button-solid rounded-lg transition-colors"
           >
             {t('minutes.createNew')}
           </Link>
@@ -121,7 +121,7 @@ export default function MinutesList({ meetingSeriesId }: MinutesListProps) {
         {meetingSeriesId && (
           <Link
             href={`/meeting-series/${meetingSeriesId}/minutes/new`}
-            className="inline-flex w-full sm:w-auto justify-center items-center px-4 py-2 min-h-11 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="inline-flex w-full sm:w-auto justify-center items-center px-4 py-2 min-h-11 brand-button-solid rounded-lg transition-colors"
           >
             <svg
               className="w-5 h-5 mr-2"
@@ -153,7 +153,7 @@ export default function MinutesList({ meetingSeriesId }: MinutesListProps) {
             <Link
               key={minute._id}
               href={`/minutes/${minute._id}`}
-              className="block p-6 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md hover:border-blue-300 transition-all"
+              className="block p-6 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md hover:border-[var(--brand-primary-border)] transition-all"
             >
               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                 <div className="flex-1 min-w-0">
@@ -181,7 +181,7 @@ export default function MinutesList({ meetingSeriesId }: MinutesListProps) {
 
                   {!meetingSeriesId && minute.meetingSeries_id && (
                     <div className="mb-2">
-                      <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                      <span className="text-xs font-medium text-[var(--brand-primary)] bg-[var(--brand-primary-soft)] px-2 py-1 rounded">
                         {minute.meetingSeries_id.project} - {minute.meetingSeries_id.name}
                       </span>
                     </div>

@@ -74,7 +74,7 @@ export default function Header() {
 
   return (
     <div className="flex items-center gap-3">
-      <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
+      <div className="w-10 h-10 brand-gradient-bg rounded-xl flex items-center justify-center shadow-lg">
         {settings.organizationLogo ? (
           <Image 
             src={settings.organizationLogo} 
@@ -90,7 +90,7 @@ export default function Header() {
           </svg>
         )}
       </div>
-      <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+      <h1 className="text-2xl font-bold brand-gradient-text">
         {settings.organizationName}
       </h1>
       {/* Admin link removed by request */}

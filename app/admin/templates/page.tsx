@@ -473,9 +473,9 @@ function AdminTemplatesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 py-6 sm:py-8 px-3 sm:px-4">
+    <div className="min-h-screen brand-page-gradient dark:bg-slate-950 py-6 sm:py-8 px-3 sm:px-4">
       <div className="max-w-6xl mx-auto space-y-5">
-        <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 dark:from-slate-900 dark:via-slate-900 dark:to-slate-800 rounded-2xl p-4 sm:p-6 border border-blue-100 dark:border-slate-700 shadow-sm">
+        <div className="bg-[var(--brand-primary-soft)] dark:bg-slate-900 rounded-2xl p-4 sm:p-6 border border-[var(--brand-primary-border)] dark:border-slate-700 shadow-sm">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent">
@@ -502,7 +502,7 @@ function AdminTemplatesPage() {
             <button
               type="button"
               onClick={openCreateModal}
-              className="inline-flex items-center justify-center px-4 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 min-h-[44px] shadow-md"
+              className="inline-flex items-center justify-center px-4 py-2.5 brand-button-primary rounded-xl min-h-[44px] shadow-md"
             >
               + Neue Vorlage
             </button>
@@ -598,7 +598,7 @@ function AdminTemplatesPage() {
                     closeMentionSuggestions();
                   }}
                   className={`px-4 py-2 text-sm font-medium ${
-                    editorMode === 'visual' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'
+                    editorMode === 'visual' ? 'bg-[var(--brand-primary)] text-white' : 'bg-white text-gray-700 hover:bg-gray-50'
                   }`}
                 >
                   Visuell
@@ -607,7 +607,7 @@ function AdminTemplatesPage() {
                   type="button"
                   onClick={() => setEditorMode('markdown')}
                   className={`px-4 py-2 text-sm font-medium ${
-                    editorMode === 'markdown' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'
+                    editorMode === 'markdown' ? 'bg-[var(--brand-primary)] text-white' : 'bg-white text-gray-700 hover:bg-gray-50'
                   }`}
                 >
                   Markdown
@@ -624,7 +624,7 @@ function AdminTemplatesPage() {
                         <button type="button" onClick={() => removeTopic(topicIndex)} className="px-3 py-2 text-sm bg-red-600 text-white rounded-lg min-h-[40px]">Löschen</button>
                       </div>
                       <div className="flex gap-2">
-                        <button type="button" onClick={() => addItem(topicIndex, 'infoItem')} className="px-3 py-1.5 text-xs bg-blue-100 text-blue-800 rounded">+ Info</button>
+                        <button type="button" onClick={() => addItem(topicIndex, 'infoItem')} className="px-3 py-1.5 text-xs bg-[var(--brand-primary-soft)] text-[var(--brand-primary-strong)] rounded">+ Info</button>
                         <button type="button" onClick={() => addItem(topicIndex, 'actionItem')} className="px-3 py-1.5 text-xs bg-amber-100 text-amber-800 rounded">+ Aufgabe</button>
                       </div>
                       {(topic.infoItems || []).map((item, itemIndex) => (
@@ -735,7 +735,7 @@ function AdminTemplatesPage() {
                           <button
                             key={`${candidate.value}-${index}`}
                             type="button"
-                            className={`w-full text-left px-3 py-2 text-sm hover:bg-blue-50 ${index === selectedMentionIndex ? 'bg-blue-100' : ''}`}
+                            className={`w-full text-left px-3 py-2 text-sm hover:bg-[var(--brand-primary-soft)] ${index === selectedMentionIndex ? 'bg-[var(--brand-primary-soft)]' : ''}`}
                             onMouseDown={(event) => {
                               event.preventDefault();
                               applyMentionSuggestion(candidate);
@@ -762,7 +762,7 @@ function AdminTemplatesPage() {
               <button
                 onClick={saveTemplate}
                 disabled={saving || !name.trim()}
-                className="px-4 py-2.5 min-h-[44px] bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-xl hover:from-indigo-700 hover:to-purple-700 disabled:opacity-50"
+                className="px-4 py-2.5 min-h-[44px] brand-button-primary rounded-xl disabled:opacity-50"
               >
                 {saving ? 'Speichern...' : editingTemplate ? 'Änderungen speichern' : 'Vorlage erstellen'}
               </button>

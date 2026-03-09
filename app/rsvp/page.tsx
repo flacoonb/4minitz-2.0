@@ -103,7 +103,7 @@ export default function RsvpPage() {
             <button
               onClick={submitRsvp}
               disabled={loading}
-              className="w-full py-2.5 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50"
+              className="w-full py-2.5 rounded-lg brand-button-solid disabled:opacity-50 transition-colors"
             >
               {loading ? 'Speichert...' : `${responseLabel} bestätigen`}
             </button>

@@ -569,7 +569,7 @@ export default function MeetingSeriesPage() {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-[var(--brand-primary)] mx-auto mb-4"></div>
           <p className="text-gray-600 animate-pulse">{t('loading')}</p>
         </div>
       </div>
@@ -593,7 +593,7 @@ export default function MeetingSeriesPage() {
       <div>
         <Link
           href="/meeting-series"
-          className="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium mb-6 hover:scale-105 transition-all"
+          className="inline-flex items-center text-[var(--brand-primary)] hover:text-[var(--brand-primary-strong)] text-sm font-medium mb-6 hover:scale-105 transition-all"
         >
           <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -601,10 +601,10 @@ export default function MeetingSeriesPage() {
           {t('backToSeries')}
         </Link>
 
-        <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 rounded-2xl p-5 sm:p-8 border border-blue-100">
+        <div className="bg-[var(--brand-primary-soft)] rounded-2xl p-5 sm:p-8 border border-[var(--brand-primary-border)]">
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
             <div className="flex items-start sm:items-center gap-3 sm:gap-4 min-w-0">
-              <div className="w-14 h-14 sm:w-20 sm:h-20 shrink-0 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
+              <div className="w-14 h-14 sm:w-20 sm:h-20 shrink-0 brand-gradient-bg rounded-2xl flex items-center justify-center shadow-lg">
                 <svg className="w-7 h-7 sm:w-10 sm:h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                 </svg>
@@ -635,7 +635,7 @@ export default function MeetingSeriesPage() {
               {canEditSeries && (
                 <Link
                   href={`/meeting-series/${series._id}/templates`}
-                  className="inline-flex w-full md:w-auto justify-center items-center gap-2 px-6 py-3 min-h-11 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-xl shadow-lg hover:shadow-xl md:hover:scale-105 transition-all"
+                  className="inline-flex w-full md:w-auto justify-center items-center gap-2 px-6 py-3 min-h-11 brand-button-primary text-white rounded-xl shadow-lg hover:shadow-xl md:hover:scale-105 transition-all"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2a4 4 0 014-4h4m0 0l-3-3m3 3l-3 3M5 7h14" />
@@ -646,7 +646,7 @@ export default function MeetingSeriesPage() {
               {canEditSeries && (
                 <Link
                   href={`/meeting-series/${series._id}/edit`}
-                  className="inline-flex w-full md:w-auto justify-center items-center gap-2 px-6 py-3 min-h-11 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl shadow-lg hover:shadow-xl md:hover:scale-105 transition-all"
+                  className="inline-flex w-full md:w-auto justify-center items-center gap-2 px-6 py-3 min-h-11 brand-button-primary text-white rounded-xl shadow-lg hover:shadow-xl md:hover:scale-105 transition-all"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -686,7 +686,7 @@ export default function MeetingSeriesPage() {
                 setShowEventCreator((prev) => !prev);
                 setEventError(null);
               }}
-              className="inline-flex items-center justify-center gap-2 px-4 py-2 bg-violet-600 text-white rounded-lg hover:bg-violet-700 transition-colors"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2 brand-button-solid rounded-lg transition-colors"
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -697,7 +697,7 @@ export default function MeetingSeriesPage() {
         </div>
 
         {showEventCreator && (
-          <div className="mb-6 p-4 rounded-xl border border-violet-100 bg-violet-50/40 space-y-4">
+          <div className="mb-6 p-4 rounded-xl border border-[var(--brand-primary-border)] bg-[var(--brand-primary-soft)] space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Titel</label>
@@ -771,7 +771,7 @@ export default function MeetingSeriesPage() {
                         type="checkbox"
                         checked={selectedInviteeIds.includes(member.userId)}
                         onChange={() => toggleInvitee(member.userId)}
-                        className="h-4 w-4 text-violet-600 rounded"
+                        className="h-4 w-4 text-[var(--brand-primary)] rounded"
                       />
                       <span className="text-sm text-gray-800">{resolveUserLabel(member.userId)}</span>
                     </label>
@@ -794,7 +794,7 @@ export default function MeetingSeriesPage() {
               <button
                 onClick={createMeetingEvent}
                 disabled={creatingEvent}
-                className="px-4 py-2 rounded-lg bg-violet-600 text-white hover:bg-violet-700 disabled:opacity-50"
+                className="px-4 py-2 rounded-lg brand-button-solid disabled:opacity-50"
               >
                 {creatingEvent ? 'Speichert...' : 'Sitzung erstellen'}
               </button>
@@ -820,7 +820,7 @@ export default function MeetingSeriesPage() {
                       {event.location && <p className="text-sm text-gray-600">{event.location}</p>}
                     </div>
                     <div className="flex flex-wrap gap-2 text-xs">
-                      <span className="px-2 py-1 rounded-full bg-blue-100 text-blue-800">offen {counts.pending}</span>
+                      <span className="px-2 py-1 rounded-full bg-[var(--brand-primary-soft)] text-[var(--brand-primary-strong)]">offen {counts.pending}</span>
                       <span className="px-2 py-1 rounded-full bg-green-100 text-green-800">zugesagt {counts.accepted}</span>
                       <span className="px-2 py-1 rounded-full bg-yellow-100 text-yellow-800">vorbehalt {counts.tentative}</span>
                       <span className="px-2 py-1 rounded-full bg-rose-100 text-rose-800">abgesagt {counts.declined}</span>
@@ -830,7 +830,7 @@ export default function MeetingSeriesPage() {
                     <button
                       onClick={() => sendEventInvites(event._id)}
                       disabled={isActionLoading}
-                      className="px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-sm hover:bg-indigo-700 disabled:opacity-50"
+                      className="px-3 py-1.5 rounded-lg bg-[var(--brand-primary)] text-white text-sm hover:bg-[var(--brand-primary-strong)] disabled:opacity-50"
                     >
                       Einladungen senden
                     </button>
@@ -881,7 +881,7 @@ export default function MeetingSeriesPage() {
         </div>
 
         {minutes.length === 0 ? (
-          <div className="p-8 bg-gradient-to-br from-gray-50 to-blue-50 rounded-xl text-center">
+          <div className="p-8 bg-gradient-to-br from-gray-50 to-[var(--brand-page-to)] rounded-xl text-center">
             <h3 className="text-lg font-medium text-gray-900 mb-2">{t('noMinutes')}</h3>
             <p className="text-gray-600 mb-4">{t('noMinutesText')}</p>
             <p className="text-sm text-gray-500">{t('noMinutesHint')}</p>
@@ -896,7 +896,7 @@ export default function MeetingSeriesPage() {
               >
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
+                    <div className="w-8 h-8 brand-gradient-bg rounded-lg flex items-center justify-center text-white font-bold text-sm">
                       {index + 1}
                     </div>
                     <div className="min-w-0">
@@ -982,7 +982,7 @@ export default function MeetingSeriesPage() {
                 <select
                   value={importSourceId}
                   onChange={(e) => loadSourceTasks(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent bg-white"
                 >
                   <option value="">{t('selectSeries')}</option>
                   {allSeries.map(s => (
@@ -996,7 +996,7 @@ export default function MeetingSeriesPage() {
               {/* Loading */}
               {loadingImportTasks && (
                 <div className="flex justify-center py-4">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--brand-primary)]"></div>
                 </div>
               )}
 
@@ -1015,7 +1015,7 @@ export default function MeetingSeriesPage() {
                     </span>
                     <button
                       onClick={toggleAllTasks}
-                      className="text-sm text-blue-600 hover:text-blue-800"
+                      className="text-sm text-[var(--brand-primary)] hover:text-[var(--brand-primary-strong)]"
                     >
                       {selectedTaskIds.size === importTasks.length ? t('deselectAll') : t('selectAll')}
                     </button>
@@ -1026,7 +1026,7 @@ export default function MeetingSeriesPage() {
                       <label
                         key={task._id}
                         className={`flex items-start gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${selectedTaskIds.has(task._id)
-                            ? 'border-blue-400 bg-blue-50'
+                            ? 'border-[var(--brand-primary-border)] bg-[var(--brand-primary-soft)]'
                             : 'border-gray-200 hover:border-gray-300'
                           }`}
                       >
@@ -1034,7 +1034,7 @@ export default function MeetingSeriesPage() {
                           type="checkbox"
                           checked={selectedTaskIds.has(task._id)}
                           onChange={() => toggleTask(task._id)}
-                          className="mt-1 h-4 w-4 text-blue-600 rounded"
+                          className="mt-1 h-4 w-4 text-[var(--brand-primary)] rounded"
                         />
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-gray-900 text-sm">{task.subject}</p>
@@ -1045,12 +1045,12 @@ export default function MeetingSeriesPage() {
                             </span>
                             <span className={`px-1.5 py-0.5 text-xs rounded ${task.priority === 'high' ? 'bg-red-100 text-red-800' :
                                 task.priority === 'medium' ? 'bg-orange-100 text-orange-800' :
-                                  'bg-blue-100 text-blue-800'
+                                  'bg-[var(--brand-primary-soft)] text-[var(--brand-primary-strong)]'
                               }`}>
                               {task.priority === 'high' ? t('highPriority') : task.priority === 'medium' ? t('mediumPriority') : t('lowPriority')}
                             </span>
                             {task.dueDate && (
-                              <span className="px-1.5 py-0.5 text-xs bg-purple-100 text-purple-800 rounded">
+                              <span className="px-1.5 py-0.5 text-xs bg-[var(--brand-primary-soft)] text-[var(--brand-primary-strong)] rounded">
                                 {t('dueLabel')}: {new Date(task.dueDate).toLocaleDateString(locale)}
                               </span>
                             )}
@@ -1083,7 +1083,7 @@ export default function MeetingSeriesPage() {
                 <button
                   onClick={executeImport}
                   disabled={importing}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 flex items-center gap-2"
+                  className="px-6 py-2 bg-[var(--brand-primary)] text-white rounded-lg hover:bg-[var(--brand-primary-strong)] transition-colors disabled:opacity-50 flex items-center gap-2"
                 >
                   {importing ? (
                     <>
@@ -1121,7 +1121,7 @@ export default function MeetingSeriesPage() {
             <div className="p-6 space-y-4">
               {loadingTemplates && (
                 <div className="flex justify-center py-4">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--brand-primary)]"></div>
                 </div>
               )}
 
@@ -1135,14 +1135,14 @@ export default function MeetingSeriesPage() {
                 <div className="space-y-2">
                   <label
                     className={`flex items-start gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
-                      selectedTemplateId === '' ? 'border-blue-400 bg-blue-50' : 'border-gray-200 hover:border-gray-300'
+                      selectedTemplateId === '' ? 'border-[var(--brand-primary-border)] bg-[var(--brand-primary-soft)]' : 'border-gray-200 hover:border-gray-300'
                     }`}
                   >
                     <input
                       type="radio"
                       checked={selectedTemplateId === ''}
                       onChange={() => setSelectedTemplateId('')}
-                      className="mt-1 h-4 w-4 text-blue-600"
+                      className="mt-1 h-4 w-4 text-[var(--brand-primary)]"
                     />
                     <div>
                       <p className="font-semibold text-gray-900">{t('templateNone')}</p>
@@ -1155,7 +1155,7 @@ export default function MeetingSeriesPage() {
                       key={template._id}
                       className={`flex items-start gap-3 p-3 rounded-lg border-2 cursor-pointer transition-all ${
                         selectedTemplateId === template._id
-                          ? 'border-blue-400 bg-blue-50'
+                          ? 'border-[var(--brand-primary-border)] bg-[var(--brand-primary-soft)]'
                           : 'border-gray-200 hover:border-gray-300'
                       }`}
                     >
@@ -1163,7 +1163,7 @@ export default function MeetingSeriesPage() {
                         type="radio"
                         checked={selectedTemplateId === template._id}
                         onChange={() => setSelectedTemplateId(template._id)}
-                        className="mt-1 h-4 w-4 text-blue-600"
+                        className="mt-1 h-4 w-4 text-[var(--brand-primary)]"
                       />
                       <div className="min-w-0">
                         <div className="flex flex-wrap items-center gap-2">

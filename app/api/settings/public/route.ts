@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import connectDB from '@/lib/mongodb';
 import Settings from '@/models/Settings';
+import { DEFAULT_BRAND_COLORS, sanitizeBrandColors } from '@/lib/brand-colors';
 
 export async function GET(_request: NextRequest) {
   try {
@@ -16,7 +17,8 @@ export async function GET(_request: NextRequest) {
           system: {
             organizationName: '4Minitz 2.0',
             organizationLogo: null,
-            agendaItemLabelMode: 'topic-alpha'
+            agendaItemLabelMode: 'topic-alpha',
+            brandColors: DEFAULT_BRAND_COLORS,
           }
         }
       });
@@ -31,7 +33,8 @@ export async function GET(_request: NextRequest) {
         requireAdminApproval: settings.memberSettings?.requireAdminApproval ?? true,
         agendaItemLabelMode: settings.memberSettings?.agendaItemLabelMode || 'topic-alpha',
         dateFormat: settings.systemSettings?.dateFormat || 'DD.MM.YYYY',
-        timeFormat: settings.systemSettings?.timeFormat || '24h'
+        timeFormat: settings.systemSettings?.timeFormat || '24h',
+        brandColors: sanitizeBrandColors(settings.systemSettings?.brandColors),
       },
       language: {
         defaultLanguage: settings.languageSettings?.defaultLanguage || 'de'

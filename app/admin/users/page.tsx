@@ -283,7 +283,7 @@ const UserManagement = () => {
       case 'admin':
         return <Crown className="w-4 h-4 text-yellow-500" />;
       case 'moderator':
-        return <UserCog className="w-4 h-4 text-blue-500" />;
+        return <UserCog className="w-4 h-4 text-[var(--brand-primary)]" />;
       default:
         return <User className="w-4 h-4 text-gray-500" />;
     }
@@ -294,7 +294,7 @@ const UserManagement = () => {
       case 'admin':
         return 'bg-yellow-100 text-yellow-800';
       case 'moderator':
-        return 'bg-blue-100 text-blue-800';
+        return 'bg-[var(--brand-primary-soft)] text-[var(--brand-primary-strong)]';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -319,7 +319,7 @@ const UserManagement = () => {
         {/* Header */}
         <div className="mb-8">
           <div className="flex flex-col min-[420px]:flex-row min-[420px]:items-start gap-3 mb-2 min-w-0">
-            <div className="p-3 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl text-white shadow-lg w-fit shrink-0">
+            <div className="p-3 brand-gradient-bg rounded-xl text-white shadow-lg w-fit shrink-0">
               <Users className="w-6 h-6" />
             </div>
             <div className="min-w-0">
@@ -361,7 +361,7 @@ const UserManagement = () => {
                 placeholder={t('searchPlaceholder')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 min-h-11 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 min-h-11 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
               />
             </div>
 
@@ -370,7 +370,7 @@ const UserManagement = () => {
               <select
                 value={roleFilter}
                 onChange={(e) => setRoleFilter(e.target.value)}
-                className="px-4 py-2 min-h-11 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="px-4 py-2 min-h-11 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
               >
                 <option value="all">{t('filters.allRoles')}</option>
                 <option value="admin">{t('roles.admin')}</option>
@@ -381,7 +381,7 @@ const UserManagement = () => {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-4 py-2 min-h-11 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                className="px-4 py-2 min-h-11 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
               >
                 <option value="all">{t('filters.allStatus')}</option>
                 <option value="active">{t('status.active')}</option>
@@ -393,7 +393,7 @@ const UserManagement = () => {
             {/* Create User Button */}
             <button
               onClick={() => setShowCreateModal(true)}
-              className="w-full lg:w-auto px-4 py-2 min-h-11 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg hover:from-indigo-600 hover:to-purple-700 transition-all flex items-center justify-center gap-2 shadow-lg"
+              className="w-full lg:w-auto px-4 py-2 min-h-11 brand-button-primary rounded-lg transition-all flex items-center justify-center gap-2 shadow-lg"
             >
               <UserPlus className="w-4 h-4" />
               {t('actions.create')}
@@ -405,7 +405,7 @@ const UserManagement = () => {
         <div className="bg-white/70 backdrop-blur-sm border border-white/50 rounded-xl shadow-lg overflow-hidden">
           {loading ? (
             <div className="p-8 text-center">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
+              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--brand-primary)]"></div>
               <p className="mt-4 text-slate-600">{t('loading')}</p>
             </div>
           ) : (
@@ -422,7 +422,7 @@ const UserManagement = () => {
                           className="w-10 h-10 rounded-full object-cover shrink-0"
                         />
                       ) : (
-                        <div className="w-10 h-10 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold shrink-0">
+                        <div className="w-10 h-10 brand-gradient-bg rounded-full flex items-center justify-center text-white font-semibold shrink-0">
                           {user.firstName[0]?.toUpperCase() || user.email[0]?.toUpperCase()}
                         </div>
                       )}
@@ -458,7 +458,7 @@ const UserManagement = () => {
                           });
                           setShowEditModal(true);
                         }}
-                        className="p-2 min-h-11 min-w-11 inline-flex items-center justify-center text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                        className="p-2 min-h-11 min-w-11 inline-flex items-center justify-center text-slate-600 hover:text-[var(--brand-primary)] hover:bg-[var(--brand-primary-soft)] rounded-lg transition-colors"
                         title={t('actions.edit')}
                       >
                         <Edit3 className="w-4 h-4" />
@@ -503,7 +503,7 @@ const UserManagement = () => {
                                 className="w-10 h-10 rounded-full object-cover"
                               />
                             ) : (
-                              <div className="w-10 h-10 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-full flex items-center justify-center text-white font-semibold">
+                              <div className="w-10 h-10 brand-gradient-bg rounded-full flex items-center justify-center text-white font-semibold">
                                 {user.firstName[0]?.toUpperCase() || user.email[0]?.toUpperCase()}
                               </div>
                             )}
@@ -590,7 +590,7 @@ const UserManagement = () => {
                                 });
                                 setShowEditModal(true);
                               }}
-                              className="p-2 min-h-11 min-w-11 inline-flex items-center justify-center text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors"
+                              className="p-2 min-h-11 min-w-11 inline-flex items-center justify-center text-slate-600 hover:text-[var(--brand-primary)] hover:bg-[var(--brand-primary-soft)] rounded-lg transition-colors"
                               title={t('actions.edit')}
                             >
                               <Edit3 className="w-4 h-4" />
@@ -659,7 +659,7 @@ const UserManagement = () => {
                     type="email"
                     value={newUser.email}
                     onChange={(e) => setNewUser({...newUser, email: e.target.value})}
-                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
                     required
                   />
                 </div>
@@ -670,7 +670,7 @@ const UserManagement = () => {
                       type="text"
                       value={newUser.firstName}
                       onChange={(e) => setNewUser({...newUser, firstName: e.target.value})}
-                      className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
                       required
                     />
                   </div>
@@ -680,7 +680,7 @@ const UserManagement = () => {
                       type="text"
                       value={newUser.lastName}
                       onChange={(e) => setNewUser({...newUser, lastName: e.target.value})}
-                      className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
                       required
                     />
                   </div>
@@ -691,7 +691,7 @@ const UserManagement = () => {
                     type="password"
                     value={newUser.password}
                     onChange={(e) => setNewUser({...newUser, password: e.target.value})}
-                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
                     required
                     minLength={8}
                   />
@@ -701,7 +701,7 @@ const UserManagement = () => {
                   <select
                     value={newUser.role}
                     onChange={(e) => setNewUser({...newUser, role: e.target.value as 'admin' | 'moderator' | 'user'})}
-                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
                   >
                     <option value="user">{t('roles.user')}</option>
                     <option value="moderator">{t('roles.moderator')}</option>
@@ -719,7 +719,7 @@ const UserManagement = () => {
                   <button
                     type="submit"
                     disabled={saving}
-                    className="w-full sm:flex-1 px-4 py-2 min-h-11 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg hover:from-indigo-600 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full sm:flex-1 px-4 py-2 min-h-11 brand-button-primary rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {saving ? 'Erstelle…' : t('actions.create')}
                   </button>
@@ -743,7 +743,7 @@ const UserManagement = () => {
                     type="email"
                     value={editUser.email}
                     onChange={(e) => setEditUser({...editUser, email: e.target.value})}
-                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
                     required
                   />
                 </div>
@@ -754,7 +754,7 @@ const UserManagement = () => {
                       type="text"
                       value={editUser.firstName}
                       onChange={(e) => setEditUser({...editUser, firstName: e.target.value})}
-                      className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
                       required
                     />
                   </div>
@@ -764,7 +764,7 @@ const UserManagement = () => {
                       type="text"
                       value={editUser.lastName}
                       onChange={(e) => setEditUser({...editUser, lastName: e.target.value})}
-                      className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
                       required
                     />
                   </div>
@@ -774,7 +774,7 @@ const UserManagement = () => {
                   <select
                     value={editUser.role}
                     onChange={(e) => setEditUser({...editUser, role: e.target.value as 'admin' | 'moderator' | 'user'})}
-                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
                   >
                     <option value="user">{t('roles.user')}</option>
                     <option value="moderator">{t('roles.moderator')}</option>
@@ -787,7 +787,7 @@ const UserManagement = () => {
                       type="checkbox"
                       checked={editUser.isActive}
                       onChange={(e) => setEditUser({...editUser, isActive: e.target.checked})}
-                      className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
+                      className="w-4 h-4 text-[var(--brand-primary)] border-slate-300 rounded focus:ring-[var(--brand-primary)]"
                     />
                     <span className="text-sm text-slate-700">{t('status.active')}</span>
                   </label>
@@ -796,7 +796,7 @@ const UserManagement = () => {
                       type="checkbox"
                       checked={editUser.isEmailVerified}
                       onChange={(e) => setEditUser({...editUser, isEmailVerified: e.target.checked})}
-                      className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
+                      className="w-4 h-4 text-[var(--brand-primary)] border-slate-300 rounded focus:ring-[var(--brand-primary)]"
                     />
                     <span className="text-sm text-slate-700">{t('status.verified')}</span>
                   </label>
@@ -812,7 +812,7 @@ const UserManagement = () => {
                   <button
                     type="submit"
                     disabled={saving}
-                    className="w-full sm:flex-1 px-4 py-2 min-h-11 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg hover:from-indigo-600 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="w-full sm:flex-1 px-4 py-2 min-h-11 brand-button-primary rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {saving ? 'Speichere…' : t('actions.update')}
                   </button>

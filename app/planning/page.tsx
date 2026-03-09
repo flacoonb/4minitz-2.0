@@ -160,11 +160,11 @@ export default function PlanningPage() {
     return events.filter((event) => event.status === statusFilter);
   }, [events, statusFilter]);
 
-  const getSeriesLabel = (event: MeetingEvent) => {
+  const getSeriesLabel = useCallback((event: MeetingEvent) => {
     const series = seriesById[event.meetingSeriesId];
     if (!series) return t('unknownSeries');
     return series.name ? `${series.project || ''} - ${series.name}`.trim() : series.project || t('unknownSeries');
-  };
+  }, [seriesById, t]);
 
   const formatDateTime = (event: MeetingEvent) => {
     const dateText = new Date(event.scheduledDate).toLocaleDateString(locale);
@@ -185,10 +185,10 @@ export default function PlanningPage() {
 
   const statusBadgeClass: Record<MeetingEvent['status'], string> = {
     draft: 'bg-slate-100 text-slate-700',
-    invited: 'bg-indigo-100 text-indigo-700',
+    invited: 'bg-[var(--brand-primary-soft)] text-[var(--brand-primary-strong)]',
     confirmed: 'bg-emerald-100 text-emerald-700',
     cancelled: 'bg-rose-100 text-rose-700',
-    completed: 'bg-blue-100 text-blue-700',
+    completed: 'bg-[var(--brand-primary-soft)] text-[var(--brand-primary-strong)]',
   };
 
   const calendarEntriesByDate = useMemo(() => {
@@ -254,7 +254,7 @@ export default function PlanningPage() {
     });
 
     return map;
-  }, [events, minutes, t, seriesById]);
+  }, [events, minutes, t, seriesById, getSeriesLabel]);
 
   const calendarDays = useMemo(() => {
     const year = calendarMonth.getFullYear();
@@ -316,7 +316,7 @@ export default function PlanningPage() {
   if (authLoading || loading) {
     return (
       <div className="flex items-center justify-center p-12">
-        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[var(--brand-primary)]"></div>
       </div>
     );
   }
@@ -334,9 +334,9 @@ export default function PlanningPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 py-5 sm:py-6 px-3 sm:px-4">
+    <div className="min-h-screen brand-page-gradient py-5 sm:py-6 px-3 sm:px-4">
       <div className="max-w-6xl mx-auto space-y-4 sm:space-y-5">
-        <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 rounded-2xl p-4 sm:p-5 border border-blue-100 shadow-sm">
+        <div className="bg-[var(--brand-primary-soft)] rounded-2xl p-4 sm:p-5 border border-[var(--brand-primary-border)] shadow-sm">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
@@ -346,7 +346,7 @@ export default function PlanningPage() {
             </div>
             <button
               onClick={fetchPlanningData}
-              className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700 min-h-[44px] shadow-md"
+              className="px-4 py-2.5 rounded-xl brand-button-primary min-h-[44px] shadow-md"
             >
               {t('refresh')}
             </button>
@@ -403,7 +403,7 @@ export default function PlanningPage() {
                       }}
                       className={`min-h-[84px] rounded-lg border p-1.5 text-left transition-colors ${
                         isCurrentMonth
-                          ? 'bg-white border-gray-200 hover:border-indigo-300 hover:bg-indigo-50'
+                          ? 'bg-white border-gray-200 hover:border-[var(--brand-primary-border)] hover:bg-[var(--brand-primary-soft)]'
                           : 'bg-gray-50 border-gray-100 text-gray-400'
                       } ${canCreateEvent && isCurrentMonth ? 'cursor-pointer' : ''}`}
                     >
@@ -411,7 +411,7 @@ export default function PlanningPage() {
                         <div
                           className={`text-xs font-semibold ${
                             isToday
-                              ? 'inline-flex w-6 h-6 items-center justify-center rounded-full bg-indigo-600 text-white'
+                              ? 'inline-flex w-6 h-6 items-center justify-center rounded-full bg-[var(--brand-primary)] text-white'
                               : ''
                           }`}
                         >
@@ -423,7 +423,7 @@ export default function PlanningPage() {
                               e.stopPropagation();
                               openCreateForDate(day);
                             }}
-                            className="w-5 h-5 rounded text-[12px] text-indigo-600 hover:bg-indigo-100"
+                            className="w-5 h-5 rounded text-[12px] text-[var(--brand-primary)] hover:bg-[var(--brand-primary-soft)]"
                             title={t('calendar.createButton')}
                           >
                             +
@@ -441,7 +441,7 @@ export default function PlanningPage() {
                               }}
                               className={`w-full text-left truncate text-[10px] px-1.5 py-0.5 rounded ${
                                 entry.kind === 'event'
-                                  ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                                  ? 'bg-[var(--brand-primary-soft)] text-[var(--brand-primary-strong)] hover:brightness-95'
                                   : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
                               }`}
                               title={entry.title}
@@ -469,7 +469,7 @@ export default function PlanningPage() {
                   setShowCreateModal(true);
                 }}
                 disabled={!canCreateEvent}
-                className="w-full px-4 py-2.5 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700 min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+                className="w-full px-4 py-2.5 rounded-xl brand-button-primary min-h-[44px] disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
               >
                 {t('calendar.createButton')}
               </button>
@@ -535,7 +535,7 @@ export default function PlanningPage() {
                     <span className="px-2 py-1 rounded-full bg-rose-100 text-rose-800">
                       {t('rsvpBadges.declined')} {stats.declined}
                     </span>
-                    <span className="px-2 py-1 rounded-full bg-blue-100 text-blue-800">
+                    <span className="px-2 py-1 rounded-full bg-[var(--brand-primary-soft)] text-[var(--brand-primary-strong)]">
                       {t('rsvpBadges.pending')} {stats.pending}
                     </span>
                     <span className="px-2 py-1 rounded-full bg-slate-100 text-slate-700">
@@ -731,7 +731,7 @@ export default function PlanningPage() {
               <button
                 onClick={createEvent}
                 disabled={creatingEvent}
-                className="px-4 py-2 rounded-lg bg-indigo-600 text-white hover:bg-indigo-700 disabled:opacity-50"
+                className="px-4 py-2 rounded-lg brand-button-solid disabled:opacity-50"
               >
                 {creatingEvent ? t('create.creating') : t('create.submit')}
               </button>

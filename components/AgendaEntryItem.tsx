@@ -51,7 +51,7 @@ export const AgendaEntryItem: React.FC<AgendaEntryItemProps> = ({
           </div>
           
           {isEditing && !isImportedEntry ? (
-            <div className="space-y-3 bg-blue-50 p-4 rounded-lg border border-blue-200">
+            <div className="space-y-3 bg-[var(--brand-primary-soft)] p-4 rounded-lg border border-[var(--brand-primary-border)]">
               {/* Betreff */}
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">{t('discussionPoint')}</label>
@@ -59,7 +59,7 @@ export const AgendaEntryItem: React.FC<AgendaEntryItemProps> = ({
                   type="text"
                   value={editedEntry.subject}
                   onChange={(e) => setEditedEntry({ ...editedEntry, subject: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] bg-white"
                   placeholder={`${t('discussionPoint')}...`}
                 />
               </div>
@@ -71,7 +71,7 @@ export const AgendaEntryItem: React.FC<AgendaEntryItemProps> = ({
                   value={editedEntry.content || ''}
                   onChange={(e) => setEditedEntry({ ...editedEntry, content: e.target.value })}
                   rows={2}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 resize-none text-sm bg-white"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] resize-none text-sm bg-white"
                   placeholder={`${t('detailsOptional')}...`}
                 />
               </div>
@@ -83,7 +83,7 @@ export const AgendaEntryItem: React.FC<AgendaEntryItemProps> = ({
                   <select
                     value={editedEntry.labelId || ''}
                     onChange={(e) => setEditedEntry({ ...editedEntry, labelId: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 bg-white text-sm"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] bg-white text-sm"
                   >
                     <option value="">{t('type')}</option>
                     {labels.map((label) => (
@@ -99,7 +99,7 @@ export const AgendaEntryItem: React.FC<AgendaEntryItemProps> = ({
                   <select
                     value={editedEntry.isCompleted ? 'completed' : 'open'}
                     onChange={(e) => setEditedEntry({ ...editedEntry, isCompleted: e.target.value === 'completed' })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm bg-white"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] text-sm bg-white"
                   >
                     <option value="open">{t('open')}</option>
                     <option value="completed">{t('completed')}</option>
@@ -111,7 +111,7 @@ export const AgendaEntryItem: React.FC<AgendaEntryItemProps> = ({
                   <select
                     value={editedEntry.priority}
                     onChange={(e) => setEditedEntry({ ...editedEntry, priority: e.target.value as any })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm bg-white"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] text-sm bg-white"
                   >
                     <option value="low">{t('low')}</option>
                     <option value="medium">{t('medium')}</option>
@@ -125,7 +125,7 @@ export const AgendaEntryItem: React.FC<AgendaEntryItemProps> = ({
                     type="date"
                     value={editedEntry.dueDate || ''}
                     onChange={(e) => setEditedEntry({ ...editedEntry, dueDate: e.target.value })}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm bg-white"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] text-sm bg-white"
                   />
                 </div>
               </div>
@@ -143,7 +143,7 @@ export const AgendaEntryItem: React.FC<AgendaEntryItemProps> = ({
                     const selected = Array.from(e.target.selectedOptions, option => option.value);
                     setEditedEntry({ ...editedEntry, responsibles: selected });
                   }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm bg-white"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] text-sm bg-white"
                   size={3}
                 >
                   {(selectedSeries?.participants || []).map((participant: string) => (
@@ -155,13 +155,13 @@ export const AgendaEntryItem: React.FC<AgendaEntryItemProps> = ({
               </div>
               
               {/* Aktions-Buttons */}
-              <div className="flex gap-2 pt-2 border-t border-blue-200">
+              <div className="flex gap-2 pt-2 border-t border-[var(--brand-primary-border)]">
                 <button
                   onClick={() => {
                     onUpdate(entry.id, editedEntry);
                     setIsEditing(false);
                   }}
-                  className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm"
+                  className="flex-1 px-4 py-2 bg-[var(--brand-primary)] text-white rounded-lg text-sm font-medium hover:bg-[var(--brand-primary-strong)] transition-colors shadow-sm"
                 >
                   {t('save')}
                 </button>
@@ -197,8 +197,8 @@ export const AgendaEntryItem: React.FC<AgendaEntryItemProps> = ({
               
               {/* Editable fields for imported task */}
               {isEditing ? (
-                <div className="space-y-3 bg-white p-4 rounded-lg border border-blue-200">
-                  <h5 className="text-sm font-semibold text-blue-900 mb-3">{t('updateForThisSession')}</h5>
+                <div className="space-y-3 bg-white p-4 rounded-lg border border-[var(--brand-primary-border)]">
+                  <h5 className="text-sm font-semibold text-[var(--brand-primary-strong)] mb-3">{t('updateForThisSession')}</h5>
                   
                   {/* Status und Datum */}
                   <div className="grid grid-cols-2 gap-3">
@@ -209,7 +209,7 @@ export const AgendaEntryItem: React.FC<AgendaEntryItemProps> = ({
                           type="checkbox"
                           checked={editedEntry.isCompleted}
                           onChange={(e) => setEditedEntry({ ...editedEntry, isCompleted: e.target.checked })}
-                          className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                          className="w-4 h-4 text-[var(--brand-primary)] rounded focus:ring-[var(--brand-primary)]"
                         />
                         <span className="text-sm text-gray-700">{t('completed')}</span>
                       </label>
@@ -221,7 +221,7 @@ export const AgendaEntryItem: React.FC<AgendaEntryItemProps> = ({
                         type="date"
                         value={editedEntry.dueDate || ''}
                         onChange={(e) => setEditedEntry({ ...editedEntry, dueDate: e.target.value })}
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] text-sm"
                       />
                     </div>
                   </div>
@@ -236,7 +236,7 @@ export const AgendaEntryItem: React.FC<AgendaEntryItemProps> = ({
                         const selected = Array.from(e.target.selectedOptions, option => option.value);
                         setEditedEntry({ ...editedEntry, responsibles: selected });
                       }}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 text-sm"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] text-sm"
                       size={3}
                     >
                       {(selectedSeries?.participants || []).map((participant: string) => (
@@ -254,7 +254,7 @@ export const AgendaEntryItem: React.FC<AgendaEntryItemProps> = ({
                         onUpdate(entry.id, editedEntry);
                         setIsEditing(false);
                       }}
-                      className="flex-1 px-3 py-1.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
+                      className="flex-1 px-3 py-1.5 bg-[var(--brand-primary)] text-white rounded-lg text-sm font-medium hover:bg-[var(--brand-primary-strong)]"
                     >
                       {t('save')}
                     </button>
@@ -287,7 +287,7 @@ export const AgendaEntryItem: React.FC<AgendaEntryItemProps> = ({
                   </div>
                   <button
                     onClick={() => setIsEditing(true)}
-                    className="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                    className="text-[var(--brand-primary)] hover:text-[var(--brand-primary-strong)] text-sm font-medium"
                   >
                     {t('edit')}
                   </button>
@@ -310,13 +310,13 @@ export const AgendaEntryItem: React.FC<AgendaEntryItemProps> = ({
                 <span className={`px-2 py-1 rounded text-xs font-medium ${
                   entry.priority === 'high' ? 'bg-red-100 text-red-800' :
                   entry.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                  'bg-blue-100 text-blue-800'
+                  'bg-[var(--brand-primary-soft)] text-[var(--brand-primary-strong)]'
                 }`}>
                   {entry.priority === 'high' ? t('high') : entry.priority === 'medium' ? t('medium') : t('low')}
                 </span>
                 
                 {entry.dueDate && (
-                  <span className="px-2 py-1 rounded text-xs font-medium bg-purple-100 text-purple-800 flex items-center gap-1">
+                  <span className="px-2 py-1 rounded text-xs font-medium bg-[var(--brand-primary-soft)] text-[var(--brand-primary-strong)] flex items-center gap-1">
                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                     </svg>
@@ -325,7 +325,7 @@ export const AgendaEntryItem: React.FC<AgendaEntryItemProps> = ({
                 )}
                 
                 {entry.responsibles && entry.responsibles.length > 0 && (
-                  <span className="px-2 py-1 rounded text-xs font-medium bg-indigo-100 text-indigo-800 flex items-center gap-1">
+                  <span className="px-2 py-1 rounded text-xs font-medium bg-[var(--brand-primary-soft)] text-[var(--brand-primary-strong)] flex items-center gap-1">
                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
@@ -342,7 +342,7 @@ export const AgendaEntryItem: React.FC<AgendaEntryItemProps> = ({
             <>
               <button
                 onClick={() => setIsEditing(true)}
-                className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                className="p-2 text-gray-400 hover:text-[var(--brand-primary)] hover:bg-[var(--brand-primary-soft)] rounded-lg transition-colors"
                 title={t('edit')}
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

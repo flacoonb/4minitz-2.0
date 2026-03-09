@@ -32,7 +32,7 @@ export default function MeetingSeriesError({
         <div className="flex gap-3 justify-center">
           <button
             onClick={reset}
-            className="px-6 py-2.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors font-medium"
+            className="px-6 py-2.5 brand-button-solid rounded-lg transition-colors font-medium"
           >
             {t('tryAgain')}
           </button>

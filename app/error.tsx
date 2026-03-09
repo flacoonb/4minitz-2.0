@@ -56,7 +56,7 @@ export default function Error({
           {isChunkError ? (
             <button
               onClick={() => window.location.reload()}
-              className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className="px-6 py-2 brand-button-solid rounded-lg transition-colors"
             >
               {t('tryAgain')}
             </button>
@@ -64,7 +64,7 @@ export default function Error({
             <>
               <button
                 onClick={reset}
-                className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
+                className="px-6 py-2 brand-button-solid rounded-lg transition-colors"
               >
                 {t('tryAgain')}
               </button>

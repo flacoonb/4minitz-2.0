@@ -250,7 +250,7 @@ export default function NewMeetingSeriesPage() {
   if (authLoading) {
     return (
       <div className="flex items-center justify-center p-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--brand-primary)]"></div>
       </div>
     );
   }
@@ -266,7 +266,7 @@ export default function NewMeetingSeriesPage() {
       <div>
         <Link
           href="/meeting-series"
-          className="inline-flex items-center text-blue-600 hover:text-blue-800 text-sm font-medium mb-6 hover:scale-105 transition-all"
+          className="inline-flex items-center text-[var(--brand-primary)] hover:text-[var(--brand-primary-strong)] text-sm font-medium mb-6 hover:scale-105 transition-all"
         >
           <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -274,7 +274,7 @@ export default function NewMeetingSeriesPage() {
           {t('backToSeries')}
         </Link>
 
-        <div className="bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 rounded-2xl p-5 sm:p-8 border border-blue-100">
+        <div className="bg-[var(--brand-primary-soft)] rounded-2xl p-5 sm:p-8 border border-[var(--brand-primary-border)]">
           <div className="flex items-start sm:items-center gap-3 sm:gap-4 min-w-0">
             <div className="w-12 h-12 sm:w-16 sm:h-16 shrink-0 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg">
               <svg className="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -285,7 +285,7 @@ export default function NewMeetingSeriesPage() {
               <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent break-words">
                 {t('title')}
               </h1>
-              <p className="text-base sm:text-lg text-blue-700 font-medium mt-1">
+              <p className="text-base sm:text-lg text-[var(--brand-primary-strong)] font-medium mt-1">
                 {t('subtitle')}
               </p>
             </div>
@@ -302,7 +302,7 @@ export default function NewMeetingSeriesPage() {
       )}
 
       {importMessage && (
-        <div className="bg-blue-50 border border-blue-200 text-blue-800 px-4 py-3 rounded-lg">
+        <div className="bg-[var(--brand-primary-soft)] border border-[var(--brand-primary-border)] text-[var(--brand-primary-strong)] px-4 py-3 rounded-lg">
           <p className="text-sm font-medium">{importMessage}</p>
         </div>
       )}
@@ -325,7 +325,7 @@ export default function NewMeetingSeriesPage() {
                 onChange={handleInputChange}
                 required
                 autoComplete="off"
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent transition-all"
                 placeholder={t('sessionNamePlaceholder')}
               />
               <datalist id="existing-session-names">
@@ -344,7 +344,7 @@ export default function NewMeetingSeriesPage() {
                 name="name"
                 value={formData.name}
                 onChange={handleInputChange}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent transition-all bg-white"
               >
                 <option value="">{t('noYear')}</option>
                 {Array.from({ length: 7 }, (_, i) => new Date().getFullYear() - 2 + i).map(year => (
@@ -364,7 +364,7 @@ export default function NewMeetingSeriesPage() {
                 id="sourceSeriesId"
                 value={sourceSeriesId}
                 onChange={(e) => setSourceSeriesId(e.target.value)}
-                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all bg-white"
+                className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent transition-all bg-white"
               >
                 <option value="">{t('noImport')}</option>
                 {existingSeries.map(s => (
@@ -390,7 +390,7 @@ export default function NewMeetingSeriesPage() {
               value={formData.description}
               onChange={handleInputChange}
               rows={3}
-              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent transition-all resize-none"
               placeholder={t('descriptionPlaceholder')}
             />
           </div>
@@ -405,7 +405,7 @@ export default function NewMeetingSeriesPage() {
                 <select
                   value={selectedUserId}
                   onChange={(e) => setSelectedUserId(e.target.value)}
-                  className="w-full flex-1 min-w-0 px-4 py-3 min-h-11 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full flex-1 min-w-0 px-4 py-3 min-h-11 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent transition-all"
                 >
                   <option value="">{t('selectUser')}</option>
                   {allUsers
@@ -421,7 +421,7 @@ export default function NewMeetingSeriesPage() {
                   type="button"
                   onClick={addMember}
                   disabled={!selectedUserId}
-                  className="w-full min-[420px]:w-auto px-3 sm:px-4 py-3 min-h-11 min-w-11 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center shrink-0"
+                  className="w-full min-[420px]:w-auto px-3 sm:px-4 py-3 min-h-11 min-w-11 bg-[var(--brand-primary)] text-white rounded-xl hover:bg-[var(--brand-primary-strong)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center shrink-0"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -436,10 +436,10 @@ export default function NewMeetingSeriesPage() {
                     return (
                       <div
                         key={member.userId}
-                        className="flex items-start justify-between gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200"
+                        className="flex items-start justify-between gap-3 p-3 bg-[var(--brand-primary-soft)] rounded-lg border border-[var(--brand-primary-border)]"
                       >
                         <div className="flex items-start gap-3 min-w-0">
-                          <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-indigo-500 rounded-full flex items-center justify-center text-white font-bold">
+                          <div className="w-10 h-10 brand-gradient-bg rounded-full flex items-center justify-center text-white font-bold">
                             {user ? user.firstName.charAt(0).toUpperCase() : '?'}
                           </div>
                           <div className="min-w-0">
@@ -481,13 +481,13 @@ export default function NewMeetingSeriesPage() {
                   value={newParticipant}
                   onChange={(e) => setNewParticipant(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addParticipant())}
-                  className="w-full flex-1 min-w-0 px-4 py-3 min-h-11 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full flex-1 min-w-0 px-4 py-3 min-h-11 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent transition-all"
                   placeholder={t('participantPlaceholder')}
                 />
                 <button
                   type="button"
                   onClick={addParticipant}
-                  className="w-full min-[420px]:w-auto px-3 sm:px-4 py-3 min-h-11 min-w-11 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors inline-flex items-center justify-center shrink-0"
+                  className="w-full min-[420px]:w-auto px-3 sm:px-4 py-3 min-h-11 min-w-11 bg-[var(--brand-primary)] text-white rounded-xl hover:bg-[var(--brand-primary-strong)] transition-colors inline-flex items-center justify-center shrink-0"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -500,13 +500,13 @@ export default function NewMeetingSeriesPage() {
                   {formData.participants.map((participant, index) => (
                     <div
                       key={index}
-                      className="flex items-center gap-2 bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm"
+                      className="flex items-center gap-2 bg-[var(--brand-primary-soft)] text-[var(--brand-primary-strong)] px-3 py-1 rounded-full text-sm"
                     >
                       <span>{participant}</span>
                       <button
                         type="button"
                         onClick={() => removeParticipant(participant)}
-                        className="hover:bg-blue-200 rounded-full p-1 transition-colors"
+                        className="hover:bg-[var(--brand-primary-soft)] rounded-full p-1 transition-colors"
                       >
                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -532,13 +532,13 @@ export default function NewMeetingSeriesPage() {
                   value={newInformedUser}
                   onChange={(e) => setNewInformedUser(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), addInformedUser())}
-                  className="w-full flex-1 min-w-0 px-4 py-3 min-h-11 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                  className="w-full flex-1 min-w-0 px-4 py-3 min-h-11 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent transition-all"
                   placeholder={t('informedUserPlaceholder')}
                 />
                 <button
                   type="button"
                   onClick={addInformedUser}
-                  className="w-full min-[420px]:w-auto px-3 sm:px-4 py-3 min-h-11 min-w-11 bg-blue-600 text-white rounded-xl hover:bg-blue-700 transition-colors inline-flex items-center justify-center shrink-0"
+                  className="w-full min-[420px]:w-auto px-3 sm:px-4 py-3 min-h-11 min-w-11 bg-[var(--brand-primary)] text-white rounded-xl hover:bg-[var(--brand-primary-strong)] transition-colors inline-flex items-center justify-center shrink-0"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
@@ -575,7 +575,7 @@ export default function NewMeetingSeriesPage() {
             <button
               type="submit"
               disabled={loading || !formData.project}
-              className="w-full sm:w-auto px-6 sm:px-8 py-3 min-h-11 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl shadow-lg hover:shadow-xl sm:hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+              className="w-full sm:w-auto px-6 sm:px-8 py-3 min-h-11 brand-button-primary rounded-xl shadow-lg hover:shadow-xl sm:hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
             >
               {loading ? (
                 <div className="flex items-center gap-2">

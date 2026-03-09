@@ -110,11 +110,11 @@ const LoginPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex items-center justify-center p-4">
+    <div className="min-h-screen brand-page-gradient flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl shadow-lg mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 brand-gradient-bg rounded-2xl shadow-lg mb-4">
             <LogIn className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-slate-800 mb-2">{t('title')}</h1>
@@ -152,7 +152,7 @@ const LoginPage = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white/50"
+                  className="w-full pl-12 pr-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent transition-all bg-white/50"
                   placeholder={t('emailPlaceholder')}
                   required
                 />
@@ -172,7 +172,7 @@ const LoginPage = () => {
                   name="password"
                   value={formData.password}
                   onChange={handleInputChange}
-                  className="w-full pl-12 pr-12 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white/50"
+                  className="w-full pl-12 pr-12 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent transition-all bg-white/50"
                   placeholder={t('passwordPlaceholder')}
                   required
                 />
@@ -189,7 +189,7 @@ const LoginPage = () => {
             <div className="mt-2 text-right">
               <Link
                 href="/auth/forgot-password"
-                className="text-sm font-semibold text-indigo-600 hover:text-indigo-500 transition-colors"
+                className="text-sm font-semibold text-[var(--brand-primary)] hover:text-[var(--brand-primary-strong)] transition-colors"
               >
                 {t('forgotPassword')}
               </Link>
@@ -199,7 +199,7 @@ const LoginPage = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 px-6 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold rounded-xl hover:from-indigo-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg"
+              className="w-full py-3 px-6 brand-button-primary font-semibold rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg"
             >
               {loading ? (
                 <div className="flex items-center justify-center gap-3">
@@ -221,7 +221,7 @@ const LoginPage = () => {
               {t('noAccount')}{' '}
               <Link
                 href="/auth/register"
-                className="font-semibold text-indigo-600 hover:text-indigo-500 transition-colors"
+                className="font-semibold text-[var(--brand-primary)] hover:text-[var(--brand-primary-strong)] transition-colors"
               >
                 {t('registerNow')}
               </Link>

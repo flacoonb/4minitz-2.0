@@ -86,7 +86,7 @@ export default function AttachmentList({ minuteId, onDelete }: AttachmentListPro
   if (loading) {
     return (
       <div className="flex items-center justify-center py-8">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[var(--brand-primary)]"></div>
       </div>
     );
   }
@@ -124,7 +124,7 @@ export default function AttachmentList({ minuteId, onDelete }: AttachmentListPro
             <a
               href={attachment.url}
               download={attachment.originalName}
-              className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+              className="p-2 text-[var(--brand-primary)] hover:bg-[var(--brand-primary-soft)] rounded-lg transition-colors"
               title={t('download')}
             >
               <Download className="w-4 h-4" />

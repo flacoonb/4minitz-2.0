@@ -623,7 +623,7 @@ const ProfilePage = () => {
       case 'admin':
         return 'text-yellow-600 bg-yellow-100';
       case 'moderator':
-        return 'text-blue-600 bg-blue-100';
+        return 'text-[var(--brand-primary-strong)] bg-[var(--brand-primary-soft)]';
       default:
         return 'text-gray-600 bg-gray-100';
     }
@@ -637,7 +637,7 @@ const ProfilePage = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500 mb-4"></div>
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--brand-primary)] mb-4"></div>
           <p className="text-slate-600 dark:text-slate-400">{t('loading')}</p>
         </div>
       </div>
@@ -660,7 +660,7 @@ const ProfilePage = () => {
         {/* Header */}
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-2">
-            <div className="p-3 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl text-white shadow-lg">
+            <div className="p-3 brand-gradient-bg rounded-xl text-white shadow-lg">
               <User className="w-6 h-6" />
             </div>
             <div>
@@ -708,7 +708,7 @@ const ProfilePage = () => {
                       unoptimized
                     />
                   ) : (
-                    <div className="w-24 h-24 bg-gradient-to-br from-indigo-400 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-2xl">
+                    <div className="w-24 h-24 brand-gradient-bg rounded-full flex items-center justify-center text-white font-bold text-2xl">
                       {user.firstName[0]?.toUpperCase() || user.email[0]?.toUpperCase()}
                     </div>
                   )}
@@ -763,7 +763,7 @@ const ProfilePage = () => {
                       key={tab.key}
                       onClick={() => handleTabSwitch(tab.key as any)}
                       className={`flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-6 py-3 sm:py-4 min-h-11 text-xs sm:text-sm font-medium border-b-2 transition-colors leading-tight text-center sm:whitespace-nowrap ${activeTab === tab.key
-                        ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400 bg-indigo-50/50 dark:bg-indigo-900/20'
+                        ? 'border-[var(--brand-primary)] text-[var(--brand-primary)] dark:text-[var(--brand-primary)] bg-[var(--brand-primary-soft)] dark:bg-[var(--brand-primary-soft)]'
                         : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-50/50 dark:hover:bg-slate-800/50'
                         }`}
                     >
@@ -783,7 +783,7 @@ const ProfilePage = () => {
                       {!editMode && (
                         <button
                           onClick={() => setEditMode(true)}
-                          className="flex items-center gap-2 px-4 py-2 min-h-11 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded-lg transition-colors"
+                          className="flex items-center gap-2 px-4 py-2 min-h-11 text-[var(--brand-primary)] dark:text-[var(--brand-primary)] hover:bg-[var(--brand-primary-soft)] dark:hover:bg-[var(--brand-primary-soft)] rounded-lg transition-colors"
                         >
                           <Edit3 className="w-4 h-4" />
                           {t('profileTab.edit')}
@@ -802,7 +802,7 @@ const ProfilePage = () => {
                             onChange={(e) => setProfileData({ ...profileData, firstName: e.target.value })}
                             disabled={!editMode}
                             autoComplete="given-name"
-                            className="w-full px-4 py-3 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-slate-50 dark:disabled:bg-slate-800 disabled:text-slate-500 dark:disabled:text-slate-500"
+                            className="w-full px-4 py-3 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent disabled:bg-slate-50 dark:disabled:bg-slate-800 disabled:text-slate-500 dark:disabled:text-slate-500"
                           />
                         </div>
                         <div>
@@ -814,7 +814,7 @@ const ProfilePage = () => {
                             onChange={(e) => setProfileData({ ...profileData, lastName: e.target.value })}
                             disabled={!editMode}
                             autoComplete="family-name"
-                            className="w-full px-4 py-3 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-slate-50 dark:disabled:bg-slate-800 disabled:text-slate-500 dark:disabled:text-slate-500"
+                            className="w-full px-4 py-3 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent disabled:bg-slate-50 dark:disabled:bg-slate-800 disabled:text-slate-500 dark:disabled:text-slate-500"
                           />
                         </div>
                       </div>
@@ -840,7 +840,7 @@ const ProfilePage = () => {
                           onChange={(e) => setProfileData({ ...profileData, avatar: e.target.value })}
                           disabled={!editMode}
                           placeholder="https://..."
-                          className="w-full px-4 py-3 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-slate-50 dark:disabled:bg-slate-800 disabled:text-slate-500 dark:disabled:text-slate-500"
+                          className="w-full px-4 py-3 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent disabled:bg-slate-50 dark:disabled:bg-slate-800 disabled:text-slate-500 dark:disabled:text-slate-500"
                         />
                       </div>
 
@@ -853,7 +853,7 @@ const ProfilePage = () => {
                           onChange={(e) => setProfileData({ ...profileData, email: e.target.value })}
                           disabled={!editMode}
                           autoComplete="email"
-                          className="w-full px-4 py-3 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent disabled:bg-slate-50 dark:disabled:bg-slate-800 disabled:text-slate-500 dark:disabled:text-slate-500"
+                          className="w-full px-4 py-3 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent disabled:bg-slate-50 dark:disabled:bg-slate-800 disabled:text-slate-500 dark:disabled:text-slate-500"
                         />
                       </div>
 
@@ -872,7 +872,7 @@ const ProfilePage = () => {
                           <button
                             type="submit"
                             disabled={savingProfile}
-                            className="px-4 py-2 min-h-11 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg hover:from-indigo-600 hover:to-purple-700 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                            className="px-4 py-2 min-h-11 brand-button-primary text-white rounded-lg transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                           >
                             {savingProfile ? (
                               <>
@@ -910,7 +910,7 @@ const ProfilePage = () => {
                             value={passwordData.currentPassword}
                             onChange={(e) => setPasswordData({ ...passwordData, currentPassword: e.target.value })}
                             autoComplete="current-password"
-                            className="w-full px-4 py-3 pr-12 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                            className="w-full px-4 py-3 pr-12 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
                             required
                           />
                           <button
@@ -932,7 +932,7 @@ const ProfilePage = () => {
                             value={passwordData.newPassword}
                             onChange={(e) => setPasswordData({ ...passwordData, newPassword: e.target.value })}
                             autoComplete="new-password"
-                            className="w-full px-4 py-3 pr-12 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                            className="w-full px-4 py-3 pr-12 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
                             required
                             minLength={8}
                           />
@@ -955,7 +955,7 @@ const ProfilePage = () => {
                             value={passwordData.confirmPassword}
                             onChange={(e) => setPasswordData({ ...passwordData, confirmPassword: e.target.value })}
                             autoComplete="new-password"
-                            className="w-full px-4 py-3 pr-12 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                            className="w-full px-4 py-3 pr-12 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
                             required
                           />
                           <button
@@ -971,7 +971,7 @@ const ProfilePage = () => {
                       <button
                         type="submit"
                         disabled={savingPassword}
-                        className="px-6 py-3 min-h-11 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg hover:from-indigo-600 hover:to-purple-700 transition-all disabled:opacity-50 flex items-center gap-2"
+                        className="px-6 py-3 min-h-11 brand-button-primary text-white rounded-lg transition-all disabled:opacity-50 flex items-center gap-2"
                       >
                         {savingPassword ? (
                           <>
@@ -998,8 +998,8 @@ const ProfilePage = () => {
                         <p className="text-slate-600 dark:text-slate-400">{t('preferencesTab.description')}</p>
                       </div>
                       {savingPreferences && (
-                        <div className="flex items-center gap-2 text-indigo-600 dark:text-indigo-400 text-sm font-medium">
-                          <div className="w-4 h-4 border-2 border-indigo-600/30 border-t-indigo-600 rounded-full animate-spin"></div>
+                        <div className="flex items-center gap-2 text-[var(--brand-primary)] dark:text-[var(--brand-primary)] text-sm font-medium">
+                          <div className="w-4 h-4 border-2 border-[var(--brand-primary-border)] border-t-[var(--brand-primary)] rounded-full animate-spin"></div>
                           {t('preferencesTab.saving')}
                         </div>
                       )}
@@ -1016,7 +1016,7 @@ const ProfilePage = () => {
                               setPreferencesData(newPrefs);
                               updatePreferences(newPrefs);
                             }}
-                            className="w-full px-4 py-3 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                            className="w-full px-4 py-3 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
                           >
                             <option value="de">Deutsch</option>
                             <option value="en">English</option>
@@ -1032,7 +1032,7 @@ const ProfilePage = () => {
                               setPreferencesData(newPrefs);
                               updatePreferences(newPrefs);
                             }}
-                            className="w-full px-4 py-3 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                            className="w-full px-4 py-3 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
                           >
                             <option value="light">{t('preferencesTab.themes.light')}</option>
                             <option value="dark">{t('preferencesTab.themes.dark')}</option>
@@ -1059,7 +1059,7 @@ const ProfilePage = () => {
                               setPreferencesData(newPrefs);
                               updatePreferences(newPrefs);
                             }}
-                            className="w-4 h-4 text-indigo-600 border-slate-300 dark:border-slate-600 rounded focus:ring-indigo-500 dark:bg-slate-800"
+                            className="w-4 h-4 text-[var(--brand-primary)] border-slate-300 dark:border-slate-600 rounded focus:ring-[var(--brand-primary)] dark:bg-slate-800"
                           />
                           <div>
                             <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{t('preferencesTab.emailNotifications')}</span>
@@ -1073,7 +1073,7 @@ const ProfilePage = () => {
                             checked={preferencesData.notifications.inApp}
                             disabled={configuringPush || savingPreferences}
                             onChange={(e) => handlePushToggle(e.target.checked)}
-                            className="w-4 h-4 text-indigo-600 border-slate-300 dark:border-slate-600 rounded focus:ring-indigo-500 dark:bg-slate-800"
+                            className="w-4 h-4 text-[var(--brand-primary)] border-slate-300 dark:border-slate-600 rounded focus:ring-[var(--brand-primary)] dark:bg-slate-800"
                           />
                           <div>
                             <span className="text-sm font-medium text-slate-700 dark:text-slate-300">{t('preferencesTab.pushNotifications')}</span>
@@ -1084,7 +1084,7 @@ const ProfilePage = () => {
 
                       <div className="border border-slate-200 dark:border-slate-700 rounded-xl p-4 sm:p-5 space-y-4">
                         <div className="flex items-start gap-3">
-                          <div className="p-2 rounded-lg bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 dark:text-indigo-300">
+                          <div className="p-2 rounded-lg bg-[var(--brand-primary-soft)] dark:bg-[var(--brand-primary-soft)] text-[var(--brand-primary)] dark:text-[var(--brand-primary)]">
                             <Link2 className="w-4 h-4" />
                           </div>
                           <div>
@@ -1124,7 +1124,7 @@ const ProfilePage = () => {
                             type="button"
                             onClick={handleRegenerateCalendarLink}
                             disabled={regeneratingCalendarLink}
-                            className="px-4 py-2 min-h-11 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:from-indigo-600 hover:to-purple-700 disabled:opacity-50 inline-flex items-center justify-center gap-2"
+                            className="px-4 py-2 min-h-11 rounded-lg brand-button-primary text-white disabled:opacity-50 inline-flex items-center justify-center gap-2"
                           >
                             {regeneratingCalendarLink ? (
                               <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>

@@ -3,6 +3,7 @@ import connectDB from '@/lib/mongodb';
 import Settings, { ISettings } from '@/models/Settings';
 import { verifyToken } from '@/lib/auth';
 import { logAction } from '@/lib/audit';
+import { DEFAULT_BRAND_COLORS, sanitizeBrandColors } from '@/lib/brand-colors';
 
 function normalizeUrlCandidate(value: string): string {
   return String(value || '').trim().replace(/\/+$/, '');
@@ -111,6 +112,7 @@ const DEFAULT_SETTINGS = {
   systemSettings: {
     organizationName: '4Minitz 2.0',
     organizationLogo: null,
+    brandColors: DEFAULT_BRAND_COLORS,
     timezone: 'Europe/Berlin',
     dateFormat: 'DD.MM.YYYY',
     timeFormat: '24h',
@@ -171,6 +173,13 @@ export async function GET(request: NextRequest) {
       settings.memberSettings.agendaItemLabelMode = 'topic-alpha';
     }
 
+    if (!settings.systemSettings) {
+      (settings as any).systemSettings = { ...DEFAULT_SETTINGS.systemSettings };
+    }
+    (settings.systemSettings as any).brandColors = sanitizeBrandColors(
+      (settings.systemSettings as any).brandColors
+    );
+
     // Mask SMTP password in response
     if (settings.smtpSettings?.auth?.pass) {
       settings.smtpSettings.auth.pass = '********';
@@ -198,6 +207,14 @@ export async function PUT(request: NextRequest) {
     const setData: Record<string, unknown> = { updatedBy: userId };
     for (const section of allowedSections) {
       if (body[section] !== undefined) setData[section] = body[section];
+    }
+
+    if (setData.systemSettings && typeof setData.systemSettings === 'object') {
+      const incomingSystem = setData.systemSettings as Record<string, unknown>;
+      setData.systemSettings = {
+        ...incomingSystem,
+        brandColors: sanitizeBrandColors(incomingSystem.brandColors),
+      };
     }
 
     // Atomic upsert to avoid read-modify-write race condition

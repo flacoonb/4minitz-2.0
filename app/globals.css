@@ -4,6 +4,14 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --brand-primary: #6366F1;
+  --brand-primary-strong: #4F46E5;
+  --brand-secondary: #8B5CF6;
+  --brand-page-from: #F8FAFC;
+  --brand-page-to: #F1F5F9;
+  --brand-primary-soft: rgba(99, 102, 241, 0.12);
+  --brand-primary-border: rgba(99, 102, 241, 0.32);
+  --brand-primary-shadow: rgba(99, 102, 241, 0.35);
 }
 
 @theme inline {
@@ -28,6 +36,40 @@ body {
   padding-right: env(safe-area-inset-right);
   padding-bottom: env(safe-area-inset-bottom);
   padding-left: env(safe-area-inset-left);
+}
+
+.brand-page-gradient {
+  background: linear-gradient(135deg, var(--brand-page-from) 0%, #ffffff 45%, var(--brand-page-to) 100%);
+}
+
+.brand-gradient-bg {
+  background: linear-gradient(135deg, var(--brand-primary) 0%, var(--brand-secondary) 100%);
+}
+
+.brand-gradient-text {
+  background: linear-gradient(90deg, var(--brand-primary) 0%, var(--brand-secondary) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.brand-button-primary {
+  background: linear-gradient(90deg, var(--brand-primary) 0%, var(--brand-secondary) 100%);
+  color: #ffffff;
+  box-shadow: 0 10px 24px -14px var(--brand-primary-shadow);
+}
+
+.brand-button-primary:hover {
+  filter: brightness(0.94);
+}
+
+.brand-button-solid {
+  background-color: var(--brand-primary);
+  color: #ffffff;
+}
+
+.brand-button-solid:hover {
+  background-color: var(--brand-primary-strong);
 }
 
 /* Disable hover effects on touch devices */

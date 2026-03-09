@@ -49,7 +49,7 @@ export default function SetupPage() {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+          <Loader2 className="w-8 h-8 animate-spin text-[var(--brand-primary)]" />
           <p className="text-slate-600">Lade Systemstatus...</p>
         </div>
       </div>
@@ -69,7 +69,7 @@ export default function SetupPage() {
           </p>
           <a
             href="/auth/login"
-            className="inline-flex items-center justify-center w-full px-6 py-3 text-base font-medium text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors"
+            className="inline-flex items-center justify-center w-full px-6 py-3 text-base font-medium text-white brand-button-solid rounded-lg transition-colors"
           >
             Zum Login
           </a>
@@ -130,7 +130,7 @@ export default function SetupPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen brand-page-gradient py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-slate-900 mb-4 tracking-tight">
@@ -145,8 +145,8 @@ export default function SetupPage() {
           {/* Database Section */}
           <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-white/20 overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center gap-3">
-              <div className="p-2 bg-blue-100 rounded-lg">
-                <Database className="w-5 h-5 text-blue-600" />
+              <div className="p-2 bg-[var(--brand-primary-soft)] rounded-lg">
+                <Database className="w-5 h-5 text-[var(--brand-primary)]" />
               </div>
               <h2 className="text-lg font-semibold text-slate-900">Datenbank Verbindung</h2>
             </div>
@@ -162,7 +162,7 @@ export default function SetupPage() {
                     value={form.mongoUri}
                     onChange={onChange}
                     required
-                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
+                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent transition-all outline-none"
                     placeholder="mongodb://localhost:27017/4minitz"
                   />
                 </div>
@@ -176,8 +176,8 @@ export default function SetupPage() {
           {/* Admin Section */}
           <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-white/20 overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center gap-3">
-              <div className="p-2 bg-indigo-100 rounded-lg">
-                <User className="w-5 h-5 text-indigo-600" />
+              <div className="p-2 bg-[var(--brand-primary-soft)] rounded-lg">
+                <User className="w-5 h-5 text-[var(--brand-primary)]" />
               </div>
               <h2 className="text-lg font-semibold text-slate-900">Administrator Account</h2>
             </div>
@@ -190,7 +190,7 @@ export default function SetupPage() {
                     value={form.firstName}
                     onChange={onChange}
                     required
-                    className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
+                    className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent transition-all outline-none"
                   />
                 </div>
                 <div>
@@ -200,7 +200,7 @@ export default function SetupPage() {
                     value={form.lastName}
                     onChange={onChange}
                     required
-                    className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
+                    className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent transition-all outline-none"
                   />
                 </div>
               </div>
@@ -214,7 +214,7 @@ export default function SetupPage() {
                     value={form.email}
                     onChange={onChange}
                     required
-                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
+                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent transition-all outline-none"
                   />
                 </div>
               </div>
@@ -230,7 +230,7 @@ export default function SetupPage() {
                     onChange={onChange}
                     required
                     minLength={8}
-                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
+                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent transition-all outline-none"
                     placeholder="Mindestens 8 Zeichen"
                   />
                 </div>
@@ -242,8 +242,8 @@ export default function SetupPage() {
           {/* Organization Section */}
           <div className="bg-white/80 backdrop-blur-md rounded-2xl shadow-sm border border-white/20 overflow-hidden">
             <div className="px-6 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center gap-3">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <Building className="w-5 h-5 text-purple-600" />
+              <div className="p-2 bg-[var(--brand-primary-soft)] rounded-lg">
+                <Building className="w-5 h-5 text-[var(--brand-primary)]" />
               </div>
               <h2 className="text-lg font-semibold text-slate-900">Organisation</h2>
             </div>
@@ -255,7 +255,7 @@ export default function SetupPage() {
                 name="organizationName"
                 value={form.organizationName}
                 onChange={onChange}
-                className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
+                className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent transition-all outline-none"
                 placeholder="z.B. Meine Firma GmbH"
               />
             </div>
@@ -278,7 +278,7 @@ export default function SetupPage() {
                     value={form.smtpHost}
                     onChange={onChange}
                     required
-                    className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
+                    className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent transition-all outline-none"
                   />
                 </div>
                 <div>
@@ -289,7 +289,7 @@ export default function SetupPage() {
                     value={form.smtpPort}
                     onChange={onChange}
                     required
-                    className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
+                    className="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent transition-all outline-none"
                   />
                 </div>
               </div>
@@ -301,7 +301,7 @@ export default function SetupPage() {
                   name="smtpSecure"
                   checked={form.smtpSecure}
                   onChange={onChange}
-                  className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                  className="w-5 h-5 text-[var(--brand-primary)] border-gray-300 rounded focus:ring-[var(--brand-primary)]"
                 />
                 <label htmlFor="smtpSecure" className="text-sm text-slate-700 font-medium select-none cursor-pointer">
                   Sichere Verbindung verwenden (SSL/TLS)
@@ -319,7 +319,7 @@ export default function SetupPage() {
                       name="smtpUser"
                       value={form.smtpUser}
                       onChange={onChange}
-                      className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
+                      className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent transition-all outline-none"
                     />
                   </div>
                 </div>
@@ -334,7 +334,7 @@ export default function SetupPage() {
                       type="password"
                       value={form.smtpPass}
                       onChange={onChange}
-                      className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
+                      className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent transition-all outline-none"
                     />
                   </div>
                 </div>
@@ -349,7 +349,7 @@ export default function SetupPage() {
                     value={form.smtpFrom}
                     onChange={onChange}
                     required
-                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none"
+                    className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent transition-all outline-none"
                   />
                 </div>
               </div>
@@ -374,7 +374,7 @@ export default function SetupPage() {
                   name="setupToken"
                   value={setupToken}
                   onChange={(e) => setSetupToken(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all outline-none font-mono text-sm"
+                  className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent transition-all outline-none font-mono text-sm"
                   placeholder="Token aus .setup_token Datei"
                 />
               </div>
@@ -389,7 +389,7 @@ export default function SetupPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-4 px-6 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-xl font-semibold text-lg shadow-xl shadow-blue-500/20 hover:from-blue-700 hover:to-indigo-700 focus:ring-4 focus:ring-blue-500/30 transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full py-4 px-6 brand-button-primary text-white rounded-xl font-semibold text-lg shadow-xl shadow-[var(--brand-primary-shadow)] focus:ring-4 focus:ring-[var(--brand-primary-border)] transition-all disabled:opacity-70 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>

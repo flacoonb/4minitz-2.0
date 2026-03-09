@@ -171,13 +171,13 @@ export default function EmailConfigPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen brand-page-gradient py-8">
       <div className="max-w-4xl mx-auto px-4">
         {/* Header */}
         <div className="mb-6">
           <Link
             href="/admin"
-            className="text-blue-600 hover:text-blue-800 mb-4 inline-block"
+            className="text-[var(--brand-primary)] hover:text-[var(--brand-primary-strong)] mb-4 inline-block"
           >
             {t('backToAdmin')}
           </Link>
@@ -323,7 +323,7 @@ export default function EmailConfigPage() {
                 type="text"
                 value={config.host}
                 onChange={(e) => setConfig({ ...config, host: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-[var(--brand-primary)]"
                 placeholder="smtp.gmail.com"
               />
             </div>
@@ -337,7 +337,7 @@ export default function EmailConfigPage() {
                 type="number"
                 value={config.port}
                 onChange={(e) => setConfig({ ...config, port: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-[var(--brand-primary)]"
                 placeholder="587"
               />
               <p className="text-xs text-gray-500 mt-1">
@@ -352,7 +352,7 @@ export default function EmailConfigPage() {
                 id="secure"
                 checked={config.secure}
                 onChange={(e) => setConfig({ ...config, secure: e.target.checked })}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                className="h-4 w-4 text-[var(--brand-primary)] focus:ring-[var(--brand-primary)] border-gray-300 rounded"
               />
               <label htmlFor="secure" className="ml-2 block text-sm text-gray-700">
                 {t('settings.secure')}
@@ -368,7 +368,7 @@ export default function EmailConfigPage() {
                 type="email"
                 value={config.fromEmail}
                 onChange={(e) => setConfig({ ...config, fromEmail: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-[var(--brand-primary)]"
                 placeholder="noreply@protokoll-app.local"
               />
             </div>
@@ -386,7 +386,7 @@ export default function EmailConfigPage() {
                     setPassword('');
                   }
                 }}
-                className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                className="h-4 w-4 text-[var(--brand-primary)] focus:ring-[var(--brand-primary)] border-gray-300 rounded"
               />
               <label htmlFor="hasAuth" className="ml-2 block text-sm text-gray-700">
                 {t('settings.auth')}
@@ -403,7 +403,7 @@ export default function EmailConfigPage() {
                   type="text"
                   value={config.user || ''}
                   onChange={(e) => setConfig({ ...config, user: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-[var(--brand-primary)]"
                   placeholder="deine-email@example.com"
                 />
               </div>
@@ -420,7 +420,7 @@ export default function EmailConfigPage() {
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-[var(--brand-primary)]"
                     placeholder={t('settings.passwordPlaceholder')}
                   />
                   <button
@@ -438,7 +438,7 @@ export default function EmailConfigPage() {
                         href="https://myaccount.google.com/apppasswords"
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="text-blue-600 hover:underline"
+                        className="text-[var(--brand-primary)] hover:underline"
                       >
                         {chunks}
                       </a>
@@ -454,7 +454,7 @@ export default function EmailConfigPage() {
             <button
               onClick={saveConfig}
               disabled={saving}
-              className="w-full sm:flex-1 bg-blue-600 text-white px-4 py-2 min-h-11 rounded hover:bg-blue-700 disabled:bg-gray-400"
+              className="w-full sm:flex-1 brand-button-solid px-4 py-2 min-h-11 rounded disabled:bg-gray-400"
             >
               {saving ? t('actions.validating') : t('actions.validate')}
             </button>
@@ -480,12 +480,12 @@ export default function EmailConfigPage() {
               value={testEmail}
               onChange={(e) => setTestEmail(e.target.value)}
               placeholder="test@example.com"
-              className="flex-1 px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-blue-500"
+              className="flex-1 px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-[var(--brand-primary)]"
             />
             <button
               onClick={sendTestEmail}
               disabled={sendingTest || !testEmail}
-              className="w-full sm:w-auto bg-blue-600 text-white px-6 py-2 min-h-11 rounded hover:bg-blue-700 disabled:bg-gray-400"
+              className="w-full sm:w-auto brand-button-solid px-6 py-2 min-h-11 rounded disabled:bg-gray-400"
             >
               {sendingTest ? t('actions.sending') : t('actions.send')}
             </button>
@@ -521,15 +521,15 @@ export default function EmailConfigPage() {
         </div>
 
         {/* Instructions */}
-        <div className="bg-blue-50 border-l-4 border-blue-400 p-4 rounded mt-6">
-          <h3 className="text-sm font-medium text-blue-800 mb-2">{t('manual.title')}</h3>
-          <p className="text-sm text-blue-700 mb-2">
+        <div className="p-4 rounded mt-6 bg-[var(--brand-primary-soft)] border-l-4 border-[var(--brand-primary-border)]">
+          <h3 className="text-sm font-medium text-[var(--brand-primary-strong)] mb-2">{t('manual.title')}</h3>
+          <p className="text-sm text-[var(--brand-primary-strong)] mb-2">
             {t('manual.description')}
           </p>
-          <ol className="list-decimal list-inside text-sm text-blue-700 space-y-1 ml-2">
-            <li>{t.rich('manual.step1', { code: (chunks) => <code className="bg-blue-100 px-1 rounded">{chunks}</code> })}</li>
-            <li>{t.rich('manual.step2', { code: (chunks) => <code className="bg-blue-100 px-1 rounded">{chunks}</code> })}</li>
-            <li>{t.rich('manual.step3', { code: (chunks) => <code className="bg-blue-100 px-1 rounded">{chunks}</code> })}</li>
+          <ol className="list-decimal list-inside text-sm text-[var(--brand-primary-strong)] space-y-1 ml-2">
+            <li>{t.rich('manual.step1', { code: (chunks) => <code className="bg-[var(--brand-primary-soft)] px-1 rounded">{chunks}</code> })}</li>
+            <li>{t.rich('manual.step2', { code: (chunks) => <code className="bg-[var(--brand-primary-soft)] px-1 rounded">{chunks}</code> })}</li>
+            <li>{t.rich('manual.step3', { code: (chunks) => <code className="bg-[var(--brand-primary-soft)] px-1 rounded">{chunks}</code> })}</li>
           </ol>
         </div>
       </div>

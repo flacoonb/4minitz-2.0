@@ -76,7 +76,7 @@ export default function MeetingSeriesList() {
   if (loading) {
     return (
       <div className="flex items-center justify-center p-12">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--brand-primary)]"></div>
       </div>
     );
   }
@@ -123,7 +123,7 @@ export default function MeetingSeriesList() {
         {hasPermission('canCreateMeetings') && (
           <Link
             href="/meeting-series/new"
-            className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            className="inline-flex items-center px-4 py-2 brand-button-solid rounded-lg transition-colors"
           >
             {t('meetingSeries.createNew')}
           </Link>
@@ -145,7 +145,7 @@ export default function MeetingSeriesList() {
           <Link
             key={item._id}
             href={`/meeting-series/${item._id}`}
-            className="group block p-6 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-gray-200 dark:border-slate-700 rounded-2xl shadow-lg hover:shadow-2xl hover:border-blue-300 dark:hover:border-blue-600 transition-all duration-300"
+            className="group block p-6 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-gray-200 dark:border-slate-700 rounded-2xl shadow-lg hover:shadow-2xl hover:border-[var(--brand-primary-border)] dark:hover:border-[var(--brand-primary)] transition-all duration-300"
           >
             {item.name && (
               <div className="mb-3">
@@ -158,7 +158,7 @@ export default function MeetingSeriesList() {
               </div>
             )}
 
-            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-3 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-3 group-hover:text-[var(--brand-primary)] dark:group-hover:text-[var(--brand-primary)] transition-colors">
               {item.project}
             </h3>
             

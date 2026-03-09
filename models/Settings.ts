@@ -49,6 +49,13 @@ export interface ISettings extends Document {
   systemSettings: {
     organizationName: string;
     organizationLogo?: string;
+    brandColors?: {
+      primary: string;
+      primaryDark: string;
+      secondary: string;
+      pageFrom: string;
+      pageTo: string;
+    };
     timezone: string;
     dateFormat: string;
     timeFormat: '12h' | '24h';
@@ -91,6 +98,8 @@ const RolePermissionsSchema = new Schema({
   canUseTemplates: { type: Boolean, default: false }
 }, { _id: false });
 
+const HEX_COLOR_PATTERN = /^#([0-9A-Fa-f]{6})$/;
+
 const SettingsSchema = new Schema<ISettings>({
   roles: {
     admin: { type: RolePermissionsSchema, required: true },
@@ -124,6 +133,13 @@ const SettingsSchema = new Schema<ISettings>({
   systemSettings: {
     organizationName: { type: String, default: '4Minitz' },
     organizationLogo: { type: String },
+    brandColors: {
+      primary: { type: String, default: '#6366F1', match: HEX_COLOR_PATTERN },
+      primaryDark: { type: String, default: '#4F46E5', match: HEX_COLOR_PATTERN },
+      secondary: { type: String, default: '#8B5CF6', match: HEX_COLOR_PATTERN },
+      pageFrom: { type: String, default: '#F8FAFC', match: HEX_COLOR_PATTERN },
+      pageTo: { type: String, default: '#F1F5F9', match: HEX_COLOR_PATTERN },
+    },
     timezone: { type: String, default: 'Europe/Berlin' },
     dateFormat: { type: String, default: 'DD.MM.YYYY' },
     timeFormat: { type: String, enum: ['12h', '24h'], default: '24h' },

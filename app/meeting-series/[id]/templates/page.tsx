@@ -470,7 +470,7 @@ function SeriesTemplatesPage() {
       <div className="bg-white border rounded-xl p-5">
         <div className="flex items-center justify-between mb-4">
           <h2 className="text-xl font-semibold">Vorlagen</h2>
-          <button type="button" onClick={openCreateModal} className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+          <button type="button" onClick={openCreateModal} className="px-4 py-2 brand-button-solid rounded-lg">
             + Neue Vorlage
           </button>
         </div>
@@ -522,8 +522,8 @@ function SeriesTemplatesPage() {
             <textarea value={globalNote} onChange={(e) => setGlobalNote(e.target.value)} placeholder="Globaler Hinweis (optional)" className="w-full px-3 py-2 border rounded-lg min-h-[80px]" />
             <div className="space-y-3">
               <div className="inline-flex rounded-lg border border-gray-200 overflow-hidden">
-                <button type="button" onClick={() => { if (editorMode === 'markdown') { const parsed = parseMinutesMarkdown(markdown); setTopics(parsed.topics); setMarkdownWarnings(parsed.warnings); } setEditorMode('visual'); closeMentionSuggestions(); }} className={`px-4 py-2 text-sm font-medium ${editorMode === 'visual' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}>Visuell</button>
-                <button type="button" onClick={() => setEditorMode('markdown')} className={`px-4 py-2 text-sm font-medium ${editorMode === 'markdown' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}>Markdown</button>
+                <button type="button" onClick={() => { if (editorMode === 'markdown') { const parsed = parseMinutesMarkdown(markdown); setTopics(parsed.topics); setMarkdownWarnings(parsed.warnings); } setEditorMode('visual'); closeMentionSuggestions(); }} className={`px-4 py-2 text-sm font-medium ${editorMode === 'visual' ? 'bg-[var(--brand-primary)] text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}>Visuell</button>
+                <button type="button" onClick={() => setEditorMode('markdown')} className={`px-4 py-2 text-sm font-medium ${editorMode === 'markdown' ? 'bg-[var(--brand-primary)] text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}>Markdown</button>
               </div>
               {editorMode === 'visual' ? (
                 <div className="space-y-3">
@@ -535,7 +535,7 @@ function SeriesTemplatesPage() {
                         <button type="button" onClick={() => removeTopic(topicIndex)} className="px-3 py-2 text-sm bg-red-600 text-white rounded-lg">Löschen</button>
                       </div>
                       <div className="flex gap-2">
-                        <button type="button" onClick={() => addItem(topicIndex, 'infoItem')} className="px-3 py-1.5 text-xs bg-blue-100 text-blue-800 rounded">+ Info</button>
+                        <button type="button" onClick={() => addItem(topicIndex, 'infoItem')} className="px-3 py-1.5 text-xs bg-[var(--brand-primary-soft)] text-[var(--brand-primary-strong)] rounded">+ Info</button>
                         <button type="button" onClick={() => addItem(topicIndex, 'actionItem')} className="px-3 py-1.5 text-xs bg-amber-100 text-amber-800 rounded">+ Aufgabe</button>
                       </div>
                       {(topic.infoItems || []).map((item, itemIndex) => (
@@ -603,7 +603,7 @@ function SeriesTemplatesPage() {
                     {mentionSuggestions.length > 0 && mentionMenuPosition && (
                       <div className="absolute z-30 bg-white border border-gray-200 rounded-lg shadow-lg max-h-56 overflow-auto w-64" style={{ top: mentionMenuPosition.top, left: mentionMenuPosition.left }}>
                         {mentionSuggestions.map((candidate, index) => (
-                          <button key={`${candidate.value}-${index}`} type="button" className={`w-full text-left px-3 py-2 text-sm hover:bg-blue-50 ${index === selectedMentionIndex ? 'bg-blue-100' : ''}`} onMouseDown={(event) => { event.preventDefault(); applyMentionSuggestion(candidate); }}>{candidate.label}</button>
+                          <button key={`${candidate.value}-${index}`} type="button" className={`w-full text-left px-3 py-2 text-sm hover:bg-[var(--brand-primary-soft)] ${index === selectedMentionIndex ? 'bg-[var(--brand-primary-soft)]' : ''}`} onMouseDown={(event) => { event.preventDefault(); applyMentionSuggestion(candidate); }}>{candidate.label}</button>
                         ))}
                       </div>
                     )}
@@ -619,7 +619,7 @@ function SeriesTemplatesPage() {
               )}
             </div>
             <div className="flex gap-3">
-              <button onClick={saveTemplate} disabled={saving || !name.trim()} className="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:opacity-50">{saving ? 'Speichern...' : editingTemplate ? 'Änderungen speichern' : 'Vorlage erstellen'}</button>
+              <button onClick={saveTemplate} disabled={saving || !name.trim()} className="px-4 py-2 brand-button-solid rounded-lg disabled:opacity-50">{saving ? 'Speichern...' : editingTemplate ? 'Änderungen speichern' : 'Vorlage erstellen'}</button>
               <button onClick={() => { setShowEditorModal(false); closeMentionSuggestions(); }} className="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200">Abbrechen</button>
             </div>
           </div>

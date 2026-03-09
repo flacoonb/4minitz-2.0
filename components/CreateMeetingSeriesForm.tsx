@@ -80,7 +80,7 @@ export default function CreateMeetingSeriesForm() {
           value={formData.project}
           onChange={(e) => setFormData({ ...formData, project: e.target.value })}
           placeholder={t('meetingSeriesForm.projectPlaceholder')}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
         />
       </div>
 
@@ -95,7 +95,7 @@ export default function CreateMeetingSeriesForm() {
           value={formData.name}
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
           placeholder={t('meetingSeriesForm.namePlaceholder')}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
         />
       </div>
 
@@ -109,7 +109,7 @@ export default function CreateMeetingSeriesForm() {
           value={formData.participants}
           onChange={(e) => setFormData({ ...formData, participants: e.target.value })}
           placeholder={t('meetingSeriesForm.participantsPlaceholder')}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
         />
         <p className="mt-1 text-sm text-gray-500">
           {t('meetingSeriesForm.participantsPlaceholder')}
@@ -126,7 +126,7 @@ export default function CreateMeetingSeriesForm() {
           value={formData.informedUsers}
           onChange={(e) => setFormData({ ...formData, informedUsers: e.target.value })}
           placeholder={t('meetingSeriesForm.informedUsersPlaceholder')}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
         />
         <p className="mt-1 text-sm text-gray-500">
           {t('meetingSeriesForm.informedUsersPlaceholder')}
@@ -144,7 +144,7 @@ export default function CreateMeetingSeriesForm() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full sm:w-auto px-6 py-2 min-h-11 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          className="w-full sm:w-auto px-6 py-2 min-h-11 brand-button-solid rounded-lg disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {loading ? t('meetingSeriesForm.creating') : t('meetingSeriesForm.submitCreate')}
         </button>

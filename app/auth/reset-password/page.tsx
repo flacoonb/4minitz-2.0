@@ -84,7 +84,7 @@ export default function ResetPasswordPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl shadow-lg mb-4">
+          <div className="inline-flex items-center justify-center w-16 h-16 brand-gradient-bg rounded-2xl shadow-lg mb-4">
             <Lock className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-3xl font-bold text-slate-800 mb-2">{t('title')}</h1>
@@ -123,7 +123,7 @@ export default function ResetPasswordPage() {
                 id="password"
                 value={password}
                 onChange={(e) => { setPassword(e.target.value); updatePasswordStrength(e.target.value); }}
-                className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white/50"
+                className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent transition-all bg-white/50"
                 placeholder={t('newPasswordPlaceholder')}
                 required
                 disabled={!token}
@@ -166,7 +166,7 @@ export default function ResetPasswordPage() {
                 id="confirmPassword"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
-                className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all bg-white/50 ${confirmPassword && confirmPassword !== password ? 'border-red-300' : 'border-slate-200'}`}
+                className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent transition-all bg-white/50 ${confirmPassword && confirmPassword !== password ? 'border-red-300' : 'border-slate-200'}`}
                 placeholder={t('confirmPasswordPlaceholder')}
                 required
                 disabled={!token}
@@ -179,7 +179,7 @@ export default function ResetPasswordPage() {
             <button
               type="submit"
               disabled={loading || !token}
-              className="w-full py-3 px-6 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold rounded-xl hover:from-indigo-600 hover:to-purple-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg"
+              className="w-full py-3 px-6 brand-button-primary font-semibold rounded-xl focus:outline-none focus:ring-2 focus:ring-[var(--brand-primary)] focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg"
             >
               {loading ? t('resetting') : t('resetButton')}
             </button>
@@ -188,7 +188,7 @@ export default function ResetPasswordPage() {
           <div className="mt-8 pt-6 border-t border-slate-200 text-center">
             <Link
               href="/auth/login"
-              className="font-semibold text-indigo-600 hover:text-indigo-500 transition-colors text-sm"
+              className="font-semibold text-[var(--brand-primary)] transition-colors text-sm"
             >
               {t('backToLogin')}
             </Link>

@@ -77,6 +77,13 @@ interface SystemSettings {
   systemSettings: {
     organizationName: string;
     organizationLogo?: string;
+    brandColors?: {
+      primary: string;
+      primaryDark: string;
+      secondary: string;
+      pageFrom: string;
+      pageTo: string;
+    };
     timezone: string;
     dateFormat: string;
     timeFormat: '12h' | '24h';
@@ -463,13 +470,35 @@ const AdminSettings = () => {
     });
   };
 
+  const updateBrandColor = (
+    key: 'primary' | 'primaryDark' | 'secondary' | 'pageFrom' | 'pageTo',
+    value: string
+  ) => {
+    if (!settings) return;
+    const normalized = value.trim();
+    setSettings({
+      ...settings,
+      systemSettings: {
+        ...settings.systemSettings,
+        brandColors: {
+          primary: settings.systemSettings.brandColors?.primary || '#6366F1',
+          primaryDark: settings.systemSettings.brandColors?.primaryDark || '#4F46E5',
+          secondary: settings.systemSettings.brandColors?.secondary || '#8B5CF6',
+          pageFrom: settings.systemSettings.brandColors?.pageFrom || '#F8FAFC',
+          pageTo: settings.systemSettings.brandColors?.pageTo || '#F1F5F9',
+          [key]: normalized,
+        },
+      },
+    });
+  };
+
   // Get role icon and color
   const getRoleIcon = (role: string) => {
     switch (role) {
       case 'admin':
         return <Crown className="w-5 h-5 text-yellow-500" />;
       case 'moderator':
-        return <UserCog className="w-5 h-5 text-blue-500" />;
+        return <UserCog className="w-5 h-5 text-[var(--brand-primary)]" />;
       default:
         return <User className="w-5 h-5 text-gray-500" />;
     }
@@ -480,7 +509,7 @@ const AdminSettings = () => {
       case 'admin':
         return 'bg-yellow-100 text-yellow-800 border-yellow-200';
       case 'moderator':
-        return 'bg-blue-100 text-blue-800 border-blue-200';
+        return 'bg-[var(--brand-primary-soft)] text-[var(--brand-primary-strong)] border-[var(--brand-primary-border)]';
       default:
         return 'bg-gray-100 text-gray-800 border-gray-200';
     }
@@ -498,9 +527,9 @@ const AdminSettings = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100 flex items-center justify-center">
+      <div className="min-h-screen brand-page-gradient flex items-center justify-center">
         <div className="text-center">
-          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500 mb-4"></div>
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-[var(--brand-primary)] mb-4"></div>
           <p className="text-slate-600">{tCommon('loading')}</p>
         </div>
       </div>
@@ -509,7 +538,7 @@ const AdminSettings = () => {
 
   if (!settings) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+      <div className="min-h-screen brand-page-gradient">
         <div className="text-center">
           <p className="text-slate-600">{tCommon('error')}</p>
         </div>
@@ -517,14 +546,22 @@ const AdminSettings = () => {
     );
   }
 
+  const brandColors = settings.systemSettings.brandColors || {
+    primary: '#6366F1',
+    primaryDark: '#4F46E5',
+    secondary: '#8B5CF6',
+    pageFrom: '#F8FAFC',
+    pageTo: '#F1F5F9',
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+    <div className="min-h-screen brand-page-gradient">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
           <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between mb-6">
             <div className="flex items-center gap-3">
-              <div className="p-3 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl text-white shadow-lg">
+              <div className="p-3 brand-gradient-bg rounded-xl text-white shadow-lg">
                 <Settings className="w-6 h-6" />
               </div>
               <div>
@@ -550,7 +587,7 @@ const AdminSettings = () => {
               <button
                 onClick={handleSave}
                 disabled={saving || !hasChanges}
-                className="flex items-center justify-center gap-2 px-6 py-3 min-h-11 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-lg hover:from-indigo-600 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                className="flex items-center justify-center gap-2 px-6 py-3 min-h-11 brand-button-primary rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
               >
                 {saving ? (
                   <>
@@ -573,7 +610,7 @@ const AdminSettings = () => {
           <button
             onClick={handleSave}
             disabled={saving || !hasChanges}
-            className="w-full flex items-center justify-center gap-2 px-6 py-3 min-h-11 bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-xl hover:from-indigo-600 hover:to-purple-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+            className="w-full flex items-center justify-center gap-2 px-6 py-3 min-h-11 brand-button-primary rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
           >
             {saving ? (
               <>
@@ -626,7 +663,7 @@ const AdminSettings = () => {
                   onClick={() => setActiveTab(tab.key as any)}
                   className={`flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-6 py-3 sm:py-4 min-h-11 text-xs sm:text-sm font-medium border-b-2 transition-colors leading-tight text-center sm:whitespace-nowrap ${
                     activeTab === tab.key
-                      ? 'border-indigo-500 text-indigo-600 bg-indigo-50/50'
+                      ? 'border-[var(--brand-primary)] text-[var(--brand-primary)] bg-[var(--brand-primary-soft)]'
                       : 'border-transparent text-slate-600 hover:text-slate-800 hover:bg-slate-50/50'
                   }`}
                 >
@@ -665,7 +702,7 @@ const AdminSettings = () => {
                             type="checkbox"
                             checked={value}
                             onChange={(e) => updateRolePermission(role as any, permission as keyof RolePermissions, e.target.checked)}
-                            className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
+                            className="w-4 h-4 text-[var(--brand-primary)] border-slate-300 rounded focus:ring-[var(--brand-primary)]"
                           />
                           <div className="flex items-start gap-1.5 sm:gap-2 min-w-0">
                             {value ? 
@@ -702,7 +739,7 @@ const AdminSettings = () => {
                         type="checkbox"
                         checked={settings.memberSettings.requireEmailVerification}
                         onChange={(e) => updateMemberSettings('requireEmailVerification', e.target.checked)}
-                        className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
+                        className="w-4 h-4 text-[var(--brand-primary)] border-slate-300 rounded focus:ring-[var(--brand-primary)]"
                       />
                       <div>
                         <span className="text-sm font-medium text-slate-700">{t('members.requireEmailVerification')}</span>
@@ -718,7 +755,7 @@ const AdminSettings = () => {
                         type="checkbox"
                         checked={settings.memberSettings.requireAdminApproval}
                         onChange={(e) => updateMemberSettings('requireAdminApproval', e.target.checked)}
-                        className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
+                        className="w-4 h-4 text-[var(--brand-primary)] border-slate-300 rounded focus:ring-[var(--brand-primary)]"
                       />
                       <div>
                         <span className="text-sm font-medium text-slate-700">{t('members.requireAdminApproval')}</span>
@@ -734,7 +771,7 @@ const AdminSettings = () => {
                         type="checkbox"
                         checked={settings.memberSettings.allowSelfRegistration}
                         onChange={(e) => updateMemberSettings('allowSelfRegistration', e.target.checked)}
-                        className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
+                        className="w-4 h-4 text-[var(--brand-primary)] border-slate-300 rounded focus:ring-[var(--brand-primary)]"
                       />
                       <div>
                         <span className="text-sm font-medium text-slate-700">{t('members.allowSelfRegistration')}</span>
@@ -766,7 +803,7 @@ const AdminSettings = () => {
                         type="checkbox"
                         checked={settings.notificationSettings.enableEmailNotifications}
                         onChange={(e) => updateNotificationSettings('enableEmailNotifications', e.target.checked)}
-                        className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
+                        className="w-4 h-4 text-[var(--brand-primary)] border-slate-300 rounded focus:ring-[var(--brand-primary)]"
                       />
                       <div>
                         <span className="text-sm font-medium text-slate-700">{t('notifications.enableEmailNotifications')}</span>
@@ -781,7 +818,7 @@ const AdminSettings = () => {
                             type="checkbox"
                             checked={settings.notificationSettings.enableDigestEmails}
                             onChange={(e) => updateNotificationSettings('enableDigestEmails', e.target.checked)}
-                            className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
+                            className="w-4 h-4 text-[var(--brand-primary)] border-slate-300 rounded focus:ring-[var(--brand-primary)]"
                           />
                           <span className="text-sm text-slate-700">{t('notifications.enableDigestEmails')}</span>
                         </label>
@@ -790,7 +827,7 @@ const AdminSettings = () => {
                           <select
                             value={settings.notificationSettings.digestFrequency}
                             onChange={(e) => updateNotificationSettings('digestFrequency', e.target.value)}
-                            className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                            className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
                           >
                             <option value="daily">{tCommon('daily')}</option>
                             <option value="weekly">{tCommon('weekly')}</option>
@@ -816,7 +853,7 @@ const AdminSettings = () => {
                   </p>
                   <Link
                     href="/admin/templates"
-                    className="inline-flex items-center gap-2 px-4 py-2 mb-4 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                    className="inline-flex items-center gap-2 px-4 py-2 mb-4 brand-button-solid rounded-lg transition-colors"
                   >
                     {t('system.manageTemplates')}
                   </Link>
@@ -830,7 +867,7 @@ const AdminSettings = () => {
                       type="text"
                       value={settings.systemSettings.organizationName}
                       onChange={(e) => updateSystemSettings('organizationName', e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
                       placeholder="Name der Organisation"
                     />
                   </div>
@@ -842,10 +879,124 @@ const AdminSettings = () => {
                       type="text"
                       value={settings.systemSettings.baseUrl || ''}
                       onChange={(e) => updateSystemSettings('baseUrl', e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
                       placeholder="http://localhost:3000"
                     />
                     <p className="text-xs text-slate-500 mt-1">{t('system.baseUrlDesc')}</p>
+                  </div>
+
+                  {/* Brand Colors */}
+                  <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 md:col-span-2">
+                    <h4 className="text-sm font-semibold text-slate-800 mb-1">{t('system.brandColorsTitle')}</h4>
+                    <p className="text-xs text-slate-500 mb-4">{t('system.brandColorsDesc')}</p>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-medium text-slate-700 mb-1">{t('system.brandPrimary')}</label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="color"
+                            value={brandColors.primary}
+                            onChange={(e) => updateBrandColor('primary', e.target.value)}
+                            className="h-10 w-12 rounded border border-slate-300 bg-white p-1"
+                          />
+                          <input
+                            type="text"
+                            value={brandColors.primary}
+                            onChange={(e) => updateBrandColor('primary', e.target.value)}
+                            className="flex-1 px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
+                            placeholder="#6366F1"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-medium text-slate-700 mb-1">{t('system.brandPrimaryDark')}</label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="color"
+                            value={brandColors.primaryDark}
+                            onChange={(e) => updateBrandColor('primaryDark', e.target.value)}
+                            className="h-10 w-12 rounded border border-slate-300 bg-white p-1"
+                          />
+                          <input
+                            type="text"
+                            value={brandColors.primaryDark}
+                            onChange={(e) => updateBrandColor('primaryDark', e.target.value)}
+                            className="flex-1 px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
+                            placeholder="#4F46E5"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-medium text-slate-700 mb-1">{t('system.brandSecondary')}</label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="color"
+                            value={brandColors.secondary}
+                            onChange={(e) => updateBrandColor('secondary', e.target.value)}
+                            className="h-10 w-12 rounded border border-slate-300 bg-white p-1"
+                          />
+                          <input
+                            type="text"
+                            value={brandColors.secondary}
+                            onChange={(e) => updateBrandColor('secondary', e.target.value)}
+                            className="flex-1 px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
+                            placeholder="#8B5CF6"
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label className="block text-xs font-medium text-slate-700 mb-1">{t('system.brandPageFrom')}</label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="color"
+                            value={brandColors.pageFrom}
+                            onChange={(e) => updateBrandColor('pageFrom', e.target.value)}
+                            className="h-10 w-12 rounded border border-slate-300 bg-white p-1"
+                          />
+                          <input
+                            type="text"
+                            value={brandColors.pageFrom}
+                            onChange={(e) => updateBrandColor('pageFrom', e.target.value)}
+                            className="flex-1 px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
+                            placeholder="#F8FAFC"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="md:col-span-2">
+                        <label className="block text-xs font-medium text-slate-700 mb-1">{t('system.brandPageTo')}</label>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="color"
+                            value={brandColors.pageTo}
+                            onChange={(e) => updateBrandColor('pageTo', e.target.value)}
+                            className="h-10 w-12 rounded border border-slate-300 bg-white p-1"
+                          />
+                          <input
+                            type="text"
+                            value={brandColors.pageTo}
+                            onChange={(e) => updateBrandColor('pageTo', e.target.value)}
+                            className="flex-1 px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
+                            placeholder="#F1F5F9"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div
+                      className="mt-4 p-3 rounded-lg border border-slate-200"
+                      style={{ background: `linear-gradient(135deg, ${brandColors.pageFrom} 0%, #ffffff 45%, ${brandColors.pageTo} 100%)` }}
+                    >
+                      <div className="text-xs text-slate-600 mb-2">{t('system.brandPreview')}</div>
+                      <div
+                        className="h-9 rounded-md"
+                        style={{ background: `linear-gradient(90deg, ${brandColors.primary} 0%, ${brandColors.secondary} 100%)` }}
+                      />
+                    </div>
                   </div>
 
                   {/* Timezone */}
@@ -854,7 +1005,7 @@ const AdminSettings = () => {
                     <select
                       value={settings.systemSettings.timezone}
                       onChange={(e) => updateSystemSettings('timezone', e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
                     >
                       {availableTimezones.map(tz => (
                         <option key={tz} value={tz}>{tz}</option>
@@ -868,7 +1019,7 @@ const AdminSettings = () => {
                     <select
                       value={settings.systemSettings.dateFormat}
                       onChange={(e) => updateSystemSettings('dateFormat', e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
                     >
                       <option value="DD.MM.YYYY">DD.MM.YYYY</option>
                       <option value="MM/DD/YYYY">MM/DD/YYYY</option>
@@ -882,7 +1033,7 @@ const AdminSettings = () => {
                     <select
                       value={settings.systemSettings.timeFormat}
                       onChange={(e) => updateSystemSettings('timeFormat', e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
                     >
                       <option value="24h">24 Stunden</option>
                       <option value="12h">12 Stunden (AM/PM)</option>
@@ -894,7 +1045,7 @@ const AdminSettings = () => {
                     <select
                       value={settings.memberSettings.agendaItemLabelMode || 'topic-alpha'}
                       onChange={(e) => updateMemberSettings('agendaItemLabelMode', e.target.value)}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
                     >
                       <option value="topic-alpha">{t('members.agendaItemLabelModeTopicAlpha')}</option>
                       <option value="manual">{t('members.agendaItemLabelModeManual')}</option>
@@ -912,7 +1063,7 @@ const AdminSettings = () => {
                           enabled: e.target.checked, 
                           minutes: settings.systemSettings.autoLogout?.minutes ?? 480 
                         })}
-                        className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
+                        className="w-4 h-4 text-[var(--brand-primary)] border-slate-300 rounded focus:ring-[var(--brand-primary)]"
                       />
                       <div>
                         <span className="text-sm font-medium text-slate-700">{t('system.autoLogout')}</span>
@@ -932,7 +1083,7 @@ const AdminSettings = () => {
                             enabled: true, 
                             minutes: parseInt(e.target.value) 
                           })}
-                          className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                          className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
                         />
                       </div>
                     )}
@@ -947,7 +1098,7 @@ const AdminSettings = () => {
                       max="100"
                       value={settings.systemSettings.maxFileUploadSize}
                       onChange={(e) => updateSystemSettings('maxFileUploadSize', parseInt(e.target.value))}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
                     />
                   </div>
 
@@ -958,7 +1109,7 @@ const AdminSettings = () => {
                         type="checkbox"
                         checked={settings.systemSettings.enableAuditLog}
                         onChange={(e) => updateSystemSettings('enableAuditLog', e.target.checked)}
-                        className="w-4 h-4 text-indigo-600 border-slate-300 rounded focus:ring-indigo-500"
+                        className="w-4 h-4 text-[var(--brand-primary)] border-slate-300 rounded focus:ring-[var(--brand-primary)]"
                       />
                       <div>
                         <span className="text-sm font-medium text-slate-700">{t('system.enableAuditLog')}</span>
@@ -974,7 +1125,7 @@ const AdminSettings = () => {
                       type="text"
                       value={settings.systemSettings.allowedFileTypes.join(', ')}
                       onChange={(e) => updateSystemSettings('allowedFileTypes', e.target.value.split(',').map(s => s.trim()))}
-                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
                       placeholder="pdf, doc, docx, jpg, jpeg, png"
                     />
                     <p className="text-xs text-slate-500 mt-1">{t('system.allowedFileTypesDesc')}</p>
@@ -982,7 +1133,7 @@ const AdminSettings = () => {
 
                   <div className="p-4 bg-slate-50 rounded-lg border border-slate-200 md:col-span-2">
                     <div className="flex items-center gap-2 mb-3">
-                      <Database className="w-4 h-4 text-indigo-600" />
+                      <Database className="w-4 h-4 text-[var(--brand-primary)]" />
                       <h4 className="text-sm font-semibold text-slate-800">{t('system.dataManagementTitle')}</h4>
                     </div>
                     <p className="text-xs text-slate-500 mb-4">{t('system.dataManagementDesc')}</p>

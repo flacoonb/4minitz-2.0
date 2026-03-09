@@ -65,12 +65,12 @@ export default function VerifyEmailPage() {
     }, [token, router, t]);
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 flex items-center justify-center p-4">
+        <div className="min-h-screen brand-page-gradient flex items-center justify-center p-4">
             <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8">
                 <div className="text-center">
                     {status === 'loading' && (
                         <>
-                            <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-indigo-600 mx-auto mb-4"></div>
+                            <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-[var(--brand-primary)] mx-auto mb-4"></div>
                             <h1 className="text-2xl font-bold text-gray-900 mb-2">{t('verifying')}</h1>
                         </>
                     )}
@@ -99,7 +99,7 @@ export default function VerifyEmailPage() {
                             <p className="text-gray-600 mb-6">{message}</p>
                             <Link
                                 href="/auth/login"
-                                className="inline-block px-6 py-3 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors"
+                                className="inline-block px-6 py-3 brand-button-solid rounded-lg transition-colors"
                             >
                                 {t('loginButton')}
                             </Link>
