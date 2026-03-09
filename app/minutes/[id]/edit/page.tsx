@@ -367,13 +367,42 @@ function SortableInfoItem({
     return {
       id: fn.token,
       label: assignedLabel ? `${fn.name} -> ${assignedLabel}` : fn.name,
+      kind: 'function' as const,
       isActive: fn.isActive,
       hasAssignment: Boolean(assignmentUserId),
     };
   });
-  const selectableResponsibleIds = [
-    ...functionEntries.filter((entry) => entry.isActive && entry.hasAssignment).map((entry) => entry.id),
+
+  const guestEntries = Array.from(
+    new Set(
+      (meetingSeriesMembers || [])
+        .map((member) => String(member?.userId || '').trim())
+        .filter((userId) => userId.startsWith('guest:'))
+    )
+  ).map((guestId) => {
+    const guestName = guestId.replace(/^guest:/, '').trim();
+    const initials = guestName
+      .split(' ')
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part.charAt(0).toUpperCase())
+      .join('');
+    return {
+      id: guestId,
+      label: guestName ? `${guestName} (${t('guest')})` : t('guest'),
+      kind: 'guest' as const,
+      isActive: true,
+      hasAssignment: true,
+      initials: initials || 'G',
+    };
+  });
+
+  const responsibleEntries = [
+    ...functionEntries.filter((entry) => entry.isActive && entry.hasAssignment),
+    ...guestEntries,
   ];
+
+  const selectableResponsibleIds = responsibleEntries.map((entry) => entry.id);
 
   // Color schemes based on type and priority
   const getItemColors = () => {
@@ -901,14 +930,16 @@ function SortableInfoItem({
 
             <div className="border-t-2 border-indigo-200 my-2"></div>
 
-            {functionEntries.map((entry) => {
+            {responsibleEntries.map((entry) => {
               const isSelected = item.responsibles?.includes(entry.id) || false;
-              const initials = entry.label
-                .split(' ')
-                .filter(Boolean)
-                .slice(0, 2)
-                .map((part) => part.charAt(0).toUpperCase())
-                .join('') || 'F';
+              const initials = entry.kind === 'guest'
+                ? entry.initials
+                : (entry.label
+                  .split(' ')
+                  .filter(Boolean)
+                  .slice(0, 2)
+                  .map((part) => part.charAt(0).toUpperCase())
+                  .join('') || 'F');
 
               return (
                 <label
@@ -939,7 +970,7 @@ function SortableInfoItem({
                   </div>
                   <div className="min-w-0 flex items-start gap-1.5 sm:gap-2">
                     <div className={`w-6 h-6 mt-0.5 rounded-full flex items-center justify-center text-[10px] font-bold text-white shrink-0 ${
-                      isSelected ? 'bg-gradient-to-br from-indigo-500 to-purple-600' : 'bg-gradient-to-br from-emerald-500 to-teal-600'
+                      isSelected ? 'bg-gradient-to-br from-indigo-500 to-purple-600' : entry.kind === 'guest' ? 'bg-gradient-to-br from-orange-500 to-pink-500' : 'bg-gradient-to-br from-emerald-500 to-teal-600'
                     }`}>
                       {initials}
                     </div>
@@ -948,9 +979,9 @@ function SortableInfoItem({
                         {entry.label}
                       </span>
                       <span className="block text-xs text-gray-500">
-                        @{entry.id}
-                        {!entry.isActive ? ' · inaktiv (historisch)' : ''}
-                        {entry.isActive && !entry.hasAssignment ? ' · keine Person zugeordnet' : ''}
+                        {entry.kind === 'guest'
+                          ? t('guest')
+                          : `@${entry.id}${!entry.isActive ? ' · inaktiv (historisch)' : ''}${entry.isActive && !entry.hasAssignment ? ' · keine Person zugeordnet' : ''}`}
                       </span>
                     </div>
                   </div>
@@ -958,7 +989,7 @@ function SortableInfoItem({
               );
             })}
 
-            {functionEntries.length === 0 && (
+            {responsibleEntries.length === 0 && (
               <div className="text-center py-6">
                 <svg className="w-12 h-12 text-gray-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
