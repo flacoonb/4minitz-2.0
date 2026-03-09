@@ -25,14 +25,66 @@ const EMAIL_CONFIG = {
 const FROM_EMAIL = process.env.FROM_EMAIL || 'noreply@4minitz.local';
 // APP_URL is now dynamic via getAppUrl()
 
+function normalizeUrlCandidate(value: string): string {
+  return String(value || '').trim().replace(/\/+$/, '');
+}
+
+function isHttpUrl(value: string): boolean {
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+function isLocalhostLike(value: string): boolean {
+  try {
+    const parsed = new URL(value);
+    const host = parsed.hostname.toLowerCase();
+    return host === 'localhost' || host === '127.0.0.1' || host === '::1';
+  } catch {
+    return false;
+  }
+}
+
+function getFirstValidUrl(candidates: string[]): string | null {
+  for (const raw of candidates) {
+    const candidate = normalizeUrlCandidate(raw);
+    if (!candidate) continue;
+    if (!isHttpUrl(candidate)) continue;
+    return candidate;
+  }
+  return null;
+}
+
+function getFirstPublicUrl(candidates: string[]): string | null {
+  for (const raw of candidates) {
+    const candidate = normalizeUrlCandidate(raw);
+    if (!candidate) continue;
+    if (!isHttpUrl(candidate)) continue;
+    if (isLocalhostLike(candidate)) continue;
+    return candidate;
+  }
+  return null;
+}
+
 export async function getAppUrl() {
+  let configuredBaseUrl = '';
   try {
     const settings = await Settings.findOne({}).sort({ updatedAt: -1 });
     if (settings && settings.systemSettings && settings.systemSettings.baseUrl) {
-      return settings.systemSettings.baseUrl;
+      configuredBaseUrl = String(settings.systemSettings.baseUrl);
     }
   } catch (_e) { }
-  return process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+
+  const envAppUrl = String(process.env.APP_URL || '');
+  const envPublicAppUrl = String(process.env.NEXT_PUBLIC_APP_URL || '');
+  const preferred = getFirstPublicUrl([configuredBaseUrl, envAppUrl, envPublicAppUrl]);
+  if (preferred) return preferred;
+
+  const fallback = getFirstValidUrl([configuredBaseUrl, envAppUrl, envPublicAppUrl]);
+  return fallback || 'http://localhost:3000';
 }
 
 export async function getOrgName() {
@@ -623,7 +675,10 @@ export async function sendVerificationEmail(
   appUrlOverride?: string
 ): Promise<void> {
   const t = translations[locale].verifyEmail;
-  const appUrl = (appUrlOverride || (await getAppUrl())).replace(/\/+$/, '');
+  const resolvedAppUrl = await getAppUrl();
+  const preferredAppUrl = getFirstPublicUrl([String(appUrlOverride || ''), resolvedAppUrl]);
+  const fallbackAppUrl = getFirstValidUrl([String(appUrlOverride || ''), resolvedAppUrl]);
+  const appUrl = (preferredAppUrl || fallbackAppUrl || resolvedAppUrl).replace(/\/+$/, '');
   const verifyUrl = `${appUrl}/auth/verify-email?token=${token}`;
 
   const htmlContent = `

@@ -4,7 +4,7 @@ import User from '@/models/User';
 import Settings from '@/models/Settings';
 import { checkRateLimit, checkRateLimitByKey } from '@/lib/rate-limit';
 import { registerSchema, validateBody } from '@/lib/validations';
-import { sendWelcomeEmail, sendVerificationEmail, getTransporter, getFromEmail } from '@/lib/email-service';
+import { sendWelcomeEmail, sendVerificationEmail, getTransporter, getFromEmail, getAppUrl } from '@/lib/email-service';
 import crypto from 'crypto';
 import { getTranslations } from 'next-intl/server';
 
@@ -223,8 +223,7 @@ async function notifyAdminsAboutNewUser(newUser: { firstName: string; lastName: 
 
     if (admins.length === 0) return;
 
-    const settings = await Settings.findOne({}).sort({ updatedAt: -1 });
-    const baseUrl = settings?.systemSettings?.baseUrl || process.env.APP_URL || 'http://localhost:3000';
+    const baseUrl = (await getAppUrl()).replace(/\/+$/, '');
 
     const safeName = `${escapeHtml(newUser.firstName)} ${escapeHtml(newUser.lastName)}`;
     const safeEmail = escapeHtml(newUser.email);

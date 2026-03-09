@@ -6,7 +6,7 @@ import MeetingSeries from '@/models/MeetingSeries';
 import { verifyToken } from '@/lib/auth';
 import { hasPermission } from '@/lib/permissions';
 import { lookupUsersByIdentifiers, normalizeIdentifier } from '@/lib/user-identifiers';
-import { sendMeetingInvitationEmail } from '@/lib/email-service';
+import { sendMeetingInvitationEmail, getAppUrl } from '@/lib/email-service';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -22,6 +22,30 @@ function getRequestBaseUrl(request: NextRequest): string {
     return `${proto}://${host}`;
   }
   return new URL(request.url).origin;
+}
+
+function normalizeUrlCandidate(value: string): string {
+  return String(value || '').trim().replace(/\/+$/, '');
+}
+
+function isPublicHttpUrl(value: string): boolean {
+  try {
+    const parsed = new URL(value);
+    if (!['http:', 'https:'].includes(parsed.protocol)) return false;
+    const host = parsed.hostname.toLowerCase();
+    return host !== 'localhost' && host !== '127.0.0.1' && host !== '::1';
+  } catch {
+    return false;
+  }
+}
+
+async function resolveInvitationBaseUrl(request: NextRequest): Promise<string> {
+  const requestBaseUrl = normalizeUrlCandidate(getRequestBaseUrl(request));
+  const configuredBaseUrl = normalizeUrlCandidate(await getAppUrl());
+
+  if (isPublicHttpUrl(requestBaseUrl)) return requestBaseUrl;
+  if (isPublicHttpUrl(configuredBaseUrl)) return configuredBaseUrl;
+  return configuredBaseUrl || requestBaseUrl;
 }
 
 export async function POST(request: NextRequest, context: RouteContext) {
@@ -53,7 +77,7 @@ export async function POST(request: NextRequest, context: RouteContext) {
 
     const inviteeIds = event.invitees.map((invitee: any) => String(invitee.userId)).filter(Boolean);
     const userLookup = await lookupUsersByIdentifiers(inviteeIds, '_id email firstName lastName preferences');
-    const baseUrl = getRequestBaseUrl(request).replace(/\/+$/, '');
+    const baseUrl = await resolveInvitationBaseUrl(request);
 
     const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
     let sentCount = 0;

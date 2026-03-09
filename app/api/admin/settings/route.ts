@@ -4,6 +4,51 @@ import Settings, { ISettings } from '@/models/Settings';
 import { verifyToken } from '@/lib/auth';
 import { logAction } from '@/lib/audit';
 
+function normalizeUrlCandidate(value: string): string {
+  return String(value || '').trim().replace(/\/+$/, '');
+}
+
+function isHttpUrl(value: string): boolean {
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
+function isLocalhostLike(value: string): boolean {
+  try {
+    const parsed = new URL(value);
+    const host = parsed.hostname.toLowerCase();
+    return host === 'localhost' || host === '127.0.0.1' || host === '::1';
+  } catch {
+    return false;
+  }
+}
+
+function resolveDefaultBaseUrl(): string {
+  const candidates = [
+    String(process.env.APP_URL || ''),
+    String(process.env.NEXT_PUBLIC_APP_URL || ''),
+    'http://localhost:3000',
+  ];
+
+  for (const raw of candidates) {
+    const candidate = normalizeUrlCandidate(raw);
+    if (!candidate || !isHttpUrl(candidate) || isLocalhostLike(candidate)) continue;
+    return candidate;
+  }
+
+  for (const raw of candidates) {
+    const candidate = normalizeUrlCandidate(raw);
+    if (!candidate || !isHttpUrl(candidate)) continue;
+    return candidate;
+  }
+
+  return 'http://localhost:3000';
+}
+
 /** Default settings used when no DB record exists and for reset-to-defaults */
 const DEFAULT_SETTINGS = {
   roles: {
@@ -73,7 +118,7 @@ const DEFAULT_SETTINGS = {
     autoLogout: { enabled: true, minutes: 480 },
     maxFileUploadSize: 10,
     allowedFileTypes: ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png'],
-    baseUrl: 'http://localhost:3000'
+    baseUrl: resolveDefaultBaseUrl()
   }
 };
 
