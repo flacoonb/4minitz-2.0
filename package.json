@@ -30,7 +30,7 @@
     "@types/nodemailer": "^7.0.4",
     "bcryptjs": "^3.0.3",
     "dotenv": "^17.2.3",
-    "jsonwebtoken": "^9.0.2",
+    "jsonwebtoken": "^9.0.3",
     "jspdf": "^4.2.0",
     "jspdf-autotable": "^5.0.7",
     "lucide-react": "^0.556.0",
