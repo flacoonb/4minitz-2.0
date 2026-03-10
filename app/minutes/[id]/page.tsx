@@ -279,14 +279,53 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
     setExportingPdf(true);
     
     try {
-      // Fetch active PDF template (content + layout in one payload)
-      const templateResponse = await fetch('/api/pdf-templates/active');
-      const templateResult = await templateResponse.json();
-      const templateData = templateResult?.data;
+      // Prefer series-specific PDF template; fall back to active global template.
+      let templateData: any = null;
+      const meetingSeriesId = minute?.meetingSeries_id?._id ? String(minute.meetingSeries_id._id) : '';
+
+      if (meetingSeriesId) {
+        try {
+          const seriesResponse = await fetch(`/api/meeting-series/${meetingSeriesId}`, {
+            credentials: 'include',
+            cache: 'no-store',
+          });
+          const seriesResult = await seriesResponse.json().catch(() => ({}));
+          const defaultPdfTemplateId =
+            typeof seriesResult?.data?.defaultPdfTemplateId === 'string'
+              ? seriesResult.data.defaultPdfTemplateId
+              : '';
+
+          if (defaultPdfTemplateId) {
+            const defaultTemplateResponse = await fetch(`/api/pdf-templates/${defaultPdfTemplateId}`, {
+              credentials: 'include',
+              cache: 'no-store',
+            });
+            const defaultTemplateResult = await defaultTemplateResponse.json().catch(() => ({}));
+            if (defaultTemplateResult?.success && defaultTemplateResult?.data) {
+              templateData = defaultTemplateResult.data;
+            }
+          }
+        } catch (_seriesTemplateError) {
+          // Silent fallback to active template.
+        }
+      }
+
+      if (!templateData) {
+        const templateResponse = await fetch('/api/pdf-templates/active', {
+          credentials: 'include',
+          cache: 'no-store',
+        });
+        const templateResult = await templateResponse.json();
+        if (!templateResult?.success || !templateResult?.data) {
+          throw new Error(t('minutes.pdfSettingsError'));
+        }
+        templateData = templateResult.data;
+      }
+
       const contentSettings = templateData?.contentSettings || templateData;
       const layoutSettings = templateData?.layoutSettings || null;
 
-      if (!templateResult.success || !contentSettings) {
+      if (!contentSettings) {
         throw new Error(t('minutes.pdfSettingsError'));
       }
 

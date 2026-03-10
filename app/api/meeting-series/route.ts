@@ -7,6 +7,7 @@ import mongoose from 'mongoose';
 import connectDB from '@/lib/mongodb';
 import MeetingSeries from '@/models/MeetingSeries';
 import MinutesTemplate from '@/models/MinutesTemplate';
+import PdfTemplate from '@/models/PdfTemplate';
 import { verifyToken } from '@/lib/auth';
 import { hasPermission } from '@/lib/permissions';
 import { createMeetingSeriesSchema, validateBody } from '@/lib/validations';
@@ -137,7 +138,9 @@ export async function POST(request: NextRequest) {
     }
     const members = Array.isArray(body.members) ? body.members : [];
     const defaultTemplateIdInput = typeof body.defaultTemplateId === 'string' ? body.defaultTemplateId.trim() : '';
+    const defaultPdfTemplateIdInput = typeof body.defaultPdfTemplateId === 'string' ? body.defaultPdfTemplateId.trim() : '';
     let defaultTemplateId: mongoose.Types.ObjectId | undefined;
+    let defaultPdfTemplateId: mongoose.Types.ObjectId | undefined;
 
     if (defaultTemplateIdInput) {
       if (!mongoose.isValidObjectId(defaultTemplateIdInput)) {
@@ -168,6 +171,28 @@ export async function POST(request: NextRequest) {
       defaultTemplateId = new mongoose.Types.ObjectId(defaultTemplateIdInput);
     }
 
+    if (defaultPdfTemplateIdInput) {
+      if (!mongoose.isValidObjectId(defaultPdfTemplateIdInput)) {
+        return NextResponse.json(
+          { success: false, error: 'Ungültige PDF-Vorlage' },
+          { status: 400 }
+        );
+      }
+
+      const defaultPdfTemplate = await PdfTemplate.findById(defaultPdfTemplateIdInput)
+        .select('isActive')
+        .lean();
+
+      if (!defaultPdfTemplate || !defaultPdfTemplate.isActive) {
+        return NextResponse.json(
+          { success: false, error: 'PDF-Vorlage nicht gefunden oder inaktiv' },
+          { status: 400 }
+        );
+      }
+
+      defaultPdfTemplateId = new mongoose.Types.ObjectId(defaultPdfTemplateIdInput);
+    }
+
     const newSeries = await MeetingSeries.create({
       project: validated.project,
       name: validated.name || '',
@@ -179,6 +204,7 @@ export async function POST(request: NextRequest) {
       clubFunctions,
       members,
       defaultTemplateId,
+      defaultPdfTemplateId,
       availableLabels: body.availableLabels || [
         { name: 'Important', color: '#FF0000', isDefaultLabel: true },
         { name: 'Decision', color: '#00FF00', isDefaultLabel: true },

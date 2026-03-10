@@ -10,6 +10,7 @@ import Minutes from '@/models/Minutes';
 import Task from '@/models/Task';
 import Attachment from '@/models/Attachment';
 import MinutesTemplate from '@/models/MinutesTemplate';
+import PdfTemplate from '@/models/PdfTemplate';
 import { verifyToken } from '@/lib/auth';
 import { hasPermission } from '@/lib/permissions';
 import { sanitizeResponsibles, validateFunctionResponsibles } from '@/lib/club-functions';
@@ -30,6 +31,21 @@ async function isValidDefaultTemplate(defaultTemplateId: unknown, seriesId: stri
       { scope: 'global' },
       { scope: 'series', meetingSeriesId: new mongoose.Types.ObjectId(seriesId) },
     ],
+  })
+    .select('_id')
+    .lean();
+
+  return Boolean(existingTemplate);
+}
+
+async function isValidDefaultPdfTemplate(defaultPdfTemplateId: unknown): Promise<boolean> {
+  if (!defaultPdfTemplateId) return false;
+  const templateId = String(defaultPdfTemplateId);
+  if (!mongoose.isValidObjectId(templateId)) return false;
+
+  const existingTemplate = await PdfTemplate.findOne({
+    _id: templateId,
+    isActive: true,
   })
     .select('_id')
     .lean();
@@ -105,6 +121,17 @@ export async function GET(
           { $unset: { defaultTemplateId: 1 } }
         );
         delete (series as any).defaultTemplateId;
+      }
+    }
+
+    if ((series as any).defaultPdfTemplateId) {
+      const hasValidDefaultPdfTemplate = await isValidDefaultPdfTemplate((series as any).defaultPdfTemplateId);
+      if (!hasValidDefaultPdfTemplate) {
+        await MeetingSeries.updateOne(
+          { _id: id },
+          { $unset: { defaultPdfTemplateId: 1 } }
+        );
+        delete (series as any).defaultPdfTemplateId;
       }
     }
 
@@ -226,9 +253,37 @@ export async function PUT(
         body.defaultTemplateId = new mongoose.Types.ObjectId(rawDefaultTemplateId);
       }
     }
+    if (body.defaultPdfTemplateId !== undefined) {
+      const rawDefaultPdfTemplateId =
+        typeof body.defaultPdfTemplateId === 'string' ? body.defaultPdfTemplateId.trim() : '';
+
+      if (!rawDefaultPdfTemplateId) {
+        body.defaultPdfTemplateId = null;
+      } else {
+        if (!mongoose.isValidObjectId(rawDefaultPdfTemplateId)) {
+          return NextResponse.json(
+            { success: false, error: 'Ungültige PDF-Vorlage' },
+            { status: 400 }
+          );
+        }
+
+        const defaultPdfTemplate = await PdfTemplate.findById(rawDefaultPdfTemplateId)
+          .select('isActive')
+          .lean();
+
+        if (!defaultPdfTemplate || !defaultPdfTemplate.isActive) {
+          return NextResponse.json(
+            { success: false, error: 'PDF-Vorlage nicht gefunden oder inaktiv' },
+            { status: 400 }
+          );
+        }
+
+        body.defaultPdfTemplateId = new mongoose.Types.ObjectId(rawDefaultPdfTemplateId);
+      }
+    }
     const allowedUpdates = [
       'project', 'name', 'participants', 'informedUsers',
-      'additionalResponsibles', 'availableLabels', 'members', 'clubFunctions', 'defaultTemplateId'
+      'additionalResponsibles', 'availableLabels', 'members', 'clubFunctions', 'defaultTemplateId', 'defaultPdfTemplateId'
     ];
 
     allowedUpdates.forEach(field => {

@@ -34,6 +34,7 @@ export interface IMeetingSeries extends Document {
   createdAt: Date;
   updatedAt: Date;
   defaultTemplateId?: mongoose.Types.ObjectId;
+  defaultPdfTemplateId?: mongoose.Types.ObjectId;
   
   // Access Control
   visibleFor: string[];
@@ -173,6 +174,11 @@ const MeetingSeriesSchema = new Schema<IMeetingSeries>(
     defaultTemplateId: {
       type: Schema.Types.ObjectId,
       ref: 'MinutesTemplate',
+      required: false,
+    },
+    defaultPdfTemplateId: {
+      type: Schema.Types.ObjectId,
+      ref: 'PdfTemplate',
       required: false,
     },
     availableLabels: [LabelSchema],

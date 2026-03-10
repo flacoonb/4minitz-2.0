@@ -31,6 +31,12 @@ interface MinutesTemplateOption {
   scope: 'global' | 'series';
 }
 
+interface PdfTemplateOption {
+  _id: string;
+  name: string;
+  isActive?: boolean;
+}
+
 export default function NewMeetingSeriesPage() {
   const t = useTranslations('meetingSeriesNew');
   const router = useRouter();
@@ -44,6 +50,7 @@ export default function NewMeetingSeriesPage() {
     name: '',
     description: '',
     defaultTemplateId: '',
+    defaultPdfTemplateId: '',
     participants: [] as string[],
     informedUsers: [] as string[],
     members: [] as Member[],
@@ -60,6 +67,7 @@ export default function NewMeetingSeriesPage() {
   // Existing series for task import
   const [existingSeries, setExistingSeries] = useState<{ _id: string; project: string; name?: string }[]>([]);
   const [templateOptions, setTemplateOptions] = useState<MinutesTemplateOption[]>([]);
+  const [pdfTemplateOptions, setPdfTemplateOptions] = useState<PdfTemplateOption[]>([]);
   const [sourceSeriesId, setSourceSeriesId] = useState<string>('');
   const [importMessage, setImportMessage] = useState<string | null>(null);
 
@@ -80,6 +88,7 @@ export default function NewMeetingSeriesPage() {
       fetchClubFunctions();
       fetchExistingNames();
       fetchTemplateOptions();
+      fetchPdfTemplateOptions();
     }
   }, [user]);
 
@@ -128,6 +137,24 @@ export default function NewMeetingSeriesPage() {
       setTemplateOptions(Array.isArray(result.data) ? result.data : []);
     } catch {
       setTemplateOptions([]);
+    }
+  };
+
+  const fetchPdfTemplateOptions = async () => {
+    try {
+      const response = await fetch('/api/pdf-templates', {
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        setPdfTemplateOptions([]);
+        return;
+      }
+
+      const result = await response.json();
+      setPdfTemplateOptions(Array.isArray(result.data) ? result.data : []);
+    } catch {
+      setPdfTemplateOptions([]);
     }
   };
 
@@ -237,6 +264,7 @@ export default function NewMeetingSeriesPage() {
         body: JSON.stringify({
           ...formData,
           defaultTemplateId: formData.defaultTemplateId,
+          defaultPdfTemplateId: formData.defaultPdfTemplateId,
         }),
       });
 
@@ -403,6 +431,27 @@ export default function NewMeetingSeriesPage() {
               ))}
             </select>
             <p className="text-xs text-gray-500 mt-1">{t('defaultTemplateHint')}</p>
+          </div>
+
+          <div>
+            <label htmlFor="defaultPdfTemplateId" className="block text-sm font-medium text-gray-700 mb-2">
+              {t('defaultPdfTemplateLabel')}
+            </label>
+            <select
+              id="defaultPdfTemplateId"
+              name="defaultPdfTemplateId"
+              value={formData.defaultPdfTemplateId}
+              onChange={handleInputChange}
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent transition-all bg-white"
+            >
+              <option value="">{t('noDefaultPdfTemplate')}</option>
+              {pdfTemplateOptions.map((template) => (
+                <option key={template._id} value={template._id}>
+                  {template.name}{template.isActive ? ` (${t('templateActive')})` : ''}
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-gray-500 mt-1">{t('defaultPdfTemplateHint')}</p>
           </div>
 
           {/* Import Tasks from existing Series */}
