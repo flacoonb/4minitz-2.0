@@ -3,11 +3,13 @@
  * Handles operations for a specific meeting series
  */
 import { NextRequest, NextResponse } from 'next/server';
+import mongoose from 'mongoose';
 import connectDB from '@/lib/mongodb';
 import MeetingSeries from '@/models/MeetingSeries';
 import Minutes from '@/models/Minutes';
 import Task from '@/models/Task';
 import Attachment from '@/models/Attachment';
+import MinutesTemplate from '@/models/MinutesTemplate';
 import { verifyToken } from '@/lib/auth';
 import { hasPermission } from '@/lib/permissions';
 import { sanitizeResponsibles, validateFunctionResponsibles } from '@/lib/club-functions';
@@ -156,9 +158,47 @@ export async function PUT(
       }
       body.clubFunctions = clubFunctions;
     }
+    if (body.defaultTemplateId !== undefined) {
+      const rawDefaultTemplateId =
+        typeof body.defaultTemplateId === 'string' ? body.defaultTemplateId.trim() : '';
+
+      if (!rawDefaultTemplateId) {
+        body.defaultTemplateId = null;
+      } else {
+        if (!mongoose.isValidObjectId(rawDefaultTemplateId)) {
+          return NextResponse.json(
+            { success: false, error: 'Ungültige Standard-Vorlage' },
+            { status: 400 }
+          );
+        }
+
+        const defaultTemplate = await MinutesTemplate.findById(rawDefaultTemplateId)
+          .select('scope meetingSeriesId isActive')
+          .lean();
+
+        if (!defaultTemplate || !defaultTemplate.isActive) {
+          return NextResponse.json(
+            { success: false, error: 'Standard-Vorlage nicht gefunden oder inaktiv' },
+            { status: 400 }
+          );
+        }
+
+        if (
+          defaultTemplate.scope === 'series' &&
+          defaultTemplate.meetingSeriesId?.toString() !== id
+        ) {
+          return NextResponse.json(
+            { success: false, error: 'Serien-Vorlage kann nur in der eigenen Sitzungsserie gesetzt werden' },
+            { status: 400 }
+          );
+        }
+
+        body.defaultTemplateId = new mongoose.Types.ObjectId(rawDefaultTemplateId);
+      }
+    }
     const allowedUpdates = [
       'project', 'name', 'participants', 'informedUsers',
-      'additionalResponsibles', 'availableLabels', 'members', 'clubFunctions'
+      'additionalResponsibles', 'availableLabels', 'members', 'clubFunctions', 'defaultTemplateId'
     ];
 
     allowedUpdates.forEach(field => {

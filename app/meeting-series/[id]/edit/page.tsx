@@ -24,6 +24,12 @@ interface ClubFunctionEntry {
   assignedUserId?: string;
 }
 
+interface MinutesTemplateOption {
+  _id: string;
+  name: string;
+  scope: 'global' | 'series';
+}
+
 interface MeetingSeries {
   _id: string;
   project: string;
@@ -31,12 +37,14 @@ interface MeetingSeries {
   members: Member[];
   moderators: string[];
   participants: string[];
+  defaultTemplateId?: string;
 }
 
 interface FormData {
   project: string;
   name: string;
   members: Member[];
+  defaultTemplateId: string;
 }
 
 export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id: string }> }) {
@@ -53,10 +61,12 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
     project: '',
     name: '',
     members: [],
+    defaultTemplateId: '',
   });
 
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [clubFunctions, setClubFunctions] = useState<ClubFunctionEntry[]>([]);
+  const [templateOptions, setTemplateOptions] = useState<MinutesTemplateOption[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<string>('');
   const [existingProjectNames, setExistingProjectNames] = useState<string[]>([]);
 
@@ -116,6 +126,7 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
         project: seriesData.project || '',
         name: seriesData.name || '',
         members: seriesData.members || [],
+        defaultTemplateId: seriesData.defaultTemplateId ? String(seriesData.defaultTemplateId) : '',
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : t('loadingError'));
@@ -123,6 +134,23 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
       setLoading(false);
     }
   }, [seriesId, t]);
+
+  const fetchTemplateOptions = useCallback(async () => {
+    if (!seriesId) return;
+    try {
+      const response = await fetch(`/api/minutes-templates?meetingSeriesId=${seriesId}`, {
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        setTemplateOptions([]);
+        return;
+      }
+      const result = await response.json();
+      setTemplateOptions(Array.isArray(result.data) ? result.data : []);
+    } catch {
+      setTemplateOptions([]);
+    }
+  }, [seriesId]);
 
   const fetchExistingNames = useCallback(async () => {
     try {
@@ -143,8 +171,9 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
       fetchUsers();
       fetchClubFunctions();
       fetchExistingNames();
+      fetchTemplateOptions();
     }
-  }, [seriesId, fetchSeries, fetchUsers, fetchClubFunctions, fetchExistingNames]);
+  }, [seriesId, fetchSeries, fetchUsers, fetchClubFunctions, fetchExistingNames, fetchTemplateOptions]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -158,7 +187,10 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          defaultTemplateId: formData.defaultTemplateId,
+        }),
       });
 
       if (!response.ok) {
@@ -271,7 +303,7 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
         )}
 
         {/* Sticky Save Button */}
-        <div className="hidden sm:block fixed top-6 right-6 z-50">
+        <div className="hidden sm:block fixed bottom-6 right-6 z-40">
           <button
             type="submit"
             form="edit-form"
@@ -292,7 +324,7 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
         </div>
 
         {/* Mobile Save Button */}
-        <div className="sm:hidden sticky top-28 z-40 mb-4">
+        <div className="sm:hidden fixed bottom-3 inset-x-3 z-40 pb-[env(safe-area-inset-bottom)]">
           <button
             type="submit"
             form="edit-form"
@@ -312,7 +344,7 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
           </button>
         </div>
 
-        <form id="edit-form" onSubmit={handleSubmit} className="space-y-8">
+        <form id="edit-form" onSubmit={handleSubmit} className="space-y-8 pb-28 sm:pb-8">
           {/* Basic Information */}
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-100">
             <h2 className="text-xl font-bold text-gray-900 mb-4">{t('basicInfo')}</h2>
@@ -347,6 +379,24 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
                     <option key={year} value={String(year)}>{year}</option>
                   ))}
                 </select>
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {t('defaultTemplateLabel')}
+                </label>
+                <select
+                  value={formData.defaultTemplateId}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, defaultTemplateId: e.target.value }))}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent bg-white"
+                >
+                  <option value="">{t('noDefaultTemplate')}</option>
+                  {templateOptions.map((template) => (
+                    <option key={template._id} value={template._id}>
+                      {template.name} ({template.scope === 'global' ? t('templateGlobal') : t('templateSeries')})
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1 text-xs text-gray-500">{t('defaultTemplateHint')}</p>
               </div>
             </div>
           </div>

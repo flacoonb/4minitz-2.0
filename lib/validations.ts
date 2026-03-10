@@ -33,6 +33,7 @@ export const createMeetingSeriesSchema = z.object({
   visibleFor: z.array(safeString(100)).optional(),
   moderators: z.array(safeString(100)).optional(),
   participants: z.array(safeString(100)).optional(),
+  defaultTemplateId: safeString(50).optional(),
 });
 
 export const updateMeetingSeriesSchema = z.object({
@@ -41,6 +42,7 @@ export const updateMeetingSeriesSchema = z.object({
   visibleFor: z.array(safeString(100)).optional(),
   moderators: z.array(safeString(100)).optional(),
   participants: z.array(safeString(100)).optional(),
+  defaultTemplateId: safeString(50).optional(),
 });
 
 // Minutes schemas

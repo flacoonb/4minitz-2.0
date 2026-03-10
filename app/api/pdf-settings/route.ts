@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import dbConnect from '@/lib/mongodb';
-import PdfSettings from '@/models/PdfSettings';
 import { verifyToken } from '@/lib/auth';
+import { getActivePdfTemplate } from '@/lib/pdf-template-store';
+import { sanitizePdfContentSettings } from '@/lib/pdf-template-defaults';
+
+function canManageTemplates(role: string | undefined): boolean {
+  return role === 'admin' || role === 'moderator';
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -14,20 +19,8 @@ export async function GET(request: NextRequest) {
     }
 
     await dbConnect();
-
-    let settings = await PdfSettings.findOne({ isActive: true });
-
-    // Create default settings if none exist
-    if (!settings) {
-      settings = await PdfSettings.create({
-        companyName: '4Minitz 2.0',
-        headerText: 'Meeting Protokoll',
-        footerLeftText: 'Vertraulich',
-        footerText: '',
-        isActive: true
-      });
-    }
-
+    const activeTemplate = await getActivePdfTemplate();
+    const settings = sanitizePdfContentSettings(activeTemplate.contentSettings);
     return NextResponse.json({ success: true, data: settings });
   } catch (error) {
     console.error('Error fetching PDF settings:', error);
@@ -48,7 +41,7 @@ export async function PUT(request: NextRequest) {
       );
     }
 
-    if (!['admin', 'moderator'].includes(authResult.user.role)) {
+    if (!canManageTemplates(authResult.user.role)) {
       return NextResponse.json(
         { success: false, error: 'Insufficient permissions' },
         { status: 403 }
@@ -58,51 +51,20 @@ export async function PUT(request: NextRequest) {
     await dbConnect();
     const body = await request.json();
 
-    // Validate logoUrl — only allow http(s) and relative paths
-    if (body.logoUrl && !/^(https?:\/\/|\/)/i.test(body.logoUrl)) {
-      return NextResponse.json(
-        { success: false, error: 'Logo-URL must start with http://, https:// or /' },
-        { status: 400 }
-      );
-    }
-
-    // Validate fontSize range
-    if (body.fontSize !== undefined && (body.fontSize < 6 || body.fontSize > 20)) {
-      return NextResponse.json(
-        { success: false, error: 'Font size must be between 6 and 20' },
-        { status: 400 }
-      );
-    }
-
-    // Validate color format
-    const colorFields = ['primaryColor', 'secondaryColor'];
-    for (const field of colorFields) {
-      if (body[field] && !/^#[0-9a-fA-F]{6}$/.test(body[field])) {
-        return NextResponse.json(
-          { success: false, error: `${field} must be a valid hex color (e.g. #3B82F6)` },
-          { status: 400 }
-        );
-      }
-    }
-
     // Strip dead fields that may still exist in client data
     delete body.includeTableOfContents;
     delete body.includeParticipants;
     delete body.dateFormat;
 
-    // Find active settings or create new
-    let settings = await PdfSettings.findOne({ isActive: true });
+    const activeTemplate = await getActivePdfTemplate();
+    const mergedSettings = {
+      ...(activeTemplate.contentSettings || {}),
+      ...body,
+    };
+    activeTemplate.contentSettings = sanitizePdfContentSettings(mergedSettings);
+    await activeTemplate.save();
 
-    if (settings) {
-      // Update existing
-      Object.assign(settings, body);
-      await settings.save();
-    } else {
-      // Create new
-      settings = await PdfSettings.create({ ...body, isActive: true });
-    }
-
-    return NextResponse.json({ success: true, data: settings });
+    return NextResponse.json({ success: true, data: activeTemplate.contentSettings });
   } catch (error) {
     console.error('Error updating PDF settings:', error);
     return NextResponse.json(

@@ -279,11 +279,14 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
     setExportingPdf(true);
     
     try {
-      // Fetch PDF settings
-      const response = await fetch('/api/pdf-settings');
-      const settingsResult = await response.json();
+      // Fetch active PDF template (content + layout in one payload)
+      const templateResponse = await fetch('/api/pdf-templates/active');
+      const templateResult = await templateResponse.json();
+      const templateData = templateResult?.data;
+      const contentSettings = templateData?.contentSettings || templateData;
+      const layoutSettings = templateData?.layoutSettings || null;
 
-      if (!settingsResult.success) {
+      if (!templateResult.success || !contentSettings) {
         throw new Error(t('minutes.pdfSettingsError'));
       }
 
@@ -293,26 +296,16 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
         const globalSettingsResult = await globalSettingsResponse.json();
 
         if (globalSettingsResult.success && globalSettingsResult.data) {
-           settingsResult.data.locale = globalSettingsResult.data.language?.defaultLanguage;
+           contentSettings.locale = globalSettingsResult.data.language?.defaultLanguage;
         }
       } catch (e) {
         console.warn('Could not fetch global settings for PDF export', e);
       }
 
-      // Fetch PDF layout settings
-      let layoutSettings = null;
-      try {
-        const layoutResponse = await fetch('/api/pdf-layout-settings');
-        const layoutResult = await layoutResponse.json();
-        layoutSettings = layoutResult.success ? layoutResult.data : null;
-      } catch (e) {
-        console.warn('Could not fetch PDF layout settings', e);
-      }
-
       // Dynamically import PDF generator (client-side only)
       const { generateMinutePdf } = await import('@/lib/pdfGenerator');
 
-      await generateMinutePdf(minute, settingsResult.data, allUsers, layoutSettings, clubFunctions);
+      await generateMinutePdf(minute, contentSettings, allUsers, layoutSettings, clubFunctions);
     } catch (error) {
       console.error('Error generating PDF:', error);
       const errorMsg = error instanceof Error ? error.message : t('minutes.pdfGenerationError');
@@ -424,7 +417,7 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
       <div className="min-h-screen brand-page-gradient flex items-center justify-center">
         <div className="text-center">
           <h1 className="text-2xl font-bold text-red-600 mb-4">{t('common.error')}</h1>
-          <p className="text-gray-600">{error || t('minutes.notFound')}</p>
+          <p className="app-text-muted">{error || t('minutes.notFound')}</p>
           <Link href="/meeting-series" className="text-[var(--brand-primary)] hover:text-[var(--brand-primary-strong)] mt-4 inline-block">
             {t('minutes.backToOverview')}
           </Link>
@@ -437,7 +430,7 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
     <div className="min-h-screen brand-page-gradient py-6 sm:py-8 px-3 sm:px-4">
       <div className="max-w-6xl mx-auto space-y-8">
         {/* Header */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl p-5 sm:p-8 border border-gray-100">
+        <div className="app-card rounded-2xl shadow-xl p-5 sm:p-8">
           <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
             <div className="flex-1 min-w-0">
               {/* Breadcrumb */}
@@ -488,8 +481,8 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
                 <div className="flex items-center gap-3">
                   <span className={`px-4 py-2 rounded-xl font-semibold text-sm ${
                     minute.isFinalized
-                      ? 'bg-green-100 text-green-800 border border-green-200'
-                      : 'bg-amber-100 text-amber-800 border border-amber-200'
+                      ? 'bg-[var(--brand-success-soft)] text-[var(--brand-success)] border border-[var(--brand-success-border)]'
+                      : 'bg-[var(--brand-warning-soft)] text-[var(--brand-warning)] border border-[var(--brand-warning-border)]'
                   }`}>
                     {minute.isFinalized ? t('minutes.isFinalized') : t('minutes.isDraft')}
                   </span>
@@ -498,11 +491,13 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
             </div>
 
             {/* Action Buttons */}
-            <div className="flex flex-col gap-3 w-full lg:w-auto">
+            <div className="w-full lg:w-auto">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-2.5 lg:min-w-[340px]">
               {canEditMinute && !minute.isFinalized && (
                 <Link
                   href={`/minutes/${minuteId}/edit`}
-                  className="w-full lg:w-auto px-6 py-3 min-h-11 brand-button-primary rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl lg:hover:scale-105 inline-flex items-center justify-center"
+                  className="w-full px-4 py-2.5 min-h-10 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg inline-flex items-center justify-center"
+                  style={{ background: 'linear-gradient(90deg, var(--brand-primary), var(--brand-primary-strong))', color: '#fff' }}
                 >
                   <div className="flex items-center gap-2">
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -515,11 +510,13 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
               {canFinalizeMinute && (
                 <button
                   onClick={handleFinalize}
-                  className={`w-full lg:w-auto px-6 py-3 min-h-11 rounded-xl font-semibold transition-all shadow-lg hover:shadow-xl lg:hover:scale-105 ${
-                    minute.isFinalized
-                      ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white'
-                      : 'bg-gradient-to-r from-green-500 to-emerald-600 text-white'
-                  }`}
+                  className="w-full px-4 py-2.5 min-h-10 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg"
+                  style={{
+                    background: minute.isFinalized
+                      ? 'linear-gradient(90deg, var(--brand-warning), var(--brand-warning))'
+                      : 'linear-gradient(90deg, var(--brand-success), var(--brand-success))',
+                    color: '#fff',
+                  }}
                 >
                   {minute.isFinalized ? t('minutes.reopen') : t('minutes.finalize')}
                 </button>
@@ -527,7 +524,8 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
               <button
                 onClick={handleExport}
                 disabled={exportingPdf}
-                className="w-full lg:w-auto px-6 py-3 min-h-11 bg-gradient-to-r from-gray-500 to-slate-600 text-white rounded-xl font-semibold hover:shadow-lg lg:hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-4 py-2.5 min-h-10 rounded-lg font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{ background: 'linear-gradient(90deg, var(--brand-text-muted), var(--brand-text))', color: '#fff' }}
               >
                 <div className="flex items-center gap-2">
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -540,19 +538,21 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
                 <button
                   onClick={handleDelete}
                   disabled={minute.isFinalized}
-                  className="w-full lg:w-auto px-6 py-3 min-h-11 bg-gradient-to-r from-red-500 to-rose-600 text-white rounded-xl font-semibold hover:shadow-lg lg:hover:scale-105 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full px-4 py-2.5 min-h-10 rounded-lg font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{ background: 'linear-gradient(90deg, var(--brand-danger), var(--brand-danger))', color: '#fff' }}
                   title={minute.isFinalized ? t('minutes.finalizedCantDelete') : t('minutes.delete')}
                 >
                   {t('common.delete')}
                 </button>
               )}
+              </div>
             </div>
           </div>
         </div>
 
         {/* Participants */}
         {((minute.participantsWithStatus && minute.participantsWithStatus.length > 0) || (minute.participants && minute.participants.length > 0)) && (
-          <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-100">
+          <div className="app-card rounded-2xl shadow-lg p-6">
             <h2 className="text-xl font-bold text-gray-900 mb-4">{t('minutes.participants')}</h2>
             <div className="flex flex-wrap gap-3">
               {minute.participantsWithStatus && minute.participantsWithStatus.length > 0 ? (
@@ -622,9 +622,9 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
         <div className="space-y-5">
           <h2 className="text-2xl font-bold text-gray-900">{t('minutes.topics')}</h2>
           {minute.topics.length === 0 ? (
-            <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-8 border border-gray-100 text-center">
+            <div className="app-card rounded-2xl shadow-lg p-8 text-center">
               <h3 className="text-lg font-medium text-gray-900 mb-2">{t('minutes.noTopics')}</h3>
-              <p className="text-gray-600">{t('minutes.noTopicsDescription')}</p>
+              <p className="app-text-muted">{t('minutes.noTopicsDescription')}</p>
             </div>
           ) : (
             minute.topics.map((topic, topicIndex) => (

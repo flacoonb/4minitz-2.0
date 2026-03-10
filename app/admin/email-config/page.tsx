@@ -164,14 +164,14 @@ export default function EmailConfigPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen brandize-admin flex items-center justify-center">
         <div className="text-gray-600">{t('loading')}</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen brand-page-gradient py-8">
+    <div className="min-h-screen brand-page-gradient brandize-admin py-8">
       <div className="max-w-4xl mx-auto px-4">
         {/* Header */}
         <div className="mb-6">

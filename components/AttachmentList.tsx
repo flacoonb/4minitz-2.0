@@ -93,7 +93,7 @@ export default function AttachmentList({ minuteId, onDelete }: AttachmentListPro
 
   if (attachments.length === 0) {
     return (
-      <div className="text-center py-8 text-gray-500">
+      <div className="text-center py-8 app-text-muted">
         <File className="w-12 h-12 mx-auto mb-3 opacity-50" />
         <p>{t('noAttachments')}</p>
       </div>
@@ -105,17 +105,18 @@ export default function AttachmentList({ minuteId, onDelete }: AttachmentListPro
       {attachments.map((attachment) => (
         <div
           key={attachment._id}
-          className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
+          className="flex items-center gap-3 p-3 rounded-lg transition-colors hover:brightness-95"
+          style={{ backgroundColor: 'var(--brand-surface-soft)' }}
         >
-          <div className="flex-shrink-0 text-gray-600">
+          <div className="flex-shrink-0 app-text-muted">
             {getFileIcon(attachment.mimeType)}
           </div>
 
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate">
+            <p className="text-sm font-medium truncate" style={{ color: 'var(--brand-text)' }}>
               {attachment.originalName}
             </p>
-            <p className="text-xs text-gray-500">
+            <p className="text-xs app-text-muted">
               {formatFileSize(attachment.size)} • {new Date(attachment.uploadedAt).toLocaleDateString()}
             </p>
           </div>
@@ -132,11 +133,11 @@ export default function AttachmentList({ minuteId, onDelete }: AttachmentListPro
             <button
               onClick={() => setConfirmDeleteId(attachment._id)}
               disabled={deleting === attachment._id}
-              className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+              className="p-2 text-[var(--brand-danger)] hover:bg-[var(--brand-danger-soft)] rounded-lg transition-colors disabled:opacity-50"
               title={t('delete')}
             >
               {deleting === attachment._id ? (
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[var(--brand-danger)]"></div>
               ) : (
                 <Trash2 className="w-4 h-4" />
               )}

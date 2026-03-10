@@ -2019,7 +2019,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
         </div>
 
         {/* Sticky Save Button */}
-        <div className="hidden sm:block fixed top-6 right-6 z-50">
+        <div className="hidden sm:block fixed bottom-6 right-6 z-40">
           <button
             type="submit"
             form="edit-form"
@@ -2040,7 +2040,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
         </div>
 
         {/* Mobile Save Button */}
-        <div className="sm:hidden sticky top-28 z-50">
+        <div className="sm:hidden fixed bottom-3 inset-x-3 z-40 pb-[env(safe-area-inset-bottom)]">
           <button
             type="submit"
             form="edit-form"
@@ -2060,7 +2060,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
           </button>
         </div>
 
-        <form id="edit-form" onSubmit={handleSubmit} className="space-y-8">
+        <form id="edit-form" onSubmit={handleSubmit} className="space-y-8 pb-28 sm:pb-8">
           {/* Title */}
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-100">
             <label className="block text-sm font-medium text-gray-700 mb-2">{t('minuteTitle')}</label>
@@ -2405,7 +2405,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
             <>
               {/* Topics */}
               <div className="space-y-6">
-                <div className="sticky top-2 sm:top-6 z-30 bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg p-4 border border-gray-100 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
+                <div className="sticky top-32 sm:top-36 z-30 bg-white/90 backdrop-blur-sm rounded-2xl shadow-lg p-4 border border-gray-100 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
                   <h2 className="text-2xl font-bold text-gray-900">{t('topics')}</h2>
                   <button
                     type="button"

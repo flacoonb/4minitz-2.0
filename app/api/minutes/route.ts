@@ -244,47 +244,70 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    const explicitTemplateId = typeof templateId === 'string' ? templateId.trim() : '';
+    const seriesDefaultTemplateId = meetingSeries.defaultTemplateId
+      ? String(meetingSeries.defaultTemplateId)
+      : '';
+    const effectiveTemplateId = explicitTemplateId || seriesDefaultTemplateId;
+
     let resolvedTemplate: any = null;
-    if (templateId) {
-      if (!mongoose.isValidObjectId(templateId)) {
-        return NextResponse.json({ error: 'Invalid templateId' }, { status: 400 });
-      }
+    if (effectiveTemplateId) {
+      const isExplicitTemplateSelection = Boolean(explicitTemplateId);
 
-      const canUseTemplates = await hasPermission(authResult.user, 'canUseTemplates' as any);
-      const canManageGlobalTemplates = await hasPermission(authResult.user, 'canManageGlobalTemplates' as any);
-      const canManageSeriesTemplates = await hasPermission(authResult.user, 'canManageSeriesTemplates' as any);
-      const isAdmin = authResult.user.role === 'admin';
-      if (!isAdmin && !canUseTemplates && !canManageGlobalTemplates && !canManageSeriesTemplates) {
-        return NextResponse.json({ error: 'Forbidden: no template permission' }, { status: 403 });
-      }
-
-      resolvedTemplate = await MinutesTemplate.findById(templateId).lean();
-      if (!resolvedTemplate || !resolvedTemplate.isActive) {
-        return NextResponse.json({ error: 'Template not found' }, { status: 404 });
-      }
-
-      if (resolvedTemplate.scope === 'series') {
-        if (resolvedTemplate.meetingSeriesId?.toString() !== meetingSeries_id.toString()) {
-          return NextResponse.json(
-            { error: 'Series template can only be used in its own meeting series' },
-            { status: 400 }
-          );
+      if (!mongoose.isValidObjectId(effectiveTemplateId)) {
+        if (isExplicitTemplateSelection) {
+          return NextResponse.json({ error: 'Invalid templateId' }, { status: 400 });
+        }
+      } else {
+        if (isExplicitTemplateSelection) {
+          const canUseTemplates = await hasPermission(authResult.user, 'canUseTemplates' as any);
+          const canManageGlobalTemplates = await hasPermission(authResult.user, 'canManageGlobalTemplates' as any);
+          const canManageSeriesTemplates = await hasPermission(authResult.user, 'canManageSeriesTemplates' as any);
+          const isAdmin = authResult.user.role === 'admin';
+          if (!isAdmin && !canUseTemplates && !canManageGlobalTemplates && !canManageSeriesTemplates) {
+            return NextResponse.json({ error: 'Forbidden: no template permission' }, { status: 403 });
+          }
         }
 
-        const userIdValue = authResult.user._id.toString();
-        const isSeriesModerator =
-          meetingSeries.moderators.includes(username) ||
-          meetingSeries.moderators.includes(userIdValue);
-        const isSeriesParticipant =
-          meetingSeries.visibleFor?.includes(username) ||
-          meetingSeries.visibleFor?.includes(userIdValue) ||
-          meetingSeries.participants.includes(username) ||
-          meetingSeries.participants.includes(userIdValue) ||
-          meetingSeries.members?.some((m: any) => m.userId === userIdValue);
-        const canModerateAll = await hasPermission(authResult.user, 'canModerateAllMeetings');
+        const templateFromDb = await MinutesTemplate.findById(effectiveTemplateId).lean();
+        if (!templateFromDb || !templateFromDb.isActive) {
+          if (isExplicitTemplateSelection) {
+            return NextResponse.json({ error: 'Template not found' }, { status: 404 });
+          }
+        } else {
+          if (templateFromDb.scope === 'series') {
+            if (templateFromDb.meetingSeriesId?.toString() !== meetingSeries_id.toString()) {
+              if (isExplicitTemplateSelection) {
+                return NextResponse.json(
+                  { error: 'Series template can only be used in its own meeting series' },
+                  { status: 400 }
+                );
+              }
+            } else {
+              const userIdValue = authResult.user._id.toString();
+              const isSeriesModerator =
+                meetingSeries.moderators.includes(username) ||
+                meetingSeries.moderators.includes(userIdValue);
+              const isSeriesParticipant =
+                meetingSeries.visibleFor?.includes(username) ||
+                meetingSeries.visibleFor?.includes(userIdValue) ||
+                meetingSeries.participants.includes(username) ||
+                meetingSeries.participants.includes(userIdValue) ||
+                meetingSeries.members?.some((m: any) => m.userId === userIdValue);
+              const canModerateAll = await hasPermission(authResult.user, 'canModerateAllMeetings');
+              const isAdmin = authResult.user.role === 'admin';
 
-        if (!isAdmin && !canModerateAll && !isSeriesModerator && !isSeriesParticipant) {
-          return NextResponse.json({ error: 'Forbidden: no access to series template' }, { status: 403 });
+              if (!isAdmin && !canModerateAll && !isSeriesModerator && !isSeriesParticipant) {
+                if (isExplicitTemplateSelection) {
+                  return NextResponse.json({ error: 'Forbidden: no access to series template' }, { status: 403 });
+                }
+              } else {
+                resolvedTemplate = templateFromDb;
+              }
+            }
+          } else {
+            resolvedTemplate = templateFromDb;
+          }
         }
       }
     }

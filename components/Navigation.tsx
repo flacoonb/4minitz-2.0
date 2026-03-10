@@ -128,7 +128,8 @@ export default function Navigation() {
         <div className="md:hidden" ref={mobileMenuRef}>
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="p-2.5 rounded-xl text-gray-700 dark:text-gray-200 hover:bg-white/80 dark:hover:bg-slate-700 transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+            className="p-2.5 rounded-xl transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+            style={{ color: 'var(--brand-text)', backgroundColor: 'transparent' }}
             aria-label="Menu"
           >
             {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -136,7 +137,7 @@ export default function Navigation() {
 
           {/* Mobile Dropdown Menu */}
           {mobileMenuOpen && (
-            <div className="absolute left-0 right-0 top-full mt-1 mx-4 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 py-2 z-50 max-h-[70vh] overflow-y-auto">
+            <div className="absolute left-0 right-0 top-full mt-1 mx-4 rounded-xl shadow-xl py-2 z-50 max-h-[70vh] overflow-y-auto app-card">
               {navItems.map((item) => (
                 <Link
                   key={item.href}
@@ -144,8 +145,9 @@ export default function Navigation() {
                   onClick={() => setMobileMenuOpen(false)}
                   className={`block px-4 py-3 text-base font-medium transition-colors ${isActive(item.href)
                     ? 'bg-[var(--brand-primary-soft)] text-[var(--brand-primary)] border-l-4 border-[var(--brand-primary)]'
-                    : 'text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-slate-700'
+                    : 'hover:bg-[var(--brand-surface-soft)]'
                     }`}
+                  style={!isActive(item.href) ? { color: 'var(--brand-text)' } : undefined}
                 >
                   {item.label}
                 </Link>
@@ -153,7 +155,7 @@ export default function Navigation() {
 
               {canAccessRoute('admin') && (
                 <>
-                  <div className="border-t border-slate-200 dark:border-slate-700 my-1" />
+                  <div className="border-t my-1" style={{ borderColor: 'var(--brand-card-border)' }} />
                   {adminItems.map((item) => (
                     <Link
                       key={item.href}
@@ -161,7 +163,7 @@ export default function Navigation() {
                       onClick={() => setMobileMenuOpen(false)}
                       className={`block px-4 py-3 text-base font-medium transition-colors ${isActive(item.href)
                         ? 'bg-[var(--brand-primary-soft)] text-[var(--brand-primary)] border-l-4 border-[var(--brand-primary)]'
-                        : 'text-[var(--brand-primary)] hover:bg-[var(--brand-primary-soft)] dark:hover:bg-slate-700'
+                        : 'text-[var(--brand-primary)] hover:bg-[var(--brand-primary-soft)]'
                         }`}
                     >
                       {item.label}
@@ -183,8 +185,9 @@ export default function Navigation() {
               href={item.href}
               className={`group relative px-4 py-2.5 rounded-xl font-medium transition-all duration-200 min-h-[44px] flex items-center min-w-0 ${isActive(item.href)
                 ? 'brand-button-primary text-white shadow-lg'
-                : 'text-gray-700 dark:text-gray-200 hover:bg-white/80 dark:hover:bg-slate-700 hover:shadow-md'
+                : 'hover:bg-[var(--brand-surface-soft)] hover:shadow-md'
                 }`}
+              style={!isActive(item.href) ? { color: 'var(--brand-text)' } : undefined}
             >
               <div className="flex items-center gap-2">
                 <span className="truncate">{item.label}</span>
@@ -206,7 +209,7 @@ export default function Navigation() {
                   href={item.href}
                   className={`group relative px-4 py-2.5 rounded-xl font-medium transition-all duration-200 min-h-[44px] flex items-center min-w-0 ${isActive(item.href)
                     ? 'brand-button-primary text-white shadow-lg'
-                    : 'text-[var(--brand-primary)] hover:bg-[var(--brand-primary-soft)] dark:hover:bg-slate-700 hover:shadow-md border border-[var(--brand-primary-border)]'
+                    : 'text-[var(--brand-primary)] hover:bg-[var(--brand-primary-soft)] hover:shadow-md border border-[var(--brand-primary-border)]'
                     }`}
                 >
                   <div className="flex items-center gap-2">
@@ -229,60 +232,64 @@ export default function Navigation() {
       {/* User Menu */}
       <div className="flex items-center gap-3">
         {loading ? (
-          <div className="w-8 h-8 border-2 border-slate-300 border-t-[var(--brand-primary)] rounded-full animate-spin"></div>
+          <div className="w-8 h-8 border-2 border-[var(--brand-card-border)] border-t-[var(--brand-primary)] rounded-full animate-spin"></div>
         ) : currentUser ? (
           <div className="relative" ref={userMenuRef}>
             <button
               onClick={() => setShowUserMenu(!showUserMenu)}
-              className="flex items-center gap-3 px-3 py-2 rounded-xl bg-white/80 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-700 transition-all shadow-md hover:shadow-lg min-h-[44px]"
+              className="flex items-center gap-3 px-3 py-2 rounded-xl transition-all shadow-md hover:shadow-lg min-h-[44px]"
+              style={{ backgroundColor: 'var(--brand-card-soft)' }}
             >
               <div className="w-8 h-8 brand-gradient-bg rounded-full flex items-center justify-center text-white font-semibold text-sm">
                 {(currentUser.firstName && currentUser.firstName[0] ? currentUser.firstName[0].toUpperCase() : '') ||
                  (currentUser.email && currentUser.email[0] ? currentUser.email[0].toUpperCase() : '?')}
               </div>
               <div className="hidden md:block text-left">
-                <div className="text-sm font-semibold text-slate-800 dark:text-slate-200">
+                <div className="text-sm font-semibold" style={{ color: 'var(--brand-text)' }}>
                   {currentUser.firstName || ''} {currentUser.lastName || ''}
                 </div>
-                <div className="text-xs text-slate-500 dark:text-slate-400">
+                <div className="text-xs" style={{ color: 'var(--brand-text-muted)' }}>
                   {t('functionLabel')}: {functionDisplay}
                 </div>
               </div>
-              <ChevronDown className={`w-4 h-4 text-slate-600 dark:text-slate-400 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} />
+              <ChevronDown className={`w-4 h-4 transition-transform ${showUserMenu ? 'rotate-180' : ''}`} style={{ color: 'var(--brand-text-muted)' }} />
             </button>
 
             {/* Dropdown Menu */}
             {showUserMenu && (
-              <div className="absolute right-0 top-full mt-2 w-56 bg-white dark:bg-slate-800 rounded-xl shadow-xl border border-slate-200 dark:border-slate-700 py-2 z-50">
-                <div className="px-4 py-3 border-b border-slate-200 dark:border-slate-700">
-                  <div className="font-semibold text-slate-800 dark:text-slate-200">
+              <div
+                className="absolute right-0 top-full mt-2 w-56 rounded-xl shadow-xl py-2 z-50 app-card"
+                style={{ backgroundColor: 'var(--brand-card)', backdropFilter: 'none' }}
+              >
+                <div className="px-4 py-3 border-b" style={{ borderColor: 'var(--brand-card-border)' }}>
+                  <div className="font-semibold" style={{ color: 'var(--brand-text)' }}>
                     {currentUser.firstName} {currentUser.lastName}
                   </div>
-                  <div className="text-sm text-slate-500 dark:text-slate-400">
+                  <div className="text-sm" style={{ color: 'var(--brand-text-muted)' }}>
                     {t('functionLabel')}: {functionDisplay}
                   </div>
-                  <div className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+                  <div className="text-xs mt-1" style={{ color: 'var(--brand-text-muted)' }}>
                     {tRoles(currentUser.role)}
                   </div>
                 </div>
 
                 <Link
                   href="/profile"
-                  className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors min-h-[44px]"
+                  className="flex items-center gap-3 px-4 py-3 hover:bg-[var(--brand-surface-soft)] transition-colors min-h-[44px]"
                   onClick={() => setShowUserMenu(false)}
                 >
-                  <User className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-                  <span className="text-sm text-slate-700 dark:text-slate-300">{t('myProfile')}</span>
+                  <User className="w-4 h-4" style={{ color: 'var(--brand-text-muted)' }} />
+                  <span className="text-sm" style={{ color: 'var(--brand-text)' }}>{t('myProfile')}</span>
                 </Link>
 
                 {canAccessPlanning && (
                   <Link
                     href="/planning"
-                    className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors min-h-[44px]"
+                    className="flex items-center gap-3 px-4 py-3 hover:bg-[var(--brand-surface-soft)] transition-colors min-h-[44px]"
                     onClick={() => setShowUserMenu(false)}
                   >
-                    <CalendarDays className="w-4 h-4 text-slate-600 dark:text-slate-400" />
-                    <span className="text-sm text-slate-700 dark:text-slate-300">{t('planning')}</span>
+                    <CalendarDays className="w-4 h-4" style={{ color: 'var(--brand-text-muted)' }} />
+                    <span className="text-sm" style={{ color: 'var(--brand-text)' }}>{t('planning')}</span>
                   </Link>
                 )}
 
@@ -290,26 +297,26 @@ export default function Navigation() {
                   <>
                     <Link
                       href="/admin/users"
-                      className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors min-h-[44px]"
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-[var(--brand-surface-soft)] transition-colors min-h-[44px]"
                       onClick={() => setShowUserMenu(false)}
                     >
                       <UsersIcon className="w-4 h-4 text-[var(--brand-primary)] dark:text-[var(--brand-primary)]" />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">{t('userManagement')}</span>
+                      <span className="text-sm" style={{ color: 'var(--brand-text)' }}>{t('userManagement')}</span>
                     </Link>
 
                     <Link
                       href="/admin/settings"
-                      className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors min-h-[44px]"
+                      className="flex items-center gap-3 px-4 py-3 hover:bg-[var(--brand-surface-soft)] transition-colors min-h-[44px]"
                       onClick={() => setShowUserMenu(false)}
                     >
                       <Shield className="w-4 h-4 text-[var(--brand-primary)] dark:text-[var(--brand-primary)]" />
-                      <span className="text-sm text-slate-700 dark:text-slate-300">{t('systemSettings')}</span>
+                      <span className="text-sm" style={{ color: 'var(--brand-text)' }}>{t('systemSettings')}</span>
                     </Link>
 
                   </>
                 )}
 
-                <div className="border-t border-slate-200 dark:border-slate-700 mt-2">
+                <div className="border-t mt-2" style={{ borderColor: 'var(--brand-card-border)' }}>
                   <button
                     onClick={() => {
                       setShowUserMenu(false);
@@ -326,10 +333,7 @@ export default function Navigation() {
           </div>
         ) : (
           <div className="flex items-center gap-3">
-            <Link
-              href="/auth/login"
-              className="px-4 py-2.5 text-slate-700 dark:text-slate-200 hover:bg-white/80 dark:hover:bg-slate-700 rounded-lg transition-colors min-h-[44px] flex items-center"
-            >
+            <Link href="/auth/login" className="px-4 py-2.5 hover:bg-[var(--brand-surface-soft)] rounded-lg transition-colors min-h-[44px] flex items-center" style={{ color: 'var(--brand-text)' }}>
               {t('login')}
             </Link>
             <Link

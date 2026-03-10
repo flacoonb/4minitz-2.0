@@ -473,7 +473,7 @@ function AdminTemplatesPage() {
   };
 
   return (
-    <div className="min-h-screen brand-page-gradient dark:bg-slate-950 py-6 sm:py-8 px-3 sm:px-4">
+    <div className="min-h-screen brand-page-gradient brandize-admin py-6 sm:py-8 px-3 sm:px-4">
       <div className="max-w-6xl mx-auto space-y-5">
         <div className="bg-[var(--brand-primary-soft)] dark:bg-slate-900 rounded-2xl p-4 sm:p-6 border border-[var(--brand-primary-border)] dark:border-slate-700 shadow-sm">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
@@ -758,7 +758,7 @@ function AdminTemplatesPage() {
               )}
             </div>
 
-            <div className="flex gap-3">
+            <div className="sticky bottom-0 -mx-5 px-5 py-3 border-t border-gray-200 bg-white/95 backdrop-blur-sm flex gap-3">
               <button
                 onClick={saveTemplate}
                 disabled={saving || !name.trim()}

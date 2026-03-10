@@ -11,6 +11,7 @@ import Attachment from '@/models/Attachment';
 import Label from '@/models/Label';
 import PdfSettings from '@/models/PdfSettings';
 import PdfLayoutSettings from '@/models/PdfLayoutSettings';
+import PdfTemplate from '@/models/PdfTemplate';
 import AuditLog from '@/models/AuditLog';
 import PendingNotification from '@/models/PendingNotification';
 import PushSubscription from '@/models/PushSubscription';
@@ -82,6 +83,7 @@ export async function GET(request: NextRequest) {
       labels,
       pdfSettings,
       pdfLayoutSettings,
+      pdfTemplates,
       auditLogs,
       pendingNotifications,
       pushSubscriptions,
@@ -95,6 +97,7 @@ export async function GET(request: NextRequest) {
       Label.find({}).lean(),
       PdfSettings.find({}).lean(),
       PdfLayoutSettings.find({}).lean(),
+      PdfTemplate.find({}).lean(),
       AuditLog.find({}).lean(),
       PendingNotification.find({}).lean(),
       PushSubscription.find({}).lean(),
@@ -125,6 +128,7 @@ export async function GET(request: NextRequest) {
         labels,
         pdfSettings,
         pdfLayoutSettings,
+        pdfTemplates,
         auditLogs,
         pendingNotifications,
         pushSubscriptions,
@@ -151,6 +155,7 @@ export async function GET(request: NextRequest) {
           labels: labels.length,
           pdfSettings: pdfSettings.length,
           pdfLayoutSettings: pdfLayoutSettings.length,
+          pdfTemplates: pdfTemplates.length,
           auditLogs: auditLogs.length,
           pendingNotifications: pendingNotifications.length,
           pushSubscriptions: pushSubscriptions.length,

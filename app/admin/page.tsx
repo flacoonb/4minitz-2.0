@@ -7,7 +7,7 @@ export default function AdminDashboard() {
   const t = useTranslations('admin');
 
   return (
-    <div className="min-h-screen brand-page-gradient py-8">
+    <div className="min-h-screen brand-page-gradient brandize-admin py-8">
       <div className="max-w-6xl mx-auto px-4">
         {/* Header */}
         <div className="mb-8">

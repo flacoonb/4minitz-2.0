@@ -53,8 +53,25 @@ export interface ISettings extends Document {
       primary: string;
       primaryDark: string;
       secondary: string;
+      accent: string;
+      dashboardSeriesBadge: string;
+      dashboardMinutesBadge: string;
+      dashboardDraftsBadge: string;
+      dashboardTasksBadge: string;
+      dashboardOverdueBadge: string;
+      dashboardUpcomingBadge: string;
+      dashboardMinuteDraftBadge: string;
+      dashboardMinuteFinalBadge: string;
       pageFrom: string;
       pageTo: string;
+      surface: string;
+      card: string;
+      cardBorder: string;
+      text: string;
+      textMuted: string;
+      success: string;
+      warning: string;
+      danger: string;
     };
     timezone: string;
     dateFormat: string;
@@ -137,8 +154,25 @@ const SettingsSchema = new Schema<ISettings>({
       primary: { type: String, default: '#6366F1', match: HEX_COLOR_PATTERN },
       primaryDark: { type: String, default: '#4F46E5', match: HEX_COLOR_PATTERN },
       secondary: { type: String, default: '#8B5CF6', match: HEX_COLOR_PATTERN },
+      accent: { type: String, default: '#06B6D4', match: HEX_COLOR_PATTERN },
+      dashboardSeriesBadge: { type: String, default: '#06B6D4', match: HEX_COLOR_PATTERN },
+      dashboardMinutesBadge: { type: String, default: '#0891B2', match: HEX_COLOR_PATTERN },
+      dashboardDraftsBadge: { type: String, default: '#0E7490', match: HEX_COLOR_PATTERN },
+      dashboardTasksBadge: { type: String, default: '#0F766E', match: HEX_COLOR_PATTERN },
+      dashboardOverdueBadge: { type: String, default: '#0F766E', match: HEX_COLOR_PATTERN },
+      dashboardUpcomingBadge: { type: String, default: '#0D9488', match: HEX_COLOR_PATTERN },
+      dashboardMinuteDraftBadge: { type: String, default: '#0E7490', match: HEX_COLOR_PATTERN },
+      dashboardMinuteFinalBadge: { type: String, default: '#0891B2', match: HEX_COLOR_PATTERN },
       pageFrom: { type: String, default: '#F8FAFC', match: HEX_COLOR_PATTERN },
       pageTo: { type: String, default: '#F1F5F9', match: HEX_COLOR_PATTERN },
+      surface: { type: String, default: '#EEF2FF', match: HEX_COLOR_PATTERN },
+      card: { type: String, default: '#FFFFFF', match: HEX_COLOR_PATTERN },
+      cardBorder: { type: String, default: '#E2E8F0', match: HEX_COLOR_PATTERN },
+      text: { type: String, default: '#0F172A', match: HEX_COLOR_PATTERN },
+      textMuted: { type: String, default: '#64748B', match: HEX_COLOR_PATTERN },
+      success: { type: String, default: '#16A34A', match: HEX_COLOR_PATTERN },
+      warning: { type: String, default: '#D97706', match: HEX_COLOR_PATTERN },
+      danger: { type: String, default: '#DC2626', match: HEX_COLOR_PATTERN },
     },
     timezone: { type: String, default: 'Europe/Berlin' },
     dateFormat: { type: String, default: 'DD.MM.YYYY' },

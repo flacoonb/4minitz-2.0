@@ -3,8 +3,10 @@
  * Handles CRUD operations for meeting series
  */
 import { NextRequest, NextResponse } from 'next/server';
+import mongoose from 'mongoose';
 import connectDB from '@/lib/mongodb';
 import MeetingSeries from '@/models/MeetingSeries';
+import MinutesTemplate from '@/models/MinutesTemplate';
 import { verifyToken } from '@/lib/auth';
 import { hasPermission } from '@/lib/permissions';
 import { createMeetingSeriesSchema, validateBody } from '@/lib/validations';
@@ -134,6 +136,37 @@ export async function POST(request: NextRequest) {
       );
     }
     const members = Array.isArray(body.members) ? body.members : [];
+    const defaultTemplateIdInput = typeof body.defaultTemplateId === 'string' ? body.defaultTemplateId.trim() : '';
+    let defaultTemplateId: mongoose.Types.ObjectId | undefined;
+
+    if (defaultTemplateIdInput) {
+      if (!mongoose.isValidObjectId(defaultTemplateIdInput)) {
+        return NextResponse.json(
+          { success: false, error: 'Ungültige Standard-Vorlage' },
+          { status: 400 }
+        );
+      }
+
+      const defaultTemplate = await MinutesTemplate.findById(defaultTemplateIdInput)
+        .select('scope isActive')
+        .lean();
+
+      if (!defaultTemplate || !defaultTemplate.isActive) {
+        return NextResponse.json(
+          { success: false, error: 'Standard-Vorlage nicht gefunden oder inaktiv' },
+          { status: 400 }
+        );
+      }
+
+      if (defaultTemplate.scope !== 'global') {
+        return NextResponse.json(
+          { success: false, error: 'Beim Erstellen sind nur globale Standard-Vorlagen erlaubt' },
+          { status: 400 }
+        );
+      }
+
+      defaultTemplateId = new mongoose.Types.ObjectId(defaultTemplateIdInput);
+    }
 
     const newSeries = await MeetingSeries.create({
       project: validated.project,
@@ -145,6 +178,7 @@ export async function POST(request: NextRequest) {
       additionalResponsibles: body.additionalResponsibles || [],
       clubFunctions,
       members,
+      defaultTemplateId,
       availableLabels: body.availableLabels || [
         { name: 'Important', color: '#FF0000', isDefaultLabel: true },
         { name: 'Decision', color: '#00FF00', isDefaultLabel: true },

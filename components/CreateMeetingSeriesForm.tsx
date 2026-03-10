@@ -64,13 +64,13 @@ export default function CreateMeetingSeriesForm() {
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+        <div className="px-4 py-3 rounded-lg border" style={{ backgroundColor: 'var(--brand-danger-soft)', borderColor: 'var(--brand-danger-border)', color: 'var(--brand-danger)' }}>
           {error}
         </div>
       )}
 
       <div>
-        <label htmlFor="project" className="block text-sm font-medium text-gray-700 mb-2">
+        <label htmlFor="project" className="block text-sm font-medium mb-2" style={{ color: 'var(--brand-text)' }}>
           {t('meetingSeriesForm.projectLabel')} *
         </label>
         <input
@@ -80,12 +80,13 @@ export default function CreateMeetingSeriesForm() {
           value={formData.project}
           onChange={(e) => setFormData({ ...formData, project: e.target.value })}
           placeholder={t('meetingSeriesForm.projectPlaceholder')}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
+          className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
+          style={{ borderColor: 'var(--brand-card-border)', backgroundColor: 'var(--brand-card)', color: 'var(--brand-text)' }}
         />
       </div>
 
       <div>
-        <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-2">
+        <label htmlFor="name" className="block text-sm font-medium mb-2" style={{ color: 'var(--brand-text)' }}>
           {t('meetingSeriesForm.nameLabel')} *
         </label>
         <input
@@ -95,12 +96,13 @@ export default function CreateMeetingSeriesForm() {
           value={formData.name}
           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
           placeholder={t('meetingSeriesForm.namePlaceholder')}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
+          className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
+          style={{ borderColor: 'var(--brand-card-border)', backgroundColor: 'var(--brand-card)', color: 'var(--brand-text)' }}
         />
       </div>
 
       <div>
-        <label htmlFor="participants" className="block text-sm font-medium text-gray-700 mb-2">
+        <label htmlFor="participants" className="block text-sm font-medium mb-2" style={{ color: 'var(--brand-text)' }}>
           {t('meetingSeriesForm.participantsLabel')}
         </label>
         <input
@@ -109,15 +111,16 @@ export default function CreateMeetingSeriesForm() {
           value={formData.participants}
           onChange={(e) => setFormData({ ...formData, participants: e.target.value })}
           placeholder={t('meetingSeriesForm.participantsPlaceholder')}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
+          className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
+          style={{ borderColor: 'var(--brand-card-border)', backgroundColor: 'var(--brand-card)', color: 'var(--brand-text)' }}
         />
-        <p className="mt-1 text-sm text-gray-500">
+        <p className="mt-1 text-sm app-text-muted">
           {t('meetingSeriesForm.participantsPlaceholder')}
         </p>
       </div>
 
       <div>
-        <label htmlFor="informedUsers" className="block text-sm font-medium text-gray-700 mb-2">
+        <label htmlFor="informedUsers" className="block text-sm font-medium mb-2" style={{ color: 'var(--brand-text)' }}>
           {t('meetingSeriesForm.informedUsersLabel')}
         </label>
         <input
@@ -126,9 +129,10 @@ export default function CreateMeetingSeriesForm() {
           value={formData.informedUsers}
           onChange={(e) => setFormData({ ...formData, informedUsers: e.target.value })}
           placeholder={t('meetingSeriesForm.informedUsersPlaceholder')}
-          className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
+          className="w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
+          style={{ borderColor: 'var(--brand-card-border)', backgroundColor: 'var(--brand-card)', color: 'var(--brand-text)' }}
         />
-        <p className="mt-1 text-sm text-gray-500">
+        <p className="mt-1 text-sm app-text-muted">
           {t('meetingSeriesForm.informedUsersPlaceholder')}
         </p>
       </div>
@@ -137,7 +141,8 @@ export default function CreateMeetingSeriesForm() {
         <button
           type="button"
           onClick={() => router.back()}
-          className="w-full sm:w-auto px-6 py-2 min-h-11 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+          className="w-full sm:w-auto px-6 py-2 min-h-11 border rounded-lg hover:brightness-95 transition-colors"
+          style={{ borderColor: 'var(--brand-card-border)', backgroundColor: 'var(--brand-surface-soft)', color: 'var(--brand-text)' }}
         >
           {t('common.cancel')}
         </button>

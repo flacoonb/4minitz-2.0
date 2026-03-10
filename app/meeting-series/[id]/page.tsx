@@ -12,6 +12,7 @@ interface MeetingSeries {
   project: string;
   name: string;
   description?: string;
+  defaultTemplateId?: string;
   moderators: string[];
   participants: string[];
   visibleFor?: string[];
@@ -103,6 +104,7 @@ export default function MeetingSeriesPage() {
   const [loadingImportTasks, setLoadingImportTasks] = useState(false);
   const [importing, setImporting] = useState(false);
   const [importResult, setImportResult] = useState<string | null>(null);
+  const [importResultType, setImportResultType] = useState<'success' | 'error' | null>(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showTemplateModal, setShowTemplateModal] = useState(false);
   const [templates, setTemplates] = useState<MinutesTemplate[]>([]);
@@ -154,8 +156,8 @@ export default function MeetingSeriesPage() {
         fetch(`/api/meeting-events?meetingSeriesId=${seriesId}`, { credentials: 'include' }),
       ]);
 
-      if (!sRes.ok) throw new Error('Failed to load series');
-      if (!mRes.ok) throw new Error('Failed to load minutes');
+      if (!sRes.ok) throw new Error(t('loadError'));
+      if (!mRes.ok) throw new Error(t('loadError'));
 
       const sJson = await sRes.json();
       const mJson = await mRes.json();
@@ -320,7 +322,7 @@ export default function MeetingSeriesPage() {
   const createMeetingEvent = async () => {
     if (!series) return;
     if (!eventTitle.trim() || !eventDate || !eventStartTime) {
-      setEventError('Bitte Titel, Datum und Startzeit ausfüllen.');
+      setEventError(t('planner.validationRequired'));
       return;
     }
     setCreatingEvent(true);
@@ -342,9 +344,7 @@ export default function MeetingSeriesPage() {
         }),
       });
       const result = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        throw new Error(result.error || 'Sitzung konnte nicht erstellt werden.');
-      }
+      if (!response.ok) throw new Error(result.error || t('planner.errors.createFailed'));
       setMeetingEvents((prev) =>
         [...prev, result.data].sort((a, b) => {
           const left = new Date(a.scheduledDate).getTime();
@@ -355,7 +355,7 @@ export default function MeetingSeriesPage() {
       setShowEventCreator(false);
       resetEventForm();
     } catch (err) {
-      setEventError(err instanceof Error ? err.message : 'Sitzung konnte nicht erstellt werden.');
+      setEventError(err instanceof Error ? err.message : t('planner.errors.createFailed'));
     } finally {
       setCreatingEvent(false);
     }
@@ -370,12 +370,10 @@ export default function MeetingSeriesPage() {
         credentials: 'include',
       });
       const result = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        throw new Error(result.error || 'Einladungen konnten nicht versendet werden.');
-      }
+      if (!response.ok) throw new Error(result.error || t('planner.errors.invitesFailed'));
       await fetchData();
     } catch (err) {
-      setEventError(err instanceof Error ? err.message : 'Einladungen konnten nicht versendet werden.');
+      setEventError(err instanceof Error ? err.message : t('planner.errors.invitesFailed'));
     } finally {
       setEventActionLoadingId(null);
     }
@@ -390,9 +388,7 @@ export default function MeetingSeriesPage() {
         credentials: 'include',
       });
       const result = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        throw new Error(result.error || 'Protokoll konnte nicht vorbereitet werden.');
-      }
+      if (!response.ok) throw new Error(result.error || t('planner.errors.prepareFailed'));
       const minutesId = result?.data?.minutesId;
       if (minutesId) {
         router.push(`/minutes/${minutesId}/edit`);
@@ -400,7 +396,7 @@ export default function MeetingSeriesPage() {
       }
       await fetchData();
     } catch (err) {
-      setEventError(err instanceof Error ? err.message : 'Protokoll konnte nicht vorbereitet werden.');
+      setEventError(err instanceof Error ? err.message : t('planner.errors.prepareFailed'));
     } finally {
       setEventActionLoadingId(null);
     }
@@ -415,13 +411,11 @@ export default function MeetingSeriesPage() {
         credentials: 'include',
       });
       const result = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        throw new Error(result.error || 'Sitzung konnte nicht gelöscht werden.');
-      }
+      if (!response.ok) throw new Error(result.error || t('planner.errors.cancelFailed'));
       setMeetingEvents((prev) => prev.filter((entry) => entry._id !== event._id));
       setEventToDelete(null);
     } catch (err) {
-      setEventError(err instanceof Error ? err.message : 'Sitzung konnte nicht gelöscht werden.');
+      setEventError(err instanceof Error ? err.message : t('planner.errors.cancelFailed'));
     } finally {
       setEventActionLoadingId(null);
     }
@@ -491,7 +485,12 @@ export default function MeetingSeriesPage() {
         throw new Error(errorData.error || t('templateLoadError'));
       }
       const result = await response.json();
-      setTemplates(result.data || []);
+      const loadedTemplates: MinutesTemplate[] = Array.isArray(result.data) ? result.data : [];
+      setTemplates(loadedTemplates);
+      const defaultTemplateId = series.defaultTemplateId ? String(series.defaultTemplateId).trim() : '';
+      if (defaultTemplateId && loadedTemplates.some((template) => template._id === defaultTemplateId)) {
+        setSelectedTemplateId(defaultTemplateId);
+      }
     } catch (err) {
       setTemplatesError(err instanceof Error ? err.message : t('templateLoadError'));
       setTemplates([]);
@@ -538,6 +537,8 @@ export default function MeetingSeriesPage() {
 
   const executeImport = async () => {
     if (selectedTaskIds.size === 0) return;
+    setImportResult(null);
+    setImportResultType(null);
     setImporting(true);
     try {
       const res = await fetch(`/api/meeting-series/${seriesId}/import-tasks`, {
@@ -551,14 +552,17 @@ export default function MeetingSeriesPage() {
       });
       if (res.ok) {
         const result = await res.json();
+        setImportResultType('success');
         setImportResult(t('tasksImportedSuccess', { count: result.imported }));
         setImportTasks([]);
         setSelectedTaskIds(new Set());
       } else {
         const err = await res.json();
+        setImportResultType('error');
         setImportResult(t('importError', { error: err.error || t('importFailed') }));
       }
     } catch {
+      setImportResultType('error');
       setImportResult(t('importFailed'));
     } finally {
       setImporting(false);
@@ -610,21 +614,23 @@ export default function MeetingSeriesPage() {
                 </svg>
               </div>
               <div className="min-w-0">
-                <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent break-words">
+                <h1 className="text-2xl sm:text-3xl font-bold bg-clip-text text-transparent break-words" style={{ backgroundImage: 'linear-gradient(90deg, var(--brand-text), var(--brand-text-muted))' }}>
                   {series.project}{series.name ? ` – ${series.name}` : ''}
                 </h1>
                 {series.description && (
-                  <p className="mt-3 text-gray-700 max-w-2xl leading-relaxed">
+                  <p className="mt-3 max-w-2xl leading-relaxed app-text-muted">
                     {series.description}
                   </p>
                 )}
               </div>
             </div>
-            <div className="flex flex-col w-full md:w-auto md:items-end gap-3">
+            <div className="w-full md:w-auto">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-2.5 md:min-w-[360px]">
               {canEditSeries && (
                 <button
                   onClick={openImportModal}
-                  className="inline-flex w-full md:w-auto justify-center items-center gap-2 px-6 py-3 min-h-11 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl shadow-lg hover:shadow-xl md:hover:scale-105 transition-all"
+                  className="inline-flex w-full justify-center items-center gap-2 px-4 py-2.5 min-h-10 rounded-lg shadow-md hover:shadow-lg transition-all"
+                  style={{ background: 'linear-gradient(90deg, var(--brand-warning), var(--brand-warning))', color: '#fff' }}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
@@ -635,7 +641,8 @@ export default function MeetingSeriesPage() {
               {canEditSeries && (
                 <Link
                   href={`/meeting-series/${series._id}/templates`}
-                  className="inline-flex w-full md:w-auto justify-center items-center gap-2 px-6 py-3 min-h-11 brand-button-primary text-white rounded-xl shadow-lg hover:shadow-xl md:hover:scale-105 transition-all"
+                  className="inline-flex w-full justify-center items-center gap-2 px-4 py-2.5 min-h-10 rounded-lg shadow-md hover:shadow-lg transition-all"
+                  style={{ background: 'linear-gradient(90deg, var(--brand-secondary), var(--brand-accent))', color: '#fff' }}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 17v-2a4 4 0 014-4h4m0 0l-3-3m3 3l-3 3M5 7h14" />
@@ -646,7 +653,8 @@ export default function MeetingSeriesPage() {
               {canEditSeries && (
                 <Link
                   href={`/meeting-series/${series._id}/edit`}
-                  className="inline-flex w-full md:w-auto justify-center items-center gap-2 px-6 py-3 min-h-11 brand-button-primary text-white rounded-xl shadow-lg hover:shadow-xl md:hover:scale-105 transition-all"
+                  className="inline-flex w-full justify-center items-center gap-2 px-4 py-2.5 min-h-10 rounded-lg shadow-md hover:shadow-lg transition-all"
+                  style={{ background: 'linear-gradient(90deg, var(--brand-primary), var(--brand-primary-strong))', color: '#fff' }}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -657,7 +665,8 @@ export default function MeetingSeriesPage() {
               {canDeleteSeries && (
                 <button
                   onClick={() => setShowDeleteConfirm(true)}
-                  className="inline-flex w-full md:w-auto justify-center items-center gap-2 px-6 py-3 min-h-11 bg-gradient-to-r from-red-600 to-rose-600 text-white rounded-xl shadow-lg hover:shadow-xl md:hover:scale-105 transition-all"
+                  className="inline-flex w-full justify-center items-center gap-2 px-4 py-2.5 min-h-10 rounded-lg shadow-md hover:shadow-lg transition-all"
+                  style={{ background: 'linear-gradient(90deg, var(--brand-danger), var(--brand-danger))', color: '#fff' }}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -665,19 +674,18 @@ export default function MeetingSeriesPage() {
                   {tCommon('delete')}
                 </button>
               )}
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Sitzungsplaner Section */}
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-100 shadow-lg">
+      {/* Planner Section */}
+      <div className="app-card rounded-2xl p-6 shadow-lg">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
           <div>
-            <h2 className="text-xl font-bold text-gray-900">Sitzungsplaner</h2>
-            <p className="text-sm text-gray-600">
-              Termine planen, Mitglieder einladen (RSVP) und Protokoll-Entwurf vorbereiten.
-            </p>
+            <h2 className="text-xl font-bold text-gray-900">{t('planner.title')}</h2>
+            <p className="text-sm text-gray-600">{t('planner.subtitle')}</p>
           </div>
           {canCreateMinute && (
             <button
@@ -691,7 +699,7 @@ export default function MeetingSeriesPage() {
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
               </svg>
-              {showEventCreator ? 'Eingabe schliessen' : 'Sitzung planen'}
+              {showEventCreator ? t('planner.closeInput') : t('planner.planMeeting')}
             </button>
           )}
         </div>
@@ -700,16 +708,16 @@ export default function MeetingSeriesPage() {
           <div className="mb-6 p-4 rounded-xl border border-[var(--brand-primary-border)] bg-[var(--brand-primary-soft)] space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Titel</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('planner.form.titleLabel')}</label>
                 <input
                   value={eventTitle}
                   onChange={(e) => setEventTitle(e.target.value)}
-                  placeholder="z.B. Vorstandssitzung März"
+                  placeholder={t('planner.form.titlePlaceholder')}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Datum</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('planner.form.dateLabel')}</label>
                 <input
                   type="date"
                   value={eventDate}
@@ -718,7 +726,7 @@ export default function MeetingSeriesPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Startzeit</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('planner.form.startTimeLabel')}</label>
                 <input
                   type="time"
                   value={eventStartTime}
@@ -727,7 +735,7 @@ export default function MeetingSeriesPage() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Endzeit</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('planner.form.endTimeLabel')}</label>
                 <input
                   type="time"
                   value={eventEndTime}
@@ -736,21 +744,21 @@ export default function MeetingSeriesPage() {
                 />
               </div>
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Ort</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('planner.form.locationLabel')}</label>
                 <input
                   value={eventLocation}
                   onChange={(e) => setEventLocation(e.target.value)}
-                  placeholder="z.B. Vereinslokal"
+                  placeholder={t('planner.form.locationPlaceholder')}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                 />
               </div>
               <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700 mb-1">Hinweis (optional)</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">{t('planner.form.noteOptionalLabel')}</label>
                 <textarea
                   value={eventNote}
                   onChange={(e) => setEventNote(e.target.value)}
                   rows={2}
-                  placeholder="Zusätzliche Information für die Einladung"
+                  placeholder={t('planner.form.notePlaceholder')}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg"
                 />
               </div>
@@ -758,7 +766,7 @@ export default function MeetingSeriesPage() {
 
             <div>
               <p className="text-sm font-medium text-gray-700 mb-2">
-                Eingeladene Mitglieder ({selectedInviteeIds.length})
+                {t('planner.form.invitedMembers', { count: selectedInviteeIds.length })}
               </p>
               {series.members?.length ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
@@ -778,7 +786,7 @@ export default function MeetingSeriesPage() {
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-gray-500">Keine Mitglieder vorhanden.</p>
+                <p className="text-sm text-gray-500">{t('planner.form.noMembers')}</p>
               )}
             </div>
 
@@ -789,14 +797,14 @@ export default function MeetingSeriesPage() {
                 onClick={() => setShowEventCreator(false)}
                 className="px-4 py-2 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200"
               >
-                Abbrechen
+                {tCommon('cancel')}
               </button>
               <button
                 onClick={createMeetingEvent}
                 disabled={creatingEvent}
                 className="px-4 py-2 rounded-lg brand-button-solid disabled:opacity-50"
               >
-                {creatingEvent ? 'Speichert...' : 'Sitzung erstellen'}
+                {creatingEvent ? t('saving') : t('planner.form.createMeeting')}
               </button>
             </div>
           </div>
@@ -804,7 +812,7 @@ export default function MeetingSeriesPage() {
 
         {meetingEvents.length === 0 ? (
           <div className="rounded-xl border border-dashed border-gray-300 p-5 text-sm text-gray-600">
-            Noch keine geplanten Sitzungen.
+            {t('planner.noPlannedMeetings')}
           </div>
         ) : (
           <div className="space-y-3">
@@ -820,10 +828,10 @@ export default function MeetingSeriesPage() {
                       {event.location && <p className="text-sm text-gray-600">{event.location}</p>}
                     </div>
                     <div className="flex flex-wrap gap-2 text-xs">
-                      <span className="px-2 py-1 rounded-full bg-[var(--brand-primary-soft)] text-[var(--brand-primary-strong)]">offen {counts.pending}</span>
-                      <span className="px-2 py-1 rounded-full bg-green-100 text-green-800">zugesagt {counts.accepted}</span>
-                      <span className="px-2 py-1 rounded-full bg-yellow-100 text-yellow-800">vorbehalt {counts.tentative}</span>
-                      <span className="px-2 py-1 rounded-full bg-rose-100 text-rose-800">abgesagt {counts.declined}</span>
+                      <span className="px-2 py-1 rounded-full bg-[var(--brand-primary-soft)] text-[var(--brand-primary-strong)]">{t('planner.status.pending')} {counts.pending}</span>
+                      <span className="px-2 py-1 rounded-full bg-green-100 text-green-800">{t('planner.status.accepted')} {counts.accepted}</span>
+                      <span className="px-2 py-1 rounded-full bg-yellow-100 text-yellow-800">{t('planner.status.tentative')} {counts.tentative}</span>
+                      <span className="px-2 py-1 rounded-full bg-rose-100 text-rose-800">{t('planner.status.declined')} {counts.declined}</span>
                     </div>
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2">
@@ -832,7 +840,7 @@ export default function MeetingSeriesPage() {
                       disabled={isActionLoading}
                       className="px-3 py-1.5 rounded-lg bg-[var(--brand-primary)] text-white text-sm hover:bg-[var(--brand-primary-strong)] disabled:opacity-50"
                     >
-                      Einladungen senden
+                      {t('planner.actions.sendInvites')}
                     </button>
                     <button
                       onClick={() => prepareMinutesFromEvent(event._id)}
@@ -840,31 +848,31 @@ export default function MeetingSeriesPage() {
                       className="px-3 py-1.5 rounded-lg bg-emerald-600 text-white text-sm hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed"
                       title={
                         event.status !== 'invited' && event.status !== 'confirmed'
-                          ? 'Erst nach Versand der Einladungen verfügbar'
+                          ? t('planner.actions.prepareHint')
                           : undefined
                       }
                     >
-                      Protokoll vorbereiten
+                      {t('planner.actions.prepareMinute')}
                     </button>
                     <button
                       onClick={() => setEventToDelete(event)}
                       disabled={isActionLoading}
                       className="px-3 py-1.5 rounded-lg bg-rose-600 text-white text-sm hover:bg-rose-700 disabled:opacity-50"
                     >
-                      Sitzung absagen
+                      {t('planner.actions.cancelMeeting')}
                     </button>
                     {event.linkedMinutesId && (
                       <Link
                         href={`/minutes/${event.linkedMinutesId}/edit`}
                         className="px-3 py-1.5 rounded-lg bg-gray-100 text-gray-700 text-sm hover:bg-gray-200"
                       >
-                        Zum Entwurf
+                        {t('planner.actions.toDraft')}
                       </Link>
                     )}
                   </div>
                   {event.status !== 'invited' && event.status !== 'confirmed' && (
                     <p className="mt-2 text-xs text-amber-700">
-                      Protokoll vorbereiten wird aktiv, sobald Einladungen versendet wurden.
+                      {t('planner.actions.prepareInactiveHint')}
                     </p>
                   )}
                 </div>
@@ -875,7 +883,7 @@ export default function MeetingSeriesPage() {
       </div>
 
       {/* Protokolle Section */}
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-100 shadow-lg">
+      <div className="app-card rounded-2xl p-6 shadow-lg">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-bold text-gray-900">{t('minutesCount', { count: minutes.length })}</h2>
         </div>
@@ -902,9 +910,9 @@ export default function MeetingSeriesPage() {
                     <div className="min-w-0">
                       <h3 className="font-bold text-gray-900 break-words">
                         {minute.title ? (
-                          <span>{minute.title} <span className="text-gray-500 font-normal text-sm">({new Date(minute.date).toLocaleDateString('de-DE')})</span></span>
+                          <span>{minute.title} <span className="text-gray-500 font-normal text-sm">({new Date(minute.date).toLocaleDateString(locale)})</span></span>
                         ) : (
-                          `${series.project}${series.name ? ` – ${series.name}` : ''} – ${new Date(minute.date).toLocaleDateString('de-DE')}`
+                          `${series.project}${series.name ? ` – ${series.name}` : ''} – ${new Date(minute.date).toLocaleDateString(locale)}`
                         )}
                       </h3>
                       <p className="text-sm text-gray-500">
@@ -961,7 +969,7 @@ export default function MeetingSeriesPage() {
                 <button
                   onClick={() => setShowImportModal(false)}
                   className="text-gray-400 hover:text-gray-600 transition-colors min-h-10 min-w-10 inline-flex items-center justify-center rounded-lg"
-                  aria-label="Dialog schliessen"
+                  aria-label={t('planner.closeDialogAria')}
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -1064,7 +1072,7 @@ export default function MeetingSeriesPage() {
 
               {/* Import Result */}
               {importResult && (
-                <div className={`p-3 rounded-lg text-sm ${importResult.startsWith('Fehler') ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'
+                <div className={`p-3 rounded-lg text-sm ${importResultType === 'error' ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'
                   }`}>
                   {importResult}
                 </div>
@@ -1215,13 +1223,16 @@ export default function MeetingSeriesPage() {
           if (!eventToDelete) return;
           deleteMeetingEvent(eventToDelete);
         }}
-        title="Geplante Sitzung löschen?"
+        title={t('planner.deleteConfirmTitle')}
         message={
           eventToDelete
-            ? `"${eventToDelete.title}" vom ${new Date(eventToDelete.scheduledDate).toLocaleDateString(locale)} wird unwiderruflich gelöscht.`
-            : 'Diese geplante Sitzung wird unwiderruflich gelöscht.'
+            ? t('planner.deleteConfirmMessageWithDate', {
+                title: eventToDelete.title,
+                date: new Date(eventToDelete.scheduledDate).toLocaleDateString(locale),
+              })
+            : t('planner.deleteConfirmMessage')
         }
-        confirmText="Sitzung löschen"
+        confirmText={t('planner.deleteConfirmAction')}
         cancelText={tCommon('cancel')}
         isProcessing={Boolean(eventToDelete && eventActionLoadingId === eventToDelete._id)}
         type="danger"

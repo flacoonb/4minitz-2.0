@@ -96,7 +96,7 @@ export default function AttachmentUpload({
         className={`relative border-2 border-dashed rounded-lg p-6 transition-colors ${
           dragActive 
             ? 'border-[var(--brand-primary)] bg-[var(--brand-primary-soft)]' 
-            : 'border-gray-300 hover:border-gray-400'
+            : 'border-[var(--brand-card-border)] hover:border-[var(--brand-primary-border)]'
         }`}
         onDragEnter={handleDrag}
         onDragLeave={handleDrag}
@@ -113,12 +113,12 @@ export default function AttachmentUpload({
         />
 
         <div className="flex flex-col items-center justify-center gap-3">
-          <Upload className={`w-8 h-8 ${uploading ? 'text-gray-400' : 'text-gray-600'}`} />
+          <Upload className={`w-8 h-8 ${uploading ? 'text-[var(--brand-text-muted)]' : 'text-[var(--brand-text)]'}`} />
           
           {uploading ? (
             <div className="text-center">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-[var(--brand-primary)] mx-auto mb-2"></div>
-              <p className="text-sm text-gray-600">{t('uploading')}</p>
+              <p className="text-sm app-text-muted">{t('uploading')}</p>
             </div>
           ) : (
             <>
@@ -129,11 +129,11 @@ export default function AttachmentUpload({
                 >
                   {t('clickToUpload')}
                 </button>
-                <p className="text-sm text-gray-600 mt-1">
+                <p className="text-sm app-text-muted mt-1">
                   {t('orDragAndDrop')}
                 </p>
               </div>
-              <p className="text-xs text-gray-500">
+              <p className="text-xs app-text-muted">
                 {t('allowedTypes')}
               </p>
             </>
@@ -142,9 +142,9 @@ export default function AttachmentUpload({
       </div>
 
       {error && (
-        <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
-          <X className="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" />
-          <p className="text-sm text-red-700">{error}</p>
+        <div className="mt-3 p-3 bg-[var(--brand-danger-soft)] border border-[var(--brand-danger-border)] rounded-lg flex items-start gap-2">
+          <X className="w-5 h-5 text-[var(--brand-danger)] flex-shrink-0 mt-0.5" />
+          <p className="text-sm text-[var(--brand-danger)]">{error}</p>
         </div>
       )}
     </div>

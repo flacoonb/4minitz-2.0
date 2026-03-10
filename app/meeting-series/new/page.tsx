@@ -25,6 +25,12 @@ interface ClubFunctionEntry {
   assignedUserId?: string;
 }
 
+interface MinutesTemplateOption {
+  _id: string;
+  name: string;
+  scope: 'global' | 'series';
+}
+
 export default function NewMeetingSeriesPage() {
   const t = useTranslations('meetingSeriesNew');
   const router = useRouter();
@@ -37,6 +43,7 @@ export default function NewMeetingSeriesPage() {
     project: '',
     name: '',
     description: '',
+    defaultTemplateId: '',
     participants: [] as string[],
     informedUsers: [] as string[],
     members: [] as Member[],
@@ -52,6 +59,7 @@ export default function NewMeetingSeriesPage() {
 
   // Existing series for task import
   const [existingSeries, setExistingSeries] = useState<{ _id: string; project: string; name?: string }[]>([]);
+  const [templateOptions, setTemplateOptions] = useState<MinutesTemplateOption[]>([]);
   const [sourceSeriesId, setSourceSeriesId] = useState<string>('');
   const [importMessage, setImportMessage] = useState<string | null>(null);
 
@@ -71,6 +79,7 @@ export default function NewMeetingSeriesPage() {
       fetchUsers();
       fetchClubFunctions();
       fetchExistingNames();
+      fetchTemplateOptions();
     }
   }, [user]);
 
@@ -101,6 +110,24 @@ export default function NewMeetingSeriesPage() {
       }
     } catch (err) {
       console.error('Error fetching users:', err);
+    }
+  };
+
+  const fetchTemplateOptions = async () => {
+    try {
+      const response = await fetch('/api/minutes-templates?scope=global', {
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        setTemplateOptions([]);
+        return;
+      }
+
+      const result = await response.json();
+      setTemplateOptions(Array.isArray(result.data) ? result.data : []);
+    } catch {
+      setTemplateOptions([]);
     }
   };
 
@@ -207,7 +234,10 @@ export default function NewMeetingSeriesPage() {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          ...formData,
+          defaultTemplateId: formData.defaultTemplateId,
+        }),
       });
 
       if (!response.ok) {
@@ -352,6 +382,27 @@ export default function NewMeetingSeriesPage() {
                 ))}
               </select>
             </div>
+          </div>
+
+          <div>
+            <label htmlFor="defaultTemplateId" className="block text-sm font-medium text-gray-700 mb-2">
+              {t('defaultTemplateLabel')}
+            </label>
+            <select
+              id="defaultTemplateId"
+              name="defaultTemplateId"
+              value={formData.defaultTemplateId}
+              onChange={handleInputChange}
+              className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent transition-all bg-white"
+            >
+              <option value="">{t('noDefaultTemplate')}</option>
+              {templateOptions.map((template) => (
+                <option key={template._id} value={template._id}>
+                  {template.name} ({template.scope === 'global' ? t('templateGlobal') : t('templateSeries')})
+                </option>
+              ))}
+            </select>
+            <p className="text-xs text-gray-500 mt-1">{t('defaultTemplateHint')}</p>
           </div>
 
           {/* Import Tasks from existing Series */}

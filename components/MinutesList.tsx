@@ -43,13 +43,13 @@ export default function MinutesList({ meetingSeriesId }: MinutesListProps) {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to fetch minutes');
+        throw new Error(t('errors.loadFailed'));
       }
 
       const data = await response.json();
       setMinutes(data.data || []);
     } catch (_err) {
-      setError('Failed to load minutes');
+      setError(t('errors.loadFailed'));
     } finally {
       setLoading(false);
     }
@@ -69,7 +69,7 @@ export default function MinutesList({ meetingSeriesId }: MinutesListProps) {
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+      <div className="px-4 py-3 rounded-lg border" style={{ backgroundColor: 'var(--brand-danger-soft)', borderColor: 'var(--brand-danger-border)', color: 'var(--brand-danger)' }}>
         <p className="font-medium">{t('errors.loadFailed')}</p>
         <p className="text-sm">{error}</p>
       </div>
@@ -79,7 +79,7 @@ export default function MinutesList({ meetingSeriesId }: MinutesListProps) {
   if (minutes.length === 0) {
     return (
       <div className="text-center py-12">
-        <div className="text-gray-400 mb-4">
+        <div className="mb-4" style={{ color: 'var(--brand-text-muted)' }}>
           <svg
             className="mx-auto h-16 w-16"
             fill="none"
@@ -94,10 +94,10 @@ export default function MinutesList({ meetingSeriesId }: MinutesListProps) {
             />
           </svg>
         </div>
-        <h3 className="text-lg font-medium text-gray-900 mb-2">
+        <h3 className="text-lg font-medium mb-2" style={{ color: 'var(--brand-text)' }}>
           {t('minutes.title')}
         </h3>
-        <p className="text-gray-500 mb-6">
+        <p className="mb-6" style={{ color: 'var(--brand-text-muted)' }}>
           {t('minutes.createNew')}
         </p>
         {meetingSeriesId && (
@@ -115,7 +115,7 @@ export default function MinutesList({ meetingSeriesId }: MinutesListProps) {
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 break-words">
+        <h2 className="text-2xl font-bold break-words" style={{ color: 'var(--brand-text)' }}>
           {t('minutes.title')} ({minutes.length})
         </h2>
         {meetingSeriesId && (
@@ -153,12 +153,12 @@ export default function MinutesList({ meetingSeriesId }: MinutesListProps) {
             <Link
               key={minute._id}
               href={`/minutes/${minute._id}`}
-              className="block p-6 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md hover:border-[var(--brand-primary-border)] transition-all"
+              className="block p-6 rounded-lg shadow-sm hover:shadow-md hover:border-[var(--brand-primary-border)] transition-all app-card"
             >
               <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-3 mb-2">
-                    <h3 className="text-lg font-semibold text-gray-900 break-words">
+                    <h3 className="text-lg font-semibold break-words" style={{ color: 'var(--brand-text)' }}>
                       {new Date(minute.date).toLocaleDateString('de-DE', {
                         weekday: 'long',
                         year: 'numeric',
@@ -169,8 +169,8 @@ export default function MinutesList({ meetingSeriesId }: MinutesListProps) {
                   <span
                     className={`self-start sm:self-auto inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                         minute.isFinalized
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-yellow-100 text-yellow-800'
+                          ? 'bg-[var(--brand-success-soft)] text-[var(--brand-success)] border border-[var(--brand-success-border)]'
+                          : 'bg-[var(--brand-warning-soft)] text-[var(--brand-warning)] border border-[var(--brand-warning-border)]'
                       }`}
                     >
                       {minute.isFinalized
@@ -187,7 +187,7 @@ export default function MinutesList({ meetingSeriesId }: MinutesListProps) {
                     </div>
                   )}
 
-                  <div className="flex items-center gap-4 text-sm text-gray-600">
+                  <div className="flex items-center gap-4 text-sm" style={{ color: 'var(--brand-text-muted)' }}>
                     <div className="flex items-center">
                       <svg
                         className="w-4 h-4 mr-1"
@@ -240,7 +240,8 @@ export default function MinutesList({ meetingSeriesId }: MinutesListProps) {
                 </div>
 
                 <svg
-                  className="w-6 h-6 text-gray-400"
+                  className="w-6 h-6"
+                  style={{ color: 'var(--brand-text-muted)' }}
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"

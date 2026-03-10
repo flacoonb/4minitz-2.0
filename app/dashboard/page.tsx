@@ -218,7 +218,7 @@ export default function DashboardPage() {
 
   if (error || !data) {
     return (
-      <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+      <div className="px-4 py-3 rounded-lg border" style={{ backgroundColor: 'var(--brand-danger-soft)', borderColor: 'var(--brand-danger-border)', color: 'var(--brand-danger)' }}>
         <p className="font-medium">{t('errors.loadFailed')}</p>
         <p className="text-sm">{error}</p>
       </div>
@@ -230,98 +230,92 @@ export default function DashboardPage() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">Dashboard</h1>
-        <p className="text-gray-600 dark:text-gray-400">{t('dashboard.overview')}</p>
+        <h1 className="text-3xl font-bold mb-2">{t('dashboard.title')}</h1>
+        <p className="app-text-muted">{t('dashboard.overview')}</p>
       </div>
 
       {/* Statistics Cards with Compact Design */}
       <div className="grid grid-cols-3 md:grid-cols-6 gap-2 sm:gap-3 mb-6">
         {/* Series Card */}
-        <Link href="/meeting-series" className="group relative brand-gradient-bg rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-2.5 sm:p-3 overflow-hidden block focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--brand-primary-border)]">
-          <div className="absolute top-0 right-0 w-12 h-12 sm:w-16 sm:h-16 bg-white/10 rounded-full -mr-6 sm:-mr-8 -mt-6 sm:-mt-8"></div>
+        <Link href="/meeting-series" className="group relative app-card rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-2.5 sm:p-3 overflow-hidden block focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--brand-primary-border)]">
           <div className="relative">
-            <div className="w-6 h-6 sm:w-7 sm:h-7 bg-white/20 backdrop-blur-sm rounded-md flex items-center justify-center mb-1">
-              <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-md flex items-center justify-center mb-1" style={{ backgroundColor: 'var(--brand-dashboard-badge-series-soft)' }}>
+              <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" style={{ color: 'var(--brand-dashboard-badge-series-ink)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
               </svg>
             </div>
-            <p className="text-white/90 text-[10px] sm:text-xs font-medium mb-0.5 leading-tight truncate">{t('dashboard.series')}</p>
-            <p className="text-lg sm:text-xl font-bold text-white leading-tight">{data.statistics.totalSeries}</p>
+            <p className="text-[10px] sm:text-xs font-medium mb-0.5 leading-tight truncate app-text-muted">{t('dashboard.series')}</p>
+            <p className="text-lg sm:text-xl font-bold leading-tight" style={{ color: 'var(--brand-dashboard-badge-series-ink)' }}>{data.statistics.totalSeries}</p>
           </div>
         </Link>
 
         {/* Minutes Card */}
-        <Link href="/minutes" className="group relative bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-2.5 sm:p-3 overflow-hidden block focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-300">
-          <div className="absolute top-0 right-0 w-12 h-12 sm:w-16 sm:h-16 bg-white/10 rounded-full -mr-6 sm:-mr-8 -mt-6 sm:-mt-8"></div>
+        <Link href="/minutes" className="group relative app-card rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-2.5 sm:p-3 overflow-hidden block focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--brand-primary-border)]">
           <div className="relative">
-            <div className="w-6 h-6 sm:w-7 sm:h-7 bg-white/20 backdrop-blur-sm rounded-md flex items-center justify-center mb-1">
-              <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-md flex items-center justify-center mb-1" style={{ backgroundColor: 'var(--brand-dashboard-badge-minutes-soft)' }}>
+              <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" style={{ color: 'var(--brand-dashboard-badge-minutes-ink)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
-            <p className="text-white/90 text-[10px] sm:text-xs font-medium mb-0.5 leading-tight truncate">{t('dashboard.minutes')}</p>
-            <p className="text-lg sm:text-xl font-bold text-white leading-tight">{data.statistics.totalMinutes}</p>
-            <p className="hidden sm:block text-white/80 text-xs">{data.statistics.finalizedMinutes} {t('dashboard.finalized')}</p>
+            <p className="text-[10px] sm:text-xs font-medium mb-0.5 leading-tight truncate app-text-muted">{t('dashboard.minutes')}</p>
+            <p className="text-lg sm:text-xl font-bold leading-tight" style={{ color: 'var(--brand-dashboard-badge-minutes-ink)' }}>{data.statistics.totalMinutes}</p>
+            <p className="hidden sm:block text-xs app-text-muted">{data.statistics.finalizedMinutes} {t('dashboard.finalized')}</p>
           </div>
         </Link>
 
         {/* Drafts Card */}
-        <Link href="/minutes?isFinalized=false" className="group relative bg-gradient-to-br from-yellow-500 to-orange-500 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-2.5 sm:p-3 overflow-hidden block focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-yellow-300">
-          <div className="absolute top-0 right-0 w-12 h-12 sm:w-16 sm:h-16 bg-white/10 rounded-full -mr-6 sm:-mr-8 -mt-6 sm:-mt-8"></div>
+        <Link href="/minutes?isFinalized=false" className="group relative app-card rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-2.5 sm:p-3 overflow-hidden block focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--brand-primary-border)]">
           <div className="relative">
-            <div className="w-6 h-6 sm:w-7 sm:h-7 bg-white/20 backdrop-blur-sm rounded-md flex items-center justify-center mb-1">
-              <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-md flex items-center justify-center mb-1" style={{ backgroundColor: 'var(--brand-dashboard-badge-drafts-soft)' }}>
+              <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" style={{ color: 'var(--brand-dashboard-badge-drafts-ink)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
               </svg>
             </div>
-            <p className="text-white/90 text-[10px] sm:text-xs font-medium mb-0.5 leading-tight truncate">{t('dashboard.drafts')}</p>
-            <p className="text-lg sm:text-xl font-bold text-white leading-tight">{data.statistics.draftMinutes}</p>
-            <p className="hidden sm:block text-white/80 text-xs">{t('dashboard.minutes')}</p>
+            <p className="text-[10px] sm:text-xs font-medium mb-0.5 leading-tight truncate app-text-muted">{t('dashboard.drafts')}</p>
+            <p className="text-lg sm:text-xl font-bold leading-tight" style={{ color: 'var(--brand-dashboard-badge-drafts-ink)' }}>{data.statistics.draftMinutes}</p>
+            <p className="hidden sm:block text-xs app-text-muted">{t('dashboard.minutes')}</p>
           </div>
         </Link>
 
         {/* Action Items Card */}
-        <Link href="/tasks?status=active" className="group relative bg-gradient-to-br from-orange-500 to-amber-600 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-2.5 sm:p-3 overflow-hidden block focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-300">
-          <div className="absolute top-0 right-0 w-12 h-12 sm:w-16 sm:h-16 bg-white/10 rounded-full -mr-6 sm:-mr-8 -mt-6 sm:-mt-8"></div>
+        <Link href="/tasks?status=active" className="group relative app-card rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-2.5 sm:p-3 overflow-hidden block focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--brand-primary-border)]">
           <div className="relative">
-            <div className="w-6 h-6 sm:w-7 sm:h-7 bg-white/20 backdrop-blur-sm rounded-md flex items-center justify-center mb-1">
-              <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-md flex items-center justify-center mb-1" style={{ backgroundColor: 'var(--brand-dashboard-badge-tasks-soft)' }}>
+              <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" style={{ color: 'var(--brand-dashboard-badge-tasks-ink)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
               </svg>
             </div>
-            <p className="text-white/90 text-[10px] sm:text-xs font-medium mb-0.5 leading-tight truncate">{t('dashboard.tasks')}</p>
-            <p className="text-lg sm:text-xl font-bold text-white leading-tight">{data.statistics.totalActionItems}</p>
-            <p className="hidden sm:block text-white/80 text-xs">{t('dashboard.open')}</p>
+            <p className="text-[10px] sm:text-xs font-medium mb-0.5 leading-tight truncate app-text-muted">{t('dashboard.tasks')}</p>
+            <p className="text-lg sm:text-xl font-bold leading-tight" style={{ color: 'var(--brand-dashboard-badge-tasks-ink)' }}>{data.statistics.totalActionItems}</p>
+            <p className="hidden sm:block text-xs app-text-muted">{t('dashboard.open')}</p>
           </div>
         </Link>
 
         {/* Overdue Card */}
-        <Link href="/tasks?status=all&overdue=true" className="group relative bg-gradient-to-br from-red-500 to-rose-600 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-2.5 sm:p-3 overflow-hidden block focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-300">
-          <div className="absolute top-0 right-0 w-12 h-12 sm:w-16 sm:h-16 bg-white/10 rounded-full -mr-6 sm:-mr-8 -mt-6 sm:-mt-8"></div>
+        <Link href="/tasks?status=all&overdue=true" className="group relative app-card rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-2.5 sm:p-3 overflow-hidden block focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--brand-primary-border)]">
           <div className="relative">
-            <div className="w-6 h-6 sm:w-7 sm:h-7 bg-white/20 backdrop-blur-sm rounded-md flex items-center justify-center mb-1">
-              <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-md flex items-center justify-center mb-1" style={{ backgroundColor: 'var(--brand-dashboard-badge-overdue-soft)' }}>
+              <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" style={{ color: 'var(--brand-dashboard-badge-overdue-ink)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <p className="text-white/90 text-[10px] sm:text-xs font-medium mb-0.5 leading-tight truncate">{t('dashboard.overdue')}</p>
-            <p className="text-lg sm:text-xl font-bold text-white leading-tight">{data.statistics.overdueActionItems}</p>
-            <p className="hidden sm:block text-white/80 text-xs">{t('dashboard.tasks')}</p>
+            <p className="text-[10px] sm:text-xs font-medium mb-0.5 leading-tight truncate app-text-muted">{t('dashboard.overdue')}</p>
+            <p className="text-lg sm:text-xl font-bold leading-tight" style={{ color: 'var(--brand-dashboard-badge-overdue-ink)' }}>{data.statistics.overdueActionItems}</p>
+            <p className="hidden sm:block text-xs app-text-muted">{t('dashboard.tasks')}</p>
           </div>
         </Link>
 
         {/* Upcoming Card */}
-        <Link href="/tasks?status=in-progress" className="group relative brand-gradient-bg rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-2.5 sm:p-3 overflow-hidden block focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--brand-primary-border)]">
-          <div className="absolute top-0 right-0 w-12 h-12 sm:w-16 sm:h-16 bg-white/10 rounded-full -mr-6 sm:-mr-8 -mt-6 sm:-mt-8"></div>
+        <Link href="/tasks?status=in-progress" className="group relative app-card rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-2.5 sm:p-3 overflow-hidden block focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--brand-primary-border)]">
           <div className="relative">
-            <div className="w-6 h-6 sm:w-7 sm:h-7 bg-white/20 backdrop-blur-sm rounded-md flex items-center justify-center mb-1">
-              <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-md flex items-center justify-center mb-1" style={{ backgroundColor: 'var(--brand-dashboard-badge-upcoming-soft)' }}>
+              <svg className="w-3 h-3 sm:w-3.5 sm:h-3.5" style={{ color: 'var(--brand-dashboard-badge-upcoming-ink)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <p className="text-white/90 text-[10px] sm:text-xs font-medium mb-0.5 leading-tight truncate">{t('dashboard.upcoming')}</p>
-            <p className="text-lg sm:text-xl font-bold text-white leading-tight">{data.statistics.upcomingActionItems}</p>
-            <p className="hidden sm:block text-white/80 text-xs">{t('dashboard.tasks')}</p>
+            <p className="text-[10px] sm:text-xs font-medium mb-0.5 leading-tight truncate app-text-muted">{t('dashboard.upcoming')}</p>
+            <p className="text-lg sm:text-xl font-bold leading-tight" style={{ color: 'var(--brand-dashboard-badge-upcoming-ink)' }}>{data.statistics.upcomingActionItems}</p>
+            <p className="hidden sm:block text-xs app-text-muted">{t('dashboard.tasks')}</p>
           </div>
         </Link>
       </div>
@@ -333,7 +327,7 @@ export default function DashboardPage() {
           
           {/* Moderator Actions */}
           {(user?.role === 'admin' || user?.role === 'moderator') && (
-            <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-100 dark:border-slate-700 p-6 hover:shadow-xl transition-all">
+            <div className="app-card rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all">
               <div className="flex items-start justify-between gap-3 mb-4">
                 <div className="flex items-center gap-2">
                   <div className="w-10 h-10 brand-gradient-bg rounded-xl flex items-center justify-center shadow-lg">
@@ -346,7 +340,7 @@ export default function DashboardPage() {
                   </h2>
                 </div>
               </div>
-              <p className="text-gray-600 dark:text-gray-400 mb-4 text-sm">
+              <p className="app-text-muted mb-4 text-sm">
                 {t('dashboard.sendRemindersDesc')}
               </p>
               <div className="flex flex-col sm:flex-row sm:items-center gap-4">
@@ -373,7 +367,7 @@ export default function DashboardPage() {
                   )}
                 </button>
                 {data?.lastRemindersSentAt && (
-                  <span className="text-sm text-gray-500">
+                  <span className="text-sm app-text-muted">
                     {t('dashboard.lastSent')}: {new Date(data.lastRemindersSentAt).toLocaleString(locale)}
                   </span>
                 )}
@@ -382,7 +376,7 @@ export default function DashboardPage() {
           )}
 
           {/* My Tasks Section */}
-          <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-100 dark:border-slate-700 p-6 hover:shadow-xl transition-all">
+          <div className="app-card rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
               <div className="flex items-center gap-2">
                 <div className="w-10 h-10 brand-gradient-bg rounded-xl flex items-center justify-center shadow-lg">
@@ -401,7 +395,8 @@ export default function DashboardPage() {
               <select
                 value={taskFilter.status || ''}
                 onChange={(e) => setTaskFilter({ ...taskFilter, status: e.target.value || undefined })}
-                className="px-3 py-2.5 text-sm border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-gray-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] min-h-[44px] w-full"
+                className="px-3 py-2.5 text-sm border rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] min-h-[44px] w-full"
+                style={{ borderColor: 'var(--brand-card-border)', backgroundColor: 'var(--brand-card)', color: 'var(--brand-text)' }}
               >
                 <option value="">{t('tasks.filterActive')}</option>
                 <option value="open">{t('status.open')}</option>
@@ -413,7 +408,8 @@ export default function DashboardPage() {
               <select
                 value={taskFilter.priority || ''}
                 onChange={(e) => setTaskFilter({ ...taskFilter, priority: e.target.value || undefined })}
-                className="px-3 py-2.5 text-sm border border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-gray-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] min-h-[44px] w-full"
+                className="px-3 py-2.5 text-sm border rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] min-h-[44px] w-full"
+                style={{ borderColor: 'var(--brand-card-border)', backgroundColor: 'var(--brand-card)', color: 'var(--brand-text)' }}
               >
                 <option value="">{t('dashboard.allPriorities')}</option>
                 <option value="high">{t('priority.high')}</option>
@@ -424,9 +420,12 @@ export default function DashboardPage() {
               <button
                 onClick={() => setTaskFilter({ ...taskFilter, overdue: !taskFilter.overdue })}
                 className={`px-3 py-2.5 text-sm rounded-lg transition-colors min-h-[44px] w-full ${taskFilter.overdue
-                  ? 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-300 border border-red-300 dark:border-red-700'
-                  : 'bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-slate-600'
+                  ? 'border'
+                  : 'bg-[var(--brand-surface-soft)] border'
                   }`}
+                style={taskFilter.overdue
+                  ? { backgroundColor: 'var(--brand-dashboard-badge-overdue-soft)', color: 'var(--brand-dashboard-badge-overdue-ink)', borderColor: 'var(--brand-primary-border)' }
+                  : { color: 'var(--brand-text)', borderColor: 'var(--brand-card-border)' }}
               >
                 {taskFilter.overdue ? `✓ ${t('dashboard.onlyOverdue')}` : t('dashboard.onlyOverdue')}
               </button>
@@ -434,7 +433,8 @@ export default function DashboardPage() {
               {(taskFilter.status || taskFilter.priority || taskFilter.overdue) && (
                 <button
                   onClick={() => setTaskFilter({})}
-                  className="px-3 py-2.5 text-sm text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 min-h-[44px] w-full"
+                  className="px-3 py-2.5 text-sm min-h-[44px] w-full"
+                  style={{ color: 'var(--brand-text-muted)' }}
                 >
                   ✕ {t('dashboard.resetFilters')}
                 </button>
@@ -445,11 +445,11 @@ export default function DashboardPage() {
             <div className="space-y-3">
               {tasks.length === 0 ? (
                 <div className="text-center py-8">
-                  <svg className="w-16 h-16 text-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="w-16 h-16 mx-auto mb-4" style={{ color: 'var(--brand-text-muted)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                   </svg>
-                  <p className="text-gray-500 font-medium">{t('dashboard.noTasksFound')}</p>
-                  <p className="text-gray-400 text-sm mt-1">
+                  <p className="font-medium app-text-muted">{t('dashboard.noTasksFound')}</p>
+                  <p className="text-sm mt-1 app-text-muted">
                     {Object.keys(taskFilter).length > 0 ? t('dashboard.tryOtherFilters') : t('dashboard.noTasksAssigned')}
                   </p>
                 </div>
@@ -462,27 +462,25 @@ export default function DashboardPage() {
                   return (
                     <div
                       key={task._id}
-                      className={`relative p-4 rounded-xl border-2 transition-all ${isOverdue
-                        ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
-                        : task.priority === 'high'
-                          ? 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800'
-                          : 'bg-white dark:bg-slate-800 border-gray-200 dark:border-slate-700'
-                        }`}
+                      className={`relative p-4 rounded-xl border-2 transition-all ${
+                        isOverdue
+                          ? 'bg-[var(--brand-danger-soft)] border-[var(--brand-danger-border)]'
+                          : task.priority === 'high'
+                            ? 'bg-[var(--brand-warning-soft)] border-[var(--brand-warning-border)]'
+                            : 'bg-[var(--brand-card)] border-[var(--brand-card-border)]'
+                      }`}
                     >
                       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-2">
                         <div className="flex-1">
-                          <Link
-                            href={`/minutes/${task.minutesId}`}
-                            className="font-semibold text-gray-900 dark:text-gray-100 mb-1 hover:text-[var(--brand-primary)] dark:hover:text-[var(--brand-primary)] block"
-                          >
+                          <Link href={`/minutes/${task.minutesId}`} className="font-semibold mb-1 hover:text-[var(--brand-primary)] block" style={{ color: 'var(--brand-text)' }}>
                             {task.subject}
                           </Link>
-                          <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">
+                          <p className="text-sm mb-2 app-text-muted">
                             {seriesProject ? `${seriesProject} • ` : ''}
                             {seriesName} • {task.topicSubject}
                           </p>
                           {task.details && (
-                            <p className="text-sm text-gray-700 mb-2">{task.details}</p>
+                            <p className="text-sm mb-2" style={{ color: 'var(--brand-text)' }}>{task.details}</p>
                           )}
                         </div>
 
@@ -500,11 +498,18 @@ export default function DashboardPage() {
 
                       <div className="flex flex-wrap gap-2">
                         {/* Status */}
-                        <span className={`px-2 py-1 text-xs font-medium rounded-lg ${task.status === 'completed' ? 'bg-green-100 text-green-800' :
-                          task.status === 'in-progress' ? 'bg-yellow-100 text-yellow-800' :
-                            task.status === 'cancelled' ? 'bg-gray-100 text-gray-800' :
-                              'bg-red-100 text-red-800'
-                          }`}>
+                        <span
+                          className="px-2 py-1 text-xs font-medium rounded-lg"
+                          style={
+                            task.status === 'completed'
+                              ? { backgroundColor: 'var(--brand-dashboard-badge-minute-final-soft)', color: 'var(--brand-dashboard-badge-minute-final-ink)' }
+                              : task.status === 'in-progress'
+                                ? { backgroundColor: 'var(--brand-dashboard-badge-upcoming-soft)', color: 'var(--brand-dashboard-badge-upcoming-ink)' }
+                                : task.status === 'cancelled'
+                                  ? { backgroundColor: 'var(--brand-muted-soft)', color: 'var(--brand-text-muted)' }
+                                  : { backgroundColor: 'var(--brand-dashboard-badge-series-soft)', color: 'var(--brand-dashboard-badge-series-ink)' }
+                          }
+                        >
                           {task.status === 'completed' ? `✓ ${t('status.completed')}` :
                             task.status === 'in-progress' ? `⏳ ${t('status.inProgress')}` :
                               task.status === 'cancelled' ? `✕ ${t('status.cancelled')}` :
@@ -512,10 +517,16 @@ export default function DashboardPage() {
                         </span>
 
                         {/* Priority */}
-                        <span className={`px-2 py-1 text-xs font-medium rounded-lg ${task.priority === 'high' ? 'bg-red-100 text-red-800' :
-                          task.priority === 'medium' ? 'bg-orange-100 text-orange-800' :
-                            'bg-[var(--brand-primary-soft)] text-[var(--brand-primary-strong)]'
-                          }`}>
+                        <span
+                          className="px-2 py-1 text-xs font-medium rounded-lg"
+                          style={
+                            task.priority === 'high'
+                              ? { backgroundColor: 'var(--brand-dashboard-badge-overdue-soft)', color: 'var(--brand-dashboard-badge-overdue-ink)' }
+                              : task.priority === 'medium'
+                                ? { backgroundColor: 'var(--brand-dashboard-badge-drafts-soft)', color: 'var(--brand-dashboard-badge-drafts-ink)' }
+                                : { backgroundColor: 'var(--brand-dashboard-badge-series-soft)', color: 'var(--brand-dashboard-badge-series-ink)' }
+                          }
+                        >
                           {task.priority === 'high' ? `🔴 ${t('priority.high')}` :
                             task.priority === 'medium' ? `🟡 ${t('priority.medium')}` :
                               `🔵 ${t('priority.low')}`}
@@ -523,8 +534,14 @@ export default function DashboardPage() {
 
                         {/* Due Date */}
                         {task.dueDate && (
-                          <span className={`px-2 py-1 text-xs font-medium rounded-lg ${isOverdue ? 'bg-red-200 text-red-900' : 'bg-[var(--brand-primary-soft)] text-[var(--brand-primary-strong)]'
-                            }`}>
+                          <span
+                            className="px-2 py-1 text-xs font-medium rounded-lg"
+                            style={
+                              isOverdue
+                                ? { backgroundColor: 'var(--brand-dashboard-badge-overdue-soft)', color: 'var(--brand-dashboard-badge-overdue-ink)' }
+                                : { backgroundColor: 'var(--brand-dashboard-badge-upcoming-soft)', color: 'var(--brand-dashboard-badge-upcoming-ink)' }
+                            }
+                          >
                             {isOverdue ? '⚠️ ' : '📅 '}
                             {new Date(task.dueDate).toLocaleDateString(locale)}
                           </span>
@@ -532,7 +549,7 @@ export default function DashboardPage() {
 
                         {/* Estimated Hours */}
                         {task.estimatedHours && (
-                          <span className="px-2 py-1 text-xs font-medium bg-gray-100 text-gray-800 rounded-lg">
+                          <span className="px-2 py-1 text-xs font-medium rounded-lg bg-[var(--brand-muted-soft)]" style={{ color: 'var(--brand-text)' }}>
                             ⏱️ {task.estimatedHours}h
                           </span>
                         )}
@@ -540,9 +557,9 @@ export default function DashboardPage() {
 
                       {/* Additional User Comments */}
                       {task.notes && (
-                        <div className="mt-3 pt-3 border-t border-gray-200">
-                          <p className="text-xs font-medium text-gray-500 mb-1">💬 {t('dashboard.additionalComment')}</p>
-                          <p className="text-sm text-gray-700 italic">{task.notes}</p>
+                        <div className="mt-3 pt-3 border-t" style={{ borderColor: 'var(--brand-card-border)' }}>
+                          <p className="text-xs font-medium mb-1 app-text-muted">💬 {t('dashboard.additionalComment')}</p>
+                          <p className="text-sm italic" style={{ color: 'var(--brand-text)' }}>{task.notes}</p>
                         </div>
                       )}
                     </div>
@@ -554,14 +571,14 @@ export default function DashboardPage() {
         </div>
 
         {/* Recent Minutes - Sidebar */}
-        <div className="bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl shadow-lg border border-gray-100 dark:border-slate-700 p-6 hover:shadow-xl transition-all">
+        <div className="app-card rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all">
           <div className="flex items-center gap-2 mb-6">
-            <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg">
-              <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg" style={{ backgroundColor: 'var(--brand-dashboard-badge-minutes-soft)' }}>
+              <svg className="w-5 h-5" style={{ color: 'var(--brand-dashboard-badge-minutes-ink)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
-            <h2 className="text-xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+            <h2 className="text-xl font-bold" style={{ color: 'var(--brand-dashboard-badge-minutes-ink)' }}>
               {t('dashboard.recentMinutes')}
             </h2>
           </div>
@@ -570,32 +587,34 @@ export default function DashboardPage() {
               <Link
                 key={minute._id}
                 href={`/minutes/${minute._id}`}
-                className="block p-3 bg-gradient-to-br from-gray-50 to-green-50 dark:from-slate-700 dark:to-emerald-900/20 border border-gray-200 dark:border-slate-600 rounded-lg hover:shadow-md transition-all duration-200"
+                className="block p-3 rounded-lg hover:shadow-md transition-all duration-200"
+                style={{ backgroundColor: 'var(--brand-dashboard-badge-minutes-soft)', border: '1px solid var(--brand-card-border)' }}
               >
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <p className="font-medium text-gray-900 dark:text-gray-100 text-sm truncate">
+                      <p className="font-medium text-sm truncate" style={{ color: 'var(--brand-text)' }}>
                         {new Date(minute.date).toLocaleDateString(locale, {
                           month: 'short',
                           day: 'numeric',
                         })}
                       </p>
                       <span
-                        className={`text-xs px-2 py-0.5 rounded-full font-medium ${minute.isFinalized
-                          ? 'bg-green-100 text-green-800'
-                          : 'bg-yellow-100 text-yellow-800'
-                          }`}
+                        className="text-xs px-2 py-0.5 rounded-full font-medium"
+                        style={minute.isFinalized
+                          ? { backgroundColor: 'var(--brand-dashboard-badge-minute-final-soft)', color: 'var(--brand-dashboard-badge-minute-final-ink)' }
+                          : { backgroundColor: 'var(--brand-dashboard-badge-minute-draft-soft)', color: 'var(--brand-dashboard-badge-minute-draft-ink)' }}
                       >
                         {minute.isFinalized ? t('dashboard.final') : t('dashboard.draft')}
                       </span>
                     </div>
-                    <p className="text-xs text-gray-600 truncate">
+                    <p className="text-xs truncate app-text-muted">
                       {minute.meetingSeries_id?.project || minute.meetingSeries_id?.name || t('dashboard.noSeries')}
                     </p>
                   </div>
                   <svg
-                    className="w-4 h-4 text-gray-400 flex-shrink-0"
+                    className="w-4 h-4 flex-shrink-0"
+                    style={{ color: 'var(--brand-text-muted)' }}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
@@ -617,19 +636,20 @@ export default function DashboardPage() {
       {/* Task Update Modal */}
       {editingTask && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4">
-          <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-4 sm:p-6 border-b border-gray-200 dark:border-slate-700">
+          <div className="app-card rounded-2xl shadow-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="p-4 sm:p-6 border-b" style={{ borderColor: 'var(--brand-card-border)' }}>
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">{t('dashboard.editTask')}</h2>
-                  <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 break-words">
+                  <h2 className="text-xl sm:text-2xl font-bold" style={{ color: 'var(--brand-text)' }}>{t('dashboard.editTask')}</h2>
+                  <p className="text-sm mt-1 break-words app-text-muted">
                     {(editingTask.meetingSeries?.project || t('dashboard.noSeries'))}
                     {editingTask.meetingSeries?.name ? ` – ${editingTask.meetingSeries.name}` : ''} • {editingTask.topicSubject}
                   </p>
                 </div>
                 <button
                   onClick={closeTaskModal}
-                  className="text-gray-400 hover:text-gray-600 transition-colors min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-lg"
+                  className="transition-colors min-h-[44px] min-w-[44px] inline-flex items-center justify-center rounded-lg"
+                  style={{ color: 'var(--brand-text-muted)' }}
                   aria-label="Dialog schliessen"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -674,16 +694,17 @@ export default function DashboardPage() {
 
               {/* Status Selection */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--brand-text)' }}>
                   {t('dashboard.changeStatus')}
                 </label>
                 <div className="grid grid-cols-2 gap-2 sm:gap-3">
                   <button
                     onClick={() => setTaskUpdateStatus('open')}
                     className={`p-2.5 sm:p-3 rounded-lg border-2 transition-all min-h-[44px] ${taskUpdateStatus === 'open'
-                      ? 'border-red-500 bg-red-50 dark:bg-red-900/30 text-red-900 dark:text-red-300'
-                      : 'border-gray-200 dark:border-slate-600 hover:border-gray-300 dark:hover:border-slate-500 dark:text-gray-200'
+                      ? 'border-[var(--brand-danger-border)] bg-[var(--brand-danger-soft)] text-[var(--brand-danger)]'
+                      : 'border-[var(--brand-card-border)] hover:border-[var(--brand-primary-border)]'
                       }`}
+                    style={taskUpdateStatus !== 'open' ? { color: 'var(--brand-text)' } : undefined}
                   >
                     <div className="text-lg sm:text-xl mb-0.5">○</div>
                     <div className="font-medium text-sm sm:text-base leading-tight">{t('status.open')}</div>
@@ -692,9 +713,10 @@ export default function DashboardPage() {
                   <button
                     onClick={() => setTaskUpdateStatus('in-progress')}
                     className={`p-2.5 sm:p-3 rounded-lg border-2 transition-all min-h-[44px] ${taskUpdateStatus === 'in-progress'
-                      ? 'border-yellow-500 bg-yellow-50 dark:bg-yellow-900/30 text-yellow-900 dark:text-yellow-300'
-                      : 'border-gray-200 dark:border-slate-600 hover:border-gray-300 dark:hover:border-slate-500 dark:text-gray-200'
+                      ? 'border-[var(--brand-warning-border)] bg-[var(--brand-warning-soft)] text-[var(--brand-warning)]'
+                      : 'border-[var(--brand-card-border)] hover:border-[var(--brand-primary-border)]'
                       }`}
+                    style={taskUpdateStatus !== 'in-progress' ? { color: 'var(--brand-text)' } : undefined}
                   >
                     <div className="text-lg sm:text-xl mb-0.5">⏳</div>
                     <div className="font-medium text-sm sm:text-base leading-tight">{t('status.inProgress')}</div>
@@ -703,9 +725,10 @@ export default function DashboardPage() {
                   <button
                     onClick={() => setTaskUpdateStatus('completed')}
                     className={`p-2.5 sm:p-3 rounded-lg border-2 transition-all min-h-[44px] ${taskUpdateStatus === 'completed'
-                      ? 'border-green-500 bg-green-50 dark:bg-green-900/30 text-green-900 dark:text-green-300'
-                      : 'border-gray-200 dark:border-slate-600 hover:border-gray-300 dark:hover:border-slate-500 dark:text-gray-200'
+                      ? 'border-[var(--brand-success-border)] bg-[var(--brand-success-soft)] text-[var(--brand-success)]'
+                      : 'border-[var(--brand-card-border)] hover:border-[var(--brand-primary-border)]'
                       }`}
+                    style={taskUpdateStatus !== 'completed' ? { color: 'var(--brand-text)' } : undefined}
                   >
                     <div className="text-lg sm:text-xl mb-0.5">✓</div>
                     <div className="font-medium text-sm sm:text-base leading-tight">{t('status.completed')}</div>
@@ -714,9 +737,10 @@ export default function DashboardPage() {
                   <button
                     onClick={() => setTaskUpdateStatus('cancelled')}
                     className={`p-2.5 sm:p-3 rounded-lg border-2 transition-all min-h-[44px] ${taskUpdateStatus === 'cancelled'
-                      ? 'border-gray-500 bg-gray-50 dark:bg-slate-700 text-gray-900 dark:text-gray-200'
-                      : 'border-gray-200 dark:border-slate-600 hover:border-gray-300 dark:hover:border-slate-500 dark:text-gray-200'
+                      ? 'border-[var(--brand-card-border)] bg-[var(--brand-muted-soft)]'
+                      : 'border-[var(--brand-card-border)] hover:border-[var(--brand-primary-border)]'
                       }`}
+                    style={taskUpdateStatus === 'cancelled' ? { color: 'var(--brand-text)' } : { color: 'var(--brand-text)' }}
                   >
                     <div className="text-lg sm:text-xl mb-0.5">✕</div>
                     <div className="font-medium text-sm sm:text-base leading-tight">{t('status.cancelled')}</div>
@@ -726,7 +750,7 @@ export default function DashboardPage() {
 
               {/* Additional Notes (Editable) */}
               <div>
-                <label htmlFor="task-notes" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label htmlFor="task-notes" className="block text-sm font-medium mb-2" style={{ color: 'var(--brand-text)' }}>
                   💬 {t('dashboard.yourComment')}
                 </label>
                 <textarea
@@ -735,9 +759,10 @@ export default function DashboardPage() {
                   onChange={(e) => setTaskUpdateNotes(e.target.value)}
                   rows={4}
                   placeholder={t('dashboard.commentPlaceholder')}
-                  className="w-full px-4 py-3 border-2 border-gray-300 dark:border-slate-600 dark:bg-slate-700 dark:text-gray-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-[var(--brand-primary)] transition-colors"
+                  className="w-full px-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-[var(--brand-primary)] transition-colors"
+                  style={{ borderColor: 'var(--brand-card-border)', backgroundColor: 'var(--brand-card)', color: 'var(--brand-text)' }}
                 />
-                <p className="mt-2 text-xs text-gray-500 flex items-start gap-1">
+                <p className="mt-2 text-xs app-text-muted flex items-start gap-1">
                   <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m-1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
@@ -746,11 +771,12 @@ export default function DashboardPage() {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3 pt-4 border-t border-gray-200 dark:border-slate-700">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3 pt-4 border-t" style={{ borderColor: 'var(--brand-card-border)' }}>
                 <button
                   onClick={closeTaskModal}
                   disabled={isUpdating}
-                  className="w-full sm:w-auto px-6 py-2.5 text-gray-700 dark:text-gray-200 bg-gray-100 dark:bg-slate-700 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors disabled:opacity-50 min-h-[44px]"
+                  className="w-full sm:w-auto px-6 py-2.5 rounded-lg transition-colors disabled:opacity-50 min-h-[44px]"
+                  style={{ color: 'var(--brand-text)', backgroundColor: 'var(--brand-surface-soft)' }}
                 >
                   {t('common.cancel')}
                 </button>

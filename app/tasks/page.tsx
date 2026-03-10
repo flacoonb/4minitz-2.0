@@ -28,21 +28,21 @@ interface Task {
 }
 
 const STATUS_CONFIG = {
-  open: { label: 'Offen', labelEn: 'Open', color: 'bg-yellow-100 text-yellow-800', dot: 'bg-yellow-400' },
+  open: { label: 'Offen', labelEn: 'Open', color: 'bg-[var(--brand-warning-soft)] text-[var(--brand-warning)]', dot: 'bg-[var(--brand-warning)]' },
   'in-progress': {
     label: 'In Arbeit',
     labelEn: 'In Progress',
     color: 'bg-[var(--brand-primary-soft)] text-[var(--brand-primary-strong)]',
     dot: 'bg-[var(--brand-primary)]',
   },
-  completed: { label: 'Erledigt', labelEn: 'Completed', color: 'bg-green-100 text-green-800', dot: 'bg-green-400' },
-  cancelled: { label: 'Abgebrochen', labelEn: 'Cancelled', color: 'bg-gray-100 text-gray-600', dot: 'bg-gray-400' },
+  completed: { label: 'Erledigt', labelEn: 'Completed', color: 'bg-[var(--brand-success-soft)] text-[var(--brand-success)]', dot: 'bg-[var(--brand-success)]' },
+  cancelled: { label: 'Abgebrochen', labelEn: 'Cancelled', color: 'bg-[var(--brand-muted-soft)] text-[var(--brand-text-muted)]', dot: 'bg-[var(--brand-text-muted)]' },
 };
 
 const PRIORITY_CONFIG = {
-  high: { label: 'Hoch', labelEn: 'High', color: 'bg-red-100 text-red-700', icon: '!' },
-  medium: { label: 'Mittel', labelEn: 'Medium', color: 'bg-orange-100 text-orange-700', icon: '–' },
-  low: { label: 'Tief', labelEn: 'Low', color: 'bg-gray-100 text-gray-600', icon: '↓' },
+  high: { label: 'Hoch', labelEn: 'High', color: 'bg-[var(--brand-danger-soft)] text-[var(--brand-danger)]', icon: '!' },
+  medium: { label: 'Mittel', labelEn: 'Medium', color: 'bg-[var(--brand-warning-soft)] text-[var(--brand-warning)]', icon: '–' },
+  low: { label: 'Tief', labelEn: 'Low', color: 'bg-[var(--brand-muted-soft)] text-[var(--brand-text-muted)]', icon: '↓' },
 };
 
 export default function TasksPage() {
@@ -199,45 +199,47 @@ export default function TasksPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">{t('tasks.title')}</h1>
-            <p className="text-gray-600 mt-1">{t('tasks.subtitle')}</p>
+            <h1 className="text-3xl font-bold" style={{ color: 'var(--brand-text)' }}>{t('tasks.title')}</h1>
+            <p className="mt-1 app-text-muted">{t('tasks.subtitle')}</p>
           </div>
         </div>
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-gray-100 shadow-sm">
-            <div className="text-2xl font-bold text-gray-900">{stats.total}</div>
-            <div className="text-sm text-gray-500">{t('tasks.total')}</div>
+          <div className="app-card rounded-xl p-4 shadow-sm">
+            <div className="text-2xl font-bold" style={{ color: 'var(--brand-text)' }}>{stats.total}</div>
+            <div className="text-sm app-text-muted">{t('tasks.total')}</div>
           </div>
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-yellow-100 shadow-sm">
-            <div className="text-2xl font-bold text-yellow-600">{stats.open}</div>
-            <div className="text-sm text-gray-500">{t('tasks.statusOpen')}</div>
+          <div className="app-card rounded-xl p-4 shadow-sm border-[var(--brand-warning-border)]">
+            <div className="text-2xl font-bold text-[var(--brand-warning)]">{stats.open}</div>
+            <div className="text-sm app-text-muted">{t('tasks.statusOpen')}</div>
           </div>
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-[var(--brand-primary-border)] shadow-sm">
+          <div className="app-card rounded-xl p-4 border border-[var(--brand-primary-border)] shadow-sm">
             <div className="text-2xl font-bold text-[var(--brand-primary)]">{stats.inProgress}</div>
-            <div className="text-sm text-gray-500">{t('tasks.statusInProgress')}</div>
+            <div className="text-sm app-text-muted">{t('tasks.statusInProgress')}</div>
           </div>
-          <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-red-100 shadow-sm">
-            <div className="text-2xl font-bold text-red-600">{stats.overdue}</div>
-            <div className="text-sm text-gray-500">{t('tasks.overdue')}</div>
+          <div className="app-card rounded-xl p-4 shadow-sm border-[var(--brand-danger-border)]">
+            <div className="text-2xl font-bold text-[var(--brand-danger)]">{stats.overdue}</div>
+            <div className="text-sm app-text-muted">{t('tasks.overdue')}</div>
           </div>
         </div>
 
         {/* Filters */}
-        <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-gray-100 shadow-sm">
+        <div className="app-card rounded-xl p-4 shadow-sm">
           <div className="flex flex-wrap gap-3 items-center">
             <input
               type="text"
               placeholder={t('tasks.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="px-4 py-2 min-h-11 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent flex-1 min-w-0 sm:min-w-[200px]"
+              className="px-4 py-2 min-h-11 border rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent flex-1 min-w-0 sm:min-w-[200px]"
+              style={{ borderColor: 'var(--brand-card-border)', backgroundColor: 'var(--brand-card)', color: 'var(--brand-text)' }}
             />
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-3 py-2 min-h-11 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-[var(--brand-primary)]"
+              className="px-3 py-2 min-h-11 border rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)]"
+              style={{ borderColor: 'var(--brand-card-border)', backgroundColor: 'var(--brand-card)', color: 'var(--brand-text)' }}
             >
               <option value="active">{t('tasks.filterActive')}</option>
               <option value="open">{t('tasks.statusOpen')}</option>
@@ -249,7 +251,8 @@ export default function TasksPage() {
             <select
               value={filterPriority}
               onChange={(e) => setFilterPriority(e.target.value)}
-              className="px-3 py-2 min-h-11 border border-gray-300 rounded-lg bg-white focus:ring-2 focus:ring-[var(--brand-primary)]"
+              className="px-3 py-2 min-h-11 border rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)]"
+              style={{ borderColor: 'var(--brand-card-border)', backgroundColor: 'var(--brand-card)', color: 'var(--brand-text)' }}
             >
               <option value="">{t('tasks.allPriorities')}</option>
               <option value="high">{t('tasks.priorityHigh')}</option>
@@ -261,9 +264,10 @@ export default function TasksPage() {
                 type="checkbox"
                 checked={filterOverdue}
                 onChange={(e) => setFilterOverdue(e.target.checked)}
-                className="w-4 h-4 text-red-600 rounded focus:ring-red-500"
+                className="w-4 h-4 rounded focus:ring-[var(--brand-danger)]"
+                style={{ color: 'var(--brand-danger)' }}
               />
-              <span className="text-sm text-gray-700">{t('tasks.onlyOverdue')}</span>
+              <span className="text-sm" style={{ color: 'var(--brand-text)' }}>{t('tasks.onlyOverdue')}</span>
             </label>
           </div>
         </div>
@@ -275,17 +279,17 @@ export default function TasksPage() {
               <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[var(--brand-primary)]"></div>
             </div>
           ) : filteredTasks.length === 0 ? (
-            <div className="bg-white/80 backdrop-blur-sm rounded-xl p-12 border border-gray-100 shadow-sm text-center">
-              <div className="text-gray-400 text-5xl mb-4">✓</div>
-              <h3 className="text-lg font-semibold text-gray-700">{t('tasks.noTasks')}</h3>
-              <p className="text-gray-500 mt-1">{t('tasks.noTasksHint')}</p>
+            <div className="app-card rounded-xl p-12 shadow-sm text-center">
+              <div className="text-5xl mb-4 app-text-muted">✓</div>
+              <h3 className="text-lg font-semibold" style={{ color: 'var(--brand-text)' }}>{t('tasks.noTasks')}</h3>
+              <p className="mt-1 app-text-muted">{t('tasks.noTasksHint')}</p>
             </div>
           ) : (
             filteredTasks.map((task) => (
               <div
                 key={task._id}
-                className={`bg-white/80 backdrop-blur-sm rounded-xl p-5 border shadow-sm transition-all hover:shadow-md ${
-                  isOverdue(task) ? 'border-red-200 bg-red-50/50' : 'border-gray-100'
+                className={`rounded-xl p-5 border shadow-sm transition-all hover:shadow-md ${
+                  isOverdue(task) ? 'border-[var(--brand-danger-border)] bg-[var(--brand-danger-soft)]' : 'app-card'
                 }`}
               >
                 <div className="flex flex-col sm:flex-row sm:items-start gap-3">
@@ -297,20 +301,20 @@ export default function TasksPage() {
                   {/* Content */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-start gap-2 flex-wrap">
-                      <h3 className="font-semibold text-gray-900">{task.subject}</h3>
+                      <h3 className="font-semibold" style={{ color: 'var(--brand-text)' }}>{task.subject}</h3>
                       <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ${STATUS_CONFIG[task.status]?.color}`}>
                         <span className={`w-1.5 h-1.5 rounded-full ${STATUS_CONFIG[task.status]?.dot}`}></span>
                         {locale === 'de' ? STATUS_CONFIG[task.status]?.label : STATUS_CONFIG[task.status]?.labelEn}
                       </span>
                       {isOverdue(task) && (
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-700">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-[var(--brand-danger-soft)] text-[var(--brand-danger)]">
                           {t('tasks.overdue')}
                         </span>
                       )}
                     </div>
 
                     {/* Meta row */}
-                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-sm text-gray-500">
+                    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2 text-sm app-text-muted">
                       {task.meetingSeries && (
                         <Link
                           href={`/meeting-series/${task.meetingSeries._id}`}
@@ -323,7 +327,7 @@ export default function TasksPage() {
                         <span>• {task.topicSubject}</span>
                       )}
                       {task.dueDate && (
-                        <span className={isOverdue(task) ? 'text-red-600 font-medium' : ''}>
+                        <span className={isOverdue(task) ? 'font-medium text-[var(--brand-danger)]' : ''}>
                           {t('tasks.due')}: {formatDate(task.dueDate)}
                         </span>
                       )}
@@ -338,7 +342,7 @@ export default function TasksPage() {
                     </div>
 
                     {task.notes && (
-                      <p className="mt-2 text-sm text-gray-600 line-clamp-2">{task.notes}</p>
+                      <p className="mt-2 text-sm app-text-muted line-clamp-2">{task.notes}</p>
                     )}
                   </div>
 
@@ -360,7 +364,7 @@ export default function TasksPage() {
 
         {/* Count */}
         {!loading && filteredTasks.length > 0 && (
-          <div className="text-center text-sm text-gray-500">
+          <div className="text-center text-sm app-text-muted">
             {filteredTasks.length} {filteredTasks.length === 1 ? t('tasks.taskSingular') : t('tasks.taskPlural')}
           </div>
         )}
@@ -370,18 +374,18 @@ export default function TasksPage() {
       {editingTask && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4">
           <div className="bg-white rounded-2xl shadow-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-4 sm:p-6 border-b border-gray-200">
+            <div className="p-4 sm:p-6 border-b" style={{ borderColor: 'var(--brand-card-border)' }}>
               <div className="flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900">{t('dashboard.editTask')}</h2>
-                  <p className="text-sm text-gray-600 mt-1 break-words">
+                  <h2 className="text-xl sm:text-2xl font-bold" style={{ color: 'var(--brand-text)' }}>{t('dashboard.editTask')}</h2>
+                  <p className="text-sm app-text-muted mt-1 break-words">
                     {editingTask.meetingSeries?.project || t('dashboard.noSeries')}
                     {editingTask.meetingSeries?.name ? ` – ${editingTask.meetingSeries.name}` : ''}{editingTask.topicSubject ? ` • ${editingTask.topicSubject}` : ''}
                   </p>
                 </div>
                 <button
                   onClick={closeTaskModal}
-                  className="text-gray-400 hover:text-gray-600 transition-colors min-h-11 min-w-11 inline-flex items-center justify-center rounded-lg"
+                  className="transition-colors min-h-11 min-w-11 inline-flex items-center justify-center rounded-lg app-text-muted hover:text-[var(--brand-text)]"
                   aria-label="Dialog schliessen"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -428,15 +432,15 @@ export default function TasksPage() {
 
               {/* Status Selection */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--brand-text)' }}>
                   {t('dashboard.changeStatus')}
                 </label>
                 <div className="grid grid-cols-2 gap-2 sm:gap-3">
                   <button
                     onClick={() => setTaskUpdateStatus('open')}
                     className={`p-2.5 sm:p-3 rounded-lg border-2 transition-all min-h-[44px] ${taskUpdateStatus === 'open'
-                      ? 'border-red-500 bg-red-50 text-red-900'
-                      : 'border-gray-200 hover:border-gray-300'
+                      ? 'border-[var(--brand-danger-border)] bg-[var(--brand-danger-soft)] text-[var(--brand-danger)]'
+                      : 'border-[var(--brand-card-border)] hover:border-[var(--brand-primary-border)]'
                       }`}
                   >
                     <div className="text-lg sm:text-xl mb-0.5">○</div>
@@ -446,8 +450,8 @@ export default function TasksPage() {
                   <button
                     onClick={() => setTaskUpdateStatus('in-progress')}
                     className={`p-2.5 sm:p-3 rounded-lg border-2 transition-all min-h-[44px] ${taskUpdateStatus === 'in-progress'
-                      ? 'border-yellow-500 bg-yellow-50 text-yellow-900'
-                      : 'border-gray-200 hover:border-gray-300'
+                      ? 'border-[var(--brand-warning-border)] bg-[var(--brand-warning-soft)] text-[var(--brand-warning)]'
+                      : 'border-[var(--brand-card-border)] hover:border-[var(--brand-primary-border)]'
                       }`}
                   >
                     <div className="text-lg sm:text-xl mb-0.5">⏳</div>
@@ -457,8 +461,8 @@ export default function TasksPage() {
                   <button
                     onClick={() => setTaskUpdateStatus('completed')}
                     className={`p-2.5 sm:p-3 rounded-lg border-2 transition-all min-h-[44px] ${taskUpdateStatus === 'completed'
-                      ? 'border-green-500 bg-green-50 text-green-900'
-                      : 'border-gray-200 hover:border-gray-300'
+                      ? 'border-[var(--brand-success-border)] bg-[var(--brand-success-soft)] text-[var(--brand-success)]'
+                      : 'border-[var(--brand-card-border)] hover:border-[var(--brand-primary-border)]'
                       }`}
                   >
                     <div className="text-lg sm:text-xl mb-0.5">✓</div>
@@ -468,8 +472,8 @@ export default function TasksPage() {
                   <button
                     onClick={() => setTaskUpdateStatus('cancelled')}
                     className={`p-2.5 sm:p-3 rounded-lg border-2 transition-all min-h-[44px] ${taskUpdateStatus === 'cancelled'
-                      ? 'border-gray-500 bg-gray-50 text-gray-900'
-                      : 'border-gray-200 hover:border-gray-300'
+                      ? 'border-[var(--brand-card-border)] bg-[var(--brand-muted-soft)] text-[var(--brand-text)]'
+                      : 'border-[var(--brand-card-border)] hover:border-[var(--brand-primary-border)] text-[var(--brand-text)]'
                       }`}
                   >
                     <div className="text-lg sm:text-xl mb-0.5">✕</div>
@@ -480,7 +484,7 @@ export default function TasksPage() {
 
               {/* Additional Notes (Editable) */}
               <div>
-                <label htmlFor="task-notes" className="block text-sm font-medium text-gray-700 mb-2">
+                <label htmlFor="task-notes" className="block text-sm font-medium mb-2" style={{ color: 'var(--brand-text)' }}>
                   💬 {t('dashboard.yourComment')}
                 </label>
                 <textarea
@@ -489,9 +493,10 @@ export default function TasksPage() {
                   onChange={(e) => setTaskUpdateNotes(e.target.value)}
                   rows={4}
                   placeholder={t('dashboard.commentPlaceholder')}
-                  className="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-[var(--brand-primary)] transition-colors"
+                  className="w-full px-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-[var(--brand-primary)] transition-colors"
+                  style={{ borderColor: 'var(--brand-card-border)', backgroundColor: 'var(--brand-card)', color: 'var(--brand-text)' }}
                 />
-                <p className="mt-2 text-xs text-gray-500 flex items-start gap-1">
+                <p className="mt-2 text-xs app-text-muted flex items-start gap-1">
                   <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m-1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                   </svg>
@@ -500,11 +505,12 @@ export default function TasksPage() {
               </div>
 
               {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3 pt-4 border-t border-gray-200">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3 pt-4 border-t" style={{ borderColor: 'var(--brand-card-border)' }}>
                 <button
                   onClick={closeTaskModal}
                   disabled={isUpdating}
-                  className="w-full sm:w-auto px-6 py-2 min-h-11 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors disabled:opacity-50"
+                  className="w-full sm:w-auto px-6 py-2 min-h-11 rounded-lg transition-colors disabled:opacity-50 hover:brightness-95"
+                  style={{ color: 'var(--brand-text)', backgroundColor: 'var(--brand-surface-soft)' }}
                 >
                   {t('common.cancel')}
                 </button>

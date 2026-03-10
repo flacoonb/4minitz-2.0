@@ -21,13 +21,13 @@ interface MeetingSeries {
 }
 
 const YEAR_COLORS = [
-  { bg: '#3b82f6', text: '#ffffff' }, // blue
-  { bg: '#10b981', text: '#ffffff' }, // emerald
-  { bg: '#8b5cf6', text: '#ffffff' }, // purple
-  { bg: '#f59e0b', text: '#ffffff' }, // amber
-  { bg: '#f43f5e', text: '#ffffff' }, // rose
-  { bg: '#06b6d4', text: '#ffffff' }, // cyan
-  { bg: '#f97316', text: '#ffffff' }, // orange
+  { bg: 'var(--brand-primary)', text: '#ffffff' },
+  { bg: 'var(--brand-secondary)', text: '#ffffff' },
+  { bg: 'var(--brand-accent)', text: '#ffffff' },
+  { bg: 'var(--brand-success)', text: '#ffffff' },
+  { bg: 'var(--brand-warning)', text: '#ffffff' },
+  { bg: 'var(--brand-danger)', text: '#ffffff' },
+  { bg: 'var(--brand-primary-strong)', text: '#ffffff' },
 ];
 
 function getYearColor(name: string): { bg: string; text: string } {
@@ -61,13 +61,13 @@ export default function MeetingSeriesList() {
       });
       
       if (!response.ok) {
-        throw new Error('Failed to fetch meeting series');
+        throw new Error(t('errors.loadFailed'));
       }
       
       const data = await response.json();
       setSeries(data.data || []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error');
+      setError(err instanceof Error ? err.message : t('errors.unknown'));
     } finally {
       setLoading(false);
     }
@@ -83,7 +83,7 @@ export default function MeetingSeriesList() {
 
   if (error) {
     return (
-      <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+      <div className="px-4 py-3 rounded-lg border" style={{ backgroundColor: 'var(--brand-danger-soft)', borderColor: 'var(--brand-danger-border)', color: 'var(--brand-danger)' }}>
         <p className="font-medium">{t('errors.loadFailed')}</p>
         <p className="text-sm">{error}</p>
         <button
@@ -99,7 +99,7 @@ export default function MeetingSeriesList() {
   if (series.length === 0) {
     return (
       <div className="text-center py-12">
-        <div className="text-gray-400 mb-4">
+        <div className="mb-4" style={{ color: 'var(--brand-text-muted)' }}>
           <svg
             className="mx-auto h-16 w-16"
             fill="none"
@@ -114,10 +114,10 @@ export default function MeetingSeriesList() {
             />
           </svg>
         </div>
-        <h3 className="text-lg font-medium text-gray-900 mb-2">
+        <h3 className="text-lg font-medium mb-2" style={{ color: 'var(--brand-text)' }}>
           {t('meetingSeries.noSeries')}
         </h3>
-        <p className="text-gray-500 mb-6">
+        <p className="mb-6" style={{ color: 'var(--brand-text-muted)' }}>
           {t('meetingSeries.createNew')}
         </p>
         {hasPermission('canCreateMeetings') && (
@@ -135,7 +135,7 @@ export default function MeetingSeriesList() {
   return (
     <div className="space-y-4">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100 break-words">
+        <h2 className="text-2xl font-bold break-words" style={{ color: 'var(--brand-text)' }}>
           {t('meetingSeries.title')} ({series.length})
         </h2>
       </div>
@@ -145,7 +145,8 @@ export default function MeetingSeriesList() {
           <Link
             key={item._id}
             href={`/meeting-series/${item._id}`}
-            className="group block p-6 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border border-gray-200 dark:border-slate-700 rounded-2xl shadow-lg hover:shadow-2xl hover:border-[var(--brand-primary-border)] dark:hover:border-[var(--brand-primary)] transition-all duration-300"
+            className="group block p-6 rounded-2xl shadow-lg hover:shadow-2xl transition-all duration-300 app-card"
+            style={{ borderColor: 'var(--brand-card-border)' }}
           >
             {item.name && (
               <div className="mb-3">
@@ -158,11 +159,11 @@ export default function MeetingSeriesList() {
               </div>
             )}
 
-            <h3 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-3 group-hover:text-[var(--brand-primary)] dark:group-hover:text-[var(--brand-primary)] transition-colors">
+            <h3 className="text-lg font-bold mb-3 group-hover:text-[var(--brand-primary)] transition-colors" style={{ color: 'var(--brand-text)' }}>
               {item.project}
             </h3>
             
-            <div className="space-y-2 text-sm text-gray-600 dark:text-gray-400">
+            <div className="space-y-2 text-sm" style={{ color: 'var(--brand-text-muted)' }}>
               {item.lastMinutesDate && (
                 <div className="flex items-center">
                   <svg
@@ -204,8 +205,8 @@ export default function MeetingSeriesList() {
                   <span
                     className={`inline-flex items-center px-2 py-1 rounded text-xs font-medium ${
                       item.lastMinutesFinalized
-                        ? 'bg-green-100 text-green-800'
-                        : 'bg-yellow-100 text-yellow-800'
+                        ? 'bg-[var(--brand-success-soft)] text-[var(--brand-success)] border border-[var(--brand-success-border)]'
+                        : 'bg-[var(--brand-warning-soft)] text-[var(--brand-warning)] border border-[var(--brand-warning-border)]'
                     }`}
                   >
                     {item.lastMinutesFinalized ? `✓ ${t('meetingSeries.finalized')}` : `⚠ ${t('meetingSeries.draft')}`}

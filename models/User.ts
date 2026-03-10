@@ -136,8 +136,8 @@ const UserSchema: Schema<IUser> = new Schema(
       validate: {
         validator: (avatar: string) => {
           if (!avatar) return true;
-          // Accept any https URL (CDN URLs often don't end with file extensions)
-          return /^https?:\/\/.+/i.test(avatar);
+          // Accept remote URLs and internal avatar upload routes
+          return /^https?:\/\/.+/i.test(avatar) || /^\/api\/uploads\/avatars\/[a-zA-Z0-9._-]+$/i.test(avatar);
         },
         message: 'Avatar muss eine gültige URL sein'
       }

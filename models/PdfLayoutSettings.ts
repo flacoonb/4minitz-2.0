@@ -26,6 +26,9 @@ export interface ILayoutElement {
     borderWidth?: number;
     padding?: number;
     alignment?: 'left' | 'center' | 'right';
+    positionMode?: 'absolute' | 'anchored';
+    anchorX?: 'left' | 'center' | 'right';
+    anchorY?: 'top' | 'center' | 'bottom';
   };
 }
 
@@ -43,11 +46,22 @@ export interface IPdfLayoutSettings extends Document {
     info: string;
     task: string;
   };
+  metrics?: {
+    showAttendanceBox: boolean;
+    attendanceWidth: number;
+    responsibleColumnWidth: number;
+    pageFrameInset: number;
+    attendanceFontSize: number;
+    attendanceLegendFontSize: number;
+  };
   logo?: {
     enabled: boolean;
     url: string;
     position: { x: number; y: number };
     size: { width: number; height: number };
+    positionMode: 'absolute' | 'anchored';
+    anchorX: 'left' | 'center' | 'right';
+    anchorY: 'top' | 'center' | 'bottom';
   };
   updatedAt: Date;
 }
@@ -93,6 +107,18 @@ const LayoutElementSchema = new Schema({
       type: String,
       enum: ['left', 'center', 'right'],
     },
+    positionMode: {
+      type: String,
+      enum: ['absolute', 'anchored'],
+    },
+    anchorX: {
+      type: String,
+      enum: ['left', 'center', 'right'],
+    },
+    anchorY: {
+      type: String,
+      enum: ['top', 'center', 'bottom'],
+    },
   },
 });
 
@@ -106,6 +132,21 @@ const LogoSchema = new Schema({
   size: {
     width: { type: Number, default: 40 },
     height: { type: Number, default: 15 },
+  },
+  positionMode: {
+    type: String,
+    enum: ['absolute', 'anchored'],
+    default: 'absolute',
+  },
+  anchorX: {
+    type: String,
+    enum: ['left', 'center', 'right'],
+    default: 'left',
+  },
+  anchorY: {
+    type: String,
+    enum: ['top', 'center', 'bottom'],
+    default: 'top',
   },
 }, { _id: false });
 
@@ -129,13 +170,24 @@ const PdfLayoutSettingsSchema = new Schema<IPdfLayoutSettings>({
     info: { type: String, default: '#3B82F6' },
     task: { type: String, default: '#F97316' },
   },
+  metrics: {
+    showAttendanceBox: { type: Boolean, default: true },
+    attendanceWidth: { type: Number, default: 94 },
+    responsibleColumnWidth: { type: Number, default: 35 },
+    pageFrameInset: { type: Number, default: 8 },
+    attendanceFontSize: { type: Number, default: 8 },
+    attendanceLegendFontSize: { type: Number, default: 6 },
+  },
   logo: {
     type: LogoSchema,
     default: () => ({
       enabled: false,
       url: '',
       position: { x: 25, y: 25 },
-      size: { width: 40, height: 15 }
+      size: { width: 40, height: 15 },
+      positionMode: 'absolute',
+      anchorX: 'left',
+      anchorY: 'top',
     })
   },
   updatedAt: {

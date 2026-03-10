@@ -27,7 +27,7 @@ export const AgendaEntryItem: React.FC<AgendaEntryItemProps> = ({
   const label = getLabelById(entry.labelId);
 
   return (
-    <div className={`p-4 rounded-xl ${isImportedEntry ? 'bg-yellow-50 border-2 border-yellow-200' : 'bg-gray-50'}`}>
+    <div className={`brandize-legacy p-4 rounded-xl ${isImportedEntry ? 'bg-yellow-50 border-2 border-yellow-200' : 'bg-gray-50'}`}>
       {isImportedEntry && (
         <div className="flex items-center gap-2 mb-2 text-xs text-yellow-800">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

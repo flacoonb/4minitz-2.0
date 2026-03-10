@@ -618,7 +618,7 @@ function SeriesTemplatesPage() {
                 </div>
               )}
             </div>
-            <div className="flex gap-3">
+            <div className="sticky bottom-0 -mx-5 px-5 py-3 border-t border-gray-200 bg-white/95 backdrop-blur-sm flex gap-3">
               <button onClick={saveTemplate} disabled={saving || !name.trim()} className="px-4 py-2 brand-button-solid rounded-lg disabled:opacity-50">{saving ? 'Speichern...' : editingTemplate ? 'Änderungen speichern' : 'Vorlage erstellen'}</button>
               <button onClick={() => { setShowEditorModal(false); closeMentionSuggestions(); }} className="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200">Abbrechen</button>
             </div>

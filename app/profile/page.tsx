@@ -22,7 +22,8 @@ import {
   Copy,
   RefreshCw,
   Link2,
-  Unlink
+  Unlink,
+  Upload
 } from 'lucide-react';
 
 // Demo fallback removed; use cookie/JWT auth via credentials
@@ -130,6 +131,8 @@ const ProfilePage = () => {
   const [revokingCalendarLink, setRevokingCalendarLink] = useState(false);
   const [calendarInlineMessage, setCalendarInlineMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [assignedFunctionNames, setAssignedFunctionNames] = useState<string[]>([]);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const avatarFileInputRef = useRef<HTMLInputElement | null>(null);
 
   // Helper to reset profileData from user object
   const resetProfileData = useCallback((u: UserProfile) => {
@@ -262,6 +265,36 @@ const ProfilePage = () => {
       setError(err.message);
     } finally {
       setSavingProfile(false);
+    }
+  };
+
+  const handleAvatarFileUpload = async (file: File) => {
+    if (!editMode) return;
+    setError('');
+    setSuccess('');
+    setUploadingAvatar(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch('/api/upload/avatar', {
+        method: 'POST',
+        credentials: 'include',
+        body: formData,
+      });
+
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok || !result?.url) {
+        throw new Error(result?.error || t('messages.avatarUploadError'));
+      }
+
+      setProfileData((prev) => ({ ...prev, avatar: result.url }));
+      setSuccess(t('messages.avatarUploaded'));
+    } catch (err: any) {
+      setError(err.message || t('messages.avatarUploadError'));
+    } finally {
+      setUploadingAvatar(false);
+      if (avatarFileInputRef.current) avatarFileInputRef.current.value = '';
     }
   };
 
@@ -714,10 +747,10 @@ const ProfilePage = () => {
                   )}
                 </div>
 
-                <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-100 mb-1">
+                <h2 className="text-xl font-semibold mb-1" style={{ color: 'var(--brand-text)' }}>
                   {user.firstName} {user.lastName}
                 </h2>
-                <p className="text-slate-600 dark:text-slate-400 mb-3">
+                <p className="mb-3 app-text-muted">
                   {t('profileTab.function')}: {functionDisplay}
                 </p>
 
@@ -727,20 +760,20 @@ const ProfilePage = () => {
                 </div>
 
                 <div className="mt-6 space-y-3 text-sm">
-                  <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+                  <div className="flex items-center gap-2 app-text-muted">
                     <Mail className="w-4 h-4" />
                     <span className={user.isEmailVerified ? 'text-green-600 dark:text-green-400' : 'text-orange-600 dark:text-orange-400'}>
                       {user.isEmailVerified ? t('profileTab.emailVerified') : t('profileTab.emailUnverified')}
                     </span>
                   </div>
-                  <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+                  <div className="flex items-center gap-2 app-text-muted">
                     <Calendar className="w-4 h-4" />
-                    <span>{t('profileTab.memberSince', { date: new Date(user.createdAt).toLocaleDateString('de-DE') })}</span>
+                    <span>{t('profileTab.memberSince', { date: new Date(user.createdAt).toLocaleDateString() })}</span>
                   </div>
                   {user.lastLogin && (
-                    <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
+                    <div className="flex items-center gap-2 app-text-muted">
                       <Clock className="w-4 h-4" />
-                      <span>{t('profileTab.lastLogin', { date: new Date(user.lastLogin).toLocaleDateString('de-DE') })}</span>
+                      <span>{t('profileTab.lastLogin', { date: new Date(user.lastLogin).toLocaleDateString() })}</span>
                     </div>
                   )}
                 </div>
@@ -751,8 +784,8 @@ const ProfilePage = () => {
           {/* Main Content */}
           <div className="lg:col-span-3">
             {/* Tabs */}
-            <div className="bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm border border-white/50 dark:border-slate-800 rounded-xl shadow-lg overflow-hidden">
-              <div className="border-b border-slate-200 dark:border-slate-700">
+            <div className="app-card rounded-xl shadow-lg overflow-hidden">
+              <div className="border-b" style={{ borderColor: 'var(--brand-card-border)' }}>
                 <nav className="grid grid-cols-3 sm:flex sm:overflow-x-auto">
                   {[
                     { key: 'profile', label: t('tabs.profile'), icon: User },
@@ -764,8 +797,9 @@ const ProfilePage = () => {
                       onClick={() => handleTabSwitch(tab.key as any)}
                       className={`flex items-center justify-center gap-1.5 sm:gap-2 px-2 sm:px-6 py-3 sm:py-4 min-h-11 text-xs sm:text-sm font-medium border-b-2 transition-colors leading-tight text-center sm:whitespace-nowrap ${activeTab === tab.key
                         ? 'border-[var(--brand-primary)] text-[var(--brand-primary)] dark:text-[var(--brand-primary)] bg-[var(--brand-primary-soft)] dark:bg-[var(--brand-primary-soft)]'
-                        : 'border-transparent text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 hover:bg-slate-50/50 dark:hover:bg-slate-800/50'
+                        : 'border-transparent hover:bg-[var(--brand-surface-soft)]'
                         }`}
+                      style={activeTab !== tab.key ? { color: 'var(--brand-text-muted)' } : undefined}
                     >
                       <tab.icon className="w-4 h-4" />
                       {tab.label}
@@ -802,7 +836,8 @@ const ProfilePage = () => {
                             onChange={(e) => setProfileData({ ...profileData, firstName: e.target.value })}
                             disabled={!editMode}
                             autoComplete="given-name"
-                            className="w-full px-4 py-3 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent disabled:bg-slate-50 dark:disabled:bg-slate-800 disabled:text-slate-500 dark:disabled:text-slate-500"
+                            className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent disabled:opacity-70"
+                            style={{ borderColor: 'var(--brand-card-border)', backgroundColor: 'var(--brand-card)', color: 'var(--brand-text)' }}
                           />
                         </div>
                         <div>
@@ -814,7 +849,8 @@ const ProfilePage = () => {
                             onChange={(e) => setProfileData({ ...profileData, lastName: e.target.value })}
                             disabled={!editMode}
                             autoComplete="family-name"
-                            className="w-full px-4 py-3 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent disabled:bg-slate-50 dark:disabled:bg-slate-800 disabled:text-slate-500 dark:disabled:text-slate-500"
+                            className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent disabled:opacity-70"
+                            style={{ borderColor: 'var(--brand-card-border)', backgroundColor: 'var(--brand-card)', color: 'var(--brand-text)' }}
                           />
                         </div>
                       </div>
@@ -827,21 +863,55 @@ const ProfilePage = () => {
                           value={functionDisplay}
                           readOnly
                           disabled
-                          className="w-full px-4 py-3 border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800 dark:text-slate-300 rounded-lg disabled:text-slate-500 dark:disabled:text-slate-400"
+                          className="w-full px-4 py-3 border rounded-lg disabled:opacity-70"
+                          style={{ borderColor: 'var(--brand-card-border)', backgroundColor: 'var(--brand-surface-soft)', color: 'var(--brand-text-muted)' }}
                         />
                       </div>
 
                       <div>
                         <label htmlFor="profile-avatar" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{t('profileTab.avatar')}</label>
-                        <input
-                          id="profile-avatar"
-                          type="url"
-                          value={profileData.avatar}
-                          onChange={(e) => setProfileData({ ...profileData, avatar: e.target.value })}
-                          disabled={!editMode}
-                          placeholder="https://..."
-                          className="w-full px-4 py-3 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 dark:text-slate-100 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent disabled:bg-slate-50 dark:disabled:bg-slate-800 disabled:text-slate-500 dark:disabled:text-slate-500"
-                        />
+                        <div className="space-y-3">
+                          <input
+                            id="profile-avatar"
+                            type="text"
+                            value={profileData.avatar}
+                            onChange={(e) => setProfileData({ ...profileData, avatar: e.target.value })}
+                            disabled={!editMode}
+                            placeholder="https://... oder /api/uploads/avatars/..."
+                            className="w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent disabled:opacity-70"
+                            style={{ borderColor: 'var(--brand-card-border)', backgroundColor: 'var(--brand-card)', color: 'var(--brand-text)' }}
+                          />
+                          {editMode && (
+                            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                              <input
+                                ref={avatarFileInputRef}
+                                type="file"
+                                accept="image/png,image/jpeg,image/gif,image/webp"
+                                className="hidden"
+                                onChange={(e) => {
+                                  const file = e.target.files?.[0];
+                                  if (file) handleAvatarFileUpload(file);
+                                }}
+                              />
+                              <button
+                                type="button"
+                                onClick={() => avatarFileInputRef.current?.click()}
+                                disabled={uploadingAvatar}
+                                className="inline-flex items-center justify-center gap-2 px-4 py-2 min-h-11 rounded-lg bg-[var(--brand-primary-soft)] text-[var(--brand-primary-strong)] border border-[var(--brand-primary-border)] hover:brightness-95 transition-colors disabled:opacity-60"
+                              >
+                                {uploadingAvatar ? (
+                                  <div className="w-4 h-4 border-2 border-[var(--brand-primary-border)] border-t-[var(--brand-primary)] rounded-full animate-spin" />
+                                ) : (
+                                  <Upload className="w-4 h-4" />
+                                )}
+                                {uploadingAvatar ? t('profileTab.avatarUploading') : t('profileTab.avatarUpload')}
+                              </button>
+                              <p className="text-xs text-slate-500 dark:text-slate-400">
+                                {t('profileTab.avatarUploadHint')}
+                              </p>
+                            </div>
+                          )}
+                        </div>
                       </div>
 
                       <div>
@@ -865,7 +935,8 @@ const ProfilePage = () => {
                               if (user) resetProfileData(user);
                               setEditMode(false);
                             }}
-                            className="px-4 py-2 min-h-11 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-300 dark:hover:bg-slate-700 transition-colors"
+                            className="px-4 py-2 min-h-11 rounded-lg transition-colors"
+                            style={{ backgroundColor: 'var(--brand-surface-soft)', color: 'var(--brand-text)' }}
                           >
                             {t('profileTab.cancel')}
                           </button>
@@ -896,8 +967,8 @@ const ProfilePage = () => {
                 {activeTab === 'security' && (
                   <div>
                     <div className="mb-6">
-                      <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200 mb-2">{t('securityTab.title')}</h3>
-                      <p className="text-slate-600 dark:text-slate-400">{t('securityTab.description')}</p>
+                      <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--brand-text)' }}>{t('securityTab.title')}</h3>
+                      <p className="app-text-muted">{t('securityTab.description')}</p>
                     </div>
 
                     <form onSubmit={handlePasswordUpdate} className="space-y-6">

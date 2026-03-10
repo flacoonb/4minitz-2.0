@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useLocale } from 'next-intl';
+import { useLocale, useTranslations } from 'next-intl';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface Minute {
@@ -22,6 +22,7 @@ interface Minute {
 type FilterState = 'all' | 'draft' | 'finalized';
 
 export default function MinutesPage() {
+  const t = useTranslations();
   const router = useRouter();
   const searchParams = useSearchParams();
   const locale = useLocale();
@@ -52,15 +53,15 @@ export default function MinutesPage() {
       if (filter === 'draft') params.set('isFinalized', 'false');
 
       const response = await fetch(`/api/minutes?${params.toString()}`, { credentials: 'include' });
-      if (!response.ok) throw new Error('Failed to load minutes');
+      if (!response.ok) throw new Error(t('minutes.loadListError'));
       const result = await response.json();
       setMinutes(result.data || []);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Fehler beim Laden der Protokolle');
+      setError(err instanceof Error ? err.message : t('minutes.loadListError'));
     } finally {
       setLoading(false);
     }
-  }, [filter]);
+  }, [filter, t]);
 
   useEffect(() => {
     if (!authLoading && !user) {
@@ -81,62 +82,65 @@ export default function MinutesPage() {
   if (!user) return null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-slate-100">
+    <div className="min-h-screen brand-page-gradient">
       <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-slate-900">Protokolle</h1>
-          <p className="text-slate-600 mt-1">Übersicht aller verfügbaren Protokolle</p>
+          <h1 className="text-3xl font-bold" style={{ color: 'var(--brand-text)' }}>{t('minutes.title')}</h1>
+          <p className="mt-1 app-text-muted">{t('minutes.subtitle')}</p>
         </div>
 
-        <div className="mb-6 bg-white/80 backdrop-blur-sm border border-slate-200 rounded-xl p-4 shadow-sm">
+        <div className="mb-6 app-card rounded-xl p-4 shadow-sm">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             <button
               type="button"
               onClick={() => setFilter('all')}
-              className={`min-h-11 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${filter === 'all' ? 'bg-[var(--brand-primary)] text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
+              className={`min-h-11 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${filter === 'all' ? 'bg-[var(--brand-primary)] text-white' : 'bg-[var(--brand-surface-soft)] hover:brightness-95'}`}
+              style={filter !== 'all' ? { color: 'var(--brand-text)' } : undefined}
             >
-              Alle
+              {t('minutes.allStatus')}
             </button>
             <button
               type="button"
               onClick={() => setFilter('draft')}
-              className={`min-h-11 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${filter === 'draft' ? 'bg-amber-500 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
+              className={`min-h-11 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${filter === 'draft' ? 'text-white' : 'bg-[var(--brand-surface-soft)] hover:brightness-95'}`}
+              style={filter === 'draft' ? { backgroundColor: 'var(--brand-warning)' } : { color: 'var(--brand-text)' }}
             >
-              Entwürfe
+              {t('minutes.draft')}
             </button>
             <button
               type="button"
               onClick={() => setFilter('finalized')}
-              className={`min-h-11 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${filter === 'finalized' ? 'bg-emerald-600 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
+              className={`min-h-11 rounded-lg px-3 py-2 text-sm font-medium transition-colors ${filter === 'finalized' ? 'text-white' : 'bg-[var(--brand-surface-soft)] hover:brightness-95'}`}
+              style={filter === 'finalized' ? { backgroundColor: 'var(--brand-success)' } : { color: 'var(--brand-text)' }}
             >
-              Finalisiert
+              {t('minutes.finalized')}
             </button>
           </div>
         </div>
 
         {error && (
-          <div className="mb-4 rounded-lg border border-red-200 bg-red-50 text-red-700 px-4 py-3">
+          <div className="mb-4 rounded-lg border px-4 py-3" style={{ borderColor: 'var(--brand-danger-border)', backgroundColor: 'var(--brand-danger-soft)', color: 'var(--brand-danger)' }}>
             {error}
           </div>
         )}
 
         {minutes.length === 0 ? (
-          <div className="bg-white rounded-xl border border-slate-200 p-8 text-center text-slate-600">
-            Keine Protokolle gefunden.
+          <div className="app-card rounded-xl p-8 text-center app-text-muted">
+            {t('minutes.noMinutesYet')}
           </div>
         ) : (
           <div className="space-y-3">
             {minutes.map((minute) => {
               const isFinalized = Boolean(minute.isFinalized ?? minute.finalized);
               const seriesLabel = minute.meetingSeries_id
-                ? `${minute.meetingSeries_id.project || 'Sitzung'}${minute.meetingSeries_id.name ? ` – ${minute.meetingSeries_id.name}` : ''}`
-                : 'Sitzung';
+                ? `${minute.meetingSeries_id.project || t('minutes.defaultSeriesName')}${minute.meetingSeries_id.name ? ` – ${minute.meetingSeries_id.name}` : ''}`
+                : t('minutes.defaultSeriesName');
 
               return (
                 <Link
                   key={minute._id}
                   href={`/minutes/${minute._id}`}
-                  className="block bg-white/90 border border-slate-200 rounded-xl p-4 hover:shadow-md transition-shadow"
+                  className="block app-card rounded-xl p-4 hover:shadow-md transition-shadow"
                 >
                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                     <div className="min-w-0">

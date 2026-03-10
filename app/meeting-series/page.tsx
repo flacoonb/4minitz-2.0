@@ -43,10 +43,10 @@ export default function MeetingSeriesPage() {
               </svg>
             </div>
             <div className="min-w-0">
-              <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent break-words">
+              <h1 className="text-3xl sm:text-4xl font-bold bg-clip-text text-transparent break-words" style={{ backgroundImage: 'linear-gradient(90deg, var(--brand-text), var(--brand-text-muted))' }}>
                 {t('title')}
               </h1>
-              <p className="text-base sm:text-lg text-gray-600 mt-1.5 sm:mt-2">
+              <p className="text-base sm:text-lg mt-1.5 sm:mt-2 app-text-muted">
                 {t('subtitle')}
               </p>
             </div>
@@ -81,7 +81,7 @@ export default function MeetingSeriesPage() {
       )}
 
       {/* Meeting Series List */}
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-5 sm:p-8 border border-gray-100 shadow-lg">
+      <div className="app-card rounded-2xl p-5 sm:p-8 shadow-lg">
         <MeetingSeriesList />
       </div>
     </div>

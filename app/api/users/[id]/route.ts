@@ -185,7 +185,9 @@ export async function PUT(
       }
     }
     if (body.avatar !== undefined) {
-      if (body.avatar !== null && (typeof body.avatar !== 'string' || body.avatar.length > 500 || !/^https?:\/\/.+/i.test(body.avatar))) {
+      const isExternalAvatar = typeof body.avatar === 'string' && /^https?:\/\/.+/i.test(body.avatar);
+      const isInternalAvatar = typeof body.avatar === 'string' && /^\/api\/uploads\/avatars\/[a-zA-Z0-9._-]+$/i.test(body.avatar);
+      if (body.avatar !== null && (typeof body.avatar !== 'string' || body.avatar.length > 500 || (!isExternalAvatar && !isInternalAvatar))) {
         return NextResponse.json({ error: 'Avatar muss eine gültige URL sein' }, { status: 400 });
       }
       userToUpdate.avatar = body.avatar;

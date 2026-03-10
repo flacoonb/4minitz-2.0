@@ -2,10 +2,12 @@
 
 import { useMemo, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 
 type RsvpResponse = 'accepted' | 'tentative' | 'declined';
 
 export default function RsvpPage() {
+  const t = useTranslations('rsvpPage');
   const searchParams = useSearchParams();
   const token = String(searchParams.get('token') || '').trim();
   const response = String(searchParams.get('response') || '').trim().toLowerCase() as RsvpResponse;
@@ -17,19 +19,19 @@ export default function RsvpPage() {
   const [message, setMessage] = useState('');
 
   const responseLabel = useMemo(() => {
-    if (response === 'accepted') return 'Zusage';
-    if (response === 'tentative') return 'Vorbehalt';
-    if (response === 'declined') return 'Absage';
-    return 'Antwort';
-  }, [response]);
+    if (response === 'accepted') return t('response.accepted');
+    if (response === 'tentative') return t('response.tentative');
+    if (response === 'declined') return t('response.declined');
+    return t('response.generic');
+  }, [response, t]);
 
   if (finalStatus === 'success' && isValidResponse) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-slate-50">
-        <div className="max-w-md w-full bg-white border border-slate-200 rounded-xl p-6">
-          <h1 className="text-xl font-bold text-slate-900 mb-2">Antwort gespeichert</h1>
-          <div className="p-3 rounded-lg bg-green-50 text-green-700 text-sm">
-            Ihre {responseLabel} wurde gespeichert.
+      <div className="min-h-screen flex items-center justify-center p-4 brand-page-gradient">
+        <div className="max-w-md w-full app-card rounded-xl p-6">
+          <h1 className="text-xl font-bold mb-2" style={{ color: 'var(--brand-text)' }}>{t('savedTitle')}</h1>
+          <div className="p-3 rounded-lg text-sm" style={{ backgroundColor: 'var(--brand-success-soft)', color: 'var(--brand-success)' }}>
+            {t('savedMessage', { response: responseLabel })}
           </div>
         </div>
       </div>
@@ -38,11 +40,11 @@ export default function RsvpPage() {
 
   if (finalStatus === 'error') {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-slate-50">
-        <div className="max-w-md w-full bg-white border border-slate-200 rounded-xl p-6">
-          <h1 className="text-xl font-bold text-slate-900 mb-2">Fehler</h1>
-          <div className="p-3 rounded-lg bg-red-50 text-red-700 text-sm">
-            {finalMessage || 'Die Antwort konnte nicht gespeichert werden.'}
+      <div className="min-h-screen flex items-center justify-center p-4 brand-page-gradient">
+        <div className="max-w-md w-full app-card rounded-xl p-6">
+          <h1 className="text-xl font-bold mb-2" style={{ color: 'var(--brand-text)' }}>{t('errorTitle')}</h1>
+          <div className="p-3 rounded-lg text-sm" style={{ backgroundColor: 'var(--brand-danger-soft)', color: 'var(--brand-danger)' }}>
+            {finalMessage || t('saveError')}
           </div>
         </div>
       </div>
@@ -61,14 +63,14 @@ export default function RsvpPage() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         setStatus('error');
-        setMessage(data.error || 'Die Antwort konnte nicht gespeichert werden.');
+        setMessage(data.error || t('saveError'));
         return;
       }
       setStatus('success');
-      setMessage(`Ihre ${responseLabel} wurde gespeichert.`);
+      setMessage(t('savedMessage', { response: responseLabel }));
     } catch {
       setStatus('error');
-      setMessage('Die Antwort konnte nicht gespeichert werden.');
+      setMessage(t('saveError'));
     } finally {
       setLoading(false);
     }
@@ -76,36 +78,36 @@ export default function RsvpPage() {
 
   if (!token || !isValidResponse) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4 bg-slate-50">
-        <div className="max-w-md w-full bg-white border border-slate-200 rounded-xl p-6 text-center">
-          <h1 className="text-xl font-bold text-slate-900 mb-2">Ungültiger Link</h1>
-          <p className="text-slate-600">Der RSVP-Link ist unvollständig oder ungültig.</p>
+      <div className="min-h-screen flex items-center justify-center p-4 brand-page-gradient">
+        <div className="max-w-md w-full app-card rounded-xl p-6 text-center">
+          <h1 className="text-xl font-bold mb-2" style={{ color: 'var(--brand-text)' }}>{t('invalidTitle')}</h1>
+          <p className="app-text-muted">{t('invalidMessage')}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-slate-50">
-      <div className="max-w-md w-full bg-white border border-slate-200 rounded-xl p-6">
-        <h1 className="text-xl font-bold text-slate-900 mb-2">Antwort bestätigen</h1>
-        <p className="text-slate-700 mb-5">
-          Sie möchten folgende Antwort senden: <strong>{responseLabel}</strong>
+    <div className="min-h-screen flex items-center justify-center p-4 brand-page-gradient">
+      <div className="max-w-md w-full app-card rounded-xl p-6">
+        <h1 className="text-xl font-bold mb-2" style={{ color: 'var(--brand-text)' }}>{t('confirmTitle')}</h1>
+        <p className="mb-5" style={{ color: 'var(--brand-text)' }}>
+          {t('confirmMessage', { response: responseLabel })}
         </p>
 
         {status === 'success' ? (
-          <div className="p-3 rounded-lg bg-green-50 text-green-700 text-sm">{message}</div>
+          <div className="p-3 rounded-lg text-sm" style={{ backgroundColor: 'var(--brand-success-soft)', color: 'var(--brand-success)' }}>{message}</div>
         ) : (
           <>
             {status === 'error' && (
-              <div className="p-3 rounded-lg bg-red-50 text-red-700 text-sm mb-3">{message}</div>
+              <div className="p-3 rounded-lg text-sm mb-3" style={{ backgroundColor: 'var(--brand-danger-soft)', color: 'var(--brand-danger)' }}>{message}</div>
             )}
             <button
               onClick={submitRsvp}
               disabled={loading}
               className="w-full py-2.5 rounded-lg brand-button-solid disabled:opacity-50 transition-colors"
             >
-              {loading ? 'Speichert...' : `${responseLabel} bestätigen`}
+              {loading ? t('saving') : t('confirmAction', { response: responseLabel })}
             </button>
           </>
         )}

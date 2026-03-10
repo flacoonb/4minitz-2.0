@@ -5,6 +5,7 @@ import Settings from '@/models/Settings';
 import PendingNotification from '@/models/PendingNotification';
 import { decrypt } from '@/lib/crypto';
 import { sendPushToUserIds } from '@/lib/push-service';
+import { sanitizeBrandColors, hexToRgba } from '@/lib/brand-colors';
 import {
   isEmailIdentifier,
   lookupUsersByIdentifiers,
@@ -268,12 +269,57 @@ const translations = {
   },
 };
 
-const EMAIL_PRIMARY_BUTTON_STYLE =
-  'display: inline-block; background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%); color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 12px; font-weight: 600; margin-top: 24px; text-align: center; box-shadow: 0 10px 20px -8px rgba(37, 99, 235, 0.45); font-family: Inter, \"Segoe UI\", Roboto, Arial, sans-serif;';
+type EmailBrandTheme = {
+  primary: string;
+  primaryDark: string;
+  pageBackground: string;
+  cardBackground: string;
+  cardBorder: string;
+  footerBackground: string;
+  textColor: string;
+  mutedTextColor: string;
+  infoBackground: string;
+};
+
+async function getEmailBrandTheme(): Promise<EmailBrandTheme> {
+  try {
+    const settings = await Settings.findOne({}).sort({ updatedAt: -1 }).lean();
+    const settingsObj = settings as any;
+    const colors = sanitizeBrandColors(settingsObj?.systemSettings?.brandColors);
+    return {
+      primary: colors.primary,
+      primaryDark: colors.primaryDark,
+      pageBackground: colors.pageTo,
+      cardBackground: colors.card,
+      cardBorder: colors.cardBorder,
+      footerBackground: colors.pageFrom,
+      textColor: colors.text,
+      mutedTextColor: colors.textMuted,
+      infoBackground: hexToRgba(colors.surface, 0.88),
+    };
+  } catch {
+    return {
+      primary: '#6366F1',
+      primaryDark: '#4F46E5',
+      pageBackground: '#F1F5F9',
+      cardBackground: '#FFFFFF',
+      cardBorder: '#E2E8F0',
+      footerBackground: '#F8FAFC',
+      textColor: '#0F172A',
+      mutedTextColor: '#64748B',
+      infoBackground: '#F8FAFC',
+    };
+  }
+}
+
+function getEmailPrimaryButtonStyle(theme: EmailBrandTheme): string {
+  return `display: inline-block; background: linear-gradient(135deg, ${theme.primary} 0%, ${theme.primaryDark} 100%); color: #ffffff; padding: 14px 28px; text-decoration: none; border-radius: 12px; font-weight: 600; margin-top: 24px; text-align: center; box-shadow: 0 10px 20px -8px ${hexToRgba(theme.primary, 0.45)}; font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;`;
+}
 
 // Helper function to generate email HTML
-export async function generateEmailHTML(content: string): Promise<string> {
+export async function generateEmailHTML(content: string, theme?: EmailBrandTheme): Promise<string> {
   const orgName = await getOrgName();
+  const emailTheme = theme || await getEmailBrandTheme();
   return `
     <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
     <html xmlns="http://www.w3.org/1999/xhtml">
@@ -282,26 +328,26 @@ export async function generateEmailHTML(content: string): Promise<string> {
         <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
         <title>${orgName}</title>
       </head>
-      <body style="margin: 0; padding: 0; background-color: #f1f5f9; font-family: Inter, 'Segoe UI', Roboto, Arial, sans-serif; color: #0f172a;">
-        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: #f1f5f9;">
+      <body style="margin: 0; padding: 0; background-color: ${emailTheme.pageBackground}; font-family: Inter, 'Segoe UI', Roboto, Arial, sans-serif; color: ${emailTheme.textColor};">
+        <table border="0" cellpadding="0" cellspacing="0" width="100%" style="background-color: ${emailTheme.pageBackground};">
           <tr>
             <td align="center" style="padding: 32px 12px;">
-              <table border="0" cellpadding="0" cellspacing="0" width="620" style="background-color: #ffffff; border-radius: 16px; overflow: hidden; border: 1px solid #e2e8f0; box-shadow: 0 20px 40px -24px rgba(15, 23, 42, 0.35);">
+              <table border="0" cellpadding="0" cellspacing="0" width="620" style="background-color: ${emailTheme.cardBackground}; border-radius: 16px; overflow: hidden; border: 1px solid ${emailTheme.cardBorder}; box-shadow: 0 20px 40px -24px rgba(15, 23, 42, 0.35);">
                 <!-- Header -->
                 <tr>
-                  <td align="center" style="background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%); padding: 28px 24px; color: #ffffff;">
+                  <td align="center" style="background: linear-gradient(135deg, ${emailTheme.primary} 0%, ${emailTheme.primaryDark} 100%); padding: 28px 24px; color: #ffffff;">
                     <h1 style="margin: 0; font-size: 24px; font-weight: 700; letter-spacing: -0.01em; font-family: Inter, 'Segoe UI', Roboto, Arial, sans-serif;">${orgName}</h1>
                   </td>
                 </tr>
                 <!-- Content -->
                 <tr>
-                  <td style="padding: 32px 28px; color: #0f172a; font-size: 15px; line-height: 1.65;">
+                  <td style="padding: 32px 28px; color: ${emailTheme.textColor}; font-size: 15px; line-height: 1.65;">
                     ${content}
                   </td>
                 </tr>
                 <!-- Footer -->
                 <tr>
-                  <td align="center" style="background-color: #f8fafc; padding: 18px; color: #64748b; font-size: 12px; border-top: 1px solid #e2e8f0;">
+                  <td align="center" style="background-color: ${emailTheme.footerBackground}; padding: 18px; color: ${emailTheme.mutedTextColor}; font-size: 12px; border-top: 1px solid ${emailTheme.cardBorder};">
                     &copy; ${new Date().getFullYear()} ${orgName}
                   </td>
                 </tr>
@@ -382,6 +428,8 @@ export async function sendNewMinutesNotification(
   const seriesName = minute.meetingSeries.name ? `${minute.meetingSeries.project} – ${minute.meetingSeries.name}` : minute.meetingSeries.project;
   const date = new Date(minute.date).toLocaleDateString(locale);
   const appUrl = await getAppUrl();
+  const emailTheme = await getEmailBrandTheme();
+  const primaryButtonStyle = getEmailPrimaryButtonStyle(emailTheme);
   const minuteUrl = `${appUrl}/minutes/${minute._id}`;
   const minutePath = `/minutes/${minute._id}`;
 
@@ -409,7 +457,7 @@ export async function sendNewMinutesNotification(
     <p><strong>${t.greeting},</strong></p>
     <p>${t.intro(seriesName, date)}</p>
     
-    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 16px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #3b82f6; border-radius: 4px;">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 16px; background-color: ${emailTheme.infoBackground}; border: 1px solid ${emailTheme.cardBorder}; border-left: 4px solid ${emailTheme.primary}; border-radius: 4px;">
       <tr>
         <td style="padding: 16px;">
           <p style="margin: 0 0 8px 0;"><strong>${t.topicsCount(minute.topics?.length || 0)}</strong></p>
@@ -419,7 +467,7 @@ export async function sendNewMinutesNotification(
     </table>
 
     ${minute.participants && minute.participants.length > 0 ? `
-      <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 16px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #3b82f6; border-radius: 4px;">
+      <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 16px; background-color: ${emailTheme.infoBackground}; border: 1px solid ${emailTheme.cardBorder}; border-left: 4px solid ${emailTheme.primary}; border-radius: 4px;">
         <tr>
           <td style="padding: 16px;">
             <p style="margin: 0 0 8px 0;"><strong>${t.participantsList}</strong></p>
@@ -432,7 +480,7 @@ export async function sendNewMinutesNotification(
     ` : ''}
 
     <center>
-      <a href="${minuteUrl}" style="${EMAIL_PRIMARY_BUTTON_STYLE}">${t.viewButton}</a>
+      <a href="${minuteUrl}" style="${primaryButtonStyle}">${t.viewButton}</a>
     </center>
   `;
 
@@ -442,7 +490,7 @@ export async function sendNewMinutesNotification(
     to: directRecipients.join(', '),
     subject: t.subject(seriesName),
     text: `${t.intro(seriesName, date)}\n\n${t.topicsCount(minute.topics?.length || 0)}\n${t.actionItemsCount(actionItemsCount)}\n\n${t.viewButton}: ${minuteUrl}`,
-    html: await generateEmailHTML(htmlContent),
+    html: await generateEmailHTML(htmlContent, emailTheme),
   };
 
   try {
@@ -514,6 +562,8 @@ export async function sendActionItemAssignedNotification(
 
   const seriesName = minute.meetingSeries.name ? `${minute.meetingSeries.project} – ${minute.meetingSeries.name}` : minute.meetingSeries.project;
   const appUrl = await getAppUrl();
+  const emailTheme = await getEmailBrandTheme();
+  const primaryButtonStyle = getEmailPrimaryButtonStyle(emailTheme);
   const minuteUrl = `${appUrl}/minutes/${minute._id}`;
   const minutePath = `/minutes/${minute._id}`;
   const priorityColors = {
@@ -547,7 +597,7 @@ export async function sendActionItemAssignedNotification(
     <p><strong>${t.greeting},</strong></p>
     <p>${t.intro}</p>
     
-    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 16px; background-color: ${pBg}; border: 1px solid #e2e8f0; border-left: 4px solid ${pColor}; border-radius: 4px;">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 16px; background-color: ${pBg}; border: 1px solid ${emailTheme.cardBorder}; border-left: 4px solid ${pColor}; border-radius: 4px;">
       <tr>
         <td style="padding: 16px;">
           <p style="margin: 0 0 8px 0;"><strong>${t.actionItem}</strong> ${actionItem.subject}</p>
@@ -558,7 +608,7 @@ export async function sendActionItemAssignedNotification(
     </table>
 
     <center>
-      <a href="${minuteUrl}" style="${EMAIL_PRIMARY_BUTTON_STYLE}">${t.viewButton}</a>
+      <a href="${minuteUrl}" style="${primaryButtonStyle}">${t.viewButton}</a>
     </center>
   `;
 
@@ -568,7 +618,7 @@ export async function sendActionItemAssignedNotification(
     to: directRecipients.join(', '),
     subject: t.subject(seriesName),
     text: `${t.intro}\n\n${t.actionItem} ${actionItem.subject}\n${t.priority} ${actionItem.priority || 'medium'}\n\n${t.viewButton}: ${minuteUrl}`,
-    html: await generateEmailHTML(htmlContent),
+    html: await generateEmailHTML(htmlContent, emailTheme),
   };
 
   try {
@@ -593,6 +643,8 @@ export async function sendOverdueReminder(
   }
 
   const appUrl = await getAppUrl();
+  const emailTheme = await getEmailBrandTheme();
+  const primaryButtonStyle = getEmailPrimaryButtonStyle(emailTheme);
   const dashboardUrl = `${appUrl}/dashboard`;
 
   const htmlContent = `
@@ -600,7 +652,7 @@ export async function sendOverdueReminder(
     <p>${t.intro(overdueItems.length)}</p>
     
     ${overdueItems.map(item => `
-      <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 16px; background-color: #fef2f2; border: 1px solid #e2e8f0; border-left: 4px solid #ef4444; border-radius: 4px;">
+      <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 16px; background-color: #fef2f2; border: 1px solid ${emailTheme.cardBorder}; border-left: 4px solid #ef4444; border-radius: 4px;">
         <tr>
           <td style="padding: 16px;">
             <p style="margin: 0 0 8px 0;"><strong>${item.subject}</strong></p>
@@ -612,7 +664,7 @@ export async function sendOverdueReminder(
     `).join('')}
 
     <center>
-      <a href="${dashboardUrl}" style="${EMAIL_PRIMARY_BUTTON_STYLE}">${t.viewButton}</a>
+      <a href="${dashboardUrl}" style="${primaryButtonStyle}">${t.viewButton}</a>
     </center>
   `;
 
@@ -622,7 +674,7 @@ export async function sendOverdueReminder(
     to: userEmail,
     subject: t.subject(overdueItems.length),
     text: `${t.intro(overdueItems.length)}\n\n${overdueItems.map(item => `- ${item.subject} (${new Date(item.dueDate).toLocaleDateString(locale)})`).join('\n')}\n\n${t.viewButton}: ${dashboardUrl}`,
-    html: await generateEmailHTML(htmlContent),
+    html: await generateEmailHTML(htmlContent, emailTheme),
   };
 
   try {
@@ -641,6 +693,8 @@ export async function sendWelcomeEmail(
 ): Promise<void> {
   const t = translations[locale].welcome;
   const appUrl = await getAppUrl();
+  const emailTheme = await getEmailBrandTheme();
+  const primaryButtonStyle = getEmailPrimaryButtonStyle(emailTheme);
   const loginUrl = `${appUrl}/auth/login`;
 
   const htmlContent = `
@@ -648,7 +702,7 @@ export async function sendWelcomeEmail(
     <p>${t.intro}</p>
     
     <center>
-      <a href="${loginUrl}" style="${EMAIL_PRIMARY_BUTTON_STYLE}">${t.loginButton}</a>
+      <a href="${loginUrl}" style="${primaryButtonStyle}">${t.loginButton}</a>
     </center>
   `;
 
@@ -658,7 +712,7 @@ export async function sendWelcomeEmail(
     to: user.email,
     subject: t.subject,
     text: `${t.intro}\n\n${t.loginButton}: ${loginUrl}`,
-    html: await generateEmailHTML(htmlContent),
+    html: await generateEmailHTML(htmlContent, emailTheme),
   };
 
   try {
@@ -682,6 +736,8 @@ export async function sendVerificationEmail(
   const preferredAppUrl = getFirstPublicUrl([String(appUrlOverride || ''), resolvedAppUrl]);
   const fallbackAppUrl = getFirstValidUrl([String(appUrlOverride || ''), resolvedAppUrl]);
   const appUrl = (preferredAppUrl || fallbackAppUrl || resolvedAppUrl).replace(/\/+$/, '');
+  const emailTheme = await getEmailBrandTheme();
+  const primaryButtonStyle = getEmailPrimaryButtonStyle(emailTheme);
   const verifyUrl = `${appUrl}/auth/verify-email?token=${token}`;
 
   const htmlContent = `
@@ -689,7 +745,7 @@ export async function sendVerificationEmail(
     <p>${t.intro}</p>
     
     <center>
-      <a href="${verifyUrl}" style="${EMAIL_PRIMARY_BUTTON_STYLE}">${t.verifyButton}</a>
+      <a href="${verifyUrl}" style="${primaryButtonStyle}">${t.verifyButton}</a>
     </center>
     
     <p style="text-align: center; color: #6b7280; font-size: 14px; margin-top: 20px;">
@@ -703,7 +759,7 @@ export async function sendVerificationEmail(
     to: user.email,
     subject: t.subject,
     text: `${t.intro}\n\n${t.verifyButton}: ${verifyUrl}\n\n${t.expiryNote}`,
-    html: await generateEmailHTML(htmlContent),
+    html: await generateEmailHTML(htmlContent, emailTheme),
   };
 
   try {
@@ -728,6 +784,8 @@ export async function sendPendingTasksReminder(
   }
 
   const appUrl = await getAppUrl();
+  const emailTheme = await getEmailBrandTheme();
+  const primaryButtonStyle = getEmailPrimaryButtonStyle(emailTheme);
   const dashboardUrl = `${appUrl}/dashboard`;
   const name = user.firstName || '';
 
@@ -739,7 +797,7 @@ export async function sendPendingTasksReminder(
       const pColor = item.priority === 'high' ? '#ef4444' : item.priority === 'low' ? '#10b981' : '#f59e0b';
       const pBg = item.priority === 'high' ? '#fef2f2' : item.priority === 'low' ? '#f0fdf4' : '#fffbeb';
       return `
-      <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 16px; background-color: ${pBg}; border: 1px solid #e2e8f0; border-left: 4px solid ${pColor}; border-radius: 4px;">
+      <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 16px; background-color: ${pBg}; border: 1px solid ${emailTheme.cardBorder}; border-left: 4px solid ${pColor}; border-radius: 4px;">
         <tr>
           <td style="padding: 16px;">
             <p style="margin: 0 0 8px 0; font-weight: bold; font-size: 16px;">${item.subject}</p>
@@ -752,7 +810,7 @@ export async function sendPendingTasksReminder(
     }).join('')}
 
     <center>
-      <a href="${dashboardUrl}" style="${EMAIL_PRIMARY_BUTTON_STYLE}">${t.viewButton}</a>
+      <a href="${dashboardUrl}" style="${primaryButtonStyle}">${t.viewButton}</a>
     </center>
   `;
 
@@ -762,7 +820,7 @@ export async function sendPendingTasksReminder(
     to: user.email,
     subject: t.subject(tasks.length),
     text: `${t.intro(tasks.length)}\n\n${tasks.map(item => `- ${item.subject} (${item.dueDate ? new Date(item.dueDate).toLocaleDateString(locale) : 'No Date'})`).join('\n')}\n\n${t.viewButton}: ${dashboardUrl}`,
-    html: await generateEmailHTML(htmlContent),
+    html: await generateEmailHTML(htmlContent, emailTheme),
   };
 
   try {
@@ -823,6 +881,8 @@ export async function sendPasswordResetEmail(
 ): Promise<void> {
   const t = resetTranslations[locale];
   const appUrl = await getAppUrl();
+  const emailTheme = await getEmailBrandTheme();
+  const primaryButtonStyle = getEmailPrimaryButtonStyle(emailTheme);
   const resetUrl = `${appUrl}/auth/reset-password?token=${token}`;
 
   const fullName = [user.firstName, user.lastName]
@@ -835,7 +895,7 @@ export async function sendPasswordResetEmail(
     <p>${t.intro}</p>
 
     <center>
-      <a href="${resetUrl}" style="${EMAIL_PRIMARY_BUTTON_STYLE}">${t.resetButton}</a>
+      <a href="${resetUrl}" style="${primaryButtonStyle}">${t.resetButton}</a>
     </center>
 
     <p style="text-align: center; color: #6b7280; font-size: 14px; margin-top: 20px;">
@@ -849,7 +909,7 @@ export async function sendPasswordResetEmail(
     to: user.email,
     subject: t.subject,
     text: `${t.intro}\n\n${t.resetButton}: ${resetUrl}\n\n${t.expiryNote}`,
-    html: await generateEmailHTML(htmlContent),
+    html: await generateEmailHTML(htmlContent, emailTheme),
   };
 
   const transport = await getTransporter();
@@ -910,10 +970,12 @@ export async function sendMeetingInvitationEmail(
       ? 'Sie können Ihre Antwort später erneut über denselben Link ändern, solange der Link gültig ist.'
       : 'You can update your response later using the same link while it remains valid.';
 
+  const emailTheme = await getEmailBrandTheme();
+
   const htmlContent = `
     <p><strong>${greeting},</strong></p>
     <p>${intro}</p>
-    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 16px; background-color: #f8fafc; border: 1px solid #e2e8f0; border-left: 4px solid #3b82f6; border-radius: 4px;">
+    <table border="0" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom: 16px; background-color: ${emailTheme.infoBackground}; border: 1px solid ${emailTheme.cardBorder}; border-left: 4px solid ${emailTheme.primary}; border-radius: 4px;">
       <tr>
         <td style="padding: 16px;">
           <p style="margin: 0 0 8px 0;"><strong>${detailsLabel}</strong></p>
@@ -944,7 +1006,7 @@ export async function sendMeetingInvitationEmail(
       `${payload.location ? `${locationLabel}: ${payload.location}\n` : ''}` +
       `${payload.note ? `${noteLabel}: ${payload.note}\n` : ''}` +
       `\n${ctaAccept}: ${payload.acceptUrl}\n${ctaTentative}: ${payload.tentativeUrl}\n${ctaDecline}: ${payload.declineUrl}`,
-    html: await generateEmailHTML(htmlContent),
+    html: await generateEmailHTML(htmlContent, emailTheme),
   };
 
   const transport = await getTransporter();
@@ -972,6 +1034,8 @@ export async function sendMeetingCancellationEmail(
       ? `Die Sitzung "${payload.eventTitle}" (${payload.seriesName}) wurde abgesagt.`
       : `The meeting "${payload.eventTitle}" (${payload.seriesName}) has been cancelled.`;
 
+  const emailTheme = await getEmailBrandTheme();
+
   const htmlContent = `
     <p><strong>${greeting},</strong></p>
     <p>${intro}</p>
@@ -997,7 +1061,7 @@ export async function sendMeetingCancellationEmail(
       `${dateLabel}, ${timeText}\n` +
       `${payload.location ? `${locationLabel}: ${payload.location}\n` : ''}` +
       `${payload.note ? `${noteLabel}: ${payload.note}\n` : ''}`,
-    html: await generateEmailHTML(htmlContent),
+    html: await generateEmailHTML(htmlContent, emailTheme),
   };
 
   const transport = await getTransporter();

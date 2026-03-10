@@ -53,7 +53,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
               <ThemeProvider>
                 <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
                   {/* Modern Header with Glassmorphism */}
-                  <header className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md shadow-lg border-b border-white/20 dark:border-slate-800 sticky top-0 z-50 transition-colors duration-300">
+                  <header className="app-header-shell shadow-lg sticky top-0 z-50 transition-colors duration-300">
                     <div className="max-w-7xl mx-auto px-4 py-2 md:py-4">
                       <div className="flex justify-between items-center mb-2 md:mb-4">
                         <Header />
@@ -70,11 +70,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   </main>
 
                   {/* Footer */}
-                  <footer className="bg-gradient-to-br from-gray-50 to-gray-100 dark:from-slate-900 dark:to-slate-800 border-t border-gray-200 dark:border-slate-800 mt-12 transition-colors duration-300">
+                  <footer className="app-footer-shell mt-12 transition-colors duration-300">
                     <div className="max-w-7xl mx-auto px-4 py-6">
                       <div className="text-center">
-                        <p className="text-gray-800 dark:text-gray-200 font-semibold text-lg">{organizationName}</p>
-                        <p className="text-sm text-gray-600 dark:text-gray-400 mt-2">© Copyright by Bph</p>
+                        <p className="font-semibold text-lg" style={{ color: 'var(--brand-text)' }}>{organizationName}</p>
+                        <p className="text-sm mt-2 app-text-muted">© Copyright by Bph</p>
                       </div>
                     </div>
                   </footer>

@@ -7,11 +7,53 @@
   --brand-primary: #6366F1;
   --brand-primary-strong: #4F46E5;
   --brand-secondary: #8B5CF6;
+  --brand-accent: #06B6D4;
   --brand-page-from: #F8FAFC;
   --brand-page-to: #F1F5F9;
+  --brand-surface: #EEF2FF;
+  --brand-card: #FFFFFF;
+  --brand-card-border: #E2E8F0;
+  --brand-text: #0F172A;
+  --brand-text-muted: #64748B;
+  --brand-success: #16A34A;
+  --brand-warning: #D97706;
+  --brand-danger: #DC2626;
   --brand-primary-soft: rgba(99, 102, 241, 0.12);
   --brand-primary-border: rgba(99, 102, 241, 0.32);
   --brand-primary-shadow: rgba(99, 102, 241, 0.35);
+  --brand-surface-soft: rgba(238, 242, 255, 0.7);
+  --brand-card-soft: rgba(255, 255, 255, 0.82);
+  --brand-muted-soft: rgba(100, 116, 139, 0.14);
+  --brand-danger-soft: rgba(220, 38, 38, 0.12);
+  --brand-danger-border: rgba(220, 38, 38, 0.28);
+  --brand-warning-soft: rgba(217, 119, 6, 0.14);
+  --brand-warning-border: rgba(217, 119, 6, 0.28);
+  --brand-success-soft: rgba(22, 163, 74, 0.12);
+  --brand-success-border: rgba(22, 163, 74, 0.28);
+  --brand-dashboard-badge-series: #06B6D4;
+  --brand-dashboard-badge-series-soft: rgba(6, 182, 212, 0.14);
+  --brand-dashboard-badge-series-ink: #0789A1;
+  --brand-dashboard-badge-minutes: #0891B2;
+  --brand-dashboard-badge-minutes-soft: rgba(8, 145, 178, 0.14);
+  --brand-dashboard-badge-minutes-ink: #097A96;
+  --brand-dashboard-badge-drafts: #0E7490;
+  --brand-dashboard-badge-drafts-soft: rgba(14, 116, 144, 0.14);
+  --brand-dashboard-badge-drafts-ink: #106980;
+  --brand-dashboard-badge-tasks: #0F766E;
+  --brand-dashboard-badge-tasks-soft: rgba(15, 118, 110, 0.14);
+  --brand-dashboard-badge-tasks-ink: #116A63;
+  --brand-dashboard-badge-overdue: #0F766E;
+  --brand-dashboard-badge-overdue-soft: rgba(15, 118, 110, 0.14);
+  --brand-dashboard-badge-overdue-ink: #116A63;
+  --brand-dashboard-badge-upcoming: #0D9488;
+  --brand-dashboard-badge-upcoming-soft: rgba(13, 148, 136, 0.14);
+  --brand-dashboard-badge-upcoming-ink: #118073;
+  --brand-dashboard-badge-minute-draft: #0E7490;
+  --brand-dashboard-badge-minute-draft-soft: rgba(14, 116, 144, 0.14);
+  --brand-dashboard-badge-minute-draft-ink: #106980;
+  --brand-dashboard-badge-minute-final: #0891B2;
+  --brand-dashboard-badge-minute-final-soft: rgba(8, 145, 178, 0.14);
+  --brand-dashboard-badge-minute-final-ink: #097A96;
 }
 
 @theme inline {
@@ -39,7 +81,7 @@ body {
 }
 
 .brand-page-gradient {
-  background: linear-gradient(135deg, var(--brand-page-from) 0%, #ffffff 45%, var(--brand-page-to) 100%);
+  background: linear-gradient(135deg, var(--brand-page-from) 0%, var(--brand-card) 45%, var(--brand-page-to) 100%);
 }
 
 .brand-gradient-bg {
@@ -70,6 +112,101 @@ body {
 
 .brand-button-solid:hover {
   background-color: var(--brand-primary-strong);
+}
+
+.app-card {
+  background-color: var(--brand-card-soft);
+  border: 1px solid var(--brand-card-border);
+  color: var(--brand-text);
+  backdrop-filter: blur(8px);
+}
+
+.app-header-shell {
+  background-color: var(--brand-card-soft);
+  border-bottom: 1px solid var(--brand-card-border);
+  backdrop-filter: blur(12px);
+}
+
+.app-footer-shell {
+  background: linear-gradient(135deg, var(--brand-page-from) 0%, var(--brand-surface) 100%);
+  border-top: 1px solid var(--brand-card-border);
+}
+
+.app-text-muted {
+  color: var(--brand-text-muted);
+}
+
+/* Scoped mapper for legacy utility colors on admin pages */
+.brandize-admin :is(.text-slate-900, .text-slate-800, .text-slate-700, .text-gray-900, .text-gray-800, .text-gray-700),
+.brandize-legacy :is(.text-slate-900, .text-slate-800, .text-slate-700, .text-gray-900, .text-gray-800, .text-gray-700),
+.brandize-admin-settings :is(.text-slate-900, .text-slate-800, .text-slate-700, .text-gray-900, .text-gray-800, .text-gray-700) {
+  color: var(--brand-text) !important;
+}
+
+.brandize-admin :is(.text-slate-600, .text-slate-500, .text-slate-400, .text-gray-600, .text-gray-500, .text-gray-400),
+.brandize-legacy :is(.text-slate-600, .text-slate-500, .text-slate-400, .text-gray-600, .text-gray-500, .text-gray-400),
+.brandize-admin-settings :is(.text-slate-600, .text-slate-500, .text-slate-400, .text-gray-600, .text-gray-500, .text-gray-400) {
+  color: var(--brand-text-muted) !important;
+}
+
+.brandize-admin :is(.border-slate-300, .border-slate-200, .border-gray-300, .border-gray-200, .border-gray-100, .border-white\/50, .border-white\/60),
+.brandize-legacy :is(.border-slate-300, .border-slate-200, .border-gray-300, .border-gray-200, .border-gray-100, .border-white\/50, .border-white\/60),
+.brandize-admin-settings :is(.border-slate-300, .border-slate-200, .border-gray-300, .border-gray-200, .border-gray-100, .border-white\/50, .border-white\/60) {
+  border-color: var(--brand-card-border) !important;
+}
+
+.brandize-admin :is(.bg-slate-50, .bg-white\/70, .bg-white\/80, .bg-white\/90, .bg-gray-50),
+.brandize-legacy :is(.bg-slate-50, .bg-white\/70, .bg-white\/80, .bg-white\/90, .bg-gray-50),
+.brandize-admin-settings :is(.bg-slate-50, .bg-white\/70, .bg-white\/80, .bg-white\/90, .bg-gray-50) {
+  background-color: var(--brand-card-soft) !important;
+}
+
+.brandize-admin :is(.text-red-900, .text-red-800, .text-red-700, .text-red-600, .text-red-500),
+.brandize-legacy :is(.text-red-900, .text-red-800, .text-red-700, .text-red-600, .text-red-500),
+.brandize-admin-settings :is(.text-red-900, .text-red-800, .text-red-700, .text-red-600, .text-red-500) {
+  color: var(--brand-danger) !important;
+}
+
+.brandize-admin :is(.bg-red-50, .bg-red-100),
+.brandize-legacy :is(.bg-red-50, .bg-red-100),
+.brandize-admin-settings :is(.bg-red-50, .bg-red-100) {
+  background-color: var(--brand-danger-soft) !important;
+}
+
+.brandize-admin :is(.border-red-200, .border-red-300),
+.brandize-legacy :is(.border-red-200, .border-red-300),
+.brandize-admin-settings :is(.border-red-200, .border-red-300) {
+  border-color: var(--brand-danger-border) !important;
+}
+
+.brandize-admin :is(.text-green-900, .text-green-800, .text-green-700, .text-green-600, .text-green-500),
+.brandize-legacy :is(.text-green-900, .text-green-800, .text-green-700, .text-green-600, .text-green-500),
+.brandize-admin-settings :is(.text-green-900, .text-green-800, .text-green-700, .text-green-600, .text-green-500) {
+  color: var(--brand-success) !important;
+}
+
+.brandize-admin :is(.bg-green-50, .bg-green-100),
+.brandize-legacy :is(.bg-green-50, .bg-green-100),
+.brandize-admin-settings :is(.bg-green-50, .bg-green-100) {
+  background-color: var(--brand-success-soft) !important;
+}
+
+.brandize-admin :is(.border-green-200, .border-green-300),
+.brandize-legacy :is(.border-green-200, .border-green-300),
+.brandize-admin-settings :is(.border-green-200, .border-green-300) {
+  border-color: var(--brand-success-border) !important;
+}
+
+.brandize-admin :is(.text-yellow-900, .text-yellow-800, .text-yellow-700, .text-yellow-600, .text-amber-700, .text-orange-700),
+.brandize-legacy :is(.text-yellow-900, .text-yellow-800, .text-yellow-700, .text-yellow-600, .text-amber-700, .text-orange-700),
+.brandize-admin-settings :is(.text-yellow-900, .text-yellow-800, .text-yellow-700, .text-yellow-600, .text-amber-700, .text-orange-700) {
+  color: var(--brand-warning) !important;
+}
+
+.brandize-admin :is(.bg-yellow-50, .bg-yellow-100, .bg-amber-50, .bg-amber-100, .bg-orange-50, .bg-orange-100),
+.brandize-legacy :is(.bg-yellow-50, .bg-yellow-100, .bg-amber-50, .bg-amber-100, .bg-orange-50, .bg-orange-100),
+.brandize-admin-settings :is(.bg-yellow-50, .bg-yellow-100, .bg-amber-50, .bg-amber-100, .bg-orange-50, .bg-orange-100) {
+  background-color: var(--brand-warning-soft) !important;
 }
 
 /* Disable hover effects on touch devices */

@@ -33,6 +33,7 @@ export interface IMeetingSeries extends Document {
   name?: string;
   createdAt: Date;
   updatedAt: Date;
+  defaultTemplateId?: mongoose.Types.ObjectId;
   
   // Access Control
   visibleFor: string[];
@@ -169,6 +170,11 @@ const MeetingSeriesSchema = new Schema<IMeetingSeries>(
     },
     
     // Configuration
+    defaultTemplateId: {
+      type: Schema.Types.ObjectId,
+      ref: 'MinutesTemplate',
+      required: false,
+    },
     availableLabels: [LabelSchema],
     minutes: [{
       type: String,

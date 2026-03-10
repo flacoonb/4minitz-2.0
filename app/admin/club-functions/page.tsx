@@ -147,7 +147,7 @@ function AdminClubFunctionsPage() {
   };
 
   return (
-    <div className="min-h-screen brand-page-gradient py-6 px-4">
+    <div className="min-h-screen brand-page-gradient brandize-admin py-6 px-4">
       <div className="max-w-5xl mx-auto space-y-6">
         <div className="bg-white/90 rounded-2xl shadow-sm border border-gray-100 p-6">
           <div className="flex items-center justify-between gap-4">
