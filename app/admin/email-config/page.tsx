@@ -38,6 +38,13 @@ export default function EmailConfigPage() {
   const [sendingTest, setSendingTest] = useState(false);
   const [showDebug, setShowDebug] = useState(false);
 
+  const autofillIgnoreProps = {
+    autoComplete: 'off',
+    'data-1p-ignore': 'true',
+    'data-lpignore': 'true',
+    'data-bwignore': 'true',
+  } as const;
+
   useEffect(() => {
     const loadConfig = async () => {
       try {
@@ -320,11 +327,14 @@ export default function EmailConfigPage() {
                 {t('settings.host')}
               </label>
               <input
+                id="email-config-host"
+                name="email-config-host"
                 type="text"
                 value={config.host}
                 onChange={(e) => setConfig({ ...config, host: e.target.value })}
                 className="w-full px-3 py-2.5 min-h-11 border border-gray-300 rounded focus:ring-2 focus:ring-[var(--brand-primary)]"
                 placeholder="smtp.gmail.com"
+                {...autofillIgnoreProps}
               />
             </div>
 
@@ -334,11 +344,14 @@ export default function EmailConfigPage() {
                 {t('settings.port')}
               </label>
               <input
+                id="email-config-port"
+                name="email-config-port"
                 type="number"
                 value={config.port}
                 onChange={(e) => setConfig({ ...config, port: e.target.value })}
                 className="w-full px-3 py-2.5 min-h-11 border border-gray-300 rounded focus:ring-2 focus:ring-[var(--brand-primary)]"
                 placeholder="587"
+                {...autofillIgnoreProps}
               />
               <p className="text-xs text-gray-500 mt-1">
                 {t('settings.portHelp')}
@@ -350,6 +363,7 @@ export default function EmailConfigPage() {
               <input
                 type="checkbox"
                 id="secure"
+                name="secure"
                 checked={config.secure}
                 onChange={(e) => setConfig({ ...config, secure: e.target.checked })}
                 className="h-4 w-4 text-[var(--brand-primary)] focus:ring-[var(--brand-primary)] border-gray-300 rounded"
@@ -365,11 +379,17 @@ export default function EmailConfigPage() {
                 {t('settings.fromEmail')}
               </label>
               <input
+                id="email-config-from-email"
+                name="email-config-from-email"
                 type="email"
                 value={config.fromEmail}
                 onChange={(e) => setConfig({ ...config, fromEmail: e.target.value })}
                 className="w-full px-3 py-2.5 min-h-11 border border-gray-300 rounded focus:ring-2 focus:ring-[var(--brand-primary)]"
                 placeholder="noreply@protokoll-app.local"
+                autoComplete="email"
+                data-1p-ignore="true"
+                data-lpignore="true"
+                data-bwignore="true"
               />
             </div>
 
@@ -378,6 +398,7 @@ export default function EmailConfigPage() {
               <input
                 type="checkbox"
                 id="hasAuth"
+                name="hasAuth"
                 checked={config.hasAuth}
                 onChange={(e) => {
                   setConfig({ ...config, hasAuth: e.target.checked });
@@ -400,11 +421,17 @@ export default function EmailConfigPage() {
                   {t('settings.username')}
                 </label>
                 <input
+                  id="email-config-username"
+                  name="email-config-username"
                   type="text"
                   value={config.user || ''}
                   onChange={(e) => setConfig({ ...config, user: e.target.value })}
                   className="w-full px-3 py-2.5 min-h-11 border border-gray-300 rounded focus:ring-2 focus:ring-[var(--brand-primary)]"
                   placeholder="deine-email@example.com"
+                  autoComplete="username"
+                  data-1p-ignore="true"
+                  data-lpignore="true"
+                  data-bwignore="true"
                 />
               </div>
             )}
@@ -417,16 +444,23 @@ export default function EmailConfigPage() {
                 </label>
                 <div className="relative">
                   <input
+                    id="email-config-password"
+                    name="email-config-password"
                     type={showPassword ? 'text' : 'password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="w-full px-3 py-2.5 min-h-11 border border-gray-300 rounded focus:ring-2 focus:ring-[var(--brand-primary)]"
                     placeholder={t('settings.passwordPlaceholder')}
+                    autoComplete="new-password"
+                    data-1p-ignore="true"
+                    data-lpignore="true"
+                    data-bwignore="true"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 min-h-11 min-w-11 inline-flex items-center justify-center rounded-lg"
+                    aria-label={showPassword ? 'Hide password' : 'Show password'}
                   >
                     {showPassword ? '🙈' : '👁️'}
                   </button>
@@ -476,11 +510,17 @@ export default function EmailConfigPage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4">
             <input
+              id="email-config-test-email"
+              name="email-config-test-email"
               type="email"
               value={testEmail}
               onChange={(e) => setTestEmail(e.target.value)}
               placeholder="test@example.com"
               className="flex-1 px-3 py-2.5 min-h-11 border border-gray-300 rounded focus:ring-2 focus:ring-[var(--brand-primary)]"
+              autoComplete="email"
+              data-1p-ignore="true"
+              data-lpignore="true"
+              data-bwignore="true"
             />
             <button
               onClick={sendTestEmail}

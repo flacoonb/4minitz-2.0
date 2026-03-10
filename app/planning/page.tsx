@@ -155,6 +155,18 @@ export default function PlanningPage() {
     }
   }, [authLoading, user, canAccessPlanning, fetchPlanningData, router]);
 
+  useEffect(() => {
+    const shouldLockScroll = showCreateModal || Boolean(selectedCalendarEntry);
+    if (!shouldLockScroll) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [showCreateModal, selectedCalendarEntry]);
+
   const filteredEvents = useMemo(() => {
     if (statusFilter === 'all') return events;
     return events.filter((event) => event.status === statusFilter);
@@ -590,18 +602,18 @@ export default function PlanningPage() {
       </div>
 
       {selectedCalendarEntry && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="w-full max-w-lg app-card rounded-2xl shadow-2xl border overflow-hidden">
-            <div className="px-5 py-4 border-b flex items-center justify-between" style={{ borderColor: 'var(--brand-card-border)' }}>
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-black/50">
+          <div className="w-full max-w-lg max-h-[90vh] app-card rounded-2xl shadow-2xl border overflow-y-auto">
+            <div className="px-4 sm:px-5 py-3 sm:py-4 border-b flex items-center justify-between" style={{ borderColor: 'var(--brand-card-border)' }}>
               <h2 className="text-lg font-semibold" style={{ color: 'var(--brand-text)' }}>{t('entryModal.title')}</h2>
               <button
                 onClick={() => setSelectedCalendarEntry(null)}
-                className="w-9 h-9 rounded-lg hover:bg-[var(--brand-surface-soft)] app-text-muted"
+                className="min-h-11 min-w-11 inline-flex items-center justify-center rounded-lg hover:bg-[var(--brand-surface-soft)] app-text-muted"
               >
                 ✕
               </button>
             </div>
-            <div className="p-5 space-y-3">
+            <div className="p-4 sm:p-5 space-y-3">
               <div className="text-xs font-semibold uppercase tracking-wide app-text-muted">
                 {selectedCalendarEntry.kind === 'event' ? t('entryModal.typeEvent') : t('entryModal.typeMinute')}
               </div>
@@ -629,11 +641,11 @@ export default function PlanningPage() {
                 </div>
               )}
             </div>
-            <div className="px-5 py-4 border-t flex flex-wrap justify-end gap-2" style={{ borderColor: 'var(--brand-card-border)' }}>
+            <div className="px-4 sm:px-5 py-3 sm:py-4 border-t flex flex-col sm:flex-row sm:flex-wrap sm:justify-end gap-2" style={{ borderColor: 'var(--brand-card-border)' }}>
               {selectedCalendarEntry.minutesId && (
                 <Link
                   href={`/minutes/${selectedCalendarEntry.minutesId}`}
-                  className="px-3 py-2 rounded-lg border hover:bg-[var(--brand-surface-soft)] min-h-[40px] inline-flex items-center"
+                  className="w-full sm:w-auto px-3 py-2.5 rounded-lg border hover:bg-[var(--brand-surface-soft)] min-h-11 inline-flex items-center justify-center"
                   style={{ borderColor: 'var(--brand-card-border)', color: 'var(--brand-text)' }}
                 >
                   {t('openMinutes')}
@@ -642,7 +654,7 @@ export default function PlanningPage() {
               {selectedCalendarEntry.meetingSeriesId && (
                 <Link
                   href={`/meeting-series/${selectedCalendarEntry.meetingSeriesId}`}
-                  className="px-3 py-2 rounded-lg border hover:bg-[var(--brand-surface-soft)] min-h-[40px] inline-flex items-center"
+                  className="w-full sm:w-auto px-3 py-2.5 rounded-lg border hover:bg-[var(--brand-surface-soft)] min-h-11 inline-flex items-center justify-center"
                   style={{ borderColor: 'var(--brand-card-border)', color: 'var(--brand-text)' }}
                 >
                   {t('openSeries')}
@@ -650,7 +662,7 @@ export default function PlanningPage() {
               )}
               <button
                 onClick={() => setSelectedCalendarEntry(null)}
-                className="px-3 py-2 rounded-lg hover:brightness-95"
+                className="w-full sm:w-auto px-3 py-2.5 min-h-11 rounded-lg hover:brightness-95"
                 style={{ backgroundColor: 'var(--brand-surface-soft)', color: 'var(--brand-text)' }}
               >
                 {t('create.cancel')}
@@ -661,24 +673,24 @@ export default function PlanningPage() {
       )}
 
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-          <div className="w-full max-w-xl app-card rounded-2xl shadow-2xl border overflow-hidden">
-            <div className="px-5 py-4 border-b flex items-center justify-between" style={{ borderColor: 'var(--brand-card-border)' }}>
+        <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-3 sm:p-4 bg-black/50">
+          <div className="w-full max-w-xl max-h-[92vh] app-card rounded-2xl shadow-2xl border overflow-y-auto">
+            <div className="px-4 sm:px-5 py-3 sm:py-4 border-b flex items-center justify-between" style={{ borderColor: 'var(--brand-card-border)' }}>
               <h2 className="text-lg font-semibold" style={{ color: 'var(--brand-text)' }}>{t('create.title')}</h2>
               <button
                 onClick={() => setShowCreateModal(false)}
-                className="w-9 h-9 rounded-lg hover:bg-[var(--brand-surface-soft)] app-text-muted"
+                className="min-h-11 min-w-11 inline-flex items-center justify-center rounded-lg hover:bg-[var(--brand-surface-soft)] app-text-muted"
               >
                 ✕
               </button>
             </div>
-            <div className="p-5 space-y-3">
+            <div className="p-4 sm:p-5 space-y-3">
               <div>
                 <label className="block text-sm font-medium mb-1" style={{ color: 'var(--brand-text)' }}>{t('create.series')}</label>
                 <select
                   value={eventSeriesId}
                   onChange={(e) => setEventSeriesId(e.target.value)}
-                  className="w-full px-3 py-2.5 border rounded-lg"
+                  className="w-full px-3 py-2.5 min-h-11 border rounded-lg"
                   style={{ borderColor: 'var(--brand-card-border)', backgroundColor: 'var(--brand-card)', color: 'var(--brand-text)' }}
                 >
                   <option value="">{t('create.selectSeries')}</option>
@@ -694,7 +706,7 @@ export default function PlanningPage() {
                 <input
                   value={eventTitle}
                   onChange={(e) => setEventTitle(e.target.value)}
-                  className="w-full px-3 py-2.5 border rounded-lg"
+                  className="w-full px-3 py-2.5 min-h-11 border rounded-lg"
                   style={{ borderColor: 'var(--brand-card-border)', backgroundColor: 'var(--brand-card)', color: 'var(--brand-text)' }}
                   placeholder={t('create.titlePlaceholder')}
                 />
@@ -706,7 +718,7 @@ export default function PlanningPage() {
                     type="date"
                     value={selectedDate}
                     onChange={(e) => setSelectedDate(e.target.value)}
-                    className="w-full px-3 py-2.5 border rounded-lg"
+                    className="w-full px-3 py-2.5 min-h-11 border rounded-lg"
                     style={{ borderColor: 'var(--brand-card-border)', backgroundColor: 'var(--brand-card)', color: 'var(--brand-text)' }}
                   />
                 </div>
@@ -716,7 +728,7 @@ export default function PlanningPage() {
                     type="time"
                     value={eventStartTime}
                     onChange={(e) => setEventStartTime(e.target.value)}
-                    className="w-full px-3 py-2.5 border rounded-lg"
+                    className="w-full px-3 py-2.5 min-h-11 border rounded-lg"
                     style={{ borderColor: 'var(--brand-card-border)', backgroundColor: 'var(--brand-card)', color: 'var(--brand-text)' }}
                   />
                 </div>
@@ -726,7 +738,7 @@ export default function PlanningPage() {
                     type="time"
                     value={eventEndTime}
                     onChange={(e) => setEventEndTime(e.target.value)}
-                    className="w-full px-3 py-2.5 border rounded-lg"
+                    className="w-full px-3 py-2.5 min-h-11 border rounded-lg"
                     style={{ borderColor: 'var(--brand-card-border)', backgroundColor: 'var(--brand-card)', color: 'var(--brand-text)' }}
                   />
                 </div>
@@ -736,7 +748,7 @@ export default function PlanningPage() {
                 <input
                   value={eventLocation}
                   onChange={(e) => setEventLocation(e.target.value)}
-                  className="w-full px-3 py-2.5 border rounded-lg"
+                  className="w-full px-3 py-2.5 min-h-11 border rounded-lg"
                   style={{ borderColor: 'var(--brand-card-border)', backgroundColor: 'var(--brand-card)', color: 'var(--brand-text)' }}
                   placeholder={t('create.locationPlaceholder')}
                 />
@@ -746,7 +758,7 @@ export default function PlanningPage() {
                 <textarea
                   value={eventNote}
                   onChange={(e) => setEventNote(e.target.value)}
-                  className="w-full px-3 py-2.5 border rounded-lg"
+                  className="w-full px-3 py-2.5 border rounded-lg min-h-[96px]"
                   style={{ borderColor: 'var(--brand-card-border)', backgroundColor: 'var(--brand-card)', color: 'var(--brand-text)' }}
                   rows={3}
                   placeholder={t('create.notePlaceholder')}
@@ -754,10 +766,10 @@ export default function PlanningPage() {
               </div>
               {createError && <div className="text-sm text-[var(--brand-danger)]">{createError}</div>}
             </div>
-            <div className="px-5 py-4 border-t flex justify-end gap-2" style={{ borderColor: 'var(--brand-card-border)' }}>
+            <div className="px-4 sm:px-5 py-3 sm:py-4 border-t flex flex-col sm:flex-row sm:justify-end gap-2" style={{ borderColor: 'var(--brand-card-border)' }}>
               <button
                 onClick={() => setShowCreateModal(false)}
-                className="px-4 py-2 rounded-lg hover:brightness-95"
+                className="w-full sm:w-auto px-4 py-2.5 min-h-11 rounded-lg hover:brightness-95"
                 style={{ backgroundColor: 'var(--brand-surface-soft)', color: 'var(--brand-text)' }}
               >
                 {t('create.cancel')}
@@ -765,7 +777,7 @@ export default function PlanningPage() {
               <button
                 onClick={createEvent}
                 disabled={creatingEvent}
-                className="px-4 py-2 rounded-lg brand-button-solid disabled:opacity-50"
+                className="w-full sm:w-auto px-4 py-2.5 min-h-11 rounded-lg brand-button-solid disabled:opacity-50"
               >
                 {creatingEvent ? t('create.creating') : t('create.submit')}
               </button>

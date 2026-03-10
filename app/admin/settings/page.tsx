@@ -585,75 +585,6 @@ const AdminSettings = () => {
                 <p className="text-slate-600 break-words">{t('subtitle')}</p>
               </div>
             </div>
-            
-            <div className="hidden sm:flex fixed right-4 bottom-4 z-50 flex-col sm:flex-row sm:items-center gap-3 bg-white/90 backdrop-blur-sm p-2 rounded-xl border border-white/60 shadow-lg">
-              {hasChanges && (
-                <span className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm font-medium">
-                  {t('unsavedChanges')}
-                </span>
-              )}
-              <button
-                onClick={handleReset}
-                className="flex items-center justify-center gap-2 px-4 py-2 min-h-11 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
-                title={t('reset')}
-              >
-                <RotateCcw className="w-4 h-4" />
-                {t('reset')}
-              </button>
-              <button
-                onClick={handleSave}
-                disabled={saving || !hasChanges}
-                className="flex items-center justify-center gap-2 px-6 py-3 min-h-11 brand-button-primary rounded-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
-              >
-                {saving ? (
-                  <>
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                    {tCommon('saving')}
-                  </>
-                ) : (
-                  <>
-                    <Save className="w-4 h-4" />
-                    {t('save')}
-                  </>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Mobile sticky save button */}
-        <div className="sm:hidden sticky top-32 z-40 mb-4">
-          {hasChanges && (
-            <div className="mb-2 px-3 py-1 bg-orange-100 text-orange-800 rounded-lg text-xs font-medium text-center">
-              {t('unsavedChanges')}
-            </div>
-          )}
-          <div className="grid grid-cols-1 min-[420px]:grid-cols-2 gap-2">
-            <button
-              onClick={handleReset}
-              className="w-full flex items-center justify-center gap-2 px-4 py-2.5 min-h-11 text-slate-600 bg-white/90 border border-slate-200 rounded-xl transition-colors"
-              title={t('reset')}
-            >
-              <RotateCcw className="w-4 h-4" />
-              {t('reset')}
-            </button>
-            <button
-              onClick={handleSave}
-              disabled={saving || !hasChanges}
-              className="w-full flex items-center justify-center gap-2 px-6 py-3 min-h-11 brand-button-primary rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
-            >
-              {saving ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                  {tCommon('saving')}
-                </>
-              ) : (
-                <>
-                  <Save className="w-4 h-4" />
-                  {t('save')}
-                </>
-              )}
-            </button>
           </div>
         </div>
 
@@ -1184,6 +1115,48 @@ const AdminSettings = () => {
             )}
 
             {/* Categories Tab removed */}
+          </div>
+        </div>
+
+        {/* Sticky Action Bar */}
+        <div className="sticky bottom-3 z-40 mt-4 pb-[env(safe-area-inset-bottom)]">
+          <div className="rounded-2xl bg-white border border-slate-200 shadow-lg p-3">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              {hasChanges ? (
+                <span className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm font-medium text-center sm:text-left">
+                  {t('unsavedChanges')}
+                </span>
+              ) : (
+                <span />
+              )}
+              <div className="grid grid-cols-1 min-[420px]:grid-cols-2 gap-2 w-full sm:w-auto">
+                <button
+                  onClick={handleReset}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 min-h-11 text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors"
+                  title={t('reset')}
+                >
+                  <RotateCcw className="w-4 h-4" />
+                  {t('reset')}
+                </button>
+                <button
+                  onClick={handleSave}
+                  disabled={saving || !hasChanges}
+                  className="w-full flex items-center justify-center gap-2 px-6 py-3 min-h-11 brand-button-primary rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg"
+                >
+                  {saving ? (
+                    <>
+                      <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                      {tCommon('saving')}
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4" />
+                      {t('save')}
+                    </>
+                  )}
+                </button>
+              </div>
+            </div>
           </div>
         </div>
 
