@@ -1,6 +1,6 @@
 [Unit]
 Description=4Minitz 2.0 Application
-Documentation=https://github.com/flacoonb/4minitz
+Documentation=https://github.com/flacoonb/4minitz-2.0
 After=network.target mongodb.service
 
 [Service]

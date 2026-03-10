@@ -1,19 +1,16 @@
 #!/usr/bin/env bash
 
 # 4Minitz 2.0 - Full Installer
-# Usage: curl -sL https://raw.githubusercontent.com/flacoonb/4minitz-2.0/main/install.sh | sudo bash
+# Usage:
+#   curl -fsSLO https://raw.githubusercontent.com/flacoonb/4minitz-2.0/main/install.sh
+#   less install.sh
+#   sudo bash install.sh
 
 set -euo pipefail
 
 REPO_URL="https://github.com/flacoonb/4minitz-2.0.git"
 NODE_MAJOR_REQUIRED=24
 INSTALL_BASENAME="4minitz-2.0"
-
-if [ -n "${SUDO_USER:-}" ]; then
-    INSTALL_DIR="/home/$SUDO_USER/$INSTALL_BASENAME"
-else
-    INSTALL_DIR="/root/$INSTALL_BASENAME"
-fi
 
 # Colors
 GREEN='\033[0;32m'
@@ -24,11 +21,76 @@ NC='\033[0m' # No Color
 echo -e "${BLUE}🚀 4Minitz 2.0 Installer${NC}"
 echo "========================"
 
-# 1. Check Root
+# 1. Check privileges and runtime expectations
 if [ "$EUID" -ne 0 ]; then 
     echo -e "${RED}❌ Please run this script as root (sudo).${NC}"
     exit 1
 fi
+
+if [ -z "${SUDO_USER:-}" ] || [ "${SUDO_USER:-}" = "root" ]; then
+    echo -e "${RED}❌ Please run this installer via sudo from a regular user account.${NC}"
+    echo "   Example: sudo bash install.sh"
+    echo "   Direct root login is not supported."
+    exit 1
+fi
+
+if ! id "$SUDO_USER" >/dev/null 2>&1; then
+    echo -e "${RED}❌ Could not resolve sudo user '$SUDO_USER'.${NC}"
+    exit 1
+fi
+
+if [ ! -f /etc/os-release ]; then
+    echo -e "${RED}❌ Unsupported system: missing /etc/os-release.${NC}"
+    echo "   This installer supports Debian/Ubuntu systems with systemd."
+    exit 1
+fi
+
+source /etc/os-release
+if [[ "${ID:-}" != "debian" && "${ID:-}" != "ubuntu" ]]; then
+    echo -e "${RED}❌ Unsupported distribution: '${ID:-unknown}'.${NC}"
+    echo "   This installer supports Debian/Ubuntu systems with systemd."
+    exit 1
+fi
+
+if ! command -v apt-get >/dev/null 2>&1; then
+    echo -e "${RED}❌ Unsupported system: apt-get not found.${NC}"
+    exit 1
+fi
+
+if ! command -v sudo >/dev/null 2>&1; then
+    echo -e "${RED}❌ Missing dependency: sudo command not found.${NC}"
+    exit 1
+fi
+
+if ! command -v systemctl >/dev/null 2>&1 || [ ! -d /run/systemd/system ]; then
+    echo -e "${RED}❌ Unsupported init system: systemd is required.${NC}"
+    exit 1
+fi
+
+USER_HOME=$(getent passwd "$SUDO_USER" | cut -d: -f6)
+if [ -z "$USER_HOME" ] || [ ! -d "$USER_HOME" ]; then
+    echo -e "${RED}❌ Could not determine home directory for user '$SUDO_USER'.${NC}"
+    exit 1
+fi
+
+INSTALL_DIR="${USER_HOME}/${INSTALL_BASENAME}"
+
+ensure_docker_group_membership() {
+    local user="$1"
+
+    if ! getent group docker >/dev/null 2>&1; then
+        echo -e "${RED}❌ Docker group not found after Docker installation/check.${NC}"
+        exit 1
+    fi
+
+    if id -nG "$user" | grep -qw docker; then
+        echo -e "${GREEN}✅ User $user is already in docker group.${NC}"
+        return
+    fi
+
+    usermod -aG docker "$user"
+    echo -e "${GREEN}✅ Added user $user to docker group.${NC}"
+}
 
 # 2. System Update & Dependencies
 echo -e "\n${BLUE}🔄 Updating system and installing base dependencies...${NC}"
@@ -61,13 +123,11 @@ fi
 if ! command -v docker &> /dev/null; then
     echo -e "${BLUE}🐳 Installing Docker...${NC}"
     curl -fsSL https://get.docker.com | sh
-    if [ -n "$SUDO_USER" ]; then
-        usermod -aG docker "$SUDO_USER"
-        echo -e "${GREEN}✅ Added user $SUDO_USER to docker group.${NC}"
-    fi
 else
     echo -e "${GREEN}✅ Docker is already installed.${NC}"
 fi
+
+ensure_docker_group_membership "$SUDO_USER"
 
 # 5. Clone Repository
 if [ -d "$INSTALL_DIR" ]; then
@@ -94,16 +154,11 @@ echo -e "\n${BLUE}⚙️  Starting setup...${NC}"
 cd "$INSTALL_DIR"
 chmod +x setup.sh
 
-# Fix permissions if running as sudo
-if [ -n "$SUDO_USER" ]; then
-    chown -R "$SUDO_USER:$SUDO_USER" "$INSTALL_DIR"
-    
-    echo -e "${BLUE}👤 Running setup as user $SUDO_USER...${NC}"
-    # Run as original user with a login shell for predictable environment.
-    sudo -H -u "$SUDO_USER" bash -lc "cd \"$INSTALL_DIR\" && ./setup.sh"
-else
-    ./setup.sh
-fi
+chown -R "$SUDO_USER:$SUDO_USER" "$INSTALL_DIR"
+
+echo -e "${BLUE}👤 Running setup as user $SUDO_USER...${NC}"
+# Run as original user with a login shell for predictable environment.
+sudo -H -u "$SUDO_USER" bash -lc "cd \"$INSTALL_DIR\" && ./setup.sh"
 
 # 7. Install Systemd Service (Optional)
 echo -e "\n${BLUE}🚀 Service Installation${NC}"
@@ -117,11 +172,7 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
     SYSTEMD_DIR="/etc/systemd/system"
     
     # Determine user who owns the directory (to run the service as)
-    if [ -n "$SUDO_USER" ]; then
-        APP_USER="$SUDO_USER"
-    else
-        APP_USER=$(stat -c '%U' "$APP_DIR")
-    fi
+    APP_USER="$SUDO_USER"
 
     echo "   App Directory: $APP_DIR"
     echo "   App User:      $APP_USER"
@@ -159,6 +210,7 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
         echo "   Status: sudo systemctl status ${APP_NAME}.service"
     else
         echo -e "${RED}❌ Service file template '$SERVICE_FILE' not found.${NC}"
+        exit 1
     fi
 else
     echo -e "\n${GREEN}✅ Installation complete!${NC}"
