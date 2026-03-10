@@ -1,5 +1,9 @@
 # NXTMinutes
 
+<p align="center">
+  <img src="./public/logo.svg" alt="NXTMinutes logo" width="420" />
+</p>
+
 Modern meeting minutes app with task tracking, templates, and collaborative preparation.
 
 ## Overview
@@ -10,16 +14,20 @@ Minutes can be created visually or in Markdown mode, then managed consistently t
 ## Current Feature Set
 
 - Meeting series management with moderators, participants, and visibility rules
+- Calendar-based planning with meeting events and RSVP tracking
 - Minutes creation and editing (visual editor + Markdown editor mode)
 - Markdown helpers: quick-insert snippets and `@` mention suggestions
 - Protocol templates:
   - global templates (admin scope)
   - series templates (series scope)
   - template selection when creating a new minute
+- Meeting-event to minutes flow (prepare/follow-up directly from planned meetings)
 - Action-item lifecycle (status, priority, due date, responsibles, notes/decisions)
 - Open task views and cross-series task import
+- Club-function based responsibles and mention tokens
 - PDF export and configurable PDF settings/layout
 - User/admin management with role-based permissions
+- Admin modules: system settings, users, templates, club functions, email config, PDF config
 - Auth flows: login/logout, registration, email verification, forgot/reset password
 - Browser push notifications (service worker + VAPID)
 - i18n support (`de`, `en`)
@@ -94,11 +102,15 @@ Use `.env.example` as source of truth. Important keys:
 - `npm run build` - production build
 - `npm run start` - start production server
 - `npm run lint` - lint
+- `npm test` - test command placeholder (currently no automated tests)
 - `npm run type-check` - TypeScript check
 - `npm run security:check` - security regression checks for key hardening rules
 - `npm run security:audit` - dependency audit (`npm audit --omit=dev --audit-level=high`)
+- `npm run clean` - remove `.next` build artifacts
+- `npm run rebuild` - clean and rebuild production bundle
 - `npm run setup` - interactive setup script
 - `npm run sample-data` - seed sample data
+- `npm run migrate-identifiers` - migrate identifiers to user IDs
 - `npm run create-demo-user` - create demo user
 - `npm run create-user -- <email> <password> <firstName> <lastName>` - create user via CLI
 
@@ -135,6 +147,7 @@ scripts/      Setup and data helper scripts
 ## Notes
 
 - CI runs include lint/type-check/security-check/build.
+- `npm test` is currently a placeholder and exits successfully.
 - CodeQL runs in a separate GitHub Actions workflow.
 - Dependabot PR auto-merge is configured for compatible updates.
 - Username validation supports international letters (e.g., umlauts).
