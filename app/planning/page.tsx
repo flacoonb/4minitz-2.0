@@ -271,6 +271,16 @@ export default function PlanningPage() {
     return days;
   }, [calendarMonth]);
 
+  const calendarWeekdays = useMemo(() => {
+    const monday = new Date(Date.UTC(2024, 0, 1)); // 2024-01-01 is Monday
+    const formatter = new Intl.DateTimeFormat(locale, { weekday: 'short', timeZone: 'UTC' });
+    return Array.from({ length: 7 }, (_, index) => {
+      const day = new Date(monday);
+      day.setUTCDate(monday.getUTCDate() + index);
+      return formatter.format(day).replace(/\.$/, '');
+    });
+  }, [locale]);
+
   const openCreateForDate = (date: Date) => {
     if (!canCreateEvent) return;
     resetCreateForm(formatDateKey(date));
@@ -346,7 +356,7 @@ export default function PlanningPage() {
             </div>
             <button
               onClick={fetchPlanningData}
-              className="px-4 py-2.5 rounded-xl brand-button-primary min-h-[44px] shadow-md"
+              className="w-full sm:w-auto px-4 py-2.5 rounded-xl brand-button-primary min-h-[44px] shadow-md"
             >
               {t('refresh')}
             </button>
@@ -356,20 +366,26 @@ export default function PlanningPage() {
         <div className="app-card rounded-2xl shadow-sm overflow-hidden">
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 p-4">
             <div className="xl:col-span-2">
-              <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center justify-between mb-2 sm:mb-3 gap-2">
                 <button
                   onClick={() =>
                     setCalendarMonth(
                       (current) => new Date(current.getFullYear(), current.getMonth() - 1, 1)
                     )
                   }
-                  className="px-3 py-2 rounded-lg border hover:bg-[var(--brand-surface-soft)]"
+                  className="min-h-10 min-w-10 sm:min-h-11 sm:min-w-11 px-2 sm:px-3 py-2 rounded-lg border hover:bg-[var(--brand-surface-soft)]"
                   style={{ borderColor: 'var(--brand-card-border)', color: 'var(--brand-text)' }}
+                  aria-label={t('calendar.previousMonth')}
                 >
                   ‹
                 </button>
-                <div className="text-base font-semibold" style={{ color: 'var(--brand-text)' }}>
-                  {calendarMonth.toLocaleDateString(locale, { month: 'long', year: 'numeric' })}
+                <div className="font-semibold text-center px-1 sm:px-2 leading-tight" style={{ color: 'var(--brand-text)' }}>
+                  <span className="sm:hidden">
+                    {calendarMonth.toLocaleDateString(locale, { month: 'short', year: '2-digit' })}
+                  </span>
+                  <span className="hidden sm:inline">
+                    {calendarMonth.toLocaleDateString(locale, { month: 'long', year: 'numeric' })}
+                  </span>
                 </div>
                 <button
                   onClick={() =>
@@ -377,21 +393,22 @@ export default function PlanningPage() {
                       (current) => new Date(current.getFullYear(), current.getMonth() + 1, 1)
                     )
                   }
-                  className="px-3 py-2 rounded-lg border hover:bg-[var(--brand-surface-soft)]"
+                  className="min-h-10 min-w-10 sm:min-h-11 sm:min-w-11 px-2 sm:px-3 py-2 rounded-lg border hover:bg-[var(--brand-surface-soft)]"
                   style={{ borderColor: 'var(--brand-card-border)', color: 'var(--brand-text)' }}
+                  aria-label={t('calendar.nextMonth')}
                 >
                   ›
                 </button>
               </div>
 
-              <div className="grid grid-cols-7 gap-1 text-xs font-medium app-text-muted mb-1">
-                {['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'].map((weekday) => (
-                  <div key={weekday} className="px-2 py-1 text-center">
+              <div className="grid grid-cols-7 gap-0.5 sm:gap-1 text-[11px] sm:text-xs font-medium app-text-muted mb-1">
+                {calendarWeekdays.map((weekday, index) => (
+                  <div key={`${weekday}-${index}`} className="px-0.5 sm:px-2 py-1 text-center truncate">
                     {weekday}
                   </div>
                 ))}
               </div>
-              <div className="grid grid-cols-7 gap-1">
+              <div className="grid grid-cols-7 gap-0.5 sm:gap-1">
                 {calendarDays.map((day) => {
                   const dayKey = formatDateKey(day);
                   const dayEntries = calendarEntriesByDate[dayKey] || [];
@@ -403,7 +420,7 @@ export default function PlanningPage() {
                       onClick={() => {
                         if (canCreateEvent && isCurrentMonth) openCreateForDate(day);
                       }}
-                      className={`min-h-[84px] rounded-lg border p-1.5 text-left transition-colors ${
+                      className={`min-h-[68px] sm:min-h-[84px] rounded-md sm:rounded-lg border p-1 sm:p-1.5 text-left transition-colors ${
                         isCurrentMonth
                           ? 'bg-[var(--brand-card)] border-[var(--brand-card-border)] hover:border-[var(--brand-primary-border)] hover:bg-[var(--brand-primary-soft)]'
                           : 'bg-[var(--brand-surface-soft)] border-[var(--brand-card-border)] text-[var(--brand-text-muted)]'
@@ -411,9 +428,9 @@ export default function PlanningPage() {
                     >
                       <div className="flex items-center justify-between mb-1">
                         <div
-                          className={`text-xs font-semibold ${
+                          className={`text-[11px] sm:text-xs font-semibold ${
                             isToday
-                              ? 'inline-flex w-6 h-6 items-center justify-center rounded-full bg-[var(--brand-primary)] text-white'
+                              ? 'inline-flex w-5 h-5 sm:w-6 sm:h-6 items-center justify-center rounded-full bg-[var(--brand-primary)] text-white'
                               : ''
                           }`}
                         >
@@ -425,15 +442,16 @@ export default function PlanningPage() {
                               e.stopPropagation();
                               openCreateForDate(day);
                             }}
-                            className="w-5 h-5 rounded text-[12px] text-[var(--brand-primary)] hover:bg-[var(--brand-primary-soft)]"
+                            className="min-h-6 min-w-6 sm:min-h-7 sm:min-w-7 rounded text-[11px] sm:text-[12px] text-[var(--brand-primary)] hover:bg-[var(--brand-primary-soft)]"
                             title={t('calendar.createButton')}
+                            aria-label={t('calendar.createButton')}
                           >
                             +
                           </button>
                         )}
                       </div>
                       {dayEntries.length > 0 && (
-                        <div className="space-y-1">
+                        <div className="space-y-0.5 sm:space-y-1">
                           {dayEntries.slice(0, 3).map((entry) => (
                             <button
                               key={entry.id}
@@ -441,7 +459,7 @@ export default function PlanningPage() {
                                 e.stopPropagation();
                                 setSelectedCalendarEntry(entry);
                               }}
-                              className={`w-full text-left truncate text-[10px] px-1.5 py-0.5 rounded ${
+                              className={`w-full text-left truncate leading-tight text-[9px] sm:text-[10px] px-1 py-0.5 rounded ${
                                 entry.kind === 'event'
                                   ? 'bg-[var(--brand-primary-soft)] text-[var(--brand-primary-strong)] hover:brightness-95'
                                   : 'bg-[var(--brand-success-soft)] text-[var(--brand-success)] hover:brightness-95'
@@ -452,7 +470,7 @@ export default function PlanningPage() {
                             </button>
                           ))}
                           {dayEntries.length > 3 && (
-                            <div className="text-[10px] app-text-muted px-1">{`+${dayEntries.length - 3}`}</div>
+                            <div className="text-[9px] sm:text-[10px] app-text-muted px-1">{`+${dayEntries.length - 3}`}</div>
                           )}
                         </div>
                       )}

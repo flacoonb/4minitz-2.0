@@ -102,7 +102,7 @@ function AdminTemplatesPage() {
   const [topics, setTopics] = useState<MinutesMarkdownTopic[]>([]);
   const [markdown, setMarkdown] = useState('## Traktandum\n- [i] Info');
   const [markdownWarnings, setMarkdownWarnings] = useState<string[]>([]);
-  const [allUsers, setAllUsers] = useState<User[]>([]);
+  const [_allUsers, setAllUsers] = useState<User[]>([]);
   const [clubFunctions, setClubFunctions] = useState<ClubFunctionEntry[]>([]);
   const [mentionSuggestions, setMentionSuggestions] = useState<MentionCandidate[]>([]);
   const [mentionStartIndex, setMentionStartIndex] = useState<number | null>(null);
@@ -533,19 +533,19 @@ function AdminTemplatesPage() {
                     <div className="flex flex-wrap gap-2">
                       <button
                         onClick={() => startEdit(template)}
-                        className="px-3 py-2 min-h-[40px] bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 text-sm text-gray-800 dark:text-slate-200"
+                        className="px-3 py-2.5 min-h-11 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 text-sm text-gray-800 dark:text-slate-200"
                       >
                         Bearbeiten
                       </button>
                       <button
                         onClick={() => toggleActive(template)}
-                        className="px-3 py-2 min-h-[40px] bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 text-sm text-gray-800 dark:text-slate-200"
+                        className="px-3 py-2.5 min-h-11 bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-600 rounded-lg hover:bg-gray-50 dark:hover:bg-slate-700 text-sm text-gray-800 dark:text-slate-200"
                       >
                         {template.isActive ? 'Deaktivieren' : 'Aktivieren'}
                       </button>
                       <button
                         onClick={() => removeTemplate(template._id)}
-                        className="px-3 py-2 min-h-[40px] bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm"
+                        className="px-3 py-2.5 min-h-11 bg-red-600 text-white rounded-lg hover:bg-red-700 text-sm"
                       >
                         Löschen
                       </button>
@@ -560,15 +560,15 @@ function AdminTemplatesPage() {
         {showEditorModal && (
           <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
             <div className="bg-white dark:bg-slate-900 w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-2xl shadow-2xl border border-gray-100 dark:border-slate-700 p-5 space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold text-gray-900 dark:text-slate-100">{editingTemplate ? 'Vorlage bearbeiten' : 'Neue Vorlage'}</h2>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <h2 className="text-xl font-semibold text-gray-900 dark:text-slate-100 break-words">{editingTemplate ? 'Vorlage bearbeiten' : 'Neue Vorlage'}</h2>
               <button
                 type="button"
                 onClick={() => {
                   setShowEditorModal(false);
                   closeMentionSuggestions();
                 }}
-                className="px-3 py-2 min-h-[40px] bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-slate-200 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-700"
+                className="w-full sm:w-auto px-3 py-2.5 min-h-11 bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-slate-200 rounded-lg hover:bg-gray-200 dark:hover:bg-slate-700"
               >
                 Schliessen
               </button>
@@ -585,7 +585,7 @@ function AdminTemplatesPage() {
             <textarea value={globalNote} onChange={(e) => setGlobalNote(e.target.value)} placeholder="Globaler Hinweis (optional)" className="w-full px-3 py-2.5 border border-gray-300 rounded-xl min-h-[80px]" />
 
             <div className="space-y-3">
-              <div className="inline-flex rounded-lg border border-gray-200 overflow-hidden">
+              <div className="grid grid-cols-2 w-full sm:w-auto rounded-lg border border-gray-200 overflow-hidden">
                 <button
                   type="button"
                   onClick={() => {
@@ -597,7 +597,7 @@ function AdminTemplatesPage() {
                     setEditorMode('visual');
                     closeMentionSuggestions();
                   }}
-                  className={`px-4 py-2 text-sm font-medium ${
+                  className={`px-4 py-2.5 min-h-11 text-sm font-medium ${
                     editorMode === 'visual' ? 'bg-[var(--brand-primary)] text-white' : 'bg-white text-gray-700 hover:bg-gray-50'
                   }`}
                 >
@@ -606,7 +606,7 @@ function AdminTemplatesPage() {
                 <button
                   type="button"
                   onClick={() => setEditorMode('markdown')}
-                  className={`px-4 py-2 text-sm font-medium ${
+                  className={`px-4 py-2.5 min-h-11 text-sm font-medium ${
                     editorMode === 'markdown' ? 'bg-[var(--brand-primary)] text-white' : 'bg-white text-gray-700 hover:bg-gray-50'
                   }`}
                 >
@@ -616,28 +616,28 @@ function AdminTemplatesPage() {
 
               {editorMode === 'visual' ? (
                 <div className="space-y-3">
-                  <button type="button" onClick={addTopic} className="px-3 py-2 text-sm bg-gray-100 border border-gray-200 rounded-lg hover:bg-gray-200 min-h-[40px]">+ Traktandum</button>
+                  <button type="button" onClick={addTopic} className="px-3 py-2.5 text-sm bg-gray-100 border border-gray-200 rounded-lg hover:bg-gray-200 min-h-11">+ Traktandum</button>
                   {topics.map((topic, topicIndex) => (
                     <div key={`topic-${topicIndex}`} className="border border-gray-200 rounded-xl p-3 space-y-3 bg-gray-50/80">
-                      <div className="flex gap-2">
+                      <div className="flex flex-col min-[420px]:flex-row gap-2">
                         <input value={topic.subject} onChange={(e) => updateTopic(topicIndex, 'subject', e.target.value)} placeholder="Traktandum" className="flex-1 px-3 py-2 border border-gray-300 rounded-lg" />
-                        <button type="button" onClick={() => removeTopic(topicIndex)} className="px-3 py-2 text-sm bg-red-600 text-white rounded-lg min-h-[40px]">Löschen</button>
+                        <button type="button" onClick={() => removeTopic(topicIndex)} className="w-full min-[420px]:w-auto px-3 py-2.5 text-sm bg-red-600 text-white rounded-lg min-h-11">Löschen</button>
                       </div>
-                      <div className="flex gap-2">
+                      <div className="flex flex-wrap gap-2">
                         <button type="button" onClick={() => addItem(topicIndex, 'infoItem')} className="px-3 py-1.5 text-xs bg-[var(--brand-primary-soft)] text-[var(--brand-primary-strong)] rounded">+ Info</button>
                         <button type="button" onClick={() => addItem(topicIndex, 'actionItem')} className="px-3 py-1.5 text-xs bg-amber-100 text-amber-800 rounded">+ Aufgabe</button>
                       </div>
                       {(topic.infoItems || []).map((item, itemIndex) => (
                         <div key={`item-${itemIndex}`} className="bg-white border border-gray-200 rounded-xl p-3 space-y-2 shadow-sm">
-                          <div className="flex gap-2">
-                            <select value={item.itemType} onChange={(e) => updateItem(topicIndex, itemIndex, { itemType: e.target.value as 'actionItem' | 'infoItem' })} className="px-2 py-2 border border-gray-300 rounded-lg text-sm">
+                          <div className="flex flex-col min-[520px]:flex-row gap-2">
+                            <select value={item.itemType} onChange={(e) => updateItem(topicIndex, itemIndex, { itemType: e.target.value as 'actionItem' | 'infoItem' })} className="px-2 py-2.5 min-h-11 border border-gray-300 rounded-lg text-sm">
                               <option value="infoItem">Info</option>
                               <option value="actionItem">Aufgabe</option>
                             </select>
-                            <input value={item.subject} onChange={(e) => updateItem(topicIndex, itemIndex, { subject: e.target.value })} placeholder="Betreff" className="flex-1 px-3 py-2 border border-gray-300 rounded-lg" />
-                            <button type="button" onClick={() => removeItem(topicIndex, itemIndex)} className="px-3 py-2 text-xs bg-red-100 text-red-700 rounded">Entfernen</button>
+                            <input value={item.subject} onChange={(e) => updateItem(topicIndex, itemIndex, { subject: e.target.value })} placeholder="Betreff" className="flex-1 px-3 py-2.5 min-h-11 border border-gray-300 rounded-lg" />
+                            <button type="button" onClick={() => removeItem(topicIndex, itemIndex)} className="w-full min-[520px]:w-auto px-3 py-2.5 min-h-11 text-xs bg-red-100 text-red-700 rounded">Entfernen</button>
                           </div>
-                          <textarea value={item.details || ''} onChange={(e) => updateItem(topicIndex, itemIndex, { details: e.target.value })} placeholder="Details" className="w-full px-3 py-2 border border-gray-300 rounded-lg min-h-[70px]" />
+                          <textarea value={item.details || ''} onChange={(e) => updateItem(topicIndex, itemIndex, { details: e.target.value })} placeholder="Details" className="w-full px-3 py-2.5 border border-gray-300 rounded-lg min-h-[70px]" />
                           <div>
                             <p className="text-xs text-gray-600 mb-1">Verantwortliche (Mehrfachauswahl)</p>
                             <select
@@ -648,7 +648,7 @@ function AdminTemplatesPage() {
                                   responsibles: Array.from(e.target.selectedOptions).map((option) => option.value),
                                 })
                               }
-                              className="w-full px-3 py-2 border border-gray-300 rounded-lg min-h-[110px]"
+                              className="w-full px-3 py-2.5 border border-gray-300 rounded-lg min-h-[110px]"
                             >
                               {responsibleOptions.map((option) => (
                                 <option
@@ -663,21 +663,21 @@ function AdminTemplatesPage() {
                           </div>
                           {item.itemType === 'actionItem' && (
                             <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                              <select value={item.status || 'open'} onChange={(e) => updateItem(topicIndex, itemIndex, { status: e.target.value as 'open' | 'in-progress' | 'completed' | 'cancelled' })} className="px-3 py-2 border border-gray-300 rounded-lg">
+                              <select value={item.status || 'open'} onChange={(e) => updateItem(topicIndex, itemIndex, { status: e.target.value as 'open' | 'in-progress' | 'completed' | 'cancelled' })} className="px-3 py-2.5 min-h-11 border border-gray-300 rounded-lg">
                                 <option value="open">Offen</option>
                                 <option value="in-progress">In Arbeit</option>
                                 <option value="completed">Erledigt</option>
                                 <option value="cancelled">Abgebrochen</option>
                               </select>
-                              <select value={item.priority || 'medium'} onChange={(e) => updateItem(topicIndex, itemIndex, { priority: e.target.value as 'high' | 'medium' | 'low' })} className="px-3 py-2 border border-gray-300 rounded-lg">
+                              <select value={item.priority || 'medium'} onChange={(e) => updateItem(topicIndex, itemIndex, { priority: e.target.value as 'high' | 'medium' | 'low' })} className="px-3 py-2.5 min-h-11 border border-gray-300 rounded-lg">
                                 <option value="high">Hoch</option>
                                 <option value="medium">Mittel</option>
                                 <option value="low">Tief</option>
                               </select>
-                              <input type="date" value={item.dueDate || ''} onChange={(e) => updateItem(topicIndex, itemIndex, { dueDate: e.target.value })} className="px-3 py-2 border border-gray-300 rounded-lg" />
+                              <input type="date" value={item.dueDate || ''} onChange={(e) => updateItem(topicIndex, itemIndex, { dueDate: e.target.value })} className="px-3 py-2.5 min-h-11 border border-gray-300 rounded-lg" />
                             </div>
                           )}
-                          <textarea value={item.notes || ''} onChange={(e) => updateItem(topicIndex, itemIndex, { notes: e.target.value })} placeholder={item.itemType === 'actionItem' ? 'Beschluss' : 'Information'} className="w-full px-3 py-2 border border-gray-300 rounded-lg min-h-[60px]" />
+                          <textarea value={item.notes || ''} onChange={(e) => updateItem(topicIndex, itemIndex, { notes: e.target.value })} placeholder={item.itemType === 'actionItem' ? 'Beschluss' : 'Information'} className="w-full px-3 py-2.5 border border-gray-300 rounded-lg min-h-[60px]" />
                         </div>
                       ))}
                     </div>
@@ -758,11 +758,11 @@ function AdminTemplatesPage() {
               )}
             </div>
 
-            <div className="sticky bottom-0 -mx-5 px-5 py-3 border-t border-gray-200 bg-white/95 backdrop-blur-sm flex gap-3">
+            <div className="sticky bottom-0 -mx-5 px-5 py-3 border-t border-gray-200 bg-white/95 backdrop-blur-sm flex flex-col sm:flex-row gap-3">
               <button
                 onClick={saveTemplate}
                 disabled={saving || !name.trim()}
-                className="px-4 py-2.5 min-h-[44px] brand-button-primary rounded-xl disabled:opacity-50"
+                className="w-full sm:w-auto px-4 py-2.5 min-h-[44px] brand-button-primary rounded-xl disabled:opacity-50"
               >
                 {saving ? 'Speichern...' : editingTemplate ? 'Änderungen speichern' : 'Vorlage erstellen'}
               </button>
@@ -771,7 +771,7 @@ function AdminTemplatesPage() {
                   setShowEditorModal(false);
                   closeMentionSuggestions();
                 }}
-                className="px-4 py-2.5 min-h-[44px] bg-gray-100 rounded-xl hover:bg-gray-200"
+                className="w-full sm:w-auto px-4 py-2.5 min-h-[44px] bg-gray-100 rounded-xl hover:bg-gray-200"
               >
                 Abbrechen
               </button>

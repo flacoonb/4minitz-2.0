@@ -120,7 +120,7 @@ export default function SeriesMinutesPage() {
 
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto py-8 flex justify-center">
+      <div className="max-w-7xl mx-auto px-4 py-8 flex justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
       </div>
     );
@@ -128,12 +128,12 @@ export default function SeriesMinutesPage() {
 
   if (error) {
     return (
-      <div className="max-w-7xl mx-auto py-8">
+      <div className="max-w-7xl mx-auto px-4 py-8">
         <div className="bg-red-50 border border-red-200 rounded-2xl p-6 text-center">
-          <p className="text-red-600">{error}</p>
+          <p className="text-red-600 break-words">{error}</p>
           <button
             onClick={() => { fetchSeriesData(); fetchMinutes(); }}
-            className="mt-4 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+            className="mt-4 w-full sm:w-auto px-4 py-2.5 min-h-11 bg-red-600 text-white rounded-lg hover:bg-red-700"
           >
             {t('tryAgain')}
           </button>
@@ -143,32 +143,32 @@ export default function SeriesMinutesPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto py-8 space-y-8">
+    <div className="max-w-7xl mx-auto px-4 py-5 sm:py-8 space-y-6 sm:space-y-8">
       {/* Breadcrumb Navigation */}
-      <nav className="flex items-center space-x-2 text-sm text-gray-600">
+      <nav className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-gray-600">
         <Link href="/minutes" className="hover:text-green-600 transition-colors">
           {t('minutes')}
         </Link>
         <span>&gt;</span>
-        <span className="text-gray-900 font-medium">
+        <span className="text-gray-900 font-medium break-words">
           {series ? `${series.project} - ${series.name}` : t('loading')}
         </span>
       </nav>
 
       {/* Header Section */}
-      <div className="bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 rounded-2xl p-8 border border-green-100">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg">
-              <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 rounded-2xl p-4 sm:p-8 border border-green-100">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex items-start sm:items-center gap-3 sm:gap-4 min-w-0">
+            <div className="w-12 h-12 sm:w-16 sm:h-16 bg-gradient-to-br from-green-500 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg shrink-0">
+              <svg className="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 712-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
-            <div>
-              <h1 className="text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
+            <div className="min-w-0">
+              <h1 className="text-2xl sm:text-4xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent break-words leading-tight">
                 {series ? `${series.project} - ${series.name}` : t('minutes')}
               </h1>
-              <p className="text-lg text-gray-600 mt-2">
+              <p className="text-sm sm:text-lg text-gray-600 mt-2">
                 {filteredMinutes.length === 1
                   ? t('minuteFound', { count: filteredMinutes.length })
                   : t('minutesFound', { count: filteredMinutes.length })
@@ -179,7 +179,7 @@ export default function SeriesMinutesPage() {
 
           <Link
             href={`/minutes/${seriesId}/new`}
-            className="inline-flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 min-h-11 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl shadow-lg hover:shadow-xl sm:hover:scale-105 transition-all duration-200"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -190,7 +190,7 @@ export default function SeriesMinutesPage() {
       </div>
 
       {/* Search and Filter Section */}
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-100 shadow-lg">
+      <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-gray-100 shadow-lg">
         <div className="flex flex-col sm:flex-row gap-4">
           <div className="flex-1">
             <div className="relative">
@@ -207,16 +207,16 @@ export default function SeriesMinutesPage() {
                 placeholder={t('searchPlaceholder')}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white/90 backdrop-blur-sm transition-all"
+                className="w-full pl-10 pr-4 py-3 min-h-11 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-white/90 backdrop-blur-sm transition-all"
               />
             </div>
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex gap-3 w-full sm:w-auto">
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-4 py-3 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 bg-white/90 backdrop-blur-sm"
+              className="w-full px-4 py-3 min-h-11 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-500 bg-white/90 backdrop-blur-sm"
             >
               <option value="">{t('allStatus')}</option>
               <option value="draft">{t('drafts')}</option>
@@ -227,9 +227,9 @@ export default function SeriesMinutesPage() {
       </div>
 
       {/* Minutes List */}
-      <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 border border-gray-100 shadow-lg">
+      <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 sm:p-8 border border-gray-100 shadow-lg">
         {filteredMinutes.length === 0 ? (
-          <div className="text-center py-12">
+          <div className="text-center py-10 sm:py-12">
             <svg className="mx-auto w-24 h-24 text-gray-300 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 712-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
             </svg>
@@ -239,7 +239,7 @@ export default function SeriesMinutesPage() {
             </p>
             <Link
               href={`/minutes/${seriesId}/new`}
-              className="inline-flex items-center gap-2 px-6 py-3 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-all"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 min-h-11 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-all"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -248,15 +248,15 @@ export default function SeriesMinutesPage() {
             </Link>
           </div>
         ) : (
-          <div className="grid gap-6">
+          <div className="grid gap-4 sm:gap-6">
             {filteredMinutes.map(minute => (
               <Link
                 key={minute._id}
                 href={`/minutes/${seriesId}/${minute._id}`}
-                className="group block p-6 bg-gradient-to-r from-white to-gray-50 border border-gray-200 rounded-2xl shadow-lg hover:shadow-2xl hover:border-green-300 hover:scale-[1.02] transition-all duration-300"
+                className="group block p-4 sm:p-6 bg-gradient-to-r from-white to-gray-50 border border-gray-200 rounded-2xl shadow-lg hover:shadow-2xl hover:border-green-300 sm:hover:scale-[1.02] transition-all duration-300"
               >
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-3">
+                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between mb-4">
+                  <div className="flex items-center gap-3 flex-wrap">
                     <div className={`w-3 h-3 rounded-full ${minute.isFinalized ? 'bg-green-500' : 'bg-yellow-500'}`}></div>
                     <span className={`text-sm font-semibold px-3 py-1 rounded-lg ${minute.isFinalized
                         ? 'text-green-700 bg-green-100'
@@ -265,22 +265,22 @@ export default function SeriesMinutesPage() {
                       {minute.isFinalized ? t('finalized') : t('draft')}
                     </span>
                   </div>
-                  <span className="text-sm text-gray-500">
+                  <span className="text-xs sm:text-sm text-gray-500">
                     {formatDate(minute.date)}
                   </span>
                 </div>
 
-                <h3 className="text-xl font-semibold text-gray-800 mb-2 group-hover:text-green-700 transition-colors">
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-800 mb-2 group-hover:text-green-700 transition-colors break-words">
                   {t('minuteFrom', { date: formatDateShort(minute.date) })}
                 </h3>
 
                 {minute.globalNote && (
-                  <p className="text-gray-600 mb-4 line-clamp-2">
+                  <p className="text-gray-600 mb-4 line-clamp-2 break-words">
                     {minute.globalNote}
                   </p>
                 )}
 
-                <div className="flex items-center justify-between text-sm text-gray-500">
+                <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between text-sm text-gray-500">
                   <span>
                     {t('participants', { count: minute.participants?.length || 0 })}
                   </span>

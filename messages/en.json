@@ -66,6 +66,8 @@
       "quickCreateTitle": "Monthly Calendar",
       "quickCreateHint": "Click a date to start planning a meeting on that day.",
       "createButton": "Plan new meeting",
+      "previousMonth": "Previous month",
+      "nextMonth": "Next month",
       "noPermission": "You do not have permission to create meetings."
     },
     "entryModal": {

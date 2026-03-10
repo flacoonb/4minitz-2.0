@@ -111,7 +111,7 @@ function SortableTopic({
         <button
           type="button"
           onClick={() => deleteTopic(topicIndex)}
-          className="self-start sm:self-auto p-2 min-h-10 min-w-10 text-red-600 hover:bg-red-50 rounded-lg transition-colors inline-flex items-center justify-center"
+          className="self-start sm:self-auto p-2 min-h-11 min-w-11 text-red-600 hover:bg-red-50 rounded-lg transition-colors inline-flex items-center justify-center"
           title={tCommon('delete')}
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -573,7 +573,7 @@ function SortableInfoItem({
             <button
               type="button"
               onClick={() => setIsEditing(true)}
-              className="p-1.5 min-h-10 min-w-10 text-[var(--brand-primary)] hover:bg-[var(--brand-primary-soft)] rounded-lg transition-colors inline-flex items-center justify-center"
+              className="p-1.5 min-h-11 min-w-11 text-[var(--brand-primary)] hover:bg-[var(--brand-primary-soft)] rounded-lg transition-colors inline-flex items-center justify-center"
               title={tCommon('edit')}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -583,7 +583,7 @@ function SortableInfoItem({
             <button
               type="button"
               onClick={() => deleteInfoItem(topicIndex, itemIndex)}
-              className="p-1.5 min-h-10 min-w-10 text-red-600 hover:bg-red-50 rounded-lg transition-colors inline-flex items-center justify-center"
+              className="p-1.5 min-h-11 min-w-11 text-red-600 hover:bg-red-50 rounded-lg transition-colors inline-flex items-center justify-center"
               title={tCommon('delete')}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -643,7 +643,7 @@ function SortableInfoItem({
             <button
               type="button"
               onClick={() => deleteInfoItem(topicIndex, itemIndex)}
-                className="p-1.5 min-h-10 min-w-10 text-red-600 hover:bg-red-100 rounded-lg transition-colors inline-flex items-center justify-center"
+                className="p-1.5 min-h-11 min-w-11 text-red-600 hover:bg-red-100 rounded-lg transition-colors inline-flex items-center justify-center"
               title={tCommon('delete')}
             >
               <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -835,7 +835,7 @@ function SortableInfoItem({
                     type="date"
                     value={item.dueDate?.split('T')[0] || ''}
                     onChange={(e) => updateInfoItem(topicIndex, itemIndex, 'dueDate', e.target.value)}
-                    className="w-full px-3 py-2 text-sm min-h-10 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-[var(--brand-primary)] bg-white"
+                    className="w-full px-3 py-2 text-sm min-h-11 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-[var(--brand-primary)] bg-white"
                   />
                 </div>
 
@@ -858,7 +858,7 @@ function SortableInfoItem({
                           key={status}
                           type="button"
                           onClick={() => updateInfoItem(topicIndex, itemIndex, 'status', status)}
-                          className={`w-full min-h-10 p-2 rounded-lg border-2 transition-all ${(item.status || 'open') === status
+                          className={`w-full min-h-11 p-2 rounded-lg border-2 transition-all ${(item.status || 'open') === status
                             ? `${statusConfig.bg} ${statusConfig.border} shadow-md`
                             : 'bg-white border-gray-300 hover:border-gray-400'
                             }`}
@@ -975,7 +975,7 @@ function SortableInfoItem({
                       {initials}
                     </div>
                     <div className="flex-1 min-w-0">
-                      <span className={`block text-sm font-semibold leading-tight truncate ${isSelected ? 'text-[var(--brand-primary-strong)]' : 'text-gray-700'}`}>
+                      <span className={`block text-sm font-semibold leading-tight break-words ${isSelected ? 'text-[var(--brand-primary-strong)]' : 'text-gray-700'}`}>
                         {entry.label}
                       </span>
                       <span className="block text-xs text-gray-500">
@@ -2151,7 +2151,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
                           updated[index] = { ...updated[index], attendance: 'present' };
                           setFormData(prev => ({ ...prev, participantsWithStatus: updated }));
                         }}
-                        className={`w-full lg:w-auto px-4 py-2.5 min-h-10 rounded-lg font-medium text-sm transition-all ${participant.attendance === 'present'
+                        className={`w-full lg:w-auto px-4 py-2.5 min-h-11 rounded-lg font-medium text-sm transition-all ${participant.attendance === 'present'
                           ? 'bg-green-500 text-white shadow-md'
                           : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                           }`}
@@ -2165,7 +2165,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
                           updated[index] = { ...updated[index], attendance: 'excused' };
                           setFormData(prev => ({ ...prev, participantsWithStatus: updated }));
                         }}
-                        className={`w-full lg:w-auto px-4 py-2.5 min-h-10 rounded-lg font-medium text-sm transition-all ${participant.attendance === 'excused'
+                        className={`w-full lg:w-auto px-4 py-2.5 min-h-11 rounded-lg font-medium text-sm transition-all ${participant.attendance === 'excused'
                           ? 'bg-yellow-500 text-white shadow-md'
                           : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                           }`}
@@ -2179,7 +2179,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
                           updated[index] = { ...updated[index], attendance: 'absent' };
                           setFormData(prev => ({ ...prev, participantsWithStatus: updated }));
                         }}
-                        className={`w-full lg:w-auto px-4 py-2.5 min-h-10 rounded-lg font-medium text-sm transition-all ${participant.attendance === 'absent'
+                        className={`w-full lg:w-auto px-4 py-2.5 min-h-11 rounded-lg font-medium text-sm transition-all ${participant.attendance === 'absent'
                           ? 'bg-red-500 text-white shadow-md'
                           : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
                           }`}
@@ -2207,7 +2207,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
                             }));
                             setMeetingSeriesMembers(prev => prev.filter((member) => member.userId !== guestId));
                           }}
-                          className="w-full lg:w-auto px-3 py-2.5 min-h-10 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors flex items-center justify-center"
+                          className="w-full lg:w-auto px-3 py-2.5 min-h-11 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors flex items-center justify-center"
                           title={t('removeGuest')}
                         >
                           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -2253,7 +2253,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
                     type="button"
                     onClick={addGuest}
                     disabled={!newGuestName.trim()}
-                    className="w-full min-[420px]:w-auto px-3 py-2.5 min-h-11 bg-[var(--brand-primary)] text-white rounded-lg text-sm font-medium hover:bg-[var(--brand-primary-strong)] disabled:opacity-50 whitespace-nowrap"
+                    className="w-full min-[420px]:w-auto px-3 py-2.5 min-h-11 bg-[var(--brand-primary)] text-white rounded-lg text-sm font-medium hover:bg-[var(--brand-primary-strong)] disabled:opacity-50"
                   >
                     {t('add')}
                   </button>
@@ -2263,7 +2263,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
                       setShowGuestInput(false);
                       setNewGuestName('');
                     }}
-                    className="w-full min-[420px]:w-auto px-3 py-2.5 min-h-11 text-gray-600 hover:bg-gray-100 rounded-lg text-sm whitespace-nowrap"
+                    className="w-full min-[420px]:w-auto px-3 py-2.5 min-h-11 text-gray-600 hover:bg-gray-100 rounded-lg text-sm"
                   >
                     {tCommon('cancel')}
                   </button>
@@ -2292,7 +2292,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
                     type="button"
                     onClick={fetchPendingTasks}
                     disabled={loadingPendingTasks}
-                    className="w-full sm:w-auto px-4 py-2.5 min-h-10 bg-amber-500 text-white rounded-lg font-medium hover:bg-amber-600 transition-colors disabled:opacity-50"
+                    className="w-full sm:w-auto px-4 py-2.5 min-h-11 bg-amber-500 text-white rounded-lg font-medium hover:bg-amber-600 transition-colors disabled:opacity-50"
                   >
                     {loadingPendingTasks ? tCommon('loading') : t('loadPendingTasks')}
                   </button>
@@ -2356,7 +2356,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
                               <button
                                 type="button"
                                 onClick={(e) => importPendingTask(e, task)}
-                                className="w-full sm:w-auto px-4 py-2.5 min-h-10 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 transition-colors inline-flex items-center justify-center gap-2"
+                                className="w-full sm:w-auto px-4 py-2.5 min-h-11 bg-green-500 text-white rounded-lg font-medium hover:bg-green-600 transition-colors inline-flex items-center justify-center gap-2"
                               >
                                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -2377,11 +2377,11 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-100">
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <h2 className="text-2xl font-bold text-gray-900">{t('topics')}</h2>
-              <div className="inline-flex rounded-lg border border-gray-300 overflow-hidden">
+              <div className="grid grid-cols-2 w-full sm:w-auto rounded-lg border border-gray-300 overflow-hidden">
                 <button
                   type="button"
                   onClick={() => setEditorMode('visual')}
-                  className={`px-4 py-2 text-sm font-semibold transition-colors ${
+                  className={`px-4 py-2.5 min-h-11 text-sm font-semibold transition-colors ${
                     editorMode === 'visual' ? 'bg-[var(--brand-primary)] text-white' : 'bg-white text-gray-700 hover:bg-gray-50'
                   }`}
                 >
@@ -2390,7 +2390,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
                 <button
                   type="button"
                   onClick={() => setEditorMode('markdown')}
-                  className={`px-4 py-2 text-sm font-semibold transition-colors ${
+                  className={`px-4 py-2.5 min-h-11 text-sm font-semibold transition-colors ${
                     editorMode === 'markdown' ? 'bg-[var(--brand-primary)] text-white' : 'bg-white text-gray-700 hover:bg-gray-50'
                   }`}
                 >

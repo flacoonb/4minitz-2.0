@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import type { CSSProperties } from 'react';
 import { Inter } from "next/font/google";
 import { NextIntlClientProvider } from 'next-intl';
@@ -29,6 +29,12 @@ export const metadata: Metadata = {
     shortcut: ["/favicon.ico", "/favicon-32x32.png"],
     apple: [{ url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" }],
   },
+};
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
 };
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
@@ -63,7 +69,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   </header>
 
                   {/* Main Content with modern spacing */}
-                  <main className="max-w-7xl mx-auto px-4 py-8">
+                  <main className="max-w-7xl mx-auto px-4 py-5 sm:py-8">
                     <div className="animate-in fade-in duration-500">
                       {children}
                     </div>

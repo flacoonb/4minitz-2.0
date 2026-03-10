@@ -66,6 +66,8 @@
       "quickCreateTitle": "Monatskalender",
       "quickCreateHint": "Klicke auf ein Datum, um direkt eine Sitzung an diesem Tag zu planen.",
       "createButton": "Neue Sitzung planen",
+      "previousMonth": "Vorheriger Monat",
+      "nextMonth": "Nächster Monat",
       "noPermission": "Sie haben keine Berechtigung, neue Sitzungen zu planen."
     },
     "entryModal": {

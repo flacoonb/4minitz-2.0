@@ -1607,7 +1607,7 @@ export default function PdfConfigPage() {
             </div>
             <button
               onClick={() => setMessage(null)}
-              className="text-white hover:text-gray-200 transition-colors min-h-10 min-w-10 inline-flex items-center justify-center rounded-lg"
+              className="text-white hover:text-gray-200 transition-colors min-h-11 min-w-11 inline-flex items-center justify-center rounded-lg"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

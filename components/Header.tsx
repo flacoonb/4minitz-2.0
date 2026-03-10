@@ -73,8 +73,8 @@ export default function Header() {
   }, [fetchSettings]);
 
   return (
-    <div className="flex items-center gap-3">
-      <div className="w-10 h-10 brand-gradient-bg rounded-xl flex items-center justify-center shadow-lg">
+    <div className="flex items-center gap-3 min-w-0">
+      <div className="w-10 h-10 brand-gradient-bg rounded-xl flex items-center justify-center shadow-lg shrink-0">
         {settings.organizationLogo ? (
           <Image 
             src={settings.organizationLogo} 
@@ -95,7 +95,10 @@ export default function Header() {
           />
         )}
       </div>
-      <h1 className="text-2xl font-bold brand-gradient-text">
+      <h1
+        className="text-lg sm:text-2xl font-bold brand-gradient-text truncate"
+        title={settings.organizationName || 'NXTMinutes'}
+      >
         {settings.organizationName}
       </h1>
       {/* Admin link removed by request */}
