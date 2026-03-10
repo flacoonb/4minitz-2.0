@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
+import mongoose from 'mongoose';
 import connectDB from '@/lib/mongodb';
 import MeetingEvent from '@/models/MeetingEvent';
 import MeetingSeries from '@/models/MeetingSeries';
+import MinutesTemplate from '@/models/MinutesTemplate';
+import PdfTemplate from '@/models/PdfTemplate';
 import { verifyToken } from '@/lib/auth';
 import { hasPermission } from '@/lib/permissions';
 import { lookupUsersByIdentifiers, normalizeIdentifier } from '@/lib/user-identifiers';
@@ -28,6 +31,52 @@ function hasSeriesAccess(series: any, username: string, userId: string, isAdmin:
 function canManageSeries(series: any, username: string, userId: string, isAdmin: boolean, canModerateAll: boolean): boolean {
   if (isAdmin || canModerateAll) return true;
   return Boolean(series && (series.moderators?.includes(username) || series.moderators?.includes(userId)));
+}
+
+async function resolveMinutesTemplateId(templateIdRaw: string, meetingSeriesId: string): Promise<string | null> {
+  const templateId = String(templateIdRaw || '').trim();
+  if (!templateId) return null;
+  if (!mongoose.isValidObjectId(templateId)) {
+    throw new Error('Ungültige Sitzungsvorlage');
+  }
+
+  const template = await MinutesTemplate.findOne({
+    _id: templateId,
+    isActive: true,
+    $or: [
+      { scope: 'global' },
+      { scope: 'series', meetingSeriesId: new mongoose.Types.ObjectId(meetingSeriesId) },
+    ],
+  })
+    .select('_id')
+    .lean();
+
+  if (!template) {
+    throw new Error('Sitzungsvorlage nicht gefunden oder inaktiv');
+  }
+
+  return templateId;
+}
+
+async function resolvePdfTemplateId(templateIdRaw: string): Promise<string | null> {
+  const templateId = String(templateIdRaw || '').trim();
+  if (!templateId) return null;
+  if (!mongoose.isValidObjectId(templateId)) {
+    throw new Error('Ungültige PDF-Vorlage');
+  }
+
+  const template = await PdfTemplate.findOne({
+    _id: templateId,
+    isActive: true,
+  })
+    .select('_id')
+    .lean();
+
+  if (!template) {
+    throw new Error('PDF-Vorlage nicht gefunden oder inaktiv');
+  }
+
+  return templateId;
 }
 
 export async function GET(request: NextRequest, context: RouteContext) {
@@ -99,6 +148,33 @@ export async function PUT(request: NextRequest, context: RouteContext) {
         } else {
           (event as any)[field] = typeof body[field] === 'string' ? body[field].trim() : body[field];
         }
+      }
+    }
+
+    if (body.minutesTemplateId !== undefined) {
+      try {
+        const resolvedTemplateId = await resolveMinutesTemplateId(
+          String(body.minutesTemplateId || ''),
+          String(event.meetingSeriesId)
+        );
+        event.minutesTemplateId = resolvedTemplateId || undefined;
+      } catch (validationError) {
+        return NextResponse.json(
+          { error: validationError instanceof Error ? validationError.message : 'Ungültige Sitzungsvorlage' },
+          { status: 400 }
+        );
+      }
+    }
+
+    if (body.pdfTemplateId !== undefined) {
+      try {
+        const resolvedPdfTemplateId = await resolvePdfTemplateId(String(body.pdfTemplateId || ''));
+        event.pdfTemplateId = resolvedPdfTemplateId || undefined;
+      } catch (validationError) {
+        return NextResponse.json(
+          { error: validationError instanceof Error ? validationError.message : 'Ungültige PDF-Vorlage' },
+          { status: 400 }
+        );
       }
     }
 

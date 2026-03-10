@@ -92,6 +92,8 @@ export interface IMinutes extends Document {
   globalNote?: string;
   templateId?: string;
   templateNameSnapshot?: string;
+  pdfTemplateId?: string;
+  pdfTemplateNameSnapshot?: string;
 
   // Agenda
   agendaSentAt?: Date;
@@ -333,6 +335,14 @@ const MinutesSchema = new Schema<IMinutes>(
       index: true,
     },
     templateNameSnapshot: {
+      type: String,
+      trim: true,
+    },
+    pdfTemplateId: {
+      type: String,
+      index: true,
+    },
+    pdfTemplateNameSnapshot: {
       type: String,
       trim: true,
     },

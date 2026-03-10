@@ -15,6 +15,8 @@ type MeetingEvent = {
   endTime?: string;
   location?: string;
   note?: string;
+  minutesTemplateId?: string;
+  pdfTemplateId?: string;
   status: 'draft' | 'invited' | 'confirmed' | 'cancelled' | 'completed';
   invitees?: Array<{ responseStatus?: 'pending' | 'accepted' | 'tentative' | 'declined' }>;
   linkedMinutesId?: string;
@@ -24,6 +26,20 @@ type MeetingSeries = {
   _id: string;
   project?: string;
   name?: string;
+  defaultTemplateId?: string;
+  defaultPdfTemplateId?: string;
+};
+
+type MinutesTemplateOption = {
+  _id: string;
+  name: string;
+  scope: 'global' | 'series';
+};
+
+type PdfTemplateOption = {
+  _id: string;
+  name: string;
+  isActive?: boolean;
 };
 
 type MinuteItem = {
@@ -76,6 +92,10 @@ export default function PlanningPage() {
   const [eventEndTime, setEventEndTime] = useState('21:00');
   const [eventLocation, setEventLocation] = useState('');
   const [eventNote, setEventNote] = useState('');
+  const [eventMinutesTemplateId, setEventMinutesTemplateId] = useState('');
+  const [eventPdfTemplateId, setEventPdfTemplateId] = useState('');
+  const [minutesTemplateOptions, setMinutesTemplateOptions] = useState<MinutesTemplateOption[]>([]);
+  const [pdfTemplateOptions, setPdfTemplateOptions] = useState<PdfTemplateOption[]>([]);
   const [selectedCalendarEntry, setSelectedCalendarEntry] = useState<CalendarEntry | null>(null);
 
   const canAccessPlanning = Boolean(user && (user.role === 'admin' || user.role === 'moderator'));
@@ -88,18 +108,33 @@ export default function PlanningPage() {
     return `${y}-${m}-${d}`;
   };
 
+  const getSeriesDefaults = useCallback(
+    (seriesId: string) => {
+      const selectedSeries = seriesList.find((series) => series._id === seriesId);
+      return {
+        minutesTemplateId: selectedSeries?.defaultTemplateId ? String(selectedSeries.defaultTemplateId) : '',
+        pdfTemplateId: selectedSeries?.defaultPdfTemplateId ? String(selectedSeries.defaultPdfTemplateId) : '',
+      };
+    },
+    [seriesList]
+  );
+
   const resetCreateForm = useCallback(
     (dateValue?: string) => {
+      const fallbackSeriesId = eventSeriesId || (seriesList[0]?._id || '');
+      const defaults = getSeriesDefaults(fallbackSeriesId);
       setSelectedDate(dateValue || formatDateKey(new Date()));
-      setEventSeriesId((prev) => prev || (seriesList[0]?._id || ''));
+      setEventSeriesId(fallbackSeriesId);
       setEventTitle('');
       setEventStartTime('19:00');
       setEventEndTime('21:00');
       setEventLocation('');
       setEventNote('');
+      setEventMinutesTemplateId(defaults.minutesTemplateId);
+      setEventPdfTemplateId(defaults.pdfTemplateId);
       setCreateError(null);
     },
-    [seriesList]
+    [eventSeriesId, seriesList, getSeriesDefaults]
   );
 
   const fetchPlanningData = useCallback(async () => {
@@ -166,6 +201,76 @@ export default function PlanningPage() {
       document.body.style.overflow = previousOverflow;
     };
   }, [showCreateModal, selectedCalendarEntry]);
+
+  useEffect(() => {
+    if (!showCreateModal || !eventSeriesId) return;
+    const defaults = getSeriesDefaults(eventSeriesId);
+    setEventMinutesTemplateId(defaults.minutesTemplateId);
+    setEventPdfTemplateId(defaults.pdfTemplateId);
+  }, [showCreateModal, eventSeriesId, getSeriesDefaults]);
+
+  useEffect(() => {
+    if (!showCreateModal || !eventSeriesId) return;
+    let cancelled = false;
+
+    const loadTemplateOptions = async () => {
+      try {
+        const [minutesTemplatesRes, pdfTemplatesRes] = await Promise.all([
+          fetch(`/api/minutes-templates?meetingSeriesId=${eventSeriesId}`, {
+            credentials: 'include',
+            cache: 'no-store',
+          }),
+          fetch('/api/pdf-templates', {
+            credentials: 'include',
+            cache: 'no-store',
+          }),
+        ]);
+
+        const minutesTemplatesJson = minutesTemplatesRes.ok ? await minutesTemplatesRes.json() : { data: [] };
+        const pdfTemplatesJson = pdfTemplatesRes.ok ? await pdfTemplatesRes.json() : { data: [] };
+        if (cancelled) return;
+
+        const loadedMinutesTemplates: MinutesTemplateOption[] = Array.isArray(minutesTemplatesJson?.data)
+          ? minutesTemplatesJson.data
+          : [];
+        const loadedPdfTemplates: PdfTemplateOption[] = Array.isArray(pdfTemplatesJson?.data)
+          ? pdfTemplatesJson.data
+          : [];
+
+        setMinutesTemplateOptions(loadedMinutesTemplates);
+        setPdfTemplateOptions(loadedPdfTemplates);
+
+        const defaults = getSeriesDefaults(eventSeriesId);
+        setEventMinutesTemplateId((prev) => {
+          if (prev && loadedMinutesTemplates.some((option) => option._id === prev)) return prev;
+          if (
+            defaults.minutesTemplateId &&
+            loadedMinutesTemplates.some((option) => option._id === defaults.minutesTemplateId)
+          ) {
+            return defaults.minutesTemplateId;
+          }
+          return '';
+        });
+        setEventPdfTemplateId((prev) => {
+          if (prev && loadedPdfTemplates.some((option) => option._id === prev)) return prev;
+          if (defaults.pdfTemplateId && loadedPdfTemplates.some((option) => option._id === defaults.pdfTemplateId)) {
+            return defaults.pdfTemplateId;
+          }
+          return '';
+        });
+      } catch {
+        if (cancelled) return;
+        setMinutesTemplateOptions([]);
+        setPdfTemplateOptions([]);
+      }
+    };
+
+    loadTemplateOptions();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [showCreateModal, eventSeriesId, getSeriesDefaults]);
 
   const filteredEvents = useMemo(() => {
     if (statusFilter === 'all') return events;
@@ -319,6 +424,8 @@ export default function PlanningPage() {
           endTime: eventEndTime || undefined,
           location: eventLocation.trim() || undefined,
           note: eventNote.trim() || undefined,
+          minutesTemplateId: eventMinutesTemplateId || undefined,
+          pdfTemplateId: eventPdfTemplateId || undefined,
           inviteeUserIds: [],
         }),
       });
@@ -674,7 +781,7 @@ export default function PlanningPage() {
 
       {showCreateModal && (
         <div className="fixed inset-0 z-50 flex items-start sm:items-center justify-center p-3 sm:p-4 bg-black/50">
-          <div className="w-full max-w-xl max-h-[92vh] app-card rounded-2xl shadow-2xl border overflow-y-auto">
+          <div className="w-full max-w-lg max-h-[92vh] app-card rounded-2xl shadow-2xl border overflow-y-auto">
             <div className="px-4 sm:px-5 py-3 sm:py-4 border-b flex items-center justify-between" style={{ borderColor: 'var(--brand-card-border)' }}>
               <h2 className="text-lg font-semibold" style={{ color: 'var(--brand-text)' }}>{t('create.title')}</h2>
               <button
@@ -684,13 +791,13 @@ export default function PlanningPage() {
                 ✕
               </button>
             </div>
-            <div className="p-4 sm:p-5 space-y-3">
+            <div className="p-3 sm:p-5 space-y-2.5 sm:space-y-3.5">
               <div>
                 <label className="block text-sm font-medium mb-1" style={{ color: 'var(--brand-text)' }}>{t('create.series')}</label>
                 <select
                   value={eventSeriesId}
                   onChange={(e) => setEventSeriesId(e.target.value)}
-                  className="w-full px-3 py-2.5 min-h-11 border rounded-lg"
+                  className="w-full px-3 py-2 min-h-10 border rounded-lg"
                   style={{ borderColor: 'var(--brand-card-border)', backgroundColor: 'var(--brand-card)', color: 'var(--brand-text)' }}
                 >
                   <option value="">{t('create.selectSeries')}</option>
@@ -706,41 +813,80 @@ export default function PlanningPage() {
                 <input
                   value={eventTitle}
                   onChange={(e) => setEventTitle(e.target.value)}
-                  className="w-full px-3 py-2.5 min-h-11 border rounded-lg"
+                  className="w-full px-3 py-2 min-h-10 border rounded-lg"
                   style={{ borderColor: 'var(--brand-card-border)', backgroundColor: 'var(--brand-card)', color: 'var(--brand-text)' }}
                   placeholder={t('create.titlePlaceholder')}
                 />
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="rounded-xl border p-2.5 sm:p-3" style={{ borderColor: 'var(--brand-card-border)', backgroundColor: 'var(--brand-card-soft)' }}>
+                <p className="text-xs font-semibold uppercase tracking-wide app-text-muted mb-2">
+                  {t('create.schedule')}
+                </p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  <div className="col-span-2 sm:col-span-1">
+                    <label className="block text-sm font-medium mb-1" style={{ color: 'var(--brand-text)' }}>{t('create.date')}</label>
+                    <input
+                      type="date"
+                      value={selectedDate}
+                      onChange={(e) => setSelectedDate(e.target.value)}
+                      className="w-full px-3 py-2 min-h-10 border rounded-lg"
+                      style={{ borderColor: 'var(--brand-card-border)', backgroundColor: 'var(--brand-card)', color: 'var(--brand-text)' }}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1" style={{ color: 'var(--brand-text)' }}>{t('create.startTime')}</label>
+                    <input
+                      type="time"
+                      value={eventStartTime}
+                      onChange={(e) => setEventStartTime(e.target.value)}
+                      className="w-full px-3 py-2 min-h-10 border rounded-lg"
+                      style={{ borderColor: 'var(--brand-card-border)', backgroundColor: 'var(--brand-card)', color: 'var(--brand-text)' }}
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium mb-1" style={{ color: 'var(--brand-text)' }}>{t('create.endTime')}</label>
+                    <input
+                      type="time"
+                      value={eventEndTime}
+                      onChange={(e) => setEventEndTime(e.target.value)}
+                      className="w-full px-3 py-2 min-h-10 border rounded-lg"
+                      style={{ borderColor: 'var(--brand-card-border)', backgroundColor: 'var(--brand-card)', color: 'var(--brand-text)' }}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 sm:gap-3">
                 <div>
-                  <label className="block text-sm font-medium mb-1" style={{ color: 'var(--brand-text)' }}>{t('create.date')}</label>
-                  <input
-                    type="date"
-                    value={selectedDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
-                    className="w-full px-3 py-2.5 min-h-11 border rounded-lg"
+                  <label className="block text-sm font-medium mb-1" style={{ color: 'var(--brand-text)' }}>{t('create.minutesTemplateLabel')}</label>
+                  <select
+                    value={eventMinutesTemplateId}
+                    onChange={(e) => setEventMinutesTemplateId(e.target.value)}
+                    className="w-full px-3 py-2 min-h-10 border rounded-lg"
                     style={{ borderColor: 'var(--brand-card-border)', backgroundColor: 'var(--brand-card)', color: 'var(--brand-text)' }}
-                  />
+                  >
+                    <option value="">{t('create.minutesTemplateDefault')}</option>
+                    {minutesTemplateOptions.map((template) => (
+                      <option key={template._id} value={template._id}>
+                        {template.name} ({template.scope === 'global' ? t('create.templateGlobal') : t('create.templateSeries')})
+                      </option>
+                    ))}
+                  </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium mb-1" style={{ color: 'var(--brand-text)' }}>{t('create.startTime')}</label>
-                  <input
-                    type="time"
-                    value={eventStartTime}
-                    onChange={(e) => setEventStartTime(e.target.value)}
-                    className="w-full px-3 py-2.5 min-h-11 border rounded-lg"
+                  <label className="block text-sm font-medium mb-1" style={{ color: 'var(--brand-text)' }}>{t('create.pdfTemplateLabel')}</label>
+                  <select
+                    value={eventPdfTemplateId}
+                    onChange={(e) => setEventPdfTemplateId(e.target.value)}
+                    className="w-full px-3 py-2 min-h-10 border rounded-lg"
                     style={{ borderColor: 'var(--brand-card-border)', backgroundColor: 'var(--brand-card)', color: 'var(--brand-text)' }}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium mb-1" style={{ color: 'var(--brand-text)' }}>{t('create.endTime')}</label>
-                  <input
-                    type="time"
-                    value={eventEndTime}
-                    onChange={(e) => setEventEndTime(e.target.value)}
-                    className="w-full px-3 py-2.5 min-h-11 border rounded-lg"
-                    style={{ borderColor: 'var(--brand-card-border)', backgroundColor: 'var(--brand-card)', color: 'var(--brand-text)' }}
-                  />
+                  >
+                    <option value="">{t('create.pdfTemplateDefault')}</option>
+                    {pdfTemplateOptions.map((template) => (
+                      <option key={template._id} value={template._id}>
+                        {template.name}{template.isActive ? ` (${t('create.templateActive')})` : ''}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
               <div>
@@ -748,7 +894,7 @@ export default function PlanningPage() {
                 <input
                   value={eventLocation}
                   onChange={(e) => setEventLocation(e.target.value)}
-                  className="w-full px-3 py-2.5 min-h-11 border rounded-lg"
+                  className="w-full px-3 py-2 min-h-10 border rounded-lg"
                   style={{ borderColor: 'var(--brand-card-border)', backgroundColor: 'var(--brand-card)', color: 'var(--brand-text)' }}
                   placeholder={t('create.locationPlaceholder')}
                 />
@@ -758,9 +904,9 @@ export default function PlanningPage() {
                 <textarea
                   value={eventNote}
                   onChange={(e) => setEventNote(e.target.value)}
-                  className="w-full px-3 py-2.5 border rounded-lg min-h-[96px]"
+                  className="w-full px-3 py-2 border rounded-lg min-h-[84px]"
                   style={{ borderColor: 'var(--brand-card-border)', backgroundColor: 'var(--brand-card)', color: 'var(--brand-text)' }}
-                  rows={3}
+                  rows={2}
                   placeholder={t('create.notePlaceholder')}
                 />
               </div>

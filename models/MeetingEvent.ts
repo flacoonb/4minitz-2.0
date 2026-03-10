@@ -22,6 +22,8 @@ export interface IMeetingEvent extends Document {
   endTime?: string;
   location?: string;
   note?: string;
+  minutesTemplateId?: string;
+  pdfTemplateId?: string;
   invitees: IMeetingEventInvitee[];
   status: MeetingEventStatus;
   linkedMinutesId?: string;
@@ -62,6 +64,8 @@ const MeetingEventSchema = new Schema<IMeetingEvent>(
     endTime: { type: String, trim: true, maxlength: 10 },
     location: { type: String, trim: true, maxlength: 500 },
     note: { type: String, trim: true, maxlength: 5000 },
+    minutesTemplateId: { type: String, trim: true, index: true },
+    pdfTemplateId: { type: String, trim: true, index: true },
     invitees: { type: [MeetingEventInviteeSchema], default: [] },
     status: {
       type: String,

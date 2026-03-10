@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
+import mongoose from 'mongoose';
 import connectDB from '@/lib/mongodb';
 import MeetingEvent from '@/models/MeetingEvent';
 import MeetingSeries from '@/models/MeetingSeries';
+import MinutesTemplate from '@/models/MinutesTemplate';
+import PdfTemplate from '@/models/PdfTemplate';
 import { verifyToken } from '@/lib/auth';
 import { hasPermission } from '@/lib/permissions';
 import { lookupUsersByIdentifiers, normalizeIdentifier } from '@/lib/user-identifiers';
@@ -18,6 +21,52 @@ function canAccessSeries(series: any, username: string, userId: string, canViewA
         series.participants?.includes(userId) ||
         (Array.isArray(series.members) && series.members.some((member: any) => member?.userId === userId)))
   );
+}
+
+async function resolveMinutesTemplateId(templateIdRaw: string, meetingSeriesId: string): Promise<string | null> {
+  const templateId = String(templateIdRaw || '').trim();
+  if (!templateId) return null;
+  if (!mongoose.isValidObjectId(templateId)) {
+    throw new Error('Ungültige Sitzungsvorlage');
+  }
+
+  const template = await MinutesTemplate.findOne({
+    _id: templateId,
+    isActive: true,
+    $or: [
+      { scope: 'global' },
+      { scope: 'series', meetingSeriesId: new mongoose.Types.ObjectId(meetingSeriesId) },
+    ],
+  })
+    .select('_id')
+    .lean();
+
+  if (!template) {
+    throw new Error('Sitzungsvorlage nicht gefunden oder inaktiv');
+  }
+
+  return templateId;
+}
+
+async function resolvePdfTemplateId(templateIdRaw: string): Promise<string | null> {
+  const templateId = String(templateIdRaw || '').trim();
+  if (!templateId) return null;
+  if (!mongoose.isValidObjectId(templateId)) {
+    throw new Error('Ungültige PDF-Vorlage');
+  }
+
+  const template = await PdfTemplate.findOne({
+    _id: templateId,
+    isActive: true,
+  })
+    .select('_id')
+    .lean();
+
+  if (!template) {
+    throw new Error('PDF-Vorlage nicht gefunden oder inaktiv');
+  }
+
+  return templateId;
 }
 
 export async function GET(request: NextRequest) {
@@ -99,6 +148,8 @@ export async function POST(request: NextRequest) {
     const endTime = String(body.endTime || '').trim();
     const location = String(body.location || '').trim();
     const note = String(body.note || '').trim();
+    const minutesTemplateIdInput = String(body.minutesTemplateId || '').trim();
+    const pdfTemplateIdInput = String(body.pdfTemplateId || '').trim();
     const scheduledDateRaw = String(body.scheduledDate || '').trim();
     const inviteeUserIds = Array.isArray(body.inviteeUserIds)
       ? body.inviteeUserIds.map((value: unknown) => String(value || '').trim()).filter(Boolean)
@@ -133,6 +184,20 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
+    let minutesTemplateId: string | undefined;
+    let pdfTemplateId: string | undefined;
+    try {
+      const resolvedMinutesTemplateId = await resolveMinutesTemplateId(minutesTemplateIdInput, meetingSeriesId);
+      const resolvedPdfTemplateId = await resolvePdfTemplateId(pdfTemplateIdInput);
+      minutesTemplateId = resolvedMinutesTemplateId || undefined;
+      pdfTemplateId = resolvedPdfTemplateId || undefined;
+    } catch (validationError) {
+      return NextResponse.json(
+        { error: validationError instanceof Error ? validationError.message : 'Ungültige Vorlage' },
+        { status: 400 }
+      );
+    }
+
     const allowedInvitees = new Set(
       Array.isArray(series.members) ? series.members.map((member: any) => String(member.userId)) : []
     );
@@ -159,6 +224,8 @@ export async function POST(request: NextRequest) {
       endTime: endTime || undefined,
       location: location || undefined,
       note: note || undefined,
+      minutesTemplateId,
+      pdfTemplateId,
       invitees,
       status: 'draft',
       createdBy: userId,

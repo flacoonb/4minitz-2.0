@@ -22,6 +22,7 @@ interface Minute {
   topics: Topic[];
   globalNote: string;
   isFinalized: boolean;
+  pdfTemplateId?: string;
   reopeningHistory?: Array<{
     reopenedAt: string;
     reopenedBy: string;
@@ -279,11 +280,27 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
     setExportingPdf(true);
     
     try {
-      // Prefer series-specific PDF template; fall back to active global template.
+      // Prefer minute-specific PDF template. Otherwise use series default and finally active global template.
       let templateData: any = null;
+      const minutePdfTemplateId = typeof minute?.pdfTemplateId === 'string' ? minute.pdfTemplateId.trim() : '';
       const meetingSeriesId = minute?.meetingSeries_id?._id ? String(minute.meetingSeries_id._id) : '';
 
-      if (meetingSeriesId) {
+      if (minutePdfTemplateId) {
+        try {
+          const minuteTemplateResponse = await fetch(`/api/pdf-templates/${minutePdfTemplateId}`, {
+            credentials: 'include',
+            cache: 'no-store',
+          });
+          const minuteTemplateResult = await minuteTemplateResponse.json().catch(() => ({}));
+          if (minuteTemplateResult?.success && minuteTemplateResult?.data) {
+            templateData = minuteTemplateResult.data;
+          }
+        } catch (_minuteTemplateError) {
+          // Silent fallback to series default/active template.
+        }
+      }
+
+      if (!templateData && meetingSeriesId) {
         try {
           const seriesResponse = await fetch(`/api/meeting-series/${meetingSeriesId}`, {
             credentials: 'include',
