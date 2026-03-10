@@ -485,11 +485,15 @@ export default function MeetingSeriesPage() {
         throw new Error(errorData.error || t('templateLoadError'));
       }
       const result = await response.json();
-      const loadedTemplates: MinutesTemplate[] = Array.isArray(result.data) ? result.data : [];
+      const loadedTemplates: MinutesTemplate[] = Array.isArray(result.data)
+        ? result.data.filter((template: any) => template && typeof template._id === 'string')
+        : [];
       setTemplates(loadedTemplates);
       const defaultTemplateId = series.defaultTemplateId ? String(series.defaultTemplateId).trim() : '';
       if (defaultTemplateId && loadedTemplates.some((template) => template._id === defaultTemplateId)) {
         setSelectedTemplateId(defaultTemplateId);
+      } else {
+        setSelectedTemplateId('');
       }
     } catch (err) {
       setTemplatesError(err instanceof Error ? err.message : t('templateLoadError'));
@@ -625,11 +629,11 @@ export default function MeetingSeriesPage() {
               </div>
             </div>
             <div className="w-full md:w-auto">
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-2.5 md:min-w-[360px]">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-2.5">
               {canEditSeries && (
                 <button
                   onClick={openImportModal}
-                  className="inline-flex w-full justify-center items-center gap-2 px-4 py-2.5 min-h-10 rounded-lg shadow-md hover:shadow-lg transition-all"
+                  className="inline-flex w-full justify-center items-center gap-2 px-4 py-2.5 min-h-11 rounded-lg shadow-md hover:shadow-lg transition-all"
                   style={{ background: 'linear-gradient(90deg, var(--brand-warning), var(--brand-warning))', color: '#fff' }}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -641,7 +645,7 @@ export default function MeetingSeriesPage() {
               {canEditSeries && (
                 <Link
                   href={`/meeting-series/${series._id}/templates`}
-                  className="inline-flex w-full justify-center items-center gap-2 px-4 py-2.5 min-h-10 rounded-lg shadow-md hover:shadow-lg transition-all"
+                  className="inline-flex w-full justify-center items-center gap-2 px-4 py-2.5 min-h-11 rounded-lg shadow-md hover:shadow-lg transition-all"
                   style={{ background: 'linear-gradient(90deg, var(--brand-secondary), var(--brand-accent))', color: '#fff' }}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -653,7 +657,7 @@ export default function MeetingSeriesPage() {
               {canEditSeries && (
                 <Link
                   href={`/meeting-series/${series._id}/edit`}
-                  className="inline-flex w-full justify-center items-center gap-2 px-4 py-2.5 min-h-10 rounded-lg shadow-md hover:shadow-lg transition-all"
+                  className="inline-flex w-full justify-center items-center gap-2 px-4 py-2.5 min-h-11 rounded-lg shadow-md hover:shadow-lg transition-all"
                   style={{ background: 'linear-gradient(90deg, var(--brand-primary), var(--brand-primary-strong))', color: '#fff' }}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -665,7 +669,7 @@ export default function MeetingSeriesPage() {
               {canDeleteSeries && (
                 <button
                   onClick={() => setShowDeleteConfirm(true)}
-                  className="inline-flex w-full justify-center items-center gap-2 px-4 py-2.5 min-h-10 rounded-lg shadow-md hover:shadow-lg transition-all"
+                  className="inline-flex w-full justify-center items-center gap-2 px-4 py-2.5 min-h-11 rounded-lg shadow-md hover:shadow-lg transition-all"
                   style={{ background: 'linear-gradient(90deg, var(--brand-danger), var(--brand-danger))', color: '#fff' }}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -968,7 +972,7 @@ export default function MeetingSeriesPage() {
                 <h2 className="text-xl font-bold text-gray-900">{t('importTasks')}</h2>
                 <button
                   onClick={() => setShowImportModal(false)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors min-h-10 min-w-10 inline-flex items-center justify-center rounded-lg"
+                  className="text-gray-400 hover:text-gray-600 transition-colors min-h-11 min-w-11 inline-flex items-center justify-center rounded-lg"
                   aria-label={t('planner.closeDialogAria')}
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -1116,7 +1120,7 @@ export default function MeetingSeriesPage() {
                 <h2 className="text-xl font-bold text-gray-900">{t('chooseTemplateTitle')}</h2>
                 <button
                   onClick={() => setShowTemplateModal(false)}
-                  className="text-gray-400 hover:text-gray-600 transition-colors min-h-10 min-w-10 inline-flex items-center justify-center rounded-lg"
+                  className="text-gray-400 hover:text-gray-600 transition-colors min-h-11 min-w-11 inline-flex items-center justify-center rounded-lg"
                 >
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

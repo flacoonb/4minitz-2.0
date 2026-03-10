@@ -18,6 +18,25 @@ interface RouteContext {
   params: Promise<{ id: string }>;
 }
 
+async function isValidDefaultTemplate(defaultTemplateId: unknown, seriesId: string): Promise<boolean> {
+  if (!defaultTemplateId) return false;
+  const templateId = String(defaultTemplateId);
+  if (!mongoose.isValidObjectId(templateId)) return false;
+
+  const existingTemplate = await MinutesTemplate.findOne({
+    _id: templateId,
+    isActive: true,
+    $or: [
+      { scope: 'global' },
+      { scope: 'series', meetingSeriesId: new mongoose.Types.ObjectId(seriesId) },
+    ],
+  })
+    .select('_id')
+    .lean();
+
+  return Boolean(existingTemplate);
+}
+
 /**
  * GET /api/meeting-series/[id]
  * Get a specific meeting series by ID
@@ -76,6 +95,17 @@ export async function GET(
         { success: false, error: 'Not authorized to view this series' },
         { status: 403 }
       );
+    }
+
+    if (series.defaultTemplateId) {
+      const hasValidDefaultTemplate = await isValidDefaultTemplate(series.defaultTemplateId, id);
+      if (!hasValidDefaultTemplate) {
+        await MeetingSeries.updateOne(
+          { _id: id },
+          { $unset: { defaultTemplateId: 1 } }
+        );
+        delete (series as any).defaultTemplateId;
+      }
     }
 
     return NextResponse.json({

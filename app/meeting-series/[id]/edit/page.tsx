@@ -175,6 +175,14 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
     }
   }, [seriesId, fetchSeries, fetchUsers, fetchClubFunctions, fetchExistingNames, fetchTemplateOptions]);
 
+  useEffect(() => {
+    if (!formData.defaultTemplateId) return;
+    const exists = templateOptions.some((template) => template._id === formData.defaultTemplateId);
+    if (!exists) {
+      setFormData((prev) => ({ ...prev, defaultTemplateId: '' }));
+    }
+  }, [templateOptions, formData.defaultTemplateId]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!seriesId) return;
