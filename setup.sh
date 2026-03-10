@@ -47,6 +47,18 @@ echo "📂 Erstelle Upload-Verzeichnis..."
 mkdir -p uploads
 chmod 755 uploads
 
+# Ensure setup token exists for web setup wizard (/setup)
+ensure_setup_token() {
+    if [ ! -s .setup_token ]; then
+        TOKEN=$(node -e "console.log(require('crypto').randomBytes(16).toString('hex'))")
+        printf "%s\n" "$TOKEN" > .setup_token
+        chmod 600 .setup_token 2>/dev/null || true
+        echo "🔐 Setup-Token erstellt (.setup_token)."
+    else
+        echo "ℹ️  Setup-Token bereits vorhanden (.setup_token)."
+    fi
+}
+
 # .env.local erstellen wenn nicht vorhanden
 if [ ! -f .env.local ]; then
     echo ""
@@ -78,6 +90,8 @@ EOF
 else
     echo "ℹ️  .env.local existiert bereits"
 fi
+
+ensure_setup_token
 
 # Docker Container starten / MongoDB Setup
 if [ "$SKIP_DOCKER" = false ]; then
@@ -171,13 +185,6 @@ if [ "$SKIP_DOCKER" = false ]; then
             sed -i "/^MONGODB_URI=/d" .env.local || true
             echo "MONGODB_URI=mongodb://$APP_USER:$APP_PASS@localhost:27017/$DB_NAME" >> .env.local
             echo "✅ .env.local aktualisiert mit geschützter DB-URI"
-            # create one-time setup token to protect web setup (if not existing)
-            if [ ! -f .setup_token ]; then
-                TOKEN=$(node -e "console.log(require('crypto').randomBytes(16).toString('hex'))")
-                echo "$TOKEN" > .setup_token
-                echo "🔐 One-time setup token created: $TOKEN"
-                echo "   Use this token in the web setup page (or pass as header 'x-setup-token')."
-            fi
         else
             # no auth -> ensure env has plain URI
             sed -i "/^MONGODB_URI=/d" .env.local || true
@@ -247,10 +254,19 @@ echo ""
 echo "1. Development Server starten:"
 echo "   npm run dev"
 echo ""
-echo "2. Anwendung öffnen:"
-echo "   http://localhost:3000"
+APP_URL_VALUE=$(grep -E '^APP_URL=' .env.local 2>/dev/null | head -n1 | cut -d'=' -f2- || true)
+APP_URL_VALUE=${APP_URL_VALUE:-http://localhost:3000}
+APP_URL_VALUE=$(printf "%s" "$APP_URL_VALUE" | sed -E "s/^['\"]//; s/['\"]$//")
+SETUP_URL="${APP_URL_VALUE%/}/setup"
+
+echo "2. Setup-Assistent im Browser öffnen:"
+echo "   $SETUP_URL"
+echo "   Setup-Token: Datei $(pwd)/.setup_token"
 echo ""
-echo "3. Mit Demo-User anmelden:"
+echo "3. Anwendung öffnen:"
+echo "   ${APP_URL_VALUE%/}"
+echo ""
+echo "4. Mit Demo-User anmelden (falls erstellt):"
 echo "   Email: demo@example.com"
 echo "   Passwort: demo123"
 echo ""

@@ -210,6 +210,8 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
         
         echo -e "${GREEN}✅ Service installed and started!${NC}"
         echo "   Status: sudo systemctl status ${APP_NAME}.service"
+        echo "   Web setup wizard: http://localhost:3000/setup"
+        echo "   Setup token file: ${APP_DIR}/.setup_token"
     else
         echo -e "${RED}❌ Service file template '$SERVICE_FILE' not found.${NC}"
         exit 1
@@ -217,4 +219,6 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
 else
     echo -e "\n${GREEN}✅ Installation complete!${NC}"
     echo "You can start the app manually with: cd \"$INSTALL_DIR\" && npm run dev"
+    echo "Then open the web setup wizard at: http://localhost:3000/setup"
+    echo "Setup token file: ${INSTALL_DIR}/.setup_token"
 fi
