@@ -4,6 +4,7 @@ import connectDB from '@/lib/mongodb';
 import { testEmailConfiguration } from '@/lib/email-service';
 import Settings from '@/models/Settings';
 import { encrypt } from '@/lib/crypto';
+import { isValidEmailAddress } from '@/lib/input-validation';
 
 /**
  * GET /api/admin/email-config
@@ -104,8 +105,7 @@ export async function PUT(request: NextRequest) {
     }
 
     // Email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(fromEmail)) {
+    if (!isValidEmailAddress(String(fromEmail))) {
       return NextResponse.json(
         { success: false, error: 'Invalid fromEmail address' },
         { status: 400 }

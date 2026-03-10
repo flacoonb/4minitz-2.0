@@ -110,6 +110,36 @@ const HEADER_POSITION_PRESETS: Array<{
   { id: 'bottom-right', anchorX: 'right', anchorY: 'bottom', labelKey: 'layout.properties.presetBottomRight' },
 ];
 
+function sanitizePreviewImageSrc(rawValue: string): string {
+  const value = rawValue.trim();
+  if (!value) return '';
+
+  // Prevent script-like input from being interpreted by the browser preview.
+  if (
+    value.includes('<') ||
+    value.includes('>') ||
+    value.includes('"') ||
+    value.includes("'") ||
+    value.includes('`')
+  ) {
+    return '';
+  }
+
+  if (value.startsWith('/')) return value;
+  if (value.startsWith('data:image/')) return value;
+
+  try {
+    const parsed = new URL(value);
+    if (parsed.protocol === 'https:' || parsed.protocol === 'http:') {
+      return parsed.toString();
+    }
+  } catch {
+    return '';
+  }
+
+  return '';
+}
+
 const DEFAULT_LAYOUT_ELEMENTS: LayoutElement[] = [
   {
     id: 'page-frame',
@@ -1341,7 +1371,10 @@ export default function PdfConfigPage() {
   const itemLabelEnabled = itemLabelPreviewEl?.enabled !== false;
   const separatorEnabled = separatorPreviewEl?.enabled !== false;
   const footerEnabled = footerPreviewEl?.enabled !== false && contentSettings.showFooter;
-  const logoSourceUrl = contentSettings.logoUrl || '';
+  const logoSourceUrl = useMemo(
+    () => sanitizePreviewImageSrc(contentSettings.logoUrl || ''),
+    [contentSettings.logoUrl]
+  );
   const logoVisible = contentSettings.showLogo && Boolean(logoSourceUrl);
   const logoCustomPlacementEnabled = logoSettings.enabled === true;
 

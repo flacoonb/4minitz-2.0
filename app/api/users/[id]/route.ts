@@ -7,6 +7,7 @@ import PushSubscription from '@/models/PushSubscription';
 import { verifyToken, requirePermission } from '@/lib/auth';
 import { sendVerificationEmail, sendWelcomeEmail } from '@/lib/email-service';
 import crypto from 'crypto';
+import { isHexObjectIdLike, isValidEmailAddress } from '@/lib/input-validation';
 
 function getRequestBaseUrl(request: NextRequest): string {
   const forwardedProto = request.headers.get('x-forwarded-proto')?.split(',')[0]?.trim();
@@ -115,8 +116,6 @@ export async function PUT(
       );
     }
 
-    const objectIdLikeUsername = /^[a-fA-F0-9]{24}$/;
-
     // Update fields (with length/format validation)
     if (body.firstName !== undefined) {
       if (typeof body.firstName !== 'string' || body.firstName.trim().length === 0 || body.firstName.length > 50) {
@@ -139,8 +138,7 @@ export async function PUT(
         return NextResponse.json({ error: 'E-Mail ist erforderlich' }, { status: 400 });
       }
       const normalizedEmail = body.email.trim().toLowerCase();
-      const emailRegex = /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,})+$/;
-      if (!emailRegex.test(normalizedEmail)) {
+      if (!isValidEmailAddress(normalizedEmail)) {
         return NextResponse.json({ error: 'Ungültige E-Mail-Adresse' }, { status: 400 });
       }
 
@@ -161,7 +159,7 @@ export async function PUT(
       if (!/^[\p{L}\p{N}._ -]+$/u.test(normalizedUsername)) {
         return NextResponse.json({ error: 'Benutzername darf nur Buchstaben, Zahlen, Leerzeichen, Punkte, Unterstriche und Bindestriche enthalten' }, { status: 400 });
       }
-      if (objectIdLikeUsername.test(normalizedUsername)) {
+      if (isHexObjectIdLike(normalizedUsername)) {
         return NextResponse.json({ error: 'Benutzername darf nicht wie eine Benutzer-ID aussehen' }, { status: 400 });
       }
 

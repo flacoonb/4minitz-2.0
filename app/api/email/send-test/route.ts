@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
 import connectToDatabase from '@/lib/mongodb';
 import { getTransporter, getFromEmail, getOrgName } from '@/lib/email-service';
+import { isValidEmailAddress } from '@/lib/input-validation';
 
 /**
  * POST /api/email/send-test
@@ -36,8 +37,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(toEmail)) {
+    if (!isValidEmailAddress(String(toEmail))) {
       return NextResponse.json(
         { success: false, error: 'Invalid email address' },
         { status: 400 }

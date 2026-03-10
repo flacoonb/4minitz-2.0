@@ -1,7 +1,6 @@
 import mongoose from 'mongoose';
 import User from '@/models/User';
-
-const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+import { isValidEmailAddress } from '@/lib/input-validation';
 
 export type LookupUser = {
   _id: string | { toString(): string };
@@ -18,7 +17,7 @@ function normalize(value: string): string {
 }
 
 function isEmail(value: string): boolean {
-  return EMAIL_REGEX.test(value);
+  return isValidEmailAddress(value);
 }
 
 export function normalizeIdentifier(value: string): string {
