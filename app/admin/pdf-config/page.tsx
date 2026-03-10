@@ -3012,12 +3012,7 @@ export default function PdfConfigPage() {
                         }}
                         onClick={() => setSelectedElement('logo')}
                       >
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                          src={logoSourceUrl}
-                          alt="Logo"
-                          className="w-full h-full object-contain"
-                        />
+                        <span className="text-[10px] font-semibold text-blue-700 tracking-wide">LOGO</span>
                       </div>
                     )}
 
