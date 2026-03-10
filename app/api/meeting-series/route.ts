@@ -179,11 +179,12 @@ export async function POST(request: NextRequest) {
         );
       }
 
-      const defaultPdfTemplate = await PdfTemplate.findById(defaultPdfTemplateIdInput)
-        .select('isActive')
-        .lean();
+      const defaultPdfTemplateExists = await PdfTemplate.exists({
+        _id: defaultPdfTemplateIdInput,
+        isActive: true,
+      });
 
-      if (!defaultPdfTemplate || !defaultPdfTemplate.isActive) {
+      if (!defaultPdfTemplateExists) {
         return NextResponse.json(
           { success: false, error: 'PDF-Vorlage nicht gefunden oder inaktiv' },
           { status: 400 }
