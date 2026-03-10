@@ -45,7 +45,9 @@ Minutes can be created visually or in Markdown mode, then managed consistently t
 ### Option A: Full installer (recommended on fresh Linux setup)
 
 ```bash
-curl -sL https://raw.githubusercontent.com/flacoonb/4minitz-2.0/main/install.sh | sudo bash
+curl -fsSLO https://raw.githubusercontent.com/flacoonb/4minitz-2.0/main/install.sh
+less install.sh
+sudo bash install.sh
 ```
 
 ### Option B: Repository already cloned
@@ -82,7 +84,8 @@ Use `.env.example` as source of truth. Important keys:
 - `NEXT_PUBLIC_APP_URL`
 - `STRICT_CSP_MODE` (optional, production CSP toggle)
 - `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `FROM_EMAIL`
-- `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY` (for web push)
+- `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` (for web push)
+- `NEXT_PUBLIC_VAPID_PUBLIC_KEY` (optional fallback for public key)
 - `CRON_SECRET`
 
 ## Useful Scripts
@@ -131,6 +134,7 @@ scripts/      Setup and data helper scripts
 
 ## Notes
 
-- CI runs include lint/type-check/security-check/build and CodeQL.
+- CI runs include lint/type-check/security-check/build.
+- CodeQL runs in a separate GitHub Actions workflow.
 - Dependabot PR auto-merge is configured for compatible updates.
 - Username validation supports international letters (e.g., umlauts).
