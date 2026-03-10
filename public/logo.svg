@@ -1,45 +1,77 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="1400" height="360" viewBox="0 0 1400 360">
   <defs>
     <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#0f172a"/>
-      <stop offset="45%" stop-color="#1e40af"/>
-      <stop offset="100%" stop-color="#0ea5e9"/>
+      <stop offset="0%" stop-color="#060816"/>
+      <stop offset="45%" stop-color="#1f2a7a"/>
+      <stop offset="78%" stop-color="#7c3aed"/>
+      <stop offset="100%" stop-color="#06b6d4"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="80%" cy="12%" r="68%">
+      <stop offset="0%" stop-color="#f472b6" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#f472b6" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="badge" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#22d3ee"/>
+      <stop offset="100%" stop-color="#a855f7"/>
+    </linearGradient>
+    <linearGradient id="label" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0b1026"/>
+      <stop offset="100%" stop-color="#172554"/>
     </linearGradient>
     <linearGradient id="word" x1="0%" y1="0%" x2="100%" y2="0%">
       <stop offset="0%" stop-color="#0f172a"/>
-      <stop offset="52%" stop-color="#1e40af"/>
-      <stop offset="100%" stop-color="#0369a1"/>
-    </linearGradient>
-    <radialGradient id="light" cx="22%" cy="10%" r="70%">
-      <stop offset="0%" stop-color="#e0f2fe" stop-opacity="0.28"/>
-      <stop offset="100%" stop-color="#e0f2fe" stop-opacity="0"/>
-    </radialGradient>
-    <linearGradient id="badge" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#22c55e"/>
-      <stop offset="100%" stop-color="#06b6d4"/>
+      <stop offset="42%" stop-color="#1d4ed8"/>
+      <stop offset="75%" stop-color="#7c3aed"/>
+      <stop offset="100%" stop-color="#0891b2"/>
     </linearGradient>
   </defs>
 
   <rect x="16" y="16" width="328" height="328" rx="84" fill="url(#bg)"/>
-  <rect x="16" y="16" width="328" height="328" rx="84" fill="url(#light)"/>
+  <rect x="16" y="16" width="328" height="328" rx="84" fill="url(#glow)"/>
 
-  <rect x="70" y="58" width="220" height="246" rx="30" fill="#f8fafc"/>
-  <rect x="70" y="58" width="220" height="62" rx="30" fill="#0f172a"/>
-  <rect x="70" y="96" width="220" height="24" fill="#0f172a"/>
+  <rect x="70" y="58" width="220" height="246" rx="30" fill="#eef4ff"/>
+  <rect x="70" y="58" width="220" height="62" rx="30" fill="#0b1024"/>
+  <rect x="70" y="96" width="220" height="24" fill="#0b1024"/>
   <path d="M246 58h44v44z" fill="#dbeafe"/>
-  <rect x="100" y="42" width="16" height="34" rx="8" fill="#f8fafc"/>
-  <rect x="244" y="42" width="16" height="34" rx="8" fill="#f8fafc"/>
+  <rect x="100" y="42" width="16" height="34" rx="8" fill="#eef4ff"/>
+  <rect x="244" y="42" width="16" height="34" rx="8" fill="#eef4ff"/>
 
-  <circle cx="104" cy="154" r="7" fill="#3b82f6"/>
+  <circle cx="104" cy="154" r="7" fill="#38bdf8"/>
   <rect x="124" y="147" width="120" height="14" rx="7" fill="#94a3b8"/>
-  <circle cx="104" cy="188" r="7" fill="#3b82f6"/>
+  <circle cx="104" cy="188" r="7" fill="#38bdf8"/>
   <rect x="124" y="181" width="120" height="14" rx="7" fill="#94a3b8"/>
-  <circle cx="104" cy="222" r="7" fill="#3b82f6"/>
+  <circle cx="104" cy="222" r="7" fill="#38bdf8"/>
   <rect x="124" y="215" width="92" height="14" rx="7" fill="#94a3b8"/>
 
   <circle cx="242" cy="236" r="58" fill="url(#badge)"/>
-  <circle cx="242" cy="236" r="44" fill="#ecfeff"/>
-  <path d="M226 236l13 13 24-26" fill="none" stroke="#0f172a" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="242" cy="236" r="44" fill="#e2e8f0"/>
+  <path d="M226 236l13 13 24-26" fill="none" stroke="#0b1024" stroke-width="9" stroke-linecap="round" stroke-linejoin="round"/>
+
+  <rect x="86" y="252" width="136" height="46" rx="23" fill="url(#label)"/>
+  <text
+    x="154"
+    y="271"
+    text-anchor="middle"
+    font-family="Segoe UI, Inter, Helvetica, Arial, sans-serif"
+    font-size="13"
+    font-weight="800"
+    letter-spacing="1.4"
+    fill="#e2e8f0"
+  >
+    NXT
+  </text>
+  <text
+    x="154"
+    y="286"
+    text-anchor="middle"
+    font-family="Segoe UI, Inter, Helvetica, Arial, sans-serif"
+    font-size="9"
+    font-weight="700"
+    letter-spacing="1.1"
+    fill="#cbd5e1"
+  >
+    MINUTES
+  </text>
 
   <text
     x="392"
@@ -56,11 +88,22 @@
     x="396"
     y="258"
     font-family="Segoe UI, Inter, Helvetica, Arial, sans-serif"
-    font-size="33"
+    font-size="31"
     font-weight="600"
-    letter-spacing="3.6"
+    letter-spacing="3.2"
     fill="#334155"
   >
     MEETING MINUTES + ACTION FLOW
+  </text>
+  <text
+    x="396"
+    y="302"
+    font-family="Segoe UI, Inter, Helvetica, Arial, sans-serif"
+    font-size="22"
+    font-weight="600"
+    letter-spacing="1.8"
+    fill="#64748b"
+  >
+    PROTOKOLLE | AUFGABEN | BESCHLUESSE
   </text>
 </svg>
