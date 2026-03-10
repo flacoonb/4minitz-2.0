@@ -6,6 +6,13 @@ updates:
     schedule:
       interval: "weekly"
     open-pull-requests-limit: 10
+    ignore:
+      - dependency-name: "eslint"
+        update-types:
+          - "version-update:semver-major"
+      - dependency-name: "mongoose"
+        update-types:
+          - "version-update:semver-major"
 
   # GitHub Actions updates (checkout, setup-node, CodeQL, etc.)
   - package-ecosystem: "github-actions"
