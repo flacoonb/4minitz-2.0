@@ -1,17 +1,17 @@
 [Unit]
-Description=4Minitz 2.0 Application
-Documentation=https://github.com/flacoonb/4minitz-2.0
+Description=NXTMinutes Application
+Documentation=https://github.com/flacoonb/NXTminutes
 After=network.target mongodb.service
 
 [Service]
 Type=simple
 User=pi
 Group=pi
-WorkingDirectory=/home/pi/4minitz-next
+WorkingDirectory=/home/pi/nxtminutes
 Environment=NODE_ENV=production
 Environment=PORT=3000
 Environment=HOSTNAME=0.0.0.0
-ExecStart=/home/pi/4minitz-next/node_modules/.bin/next start
+ExecStart=/home/pi/nxtminutes/node_modules/.bin/next start
 ExecReload=/bin/kill -HUP $MAINPID
 KillMode=process
 KillSignal=SIGINT
@@ -22,7 +22,7 @@ Restart=always
 RestartSec=10
 StandardOutput=journal
 StandardError=journal
-SyslogIdentifier=4minitz-2.0
+SyslogIdentifier=nxtminutes
 
 [Install]
 WantedBy=multi-user.target

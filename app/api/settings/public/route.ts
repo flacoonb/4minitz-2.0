@@ -15,7 +15,7 @@ export async function GET(_request: NextRequest) {
         success: true,
         data: {
           system: {
-            organizationName: '4Minitz 2.0',
+            organizationName: 'NXTMinutes',
             organizationLogo: null,
             agendaItemLabelMode: 'topic-alpha',
             brandColors: DEFAULT_BRAND_COLORS,
@@ -27,7 +27,7 @@ export async function GET(_request: NextRequest) {
     // Return only public settings (no sensitive data)
     const publicSettings = {
       system: {
-        organizationName: settings.systemSettings?.organizationName || '4Minitz 2.0',
+        organizationName: settings.systemSettings?.organizationName || 'NXTMinutes',
         organizationLogo: settings.systemSettings?.organizationLogo,
         allowRegistration: settings.memberSettings?.allowSelfRegistration ?? false,
         requireAdminApproval: settings.memberSettings?.requireAdminApproval ?? true,

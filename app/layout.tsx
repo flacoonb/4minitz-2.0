@@ -16,8 +16,8 @@ import "./globals.css";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "4Minitz 2.0 - Sitzungsprotokoll-Verwaltung",
-  description: "4Minitz 2.0 für effiziente Sitzungsprotokoll-Verwaltung",
+  title: "NXTMinutes - Sitzungsprotokoll-Verwaltung",
+  description: "NXTMinutes für effiziente Sitzungsprotokoll-Verwaltung",
   manifest: "/site.webmanifest",
   icons: {
     icon: [

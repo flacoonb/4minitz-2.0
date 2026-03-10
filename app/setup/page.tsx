@@ -26,14 +26,14 @@ export default function SetupPage() {
     // Organization
     organizationName: '',
     // Database
-    mongoUri: 'mongodb://localhost:27017/4minitz',
+    mongoUri: 'mongodb://localhost:27017/nxtminutes',
     // SMTP
     smtpHost: 'localhost',
     smtpPort: 587,
     smtpSecure: false,
     smtpUser: '',
     smtpPass: '',
-    smtpFrom: 'noreply@4minitz.local'
+    smtpFrom: 'noreply@nxtminutes.local'
   });
   const [setupToken, setSetupToken] = useState('');
   const [message, setMessage] = useState<string | null>(null);
@@ -134,7 +134,7 @@ export default function SetupPage() {
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-slate-900 mb-4 tracking-tight">
-            Willkommen bei 4Minitz 2.0
+            Willkommen bei NXTMinutes
           </h1>
           <p className="text-lg text-slate-600 max-w-2xl mx-auto">
             Bitte konfigurieren Sie die grundlegenden Systemeinstellungen und erstellen Sie den ersten Administrator-Account.
@@ -163,11 +163,11 @@ export default function SetupPage() {
                     onChange={onChange}
                     required
                     className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent transition-all outline-none"
-                    placeholder="mongodb://localhost:27017/4minitz"
+                    placeholder="mongodb://localhost:27017/nxtminutes"
                   />
                 </div>
                 <p className="mt-2 text-sm text-slate-500">
-                  Standard: mongodb://localhost:27017/4minitz
+                  Standard: mongodb://localhost:27017/nxtminutes
                 </p>
               </div>
             </div>

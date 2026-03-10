@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Connect to DB using provided URI or default
-    const mongoUri = String(body.mongoUri || process.env.MONGODB_URI || 'mongodb://localhost:27017/4minitz').trim();
+    const mongoUri = String(body.mongoUri || process.env.MONGODB_URI || 'mongodb://localhost:27017/nxtminutes').trim();
     if (!/^mongodb(\+srv)?:\/\//i.test(mongoUri)) {
       return NextResponse.json({ success: false, error: 'Invalid MongoDB URI format' }, { status: 400 });
     }

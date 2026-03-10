@@ -102,7 +102,7 @@
     }
   },
   "home": {
-    "title": "Welcome to 4Minitz 2.0",
+    "title": "Welcome to NXTMinutes",
     "subtitle": "Proof-of-Concept: Meteor.js → Next.js 15",
     "features": {
       "title": "Features",
@@ -1651,7 +1651,7 @@
     "loading": "Loading..."
   },
   "setup": {
-    "title": "4Minitz 2.0 Setup",
+    "title": "NXTMinutes Setup",
     "subtitle": "Initial Setup",
     "tokenLabel": "Setup Token",
     "tokenPlaceholder": "Enter setup token",

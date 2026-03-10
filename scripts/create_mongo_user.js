@@ -16,8 +16,8 @@ async function waitConnect(client, maxRetries = 12, delayMs = 2000) {
 
 async function main() {
   const adminUri = process.env.MONGODB_ADMIN_URI || process.env.MONGODB_URI || 'mongodb://localhost:27017';
-  const targetDb = process.env.TARGET_DB || '4minitz';
-  const newUser = process.env.NEW_DB_USER || 'minitz_app';
+  const targetDb = process.env.TARGET_DB || 'nxtminutes';
+  const newUser = process.env.NEW_DB_USER || 'nxtminutes_app';
   const newPass = process.env.NEW_DB_PASS || 'changeMe123!';
 
   const client = new MongoClient(adminUri);

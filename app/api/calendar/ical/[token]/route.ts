@@ -224,10 +224,10 @@ export async function GET(request: NextRequest, context: RouteContext) {
     const lines: string[] = [
       'BEGIN:VCALENDAR',
       'VERSION:2.0',
-      'PRODID:-//4Minitz//Meeting Calendar//EN',
+      'PRODID:-//NXTMinutes//Meeting Calendar//EN',
       'CALSCALE:GREGORIAN',
       'METHOD:PUBLISH',
-      'X-WR-CALNAME:4Minitz Meetings',
+      'X-WR-CALNAME:NXTMinutes Meetings',
       'X-WR-TIMEZONE:Europe/Zurich',
       'X-PUBLISHED-TTL:PT30M',
     ];
@@ -245,7 +245,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       const updatedAt = event.updatedAt ? new Date(event.updatedAt) : now;
 
       lines.push('BEGIN:VEVENT');
-      lines.push(`UID:meeting-event-${event._id}@4minitz`);
+      lines.push(`UID:meeting-event-${event._id}@nxtminutes`);
       lines.push(`DTSTAMP:${toUtcStamp(updatedAt)}`);
       lines.push(`DTSTART;TZID=Europe/Zurich:${startsAt}`);
       lines.push(`DTEND;TZID=Europe/Zurich:${endsAt}`);
@@ -272,7 +272,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       const updatedAt = minute.updatedAt ? new Date(minute.updatedAt) : now;
 
       lines.push('BEGIN:VEVENT');
-      lines.push(`UID:minutes-${minute._id}@4minitz`);
+      lines.push(`UID:minutes-${minute._id}@nxtminutes`);
       lines.push(`DTSTAMP:${toUtcStamp(updatedAt)}`);
       if (hasTime) {
         const startsAt = toIcalLocalDateTime(minuteDate, String(minute.time || '09:00'));
@@ -302,7 +302,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       headers: {
         'Content-Type': 'text/calendar; charset=utf-8',
         'Cache-Control': 'public, max-age=300',
-        'Content-Disposition': 'inline; filename="4minitz-calendar.ics"',
+        'Content-Disposition': 'inline; filename="nxtminutes-calendar.ics"',
       },
     });
   } catch (error) {

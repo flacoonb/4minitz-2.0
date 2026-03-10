@@ -1,10 +1,10 @@
-# 4Minitz 2.0
+# NXTMinutes
 
 Modern meeting minutes app with task tracking, templates, and collaborative preparation.
 
 ## Overview
 
-`4Minitz 2.0` helps teams run structured meetings and follow up on action items.  
+`NXTMinutes` helps teams run structured meetings and follow up on action items.  
 Minutes can be created visually or in Markdown mode, then managed consistently through the same data model.
 
 ## Current Feature Set
@@ -45,7 +45,7 @@ Minutes can be created visually or in Markdown mode, then managed consistently t
 ### Option A: Full installer (recommended on fresh Linux setup)
 
 ```bash
-curl -fsSLO https://raw.githubusercontent.com/flacoonb/4minitz-2.0/main/install.sh
+curl -fsSLO https://raw.githubusercontent.com/flacoonb/NXTminutes/main/install.sh
 less install.sh
 sudo bash install.sh
 ```

@@ -1,7 +1,7 @@
 /**
  * Minutes Model
  * Represents meeting minutes/protocols
- * Migrated from 4minitz Meteor version
+ * Migrated from nxtminutes Meteor version
  */
 import mongoose, { Schema, Document, Model } from 'mongoose';
 

@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 
-# 4Minitz 2.0 - Setup Script
+# NXTMinutes - Setup Script
 # Dieses Script richtet die komplette Entwicklungsumgebung ein
 
 set -euo pipefail
 
-echo "🚀 4Minitz 2.0 Setup"
+echo "🚀 NXTMinutes Setup"
 echo "======================="
 echo ""
 
@@ -53,7 +53,7 @@ if [ ! -f .env.local ]; then
     echo "⚙️  Erstelle .env.local..."
     cat > .env.local << 'EOF'
 # MongoDB Connection
-MONGODB_URI=mongodb://localhost:27017/4minitz-next
+MONGODB_URI=mongodb://localhost:27017/nxtminutes
 
 # Auth / Security
 JWT_SECRET=change-this-to-a-random-secret-min-32-chars
@@ -68,7 +68,7 @@ NEXTAUTH_URL=http://localhost:3000
 SMTP_HOST=localhost
 SMTP_PORT=1025
 SMTP_SECURE=false
-FROM_EMAIL=noreply@4minitz.local
+FROM_EMAIL=noreply@nxtminutes.local
 
 # App URL
 APP_URL=http://localhost:3000
@@ -90,7 +90,7 @@ if [ "$SKIP_DOCKER" = false ]; then
         # try to extract DB name
         DEFAULT_DB=$(echo "$DEFAULT_URI" | sed -E 's|.*\/([^\/?]+)(\?.*)?$|\1|')
     fi
-    DEFAULT_DB=${DEFAULT_DB:-4minitz}
+    DEFAULT_DB=${DEFAULT_DB:-nxtminutes}
 
     read -p "MongoDB per Docker verwenden? (Y/n) " -n 1 -r
     echo ""
@@ -124,17 +124,17 @@ if [ "$SKIP_DOCKER" = false ]; then
             fi
         fi
 
-        if docker container inspect mongodb-4minitz >/dev/null 2>&1; then
+        if docker container inspect mongodb-nxtminutes >/dev/null 2>&1; then
             echo "ℹ️  MongoDB Container existiert bereits"
-            if ! docker ps --filter "name=^mongodb-4minitz$" --format '{{.Names}}' | grep -qx "mongodb-4minitz"; then
+            if ! docker ps --filter "name=^mongodb-nxtminutes$" --format '{{.Names}}' | grep -qx "mongodb-nxtminutes"; then
                 echo "🔄 Starte MongoDB..."
-                docker start mongodb-4minitz
+                docker start mongodb-nxtminutes
             fi
         else
             if [ "$ENABLE_AUTH" = true ]; then
                 # create container with root user
                 docker run -d \
-                    --name mongodb-4minitz \
+                    --name mongodb-nxtminutes \
                     --network host \
                     -v mongodb_data:/data/db \
                     -e MONGO_INITDB_ROOT_USERNAME="$ROOT_USER" \
@@ -142,7 +142,7 @@ if [ "$SKIP_DOCKER" = false ]; then
                     mongo:7.0
             else
                 docker run -d \
-                    --name mongodb-4minitz \
+                    --name mongodb-nxtminutes \
                     --network host \
                     -v mongodb_data:/data/db \
                     mongo:7.0
@@ -154,8 +154,8 @@ if [ "$SKIP_DOCKER" = false ]; then
 
         if [ "$ENABLE_AUTH" = true ]; then
             # create application user
-            read -p "App-Benutzername (wird für die App verwendet) [minitz_app]: " APP_USER
-            APP_USER=${APP_USER:-minitz_app}
+            read -p "App-Benutzername (wird für die App verwendet) [nxtminutes_app]: " APP_USER
+            APP_USER=${APP_USER:-nxtminutes_app}
             read -s -p "App-Passwort: " APP_PASS
             echo ""
 

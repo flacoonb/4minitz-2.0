@@ -4,7 +4,7 @@ import MeetingSeries from '../models/MeetingSeries';
 import Minutes from '../models/Minutes';
 import Task from '../models/Task';
 
-const TARGET_DB = process.env.MONGODB_URI || 'mongodb://localhost:27017/4minitz';
+const TARGET_DB = process.env.MONGODB_URI || 'mongodb://localhost:27017/nxtminutes';
 const APPLY_CHANGES = process.argv.includes('--apply');
 const VERBOSE = process.argv.includes('--verbose');
 

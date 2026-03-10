@@ -301,7 +301,7 @@ const AdminSettings = () => {
         systemSettings: settings.systemSettings,
       },
     };
-    downloadJsonFile(`4minitz-settings-${new Date().toISOString().slice(0, 10)}.json`, payload);
+    downloadJsonFile(`nxtminutes-settings-${new Date().toISOString().slice(0, 10)}.json`, payload);
     setSuccess(t('system.exportSuccess'));
   };
 
@@ -384,7 +384,7 @@ const AdminSettings = () => {
       const blob = await response.blob();
       const contentDisposition = response.headers.get('content-disposition') || '';
       const fileMatch = contentDisposition.match(/filename="?([^"]+)"?/i);
-      const filename = fileMatch?.[1] || `4minitz-backup-${new Date().toISOString()}.json`;
+      const filename = fileMatch?.[1] || `nxtminutes-backup-${new Date().toISOString()}.json`;
 
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');

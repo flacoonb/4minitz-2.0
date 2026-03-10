@@ -1,6 +1,6 @@
 {
-  "name": "4Minitz 2.0",
-  "short_name": "4Minitz",
+  "name": "NXTMinutes",
+  "short_name": "NXTMinutes",
   "description": "Sitzungsprotokoll-Verwaltung",
   "start_url": "/",
   "display": "standalone",

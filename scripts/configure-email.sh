@@ -162,7 +162,7 @@ fi
 
 echo ""
 echo "🔄 Starten Sie die Anwendung neu, um die Änderungen zu übernehmen:"
-echo "   sudo systemctl restart 4minitz"
+echo "   sudo systemctl restart nxtminutes"
 echo ""
 echo "🧪 Testen Sie die Konfiguration unter:"
 echo "   http://localhost:3000/settings/email"

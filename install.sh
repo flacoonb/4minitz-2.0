@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 
-# 4Minitz 2.0 - Full Installer
+# NXTMinutes - Full Installer
 # Usage:
-#   curl -fsSLO https://raw.githubusercontent.com/flacoonb/4minitz-2.0/main/install.sh
+#   curl -fsSLO https://raw.githubusercontent.com/flacoonb/NXTminutes/main/install.sh
 #   less install.sh
 #   sudo bash install.sh
 
 set -euo pipefail
 
-REPO_URL="https://github.com/flacoonb/4minitz-2.0.git"
+REPO_URL="https://github.com/flacoonb/NXTminutes.git"
 NODE_MAJOR_REQUIRED=24
-INSTALL_BASENAME="4minitz-2.0"
+INSTALL_BASENAME="nxtminutes"
 
 # Colors
 GREEN='\033[0;32m'
@@ -18,7 +18,7 @@ BLUE='\033[0;34m'
 RED='\033[0;31m'
 NC='\033[0m' # No Color
 
-echo -e "${BLUE}🚀 4Minitz 2.0 Installer${NC}"
+echo -e "${BLUE}🚀 NXTMinutes Installer${NC}"
 echo "========================"
 
 # 1. Check privileges and runtime expectations
@@ -162,13 +162,13 @@ sudo -H -u "$SUDO_USER" bash -lc "cd \"$INSTALL_DIR\" && ./setup.sh"
 
 # 7. Install Systemd Service (Optional)
 echo -e "\n${BLUE}🚀 Service Installation${NC}"
-read -p "Do you want to install 4Minitz as a systemd service (auto-start on boot)? (y/N) " -n 1 -r
+read -p "Do you want to install NXTMinutes as a systemd service (auto-start on boot)? (y/N) " -n 1 -r
 echo
 if [[ $REPLY =~ ^[Yy]$ ]]; then
-    APP_NAME="4minitz"
-    LEGACY_APP_NAME="4minitz-2.0"
+    APP_NAME="nxtminutes"
+    LEGACY_APP_NAMES=("4minitz" "4minitz-2.0")
     APP_DIR=$(pwd)
-    SERVICE_FILE="4minitz-2.0.service"
+    SERVICE_FILE="nxtminutes.service"
     SYSTEMD_DIR="/etc/systemd/system"
     
     # Determine user who owns the directory (to run the service as)
@@ -197,9 +197,11 @@ if [[ $REPLY =~ ^[Yy]$ ]]; then
         sed -i "s|^WorkingDirectory=.*|WorkingDirectory=$APP_DIR|g" "$TARGET_SERVICE"
         sed -i "s|^ExecStart=.*|ExecStart=$APP_DIR/node_modules/.bin/next start|g" "$TARGET_SERVICE"
         
-        # Disable legacy service name to avoid duplicate processes/ports.
-        systemctl stop "${LEGACY_APP_NAME}.service" 2>/dev/null || true
-        systemctl disable "${LEGACY_APP_NAME}.service" 2>/dev/null || true
+        # Disable legacy service names to avoid duplicate processes/ports.
+        for LEGACY_APP_NAME in "${LEGACY_APP_NAMES[@]}"; do
+            systemctl stop "${LEGACY_APP_NAME}.service" 2>/dev/null || true
+            systemctl disable "${LEGACY_APP_NAME}.service" 2>/dev/null || true
+        done
 
         # Reload systemd
         systemctl daemon-reload

@@ -23,7 +23,7 @@ const EMAIL_CONFIG = {
   } : undefined,
 };
 
-const FROM_EMAIL = process.env.FROM_EMAIL || 'noreply@4minitz.local';
+const FROM_EMAIL = process.env.FROM_EMAIL || 'noreply@nxtminutes.local';
 // APP_URL is now dynamic via getAppUrl()
 
 function normalizeUrlCandidate(value: string): string {
@@ -95,7 +95,7 @@ export async function getOrgName() {
       return settings.systemSettings.organizationName;
     }
   } catch (_e) { }
-  return '4Minitz 2.0';
+  return 'NXTMinutes';
 }
 
 export async function getTransporter() {
@@ -173,7 +173,7 @@ const translations = {
       topicsCount: (count: number) => `Anzahl Themen: ${count}`,
       actionItemsCount: (count: number) => `Anzahl Aktionspunkte: ${count}`,
       viewButton: 'Protokoll anzeigen',
-      footer: 'Diese E-Mail wurde automatisch von 4Minitz 2.0 versendet.',
+      footer: 'Diese E-Mail wurde automatisch von NXTMinutes versendet.',
     },
     actionItemAssigned: {
       subject: (series: string) => `Neuer Aktionspunkt zugewiesen: ${series}`,
@@ -183,28 +183,28 @@ const translations = {
       priority: 'Priorität:',
       dueDate: 'Fällig:',
       viewButton: 'Aktionspunkt anzeigen',
-      footer: 'Diese E-Mail wurde automatisch von 4Minitz 2.0 versendet.',
+      footer: 'Diese E-Mail wurde automatisch von NXTMinutes versendet.',
     },
     actionItemOverdue: {
       subject: (count: number) => `${count} überfällige Aktionspunkte`,
       greeting: 'Hallo',
       intro: (count: number) => `Sie haben ${count} überfällige Aktionspunkte:`,
       viewButton: 'Dashboard anzeigen',
-      footer: 'Diese E-Mail wurde automatisch von 4Minitz 2.0 versendet.',
+      footer: 'Diese E-Mail wurde automatisch von NXTMinutes versendet.',
     },
     pendingTasksReminder: {
       subject: (count: number) => `Erinnerung: ${count} offene Aufgaben`,
       greeting: (name?: string) => name ? `Hallo ${name}` : 'Hallo',
       intro: (count: number) => `Sie haben ${count} offene Aufgaben, die noch erledigt werden müssen:`,
       viewButton: 'Dashboard anzeigen',
-      footer: 'Diese E-Mail wurde automatisch von 4Minitz 2.0 versendet.',
+      footer: 'Diese E-Mail wurde automatisch von NXTMinutes versendet.',
     },
     welcome: {
-      subject: 'Willkommen bei 4Minitz 2.0!',
+      subject: 'Willkommen bei NXTMinutes!',
       greeting: 'Hallo',
-      intro: 'Willkommen bei 4Minitz 2.0! Ihr Konto wurde erfolgreich erstellt.',
-      loginButton: 'Bei 4Minitz 2.0 anmelden',
-      footer: 'Diese E-Mail wurde automatisch von 4Minitz 2.0 versendet.',
+      intro: 'Willkommen bei NXTMinutes! Ihr Konto wurde erfolgreich erstellt.',
+      loginButton: 'Bei NXTMinutes anmelden',
+      footer: 'Diese E-Mail wurde automatisch von NXTMinutes versendet.',
     },
     verifyEmail: {
       subject: 'Bestätigen Sie Ihre E-Mail-Adresse',
@@ -212,7 +212,7 @@ const translations = {
       intro: 'Bitte bestätigen Sie Ihre E-Mail-Adresse, um Ihr Konto zu aktivieren.',
       verifyButton: 'E-Mail bestätigen',
       expiryNote: 'Dieser Link ist 24 Stunden gültig.',
-      footer: 'Diese E-Mail wurde automatisch von 4Minitz 2.0 versendet.',
+      footer: 'Diese E-Mail wurde automatisch von NXTMinutes versendet.',
     },
   },
   en: {
@@ -225,7 +225,7 @@ const translations = {
       topicsCount: (count: number) => `Number of topics: ${count}`,
       actionItemsCount: (count: number) => `Number of action items: ${count}`,
       viewButton: 'View Minutes',
-      footer: 'This email was sent automatically by 4Minitz 2.0.',
+      footer: 'This email was sent automatically by NXTMinutes.',
     },
     actionItemAssigned: {
       subject: (series: string) => `New Action Item Assigned: ${series}`,
@@ -235,28 +235,28 @@ const translations = {
       priority: 'Priority:',
       dueDate: 'Due:',
       viewButton: 'View Action Item',
-      footer: 'This email was sent automatically by 4Minitz 2.0.',
+      footer: 'This email was sent automatically by NXTMinutes.',
     },
     actionItemOverdue: {
       subject: (count: number) => `${count} Overdue Action Items`,
       greeting: 'Hello',
       intro: (count: number) => `You have ${count} overdue action items:`,
       viewButton: 'View Dashboard',
-      footer: 'This email was sent automatically by 4Minitz 2.0.',
+      footer: 'This email was sent automatically by NXTMinutes.',
     },
     pendingTasksReminder: {
       subject: (count: number) => `Reminder: ${count} Open Tasks`,
       greeting: (name?: string) => name ? `Hello ${name}` : 'Hello',
       intro: (count: number) => `You have ${count} open tasks pending:`,
       viewButton: 'View Dashboard',
-      footer: 'This email was sent automatically by 4Minitz 2.0.',
+      footer: 'This email was sent automatically by NXTMinutes.',
     },
     welcome: {
-      subject: 'Welcome to 4Minitz 2.0!',
+      subject: 'Welcome to NXTMinutes!',
       greeting: 'Hello',
-      intro: 'Welcome to 4Minitz 2.0! Your account has been successfully created.',
-      loginButton: 'Login to 4Minitz 2.0',
-      footer: 'This email was sent automatically by 4Minitz 2.0.',
+      intro: 'Welcome to NXTMinutes! Your account has been successfully created.',
+      loginButton: 'Login to NXTMinutes',
+      footer: 'This email was sent automatically by NXTMinutes.',
     },
     verifyEmail: {
       subject: 'Verify Your Email Address',
@@ -264,7 +264,7 @@ const translations = {
       intro: 'Please verify your email address to activate your account.',
       verifyButton: 'Verify Email',
       expiryNote: 'This link is valid for 24 hours.',
-      footer: 'This email was sent automatically by 4Minitz 2.0.',
+      footer: 'This email was sent automatically by NXTMinutes.',
     },
   },
 };

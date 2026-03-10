@@ -102,7 +102,7 @@
     }
   },
   "home": {
-    "title": "Willkommen bei 4Minitz 2.0",
+    "title": "Willkommen bei NXTMinutes",
     "subtitle": "Proof-of-Concept: Meteor.js → Next.js 15",
     "features": {
       "title": "Funktionen",
@@ -867,7 +867,7 @@
   },
   "admin": {
     "title": "Admin-Bereich",
-    "subtitle": "Verwaltung und Konfiguration von 4Minitz 2.0",
+    "subtitle": "Verwaltung und Konfiguration von NXTMinutes",
     "emailConfig": {
       "title": "E-Mail-Konfiguration",
       "description": "SMTP-Server einrichten und E-Mail-Benachrichtigungen testen"
@@ -918,7 +918,7 @@
     },
     "infoBox": {
       "title": "Administrator-Bereich:",
-      "text": "Hier können Sie zentrale Einstellungen von 4Minitz 2.0 vornehmen. Bitte beachten Sie, dass diese Änderungen Auswirkungen auf alle Benutzer haben können."
+      "text": "Hier können Sie zentrale Einstellungen von NXTMinutes vornehmen. Bitte beachten Sie, dass diese Änderungen Auswirkungen auf alle Benutzer haben können."
     },
     "dashboard": "Admin Dashboard",
     "settings": {
@@ -1651,7 +1651,7 @@
     "loading": "Lädt..."
   },
   "setup": {
-    "title": "4Minitz 2.0 Einrichtung",
+    "title": "NXTMinutes Einrichtung",
     "subtitle": "Ersteinrichtung",
     "tokenLabel": "Setup-Token",
     "tokenPlaceholder": "Setup-Token eingeben",

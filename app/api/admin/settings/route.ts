@@ -110,7 +110,7 @@ const DEFAULT_SETTINGS = {
     digestFrequency: 'weekly'
   },
   systemSettings: {
-    organizationName: '4Minitz 2.0',
+    organizationName: 'NXTMinutes',
     organizationLogo: null,
     brandColors: DEFAULT_BRAND_COLORS,
     timezone: 'Europe/Berlin',

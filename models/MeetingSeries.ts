@@ -1,7 +1,7 @@
 /**
  * MeetingSeries Model
  * Represents a series of recurring meetings
- * Migrated from 4minitz Meteor version
+ * Migrated from nxtminutes Meteor version
  */
 import mongoose, { Schema, Document, Model } from 'mongoose';
 

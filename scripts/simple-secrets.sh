@@ -5,12 +5,12 @@
 
 set -e
 
-SECRETS_DIR="$HOME/.4minitz-secrets"
+SECRETS_DIR="$HOME/.nxtminutes-secrets"
 ENCRYPTED_FILE="$SECRETS_DIR/smtp.gpg"
 PLAIN_FILE="$SECRETS_DIR/smtp.env"
 
 echo "=========================================="
-echo "  4Minitz Simple Encrypted Secrets"
+echo "  NXTMinutes Simple Encrypted Secrets"
 echo "=========================================="
 echo ""
 echo "Diese Lösung verwendet GPG zur Verschlüsselung."
@@ -145,7 +145,7 @@ EOF
         echo "✅ .env.local aktualisiert"
         echo ""
         echo "Starten Sie die Anwendung neu:"
-        echo "  sudo systemctl restart 4minitz"
+        echo "  sudo systemctl restart nxtminutes"
         ;;
         
     4)

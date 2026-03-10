@@ -28,7 +28,7 @@ export default function EmailConfigPage() {
     secure: false,
     hasAuth: false,
     user: null,
-    fromEmail: 'noreply@4minitz.local',
+    fromEmail: 'noreply@nxtminutes.local',
   });
   const [isValid, setIsValid] = useState(false);
   const [password, setPassword] = useState('');

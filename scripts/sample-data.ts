@@ -9,7 +9,7 @@ import mongoose from 'mongoose';
 import MeetingSeries from '../models/MeetingSeries';
 import Minutes from '../models/Minutes';
 
-const TARGET_DB = process.env.MONGODB_URI || 'mongodb://localhost:27017/4minitz-next';
+const TARGET_DB = process.env.MONGODB_URI || 'mongodb://localhost:27017/nxtminutes';
 
 async function createSampleData() {
   console.log('\n🎨 Creating Sample Data');

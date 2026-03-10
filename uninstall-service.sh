@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 
-# 4Minitz 2.0 Service Uninstallation Script
-# This script removes the 4Minitz 2.0 systemd service
+# NXTMinutes Service Uninstallation Script
+# This script removes the NXTMinutes systemd service
 
 set -euo pipefail
 
-APP_NAMES=("4minitz" "4minitz-2.0")
+APP_NAMES=("nxtminutes" "4minitz" "4minitz-2.0")
 SYSTEMD_DIR="/etc/systemd/system"
 
-echo "🛑 Uninstalling 4Minitz 2.0 systemd service..."
+echo "🛑 Uninstalling NXTMinutes systemd service..."
 
 # Check if running as root or with sudo
 if [[ $EUID -ne 0 ]]; then

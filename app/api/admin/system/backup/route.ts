@@ -105,14 +105,14 @@ export async function GET(request: NextRequest) {
 
     const exportedAt = new Date();
     const fileSafeTimestamp = exportedAt.toISOString().replace(/[:.]/g, '-');
-    const filename = `4minitz-backup-${fileSafeTimestamp}.json`;
+    const filename = `nxtminutes-backup-${fileSafeTimestamp}.json`;
 
     const safeSettings = sanitizeSettings(settings, includeSensitive);
     const safeUsers = sanitizeUsers(users, includeSensitive);
 
     const payload = {
       metadata: {
-        app: '4minitz-2.0',
+        app: 'nxtminutes',
         exportedAt: exportedAt.toISOString(),
         exportedBy: auth.user.username,
         formatVersion: 1,

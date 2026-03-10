@@ -6,7 +6,7 @@ import Minutes from '../models/Minutes';
 // Load environment variables
 dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/4minitz';
+const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/nxtminutes';
 
 async function inspectMinute() {
   try {

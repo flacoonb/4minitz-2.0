@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 const mongoose = require('mongoose');
 
-const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/4minitz';
+const uri = process.env.MONGODB_URI || 'mongodb://localhost:27017/nxtminutes';
 
 async function run(){
   try{

@@ -1,16 +1,17 @@
 #!/bin/bash
 
-# setup-secrets.sh - Encrypted secrets management for 4minitz
+# setup-secrets.sh - Encrypted secrets management for nxtminutes
 # This script helps you securely store SMTP credentials using systemd credentials encryption
 
 set -e
 
-SECRETS_DIR="/etc/4minitz/secrets"
+PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+SECRETS_DIR="/etc/nxtminutes/secrets"
 ENCRYPTED_FILE="$SECRETS_DIR/smtp.encrypted"
-SERVICE_NAME="4minitz"
+SERVICE_NAME="nxtminutes"
 
 echo "=========================================="
-echo "  4Minitz Encrypted Secrets Setup"
+echo "  NXTMinutes Encrypted Secrets Setup"
 echo "=========================================="
 echo ""
 
@@ -100,7 +101,7 @@ echo "✅ Service-Konfiguration erstellt"
 echo ""
 
 # Create helper script to read credentials
-HELPER_SCRIPT="/home/pi/4minitz-next/scripts/load-smtp-credentials.sh"
+HELPER_SCRIPT="$PROJECT_ROOT/scripts/load-smtp-credentials.sh"
 
 cat > "$HELPER_SCRIPT" <<'EOFSCRIPT'
 #!/bin/bash
@@ -141,7 +142,7 @@ echo "✅ Credentials-Loader erstellt"
 echo ""
 
 # Update .env.local to use environment variables (as fallback)
-ENV_FILE="/home/pi/4minitz-next/.env.local"
+ENV_FILE="$PROJECT_ROOT/.env.local"
 if [ -f "$ENV_FILE" ]; then
     # Backup current .env.local
     BACKUP_FILE="$ENV_FILE.backup.secrets.$(date +%Y%m%d_%H%M%S)"

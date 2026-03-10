@@ -67,14 +67,14 @@ export async function GET(request: NextRequest) {
       const t = locale === 'de' ? {
         subject: 'Ihre tägliche Zusammenfassung',
         greeting: `Hallo ${user.firstName},`,
-        intro: `Hier ist Ihre Zusammenfassung der letzten Ereignisse bei 4Minitz 2.0:`,
+        intro: `Hier ist Ihre Zusammenfassung der letzten Ereignisse bei NXTMinutes:`,
         newMinutes: 'Neue Protokolle',
         newActions: 'Neue Aufgaben',
         viewDashboard: 'Zum Dashboard'
       } : {
         subject: 'Your Daily Digest',
         greeting: `Hello ${user.firstName},`,
-        intro: `Here is your summary of recent events at 4Minitz 2.0:`,
+        intro: `Here is your summary of recent events at NXTMinutes:`,
         newMinutes: 'New Minutes',
         newActions: 'New Action Items',
         viewDashboard: 'Go to Dashboard'

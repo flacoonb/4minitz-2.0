@@ -148,7 +148,7 @@ const SettingsSchema = new Schema<ISettings>({
     digestFrequency: { type: String, enum: ['daily', 'weekly', 'monthly'], default: 'weekly' }
   },
   systemSettings: {
-    organizationName: { type: String, default: '4Minitz' },
+    organizationName: { type: String, default: 'NXTMinutes' },
     organizationLogo: { type: String },
     brandColors: {
       primary: { type: String, default: '#6366F1', match: HEX_COLOR_PATTERN },

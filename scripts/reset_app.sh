@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Reset script for 4minitz-next: drops MongoDB database and clears uploads.
+# Reset script for nxtminutes: drops MongoDB database and clears uploads.
 # Usage: MONGODB_URI="..." ./scripts/reset_app.sh
 # To run non-interactively: FORCE=1 ./scripts/reset_app.sh
 

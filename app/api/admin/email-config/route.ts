@@ -51,7 +51,7 @@ export async function GET(request: NextRequest) {
       secure: process.env.SMTP_SECURE === 'true',
       hasAuth: !!(process.env.SMTP_USER && process.env.SMTP_PASS),
       user: process.env.SMTP_USER || null,
-      fromEmail: process.env.FROM_EMAIL || 'noreply@4minitz.local',
+      fromEmail: process.env.FROM_EMAIL || 'noreply@nxtminutes.local',
       source: 'environment'
     };
 
