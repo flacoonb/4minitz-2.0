@@ -18,7 +18,7 @@ let vapidConfigured = false;
 function getVapidConfig() {
   const publicKey = process.env.VAPID_PUBLIC_KEY || process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
   const privateKey = process.env.VAPID_PRIVATE_KEY;
-  const subject = process.env.VAPID_SUBJECT || 'mailto:noreply@4minitz.local';
+  const subject = process.env.VAPID_SUBJECT || 'mailto:noreply@nxtminutes.local';
 
   if (!publicKey || !privateKey) {
     return null;
@@ -51,9 +51,9 @@ function sanitizePayload(payload: PushPayload) {
     title: payload.title,
     body: payload.body,
     url: payload.url || '/dashboard',
-    tag: payload.tag || '4minitz-notification',
-    icon: payload.icon || '/next.svg',
-    badge: payload.badge || '/next.svg',
+    tag: payload.tag || 'nxtminutes-notification',
+    icon: payload.icon || '/android-chrome-192x192.png',
+    badge: payload.badge || '/favicon-32x32.png',
     lang: payload.lang || 'de',
   };
 }

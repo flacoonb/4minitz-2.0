@@ -7,12 +7,12 @@ self.addEventListener('push', (event) => {
     data = {};
   }
 
-  const title = data.title || '4Minitz';
+  const title = data.title || 'NXTMinutes';
   const options = {
     body: data.body || '',
-    icon: data.icon || '/next.svg',
-    badge: data.badge || '/next.svg',
-    tag: data.tag || '4minitz-notification',
+    icon: data.icon || '/android-chrome-192x192.png',
+    badge: data.badge || '/favicon-32x32.png',
+    tag: data.tag || 'nxtminutes-notification',
     data: {
       url: data.url || '/dashboard',
     },

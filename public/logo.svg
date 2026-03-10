@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1400" height="360" viewBox="0 0 1400 360">
+  <defs>
+    <linearGradient id="nxt-bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="48%" stop-color="#1d4ed8"/>
+      <stop offset="100%" stop-color="#0ea5e9"/>
+    </linearGradient>
+    <radialGradient id="nxt-glow" cx="78%" cy="20%" r="56%">
+      <stop offset="0%" stop-color="#67e8f9" stop-opacity="0.55"/>
+      <stop offset="100%" stop-color="#67e8f9" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="text-gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="55%" stop-color="#1d4ed8"/>
+      <stop offset="100%" stop-color="#0ea5e9"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="16" y="16" width="328" height="328" rx="84" fill="url(#nxt-bg)"/>
+  <rect x="16" y="16" width="328" height="328" rx="84" fill="url(#nxt-glow)"/>
+
+  <rect x="88" y="72" width="42" height="216" rx="21" fill="#f8fafc"/>
+  <rect x="230" y="72" width="42" height="216" rx="21" fill="#f8fafc"/>
+  <polygon points="130,288 178,288 230,72 182,72" fill="#22d3ee"/>
+
+  <circle cx="278" cy="90" r="22" fill="#f59e0b"/>
+  <circle cx="278" cy="90" r="11" fill="#fef3c7"/>
+
+  <text
+    x="392"
+    y="202"
+    font-family="Segoe UI, Inter, Helvetica, Arial, sans-serif"
+    font-size="118"
+    font-weight="800"
+    letter-spacing="-1.6"
+    fill="url(#text-gradient)"
+  >
+    NXTMinutes
+  </text>
+  <text
+    x="396"
+    y="262"
+    font-family="Segoe UI, Inter, Helvetica, Arial, sans-serif"
+    font-size="34"
+    font-weight="600"
+    letter-spacing="4.8"
+    fill="#334155"
+  >
+    MEETING INTELLIGENCE
+  </text>
+</svg>
