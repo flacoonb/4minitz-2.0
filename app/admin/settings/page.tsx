@@ -586,7 +586,7 @@ const AdminSettings = () => {
               </div>
             </div>
             
-            <div className="hidden sm:flex sticky top-20 z-30 flex-col sm:flex-row sm:items-center gap-3 bg-white/80 backdrop-blur-sm p-2 rounded-xl border border-white/60 shadow-sm">
+            <div className="hidden sm:flex fixed right-4 bottom-4 z-50 flex-col sm:flex-row sm:items-center gap-3 bg-white/90 backdrop-blur-sm p-2 rounded-xl border border-white/60 shadow-lg">
               {hasChanges && (
                 <span className="px-3 py-1 bg-orange-100 text-orange-800 rounded-full text-sm font-medium">
                   {t('unsavedChanges')}
