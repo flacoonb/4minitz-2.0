@@ -1,5 +1,6 @@
 import mongoose, { Schema, Document, Model } from 'mongoose';
 import bcrypt from 'bcryptjs';
+import { isHexObjectIdLike, isValidEmailAddress } from '@/lib/input-validation';
 
 export interface INotificationSettings {
   enableEmailNotifications: boolean;
@@ -71,8 +72,7 @@ const UserSchema: Schema<IUser> = new Schema(
       trim: true,
       validate: {
         validator: (email: string) => {
-          // Allow longer TLDs (e.g. .info, .host, .local)
-          return /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,})+$/.test(email);
+          return isValidEmailAddress(email);
         },
         message: 'Ungültige E-Mail-Adresse'
       }
@@ -89,7 +89,7 @@ const UserSchema: Schema<IUser> = new Schema(
         validator: (username: string) => {
           // Reserve ObjectId-like values to prevent identifier confusion (username vs userId).
           // Allow multi-word usernames via spaces, but prevent leading/trailing spaces via trim.
-          return /^[\p{L}\p{N}._ -]+$/u.test(username) && !/^[a-fA-F0-9]{24}$/.test(username);
+          return /^[\p{L}\p{N}._ -]+$/u.test(username) && !isHexObjectIdLike(username);
         },
         message: 'Benutzername ist ungültig oder reserviert'
       }

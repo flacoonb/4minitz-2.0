@@ -110,6 +110,36 @@ const HEADER_POSITION_PRESETS: Array<{
   { id: 'bottom-right', anchorX: 'right', anchorY: 'bottom', labelKey: 'layout.properties.presetBottomRight' },
 ];
 
+function sanitizePreviewImageSrc(rawValue: string): string {
+  const value = rawValue.trim();
+  if (!value) return '';
+
+  // Prevent script-like input from being interpreted by the browser preview.
+  if (
+    value.includes('<') ||
+    value.includes('>') ||
+    value.includes('"') ||
+    value.includes("'") ||
+    value.includes('`')
+  ) {
+    return '';
+  }
+
+  if (value.startsWith('/')) return value;
+  if (value.startsWith('data:image/')) return value;
+
+  try {
+    const parsed = new URL(value);
+    if (parsed.protocol === 'https:' || parsed.protocol === 'http:') {
+      return parsed.toString();
+    }
+  } catch {
+    return '';
+  }
+
+  return '';
+}
+
 const DEFAULT_LAYOUT_ELEMENTS: LayoutElement[] = [
   {
     id: 'page-frame',
@@ -1341,7 +1371,10 @@ export default function PdfConfigPage() {
   const itemLabelEnabled = itemLabelPreviewEl?.enabled !== false;
   const separatorEnabled = separatorPreviewEl?.enabled !== false;
   const footerEnabled = footerPreviewEl?.enabled !== false && contentSettings.showFooter;
-  const logoSourceUrl = contentSettings.logoUrl || '';
+  const logoSourceUrl = useMemo(
+    () => sanitizePreviewImageSrc(contentSettings.logoUrl || ''),
+    [contentSettings.logoUrl]
+  );
   const logoVisible = contentSettings.showLogo && Boolean(logoSourceUrl);
   const logoCustomPlacementEnabled = logoSettings.enabled === true;
 
@@ -1607,7 +1640,7 @@ export default function PdfConfigPage() {
             </div>
             <button
               onClick={() => setMessage(null)}
-              className="text-white hover:text-gray-200 transition-colors min-h-10 min-w-10 inline-flex items-center justify-center rounded-lg"
+              className="text-white hover:text-gray-200 transition-colors min-h-11 min-w-11 inline-flex items-center justify-center rounded-lg"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

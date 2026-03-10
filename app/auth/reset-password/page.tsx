@@ -139,7 +139,7 @@ export default function ResetPasswordPage() {
                     </div>
                     <span className="text-xs text-slate-600">{strengthScore}/5</span>
                   </div>
-                  <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="grid grid-cols-1 min-[420px]:grid-cols-2 gap-2 text-xs">
                     <div className={`flex items-center gap-1 ${passwordStrength.length ? 'text-green-600' : 'text-slate-400'}`}>
                       <Check className="w-3 h-3" /> {tReg('requirements.minLength')}
                     </div>

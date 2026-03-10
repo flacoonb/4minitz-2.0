@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { withAdminAuth } from '@/contexts/AuthContext';
 import { useTranslations } from 'next-intl';
@@ -46,7 +46,7 @@ function AdminClubFunctionsPage() {
     [entries]
   );
 
-  const loadEntries = async () => {
+  const loadEntries = useCallback(async () => {
     setLoading(true);
     setError(null);
     try {
@@ -59,7 +59,7 @@ function AdminClubFunctionsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
 
   useEffect(() => {
     loadEntries();
@@ -74,7 +74,7 @@ function AdminClubFunctionsPage() {
       }
     };
     loadUsers();
-  }, []);
+  }, [loadEntries]);
 
   const handleCreate = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -147,17 +147,17 @@ function AdminClubFunctionsPage() {
   };
 
   return (
-    <div className="min-h-screen brand-page-gradient brandize-admin py-6 px-4">
+    <div className="min-h-screen brand-page-gradient brandize-admin py-6 px-3 sm:px-4">
       <div className="max-w-5xl mx-auto space-y-6">
         <div className="bg-white/90 rounded-2xl shadow-sm border border-gray-100 p-6">
-          <div className="flex items-center justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">{t('title')}</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 break-words">{t('title')}</h1>
               <p className="text-sm text-gray-600 mt-1">{t('subtitle')}</p>
             </div>
             <Link
               href="/admin"
-              className="px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50"
+              className="w-full sm:w-auto px-4 py-2.5 min-h-11 inline-flex items-center justify-center bg-white border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50"
             >
               {t('back')}
             </Link>
@@ -172,7 +172,7 @@ function AdminClubFunctionsPage() {
               <input
                 value={newName}
                 onChange={(e) => setNewName(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                className="w-full px-3 py-2.5 min-h-11 border border-gray-300 rounded-lg"
                 placeholder={t('namePlaceholder')}
                 required
               />
@@ -182,7 +182,7 @@ function AdminClubFunctionsPage() {
               <input
                 value={newDescription}
                 onChange={(e) => setNewDescription(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg"
+                className="w-full px-3 py-2.5 min-h-11 border border-gray-300 rounded-lg"
                 placeholder={t('descriptionPlaceholder')}
               />
             </div>
@@ -190,7 +190,7 @@ function AdminClubFunctionsPage() {
           <button
             type="submit"
             disabled={saving}
-            className="px-4 py-2 brand-button-primary rounded-lg text-sm font-medium disabled:opacity-60"
+            className="w-full sm:w-auto px-4 py-2.5 min-h-11 brand-button-primary rounded-lg text-sm font-medium disabled:opacity-60"
           >
             {saving ? tCommon('saving') : t('create')}
           </button>
@@ -218,21 +218,21 @@ function AdminClubFunctionsPage() {
                         {entry.isActive ? t('active') : t('inactive')}
                       </span>
                     </div>
-                    <p className="text-xs text-gray-500 mt-1">{entry.token}</p>
+                    <p className="text-xs text-gray-500 mt-1 break-all">{entry.token}</p>
                     <p className="text-xs text-gray-600 mt-1">
                       {t('assignedTo')}{' '}
                       {users.find((user) => user._id === entry.assignedUserId)
                         ? `${users.find((user) => user._id === entry.assignedUserId)?.firstName} ${users.find((user) => user._id === entry.assignedUserId)?.lastName}`
                         : t('noAssignment')}
                     </p>
-                    {entry.description && <p className="text-sm text-gray-600 mt-1">{entry.description}</p>}
+                    {entry.description && <p className="text-sm text-gray-600 mt-1 break-words">{entry.description}</p>}
                   </div>
                   <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
                     <select
                       disabled={saving}
                       value={entry.assignedUserId || ''}
                       onChange={(e) => assignUser(entry, e.target.value)}
-                      className="px-2 py-2 border border-gray-300 rounded-lg text-sm bg-white min-w-[220px]"
+                      className="w-full sm:w-auto sm:min-w-[220px] px-2 py-2.5 min-h-11 border border-gray-300 rounded-lg text-sm bg-white"
                     >
                       <option value="">{t('noAssignment')}</option>
                       {users.map((user) => (
@@ -245,7 +245,7 @@ function AdminClubFunctionsPage() {
                       type="button"
                       disabled={saving}
                       onClick={() => toggleActive(entry)}
-                      className={`px-3 py-2 rounded-lg text-sm font-medium border ${entry.isActive ? 'border-amber-300 bg-amber-50 text-amber-800' : 'border-emerald-300 bg-emerald-50 text-emerald-800'} disabled:opacity-60`}
+                      className={`px-3 py-2.5 min-h-11 rounded-lg text-sm font-medium border ${entry.isActive ? 'border-amber-300 bg-amber-50 text-amber-800' : 'border-emerald-300 bg-emerald-50 text-emerald-800'} disabled:opacity-60`}
                     >
                       {entry.isActive ? t('deactivate') : t('reactivate')}
                     </button>

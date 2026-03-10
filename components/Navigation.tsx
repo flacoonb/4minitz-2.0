@@ -137,7 +137,10 @@ export default function Navigation() {
 
           {/* Mobile Dropdown Menu */}
           {mobileMenuOpen && (
-            <div className="absolute left-0 right-0 top-full mt-1 mx-4 rounded-xl shadow-xl py-2 z-50 max-h-[70vh] overflow-y-auto app-card">
+            <div
+              className="absolute left-0 right-0 top-full mt-1 mx-4 rounded-xl shadow-xl py-2 z-50 max-h-[70vh] overflow-y-auto app-card"
+              style={{ backgroundColor: 'var(--brand-card)', backdropFilter: 'none' }}
+            >
               {navItems.map((item) => (
                 <Link
                   key={item.href}

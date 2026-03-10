@@ -3,6 +3,7 @@ import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
 import Settings from '@/models/Settings';
 import { encrypt } from '@/lib/crypto';
+import { isHexObjectIdLike, isValidEmailAddress } from '@/lib/input-validation';
 import fs from 'fs/promises';
 import path from 'path';
 import crypto from 'crypto';
@@ -90,8 +91,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: false, error: 'Missing required admin fields' }, { status: 400 });
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    if (!isValidEmailAddress(String(email || ''))) {
       return NextResponse.json({ success: false, error: 'Invalid email' }, { status: 400 });
     }
 
@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
     }
 
     const userName = username && username.trim().length >= 3 ? username.trim() : email.split('@')[0];
-    if (/^[a-fA-F0-9]{24}$/.test(userName)) {
+    if (isHexObjectIdLike(userName)) {
       return NextResponse.json({ success: false, error: 'Username is reserved' }, { status: 400 });
     }
 

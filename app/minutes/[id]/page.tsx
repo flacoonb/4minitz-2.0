@@ -279,14 +279,53 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
     setExportingPdf(true);
     
     try {
-      // Fetch active PDF template (content + layout in one payload)
-      const templateResponse = await fetch('/api/pdf-templates/active');
-      const templateResult = await templateResponse.json();
-      const templateData = templateResult?.data;
+      // Prefer series-specific PDF template; fall back to active global template.
+      let templateData: any = null;
+      const meetingSeriesId = minute?.meetingSeries_id?._id ? String(minute.meetingSeries_id._id) : '';
+
+      if (meetingSeriesId) {
+        try {
+          const seriesResponse = await fetch(`/api/meeting-series/${meetingSeriesId}`, {
+            credentials: 'include',
+            cache: 'no-store',
+          });
+          const seriesResult = await seriesResponse.json().catch(() => ({}));
+          const defaultPdfTemplateId =
+            typeof seriesResult?.data?.defaultPdfTemplateId === 'string'
+              ? seriesResult.data.defaultPdfTemplateId
+              : '';
+
+          if (defaultPdfTemplateId) {
+            const defaultTemplateResponse = await fetch(`/api/pdf-templates/${defaultPdfTemplateId}`, {
+              credentials: 'include',
+              cache: 'no-store',
+            });
+            const defaultTemplateResult = await defaultTemplateResponse.json().catch(() => ({}));
+            if (defaultTemplateResult?.success && defaultTemplateResult?.data) {
+              templateData = defaultTemplateResult.data;
+            }
+          }
+        } catch (_seriesTemplateError) {
+          // Silent fallback to active template.
+        }
+      }
+
+      if (!templateData) {
+        const templateResponse = await fetch('/api/pdf-templates/active', {
+          credentials: 'include',
+          cache: 'no-store',
+        });
+        const templateResult = await templateResponse.json();
+        if (!templateResult?.success || !templateResult?.data) {
+          throw new Error(t('minutes.pdfSettingsError'));
+        }
+        templateData = templateResult.data;
+      }
+
       const contentSettings = templateData?.contentSettings || templateData;
       const layoutSettings = templateData?.layoutSettings || null;
 
-      if (!templateResult.success || !contentSettings) {
+      if (!contentSettings) {
         throw new Error(t('minutes.pdfSettingsError'));
       }
 
@@ -492,11 +531,11 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
 
             {/* Action Buttons */}
             <div className="w-full lg:w-auto">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-2.5 lg:min-w-[340px]">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-2.5">
               {canEditMinute && !minute.isFinalized && (
                 <Link
                   href={`/minutes/${minuteId}/edit`}
-                  className="w-full px-4 py-2.5 min-h-10 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg inline-flex items-center justify-center"
+                  className="w-full px-4 py-2.5 min-h-11 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg inline-flex items-center justify-center"
                   style={{ background: 'linear-gradient(90deg, var(--brand-primary), var(--brand-primary-strong))', color: '#fff' }}
                 >
                   <div className="flex items-center gap-2">
@@ -510,7 +549,7 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
               {canFinalizeMinute && (
                 <button
                   onClick={handleFinalize}
-                  className="w-full px-4 py-2.5 min-h-10 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg"
+                  className="w-full px-4 py-2.5 min-h-11 rounded-lg font-semibold transition-all shadow-md hover:shadow-lg"
                   style={{
                     background: minute.isFinalized
                       ? 'linear-gradient(90deg, var(--brand-warning), var(--brand-warning))'
@@ -524,7 +563,7 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
               <button
                 onClick={handleExport}
                 disabled={exportingPdf}
-                className="w-full px-4 py-2.5 min-h-10 rounded-lg font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full px-4 py-2.5 min-h-11 rounded-lg font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{ background: 'linear-gradient(90deg, var(--brand-text-muted), var(--brand-text))', color: '#fff' }}
               >
                 <div className="flex items-center gap-2">
@@ -538,7 +577,7 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
                 <button
                   onClick={handleDelete}
                   disabled={minute.isFinalized}
-                  className="w-full px-4 py-2.5 min-h-10 rounded-lg font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full px-4 py-2.5 min-h-11 rounded-lg font-semibold hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   style={{ background: 'linear-gradient(90deg, var(--brand-danger), var(--brand-danger))', color: '#fff' }}
                   title={minute.isFinalized ? t('minutes.finalizedCantDelete') : t('minutes.delete')}
                 >
@@ -862,7 +901,7 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
             </div>
             <button
               onClick={() => setErrorMessage(null)}
-              className="text-white hover:text-red-100 transition-colors min-h-10 min-w-10 inline-flex items-center justify-center rounded-lg"
+              className="text-white hover:text-red-100 transition-colors min-h-11 min-w-11 inline-flex items-center justify-center rounded-lg"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

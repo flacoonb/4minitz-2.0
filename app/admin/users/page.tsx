@@ -623,7 +623,7 @@ const UserManagement = () => {
                     <button
                       onClick={() => fetchUsers(pagination.page - 1)}
                       disabled={pagination.page === 1}
-                      className="px-3 py-1 text-sm bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-3 py-1.5 min-h-11 text-sm bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {t('pagination.prev')}
                     </button>
@@ -633,7 +633,7 @@ const UserManagement = () => {
                     <button
                       onClick={() => fetchUsers(pagination.page + 1)}
                       disabled={pagination.page === pagination.totalPages}
-                      className="px-3 py-1 text-sm bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-3 py-1.5 min-h-11 text-sm bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {t('pagination.next')}
                     </button>
@@ -647,7 +647,7 @@ const UserManagement = () => {
         {/* Create User Modal */}
         {showCreateModal && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
               <div className="p-6 border-b border-slate-200">
                 <h2 className="text-xl font-semibold text-slate-800">{t('modals.create.title')}</h2>
               </div>
@@ -659,7 +659,7 @@ const UserManagement = () => {
                     type="email"
                     value={newUser.email}
                     onChange={(e) => setNewUser({...newUser, email: e.target.value})}
-                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
+                    className="w-full px-4 py-2.5 min-h-11 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
                     required
                   />
                 </div>
@@ -670,7 +670,7 @@ const UserManagement = () => {
                       type="text"
                       value={newUser.firstName}
                       onChange={(e) => setNewUser({...newUser, firstName: e.target.value})}
-                      className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
+                      className="w-full px-4 py-2.5 min-h-11 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
                       required
                     />
                   </div>
@@ -680,7 +680,7 @@ const UserManagement = () => {
                       type="text"
                       value={newUser.lastName}
                       onChange={(e) => setNewUser({...newUser, lastName: e.target.value})}
-                      className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
+                      className="w-full px-4 py-2.5 min-h-11 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
                       required
                     />
                   </div>
@@ -691,7 +691,7 @@ const UserManagement = () => {
                     type="password"
                     value={newUser.password}
                     onChange={(e) => setNewUser({...newUser, password: e.target.value})}
-                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
+                    className="w-full px-4 py-2.5 min-h-11 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
                     required
                     minLength={8}
                   />
@@ -701,7 +701,7 @@ const UserManagement = () => {
                   <select
                     value={newUser.role}
                     onChange={(e) => setNewUser({...newUser, role: e.target.value as 'admin' | 'moderator' | 'user'})}
-                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
+                    className="w-full px-4 py-2.5 min-h-11 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
                   >
                     <option value="user">{t('roles.user')}</option>
                     <option value="moderator">{t('roles.moderator')}</option>
@@ -732,7 +732,7 @@ const UserManagement = () => {
         {/* Edit User Modal */}
         {showEditModal && selectedUser && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
               <div className="p-6 border-b border-slate-200">
                 <h2 className="text-xl font-semibold text-slate-800">{t('modals.edit.title')}</h2>
               </div>
@@ -743,7 +743,7 @@ const UserManagement = () => {
                     type="email"
                     value={editUser.email}
                     onChange={(e) => setEditUser({...editUser, email: e.target.value})}
-                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
+                    className="w-full px-4 py-2.5 min-h-11 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
                     required
                   />
                 </div>
@@ -754,7 +754,7 @@ const UserManagement = () => {
                       type="text"
                       value={editUser.firstName}
                       onChange={(e) => setEditUser({...editUser, firstName: e.target.value})}
-                      className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
+                      className="w-full px-4 py-2.5 min-h-11 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
                       required
                     />
                   </div>
@@ -764,7 +764,7 @@ const UserManagement = () => {
                       type="text"
                       value={editUser.lastName}
                       onChange={(e) => setEditUser({...editUser, lastName: e.target.value})}
-                      className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
+                      className="w-full px-4 py-2.5 min-h-11 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
                       required
                     />
                   </div>
@@ -774,7 +774,7 @@ const UserManagement = () => {
                   <select
                     value={editUser.role}
                     onChange={(e) => setEditUser({...editUser, role: e.target.value as 'admin' | 'moderator' | 'user'})}
-                    className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
+                    className="w-full px-4 py-2.5 min-h-11 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
                   >
                     <option value="user">{t('roles.user')}</option>
                     <option value="moderator">{t('roles.moderator')}</option>
@@ -825,7 +825,7 @@ const UserManagement = () => {
         {/* Delete User Modal */}
         {showDeleteModal && selectedUser && (
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
               <div className="p-6 border-b border-slate-200">
                 <h2 className="text-xl font-semibold text-slate-800">{t('modals.delete.title')}</h2>
               </div>

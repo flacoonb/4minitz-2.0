@@ -106,7 +106,7 @@ function SeriesTemplatesPage() {
   const [topics, setTopics] = useState<MinutesMarkdownTopic[]>([]);
   const [markdown, setMarkdown] = useState('## Traktandum\n- [i] Info');
   const [markdownWarnings, setMarkdownWarnings] = useState<string[]>([]);
-  const [allUsers, setAllUsers] = useState<User[]>([]);
+  const [_allUsers, setAllUsers] = useState<User[]>([]);
   const [clubFunctions, setClubFunctions] = useState<ClubFunctionEntry[]>([]);
   const [mentionSuggestions, setMentionSuggestions] = useState<MentionCandidate[]>([]);
   const [mentionStartIndex, setMentionStartIndex] = useState<number | null>(null);
@@ -454,23 +454,30 @@ function SeriesTemplatesPage() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 space-y-8">
-      <div className="flex items-center justify-between">
+    <div className="max-w-6xl mx-auto px-4 py-5 sm:py-8 space-y-6 sm:space-y-8">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Serien-Vorlagen</h1>
-          <p className="text-gray-600 mt-1">Vorlagen für wiederkehrende Traktanden dieser Sitzung.</p>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 break-words">Serien-Vorlagen</h1>
+          <p className="text-gray-600 mt-1 break-words">Vorlagen für wiederkehrende Traktanden dieser Sitzung.</p>
         </div>
-        <Link href={`/meeting-series/${seriesId}/edit`} className="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200">
+        <Link
+          href={`/meeting-series/${seriesId}/edit`}
+          className="w-full sm:w-auto px-4 py-2.5 min-h-11 inline-flex items-center justify-center bg-gray-100 rounded-lg hover:bg-gray-200"
+        >
           Zurück
         </Link>
       </div>
 
-      {error && <div className="p-3 rounded-lg border border-red-200 bg-red-50 text-red-700">{error}</div>}
+      {error && <div className="p-3 rounded-lg border border-red-200 bg-red-50 text-red-700 break-words">{error}</div>}
 
-      <div className="bg-white border rounded-xl p-5">
-        <div className="flex items-center justify-between mb-4">
+      <div className="bg-white border rounded-xl p-4 sm:p-5">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
           <h2 className="text-xl font-semibold">Vorlagen</h2>
-          <button type="button" onClick={openCreateModal} className="px-4 py-2 brand-button-solid rounded-lg">
+          <button
+            type="button"
+            onClick={openCreateModal}
+            className="w-full sm:w-auto px-4 py-2.5 min-h-11 brand-button-solid rounded-lg"
+          >
             + Neue Vorlage
           </button>
         </div>
@@ -482,20 +489,33 @@ function SeriesTemplatesPage() {
           <div className="space-y-3">
             {templates.map((template) => (
               <div key={template._id} className="border rounded-lg p-3 bg-gray-50">
-                <div className="flex items-start justify-between gap-3">
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                   <div>
-                    <p className="font-semibold">{template.name}</p>
-                    {template.description && <p className="text-sm text-gray-600">{template.description}</p>}
+                    <p className="font-semibold break-words">{template.name}</p>
+                    {template.description && <p className="text-sm text-gray-600 break-words">{template.description}</p>}
                     <span className={`inline-block mt-2 px-2 py-0.5 text-xs rounded-full ${template.isActive ? 'bg-green-100 text-green-800' : 'bg-gray-200 text-gray-700'}`}>
                       {template.isActive ? 'Aktiv' : 'Inaktiv'}
                     </span>
                   </div>
-                  <div className="flex gap-2">
-                    <button onClick={() => startEdit(template)} className="px-3 py-1.5 bg-white border rounded-lg">Bearbeiten</button>
-                    <button onClick={() => toggleActive(template)} className="px-3 py-1.5 bg-white border rounded-lg">
+                  <div className="grid grid-cols-1 min-[420px]:grid-cols-3 gap-2 w-full sm:w-auto sm:min-w-[360px]">
+                    <button
+                      onClick={() => startEdit(template)}
+                      className="px-3 py-2.5 min-h-11 bg-white border rounded-lg text-sm"
+                    >
+                      Bearbeiten
+                    </button>
+                    <button
+                      onClick={() => toggleActive(template)}
+                      className="px-3 py-2.5 min-h-11 bg-white border rounded-lg text-sm"
+                    >
                       {template.isActive ? 'Deaktivieren' : 'Aktivieren'}
                     </button>
-                    <button onClick={() => removeTemplate(template._id)} className="px-3 py-1.5 bg-red-600 text-white rounded-lg">Löschen</button>
+                    <button
+                      onClick={() => removeTemplate(template._id)}
+                      className="px-3 py-2.5 min-h-11 bg-red-600 text-white rounded-lg text-sm"
+                    >
+                      Löschen
+                    </button>
                   </div>
                 </div>
               </div>
@@ -505,50 +525,56 @@ function SeriesTemplatesPage() {
       </div>
 
       {showEditorModal && (
-        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
-          <div className="bg-white w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-xl shadow-2xl border p-5 space-y-4">
-            <div className="flex items-center justify-between">
+        <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-white w-full max-w-5xl max-h-[90vh] overflow-y-auto rounded-xl shadow-2xl border p-4 sm:p-5 space-y-4">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <h2 className="text-xl font-semibold">{editingTemplate ? 'Vorlage bearbeiten' : 'Neue Vorlage'}</h2>
-              <button type="button" onClick={() => { setShowEditorModal(false); closeMentionSuggestions(); }} className="px-3 py-2 bg-gray-100 rounded-lg hover:bg-gray-200">Schliessen</button>
+              <button
+                type="button"
+                onClick={() => { setShowEditorModal(false); closeMentionSuggestions(); }}
+                className="w-full sm:w-auto px-3 py-2.5 min-h-11 bg-gray-100 rounded-lg hover:bg-gray-200"
+              >
+                Schliessen
+              </button>
             </div>
-            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" className="w-full px-3 py-2 border rounded-lg" />
-            <input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Beschreibung (optional)" className="w-full px-3 py-2 border rounded-lg" />
-            <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Standard-Titel (optional)" className="w-full px-3 py-2 border rounded-lg" />
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <input value={time} onChange={(e) => setTime(e.target.value)} placeholder="Startzeit (z. B. 09:00)" className="w-full px-3 py-2 border rounded-lg" />
-              <input value={endTime} onChange={(e) => setEndTime(e.target.value)} placeholder="Endzeit (z. B. 10:30)" className="w-full px-3 py-2 border rounded-lg" />
-              <input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Ort (optional)" className="w-full px-3 py-2 border rounded-lg" />
+            <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Name" className="w-full px-3 py-2.5 min-h-11 border rounded-lg" />
+            <input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Beschreibung (optional)" className="w-full px-3 py-2.5 min-h-11 border rounded-lg" />
+            <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Standard-Titel (optional)" className="w-full px-3 py-2.5 min-h-11 border rounded-lg" />
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <input value={time} onChange={(e) => setTime(e.target.value)} placeholder="Startzeit (z. B. 09:00)" className="w-full px-3 py-2.5 min-h-11 border rounded-lg" />
+              <input value={endTime} onChange={(e) => setEndTime(e.target.value)} placeholder="Endzeit (z. B. 10:30)" className="w-full px-3 py-2.5 min-h-11 border rounded-lg" />
+              <input value={location} onChange={(e) => setLocation(e.target.value)} placeholder="Ort (optional)" className="w-full px-3 py-2.5 min-h-11 border rounded-lg" />
             </div>
-            <textarea value={globalNote} onChange={(e) => setGlobalNote(e.target.value)} placeholder="Globaler Hinweis (optional)" className="w-full px-3 py-2 border rounded-lg min-h-[80px]" />
+            <textarea value={globalNote} onChange={(e) => setGlobalNote(e.target.value)} placeholder="Globaler Hinweis (optional)" className="w-full px-3 py-2.5 border rounded-lg min-h-[96px]" />
             <div className="space-y-3">
-              <div className="inline-flex rounded-lg border border-gray-200 overflow-hidden">
-                <button type="button" onClick={() => { if (editorMode === 'markdown') { const parsed = parseMinutesMarkdown(markdown); setTopics(parsed.topics); setMarkdownWarnings(parsed.warnings); } setEditorMode('visual'); closeMentionSuggestions(); }} className={`px-4 py-2 text-sm font-medium ${editorMode === 'visual' ? 'bg-[var(--brand-primary)] text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}>Visuell</button>
-                <button type="button" onClick={() => setEditorMode('markdown')} className={`px-4 py-2 text-sm font-medium ${editorMode === 'markdown' ? 'bg-[var(--brand-primary)] text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}>Markdown</button>
+              <div className="grid grid-cols-2 w-full sm:w-auto rounded-lg border border-gray-200 overflow-hidden">
+                <button type="button" onClick={() => { if (editorMode === 'markdown') { const parsed = parseMinutesMarkdown(markdown); setTopics(parsed.topics); setMarkdownWarnings(parsed.warnings); } setEditorMode('visual'); closeMentionSuggestions(); }} className={`px-4 py-2.5 min-h-11 text-sm font-medium ${editorMode === 'visual' ? 'bg-[var(--brand-primary)] text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}>Visuell</button>
+                <button type="button" onClick={() => setEditorMode('markdown')} className={`px-4 py-2.5 min-h-11 text-sm font-medium ${editorMode === 'markdown' ? 'bg-[var(--brand-primary)] text-white' : 'bg-white text-gray-700 hover:bg-gray-50'}`}>Markdown</button>
               </div>
               {editorMode === 'visual' ? (
                 <div className="space-y-3">
-                  <button type="button" onClick={addTopic} className="px-3 py-2 text-sm bg-gray-100 border rounded-lg hover:bg-gray-200">+ Traktandum</button>
+                  <button type="button" onClick={addTopic} className="px-3 py-2.5 min-h-11 text-sm bg-gray-100 border rounded-lg hover:bg-gray-200">+ Traktandum</button>
                   {topics.map((topic, topicIndex) => (
                     <div key={`topic-${topicIndex}`} className="border rounded-lg p-3 space-y-3 bg-gray-50">
-                      <div className="flex gap-2">
-                        <input value={topic.subject} onChange={(e) => updateTopic(topicIndex, 'subject', e.target.value)} placeholder="Traktandum" className="flex-1 px-3 py-2 border rounded-lg" />
-                        <button type="button" onClick={() => removeTopic(topicIndex)} className="px-3 py-2 text-sm bg-red-600 text-white rounded-lg">Löschen</button>
+                      <div className="flex flex-col min-[520px]:flex-row gap-2">
+                        <input value={topic.subject} onChange={(e) => updateTopic(topicIndex, 'subject', e.target.value)} placeholder="Traktandum" className="flex-1 px-3 py-2.5 min-h-11 border rounded-lg" />
+                        <button type="button" onClick={() => removeTopic(topicIndex)} className="w-full min-[520px]:w-auto px-3 py-2.5 min-h-11 text-sm bg-red-600 text-white rounded-lg">Löschen</button>
                       </div>
-                      <div className="flex gap-2">
-                        <button type="button" onClick={() => addItem(topicIndex, 'infoItem')} className="px-3 py-1.5 text-xs bg-[var(--brand-primary-soft)] text-[var(--brand-primary-strong)] rounded">+ Info</button>
-                        <button type="button" onClick={() => addItem(topicIndex, 'actionItem')} className="px-3 py-1.5 text-xs bg-amber-100 text-amber-800 rounded">+ Aufgabe</button>
+                      <div className="grid grid-cols-1 min-[420px]:grid-cols-2 gap-2">
+                        <button type="button" onClick={() => addItem(topicIndex, 'infoItem')} className="px-3 py-2.5 min-h-11 text-sm bg-[var(--brand-primary-soft)] text-[var(--brand-primary-strong)] rounded">+ Info</button>
+                        <button type="button" onClick={() => addItem(topicIndex, 'actionItem')} className="px-3 py-2.5 min-h-11 text-sm bg-amber-100 text-amber-800 rounded">+ Aufgabe</button>
                       </div>
                       {(topic.infoItems || []).map((item, itemIndex) => (
                         <div key={`item-${itemIndex}`} className="bg-white border rounded-lg p-3 space-y-2">
-                          <div className="flex gap-2">
-                            <select value={item.itemType} onChange={(e) => updateItem(topicIndex, itemIndex, { itemType: e.target.value as 'actionItem' | 'infoItem' })} className="px-2 py-2 border rounded-lg text-sm">
+                          <div className="grid grid-cols-1 min-[520px]:grid-cols-[120px_minmax(0,1fr)] min-[760px]:grid-cols-[120px_minmax(0,1fr)_auto] gap-2">
+                            <select value={item.itemType} onChange={(e) => updateItem(topicIndex, itemIndex, { itemType: e.target.value as 'actionItem' | 'infoItem' })} className="px-2 py-2.5 min-h-11 border rounded-lg text-sm">
                               <option value="infoItem">Info</option>
                               <option value="actionItem">Aufgabe</option>
                             </select>
-                            <input value={item.subject} onChange={(e) => updateItem(topicIndex, itemIndex, { subject: e.target.value })} placeholder="Betreff" className="flex-1 px-3 py-2 border rounded-lg" />
-                            <button type="button" onClick={() => removeItem(topicIndex, itemIndex)} className="px-3 py-2 text-xs bg-red-100 text-red-700 rounded">Entfernen</button>
+                            <input value={item.subject} onChange={(e) => updateItem(topicIndex, itemIndex, { subject: e.target.value })} placeholder="Betreff" className="flex-1 px-3 py-2.5 min-h-11 border rounded-lg" />
+                            <button type="button" onClick={() => removeItem(topicIndex, itemIndex)} className="w-full min-[760px]:w-auto px-3 py-2.5 min-h-11 text-sm bg-red-100 text-red-700 rounded">Entfernen</button>
                           </div>
-                          <textarea value={item.details || ''} onChange={(e) => updateItem(topicIndex, itemIndex, { details: e.target.value })} placeholder="Details" className="w-full px-3 py-2 border rounded-lg min-h-[70px]" />
+                          <textarea value={item.details || ''} onChange={(e) => updateItem(topicIndex, itemIndex, { details: e.target.value })} placeholder="Details" className="w-full px-3 py-2.5 border rounded-lg min-h-[84px]" />
                           <div>
                             <p className="text-xs text-gray-600 mb-1">Verantwortliche (Mehrfachauswahl)</p>
                             <select
@@ -559,7 +585,7 @@ function SeriesTemplatesPage() {
                                   responsibles: Array.from(e.target.selectedOptions).map((option) => option.value),
                                 })
                               }
-                              className="w-full px-3 py-2 border rounded-lg min-h-[110px]"
+                              className="w-full px-3 py-2.5 border rounded-lg min-h-[120px]"
                             >
                               {responsibleOptions.map((option) => (
                                 <option
@@ -573,13 +599,13 @@ function SeriesTemplatesPage() {
                             </select>
                           </div>
                           {item.itemType === 'actionItem' && (
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
-                              <select value={item.status || 'open'} onChange={(e) => updateItem(topicIndex, itemIndex, { status: e.target.value as 'open' | 'in-progress' | 'completed' | 'cancelled' })} className="px-3 py-2 border rounded-lg"><option value="open">Offen</option><option value="in-progress">In Arbeit</option><option value="completed">Erledigt</option><option value="cancelled">Abgebrochen</option></select>
-                              <select value={item.priority || 'medium'} onChange={(e) => updateItem(topicIndex, itemIndex, { priority: e.target.value as 'high' | 'medium' | 'low' })} className="px-3 py-2 border rounded-lg"><option value="high">Hoch</option><option value="medium">Mittel</option><option value="low">Tief</option></select>
-                              <input type="date" value={item.dueDate || ''} onChange={(e) => updateItem(topicIndex, itemIndex, { dueDate: e.target.value })} className="px-3 py-2 border rounded-lg" />
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                              <select value={item.status || 'open'} onChange={(e) => updateItem(topicIndex, itemIndex, { status: e.target.value as 'open' | 'in-progress' | 'completed' | 'cancelled' })} className="px-3 py-2.5 min-h-11 border rounded-lg"><option value="open">Offen</option><option value="in-progress">In Arbeit</option><option value="completed">Erledigt</option><option value="cancelled">Abgebrochen</option></select>
+                              <select value={item.priority || 'medium'} onChange={(e) => updateItem(topicIndex, itemIndex, { priority: e.target.value as 'high' | 'medium' | 'low' })} className="px-3 py-2.5 min-h-11 border rounded-lg"><option value="high">Hoch</option><option value="medium">Mittel</option><option value="low">Tief</option></select>
+                              <input type="date" value={item.dueDate || ''} onChange={(e) => updateItem(topicIndex, itemIndex, { dueDate: e.target.value })} className="px-3 py-2.5 min-h-11 border rounded-lg" />
                             </div>
                           )}
-                          <textarea value={item.notes || ''} onChange={(e) => updateItem(topicIndex, itemIndex, { notes: e.target.value })} placeholder={item.itemType === 'actionItem' ? 'Beschluss' : 'Information'} className="w-full px-3 py-2 border rounded-lg min-h-[60px]" />
+                          <textarea value={item.notes || ''} onChange={(e) => updateItem(topicIndex, itemIndex, { notes: e.target.value })} placeholder={item.itemType === 'actionItem' ? 'Beschluss' : 'Information'} className="w-full px-3 py-2.5 border rounded-lg min-h-[72px]" />
                         </div>
                       ))}
                     </div>
@@ -588,22 +614,22 @@ function SeriesTemplatesPage() {
               ) : (
                 <div className="space-y-3">
                   <div className="flex flex-wrap gap-2">
-                    <button type="button" onClick={() => insertMarkdownSnippet('## Neues Traktandum')} className="px-3 py-1.5 text-xs bg-gray-100 border rounded-md">Traktandum</button>
-                    <button type="button" onClick={() => insertMarkdownSnippet(buildInfoTemplate())} className="px-3 py-1.5 text-xs bg-gray-100 border rounded-md">Info</button>
-                    <button type="button" onClick={() => insertMarkdownSnippet(buildTaskTemplate('open'))} className="px-3 py-1.5 text-xs bg-gray-100 border rounded-md">Aufgabe offen</button>
-                    <button type="button" onClick={() => insertMarkdownSnippet(buildTaskTemplate('in-progress'))} className="px-3 py-1.5 text-xs bg-gray-100 border rounded-md">Aufgabe in Arbeit</button>
-                    <button type="button" onClick={() => insertMarkdownSnippet(buildTaskTemplate('done'))} className="px-3 py-1.5 text-xs bg-gray-100 border rounded-md">Aufgabe erledigt</button>
-                    <button type="button" onClick={() => insertMarkdownSnippet('!high')} className="px-3 py-1.5 text-xs bg-gray-100 border rounded-md">Prio</button>
-                    <button type="button" onClick={() => insertMarkdownSnippet('due:2026-03-20')} className="px-3 py-1.5 text-xs bg-gray-100 border rounded-md">Fällig</button>
-                    <button type="button" onClick={() => insertMarkdownSnippet('@userId')} className="px-3 py-1.5 text-xs bg-gray-100 border rounded-md">Verantwortlich</button>
-                    <button type="button" onClick={() => insertMarkdownSnippet('  beschluss: Kommentar')} className="px-3 py-1.5 text-xs bg-gray-100 border rounded-md">Beschluss/Info</button>
+                    <button type="button" onClick={() => insertMarkdownSnippet('## Neues Traktandum')} className="px-3 py-2 min-h-10 text-xs bg-gray-100 border rounded-md">Traktandum</button>
+                    <button type="button" onClick={() => insertMarkdownSnippet(buildInfoTemplate())} className="px-3 py-2 min-h-10 text-xs bg-gray-100 border rounded-md">Info</button>
+                    <button type="button" onClick={() => insertMarkdownSnippet(buildTaskTemplate('open'))} className="px-3 py-2 min-h-10 text-xs bg-gray-100 border rounded-md">Aufgabe offen</button>
+                    <button type="button" onClick={() => insertMarkdownSnippet(buildTaskTemplate('in-progress'))} className="px-3 py-2 min-h-10 text-xs bg-gray-100 border rounded-md">Aufgabe in Arbeit</button>
+                    <button type="button" onClick={() => insertMarkdownSnippet(buildTaskTemplate('done'))} className="px-3 py-2 min-h-10 text-xs bg-gray-100 border rounded-md">Aufgabe erledigt</button>
+                    <button type="button" onClick={() => insertMarkdownSnippet('!high')} className="px-3 py-2 min-h-10 text-xs bg-gray-100 border rounded-md">Prio</button>
+                    <button type="button" onClick={() => insertMarkdownSnippet('due:2026-03-20')} className="px-3 py-2 min-h-10 text-xs bg-gray-100 border rounded-md">Fällig</button>
+                    <button type="button" onClick={() => insertMarkdownSnippet('@userId')} className="px-3 py-2 min-h-10 text-xs bg-gray-100 border rounded-md">Verantwortlich</button>
+                    <button type="button" onClick={() => insertMarkdownSnippet('  beschluss: Kommentar')} className="px-3 py-2 min-h-10 text-xs bg-gray-100 border rounded-md">Beschluss/Info</button>
                   </div>
                   <div className="relative">
-                    <textarea ref={markdownTextareaRef} value={markdown} onChange={(e) => { setMarkdown(e.target.value); updateMentionSuggestions(e.target.value, e.target.selectionStart ?? e.target.value.length); }} onKeyUp={(e) => updateMentionSuggestions(e.currentTarget.value, e.currentTarget.selectionStart ?? 0)} onClick={(e) => updateMentionSuggestions(e.currentTarget.value, e.currentTarget.selectionStart ?? 0)} onScroll={() => { if (mentionSuggestions.length === 0) return; const caretPos = markdownTextareaRef.current?.selectionStart ?? markdown.length; updateMentionSuggestions(markdown, caretPos); }} onKeyDown={(e) => { if (mentionSuggestions.length === 0) return; if (e.key === 'ArrowDown') { e.preventDefault(); setSelectedMentionIndex((prev) => (prev + 1 >= mentionSuggestions.length ? 0 : prev + 1)); } else if (e.key === 'ArrowUp') { e.preventDefault(); setSelectedMentionIndex((prev) => (prev - 1 < 0 ? mentionSuggestions.length - 1 : prev - 1)); } else if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); applyMentionSuggestion(mentionSuggestions[selectedMentionIndex]); } else if (e.key === 'Escape') { e.preventDefault(); closeMentionSuggestions(); }} } className="w-full px-3 py-2 border rounded-lg min-h-[260px] font-mono text-sm" />
+                    <textarea ref={markdownTextareaRef} value={markdown} onChange={(e) => { setMarkdown(e.target.value); updateMentionSuggestions(e.target.value, e.target.selectionStart ?? e.target.value.length); }} onKeyUp={(e) => updateMentionSuggestions(e.currentTarget.value, e.currentTarget.selectionStart ?? 0)} onClick={(e) => updateMentionSuggestions(e.currentTarget.value, e.currentTarget.selectionStart ?? 0)} onScroll={() => { if (mentionSuggestions.length === 0) return; const caretPos = markdownTextareaRef.current?.selectionStart ?? markdown.length; updateMentionSuggestions(markdown, caretPos); }} onKeyDown={(e) => { if (mentionSuggestions.length === 0) return; if (e.key === 'ArrowDown') { e.preventDefault(); setSelectedMentionIndex((prev) => (prev + 1 >= mentionSuggestions.length ? 0 : prev + 1)); } else if (e.key === 'ArrowUp') { e.preventDefault(); setSelectedMentionIndex((prev) => (prev - 1 < 0 ? mentionSuggestions.length - 1 : prev - 1)); } else if (e.key === 'Enter' || e.key === 'Tab') { e.preventDefault(); applyMentionSuggestion(mentionSuggestions[selectedMentionIndex]); } else if (e.key === 'Escape') { e.preventDefault(); closeMentionSuggestions(); }} } className="w-full px-3 py-2.5 border rounded-lg min-h-[260px] font-mono text-sm" />
                     {mentionSuggestions.length > 0 && mentionMenuPosition && (
-                      <div className="absolute z-30 bg-white border border-gray-200 rounded-lg shadow-lg max-h-56 overflow-auto w-64" style={{ top: mentionMenuPosition.top, left: mentionMenuPosition.left }}>
+                      <div className="absolute z-30 bg-white border border-gray-200 rounded-lg shadow-lg max-h-56 overflow-auto w-[min(16rem,calc(100vw-2.5rem))]" style={{ top: mentionMenuPosition.top, left: mentionMenuPosition.left }}>
                         {mentionSuggestions.map((candidate, index) => (
-                          <button key={`${candidate.value}-${index}`} type="button" className={`w-full text-left px-3 py-2 text-sm hover:bg-[var(--brand-primary-soft)] ${index === selectedMentionIndex ? 'bg-[var(--brand-primary-soft)]' : ''}`} onMouseDown={(event) => { event.preventDefault(); applyMentionSuggestion(candidate); }}>{candidate.label}</button>
+                          <button key={`${candidate.value}-${index}`} type="button" className={`w-full text-left px-3 py-2.5 min-h-11 text-sm hover:bg-[var(--brand-primary-soft)] ${index === selectedMentionIndex ? 'bg-[var(--brand-primary-soft)]' : ''}`} onMouseDown={(event) => { event.preventDefault(); applyMentionSuggestion(candidate); }}>{candidate.label}</button>
                         ))}
                       </div>
                     )}
@@ -618,9 +644,9 @@ function SeriesTemplatesPage() {
                 </div>
               )}
             </div>
-            <div className="sticky bottom-0 -mx-5 px-5 py-3 border-t border-gray-200 bg-white/95 backdrop-blur-sm flex gap-3">
-              <button onClick={saveTemplate} disabled={saving || !name.trim()} className="px-4 py-2 brand-button-solid rounded-lg disabled:opacity-50">{saving ? 'Speichern...' : editingTemplate ? 'Änderungen speichern' : 'Vorlage erstellen'}</button>
-              <button onClick={() => { setShowEditorModal(false); closeMentionSuggestions(); }} className="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200">Abbrechen</button>
+            <div className="sticky bottom-0 -mx-4 sm:-mx-5 px-4 sm:px-5 py-3 border-t border-gray-200 bg-white/95 backdrop-blur-sm flex flex-col sm:flex-row gap-3">
+              <button onClick={saveTemplate} disabled={saving || !name.trim()} className="w-full sm:w-auto px-4 py-2.5 min-h-11 brand-button-solid rounded-lg disabled:opacity-50">{saving ? 'Speichern...' : editingTemplate ? 'Änderungen speichern' : 'Vorlage erstellen'}</button>
+              <button onClick={() => { setShowEditorModal(false); closeMentionSuggestions(); }} className="w-full sm:w-auto px-4 py-2.5 min-h-11 bg-gray-100 rounded-lg hover:bg-gray-200">Abbrechen</button>
             </div>
           </div>
         </div>

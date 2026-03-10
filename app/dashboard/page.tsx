@@ -230,12 +230,12 @@ export default function DashboardPage() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold mb-2">{t('dashboard.title')}</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold mb-2">{t('dashboard.title')}</h1>
         <p className="app-text-muted">{t('dashboard.overview')}</p>
       </div>
 
       {/* Statistics Cards with Compact Design */}
-      <div className="grid grid-cols-3 md:grid-cols-6 gap-2 sm:gap-3 mb-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5 sm:gap-3 mb-6">
         {/* Series Card */}
         <Link href="/meeting-series" className="group relative app-card rounded-lg shadow-sm hover:shadow-md transition-all duration-300 p-2.5 sm:p-3 overflow-hidden block focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--brand-primary-border)]">
           <div className="relative">
@@ -244,7 +244,7 @@ export default function DashboardPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
               </svg>
             </div>
-            <p className="text-[10px] sm:text-xs font-medium mb-0.5 leading-tight truncate app-text-muted">{t('dashboard.series')}</p>
+            <p className="text-xs font-medium mb-0.5 leading-tight truncate app-text-muted">{t('dashboard.series')}</p>
             <p className="text-lg sm:text-xl font-bold leading-tight" style={{ color: 'var(--brand-dashboard-badge-series-ink)' }}>{data.statistics.totalSeries}</p>
           </div>
         </Link>
@@ -257,7 +257,7 @@ export default function DashboardPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
-            <p className="text-[10px] sm:text-xs font-medium mb-0.5 leading-tight truncate app-text-muted">{t('dashboard.minutes')}</p>
+            <p className="text-xs font-medium mb-0.5 leading-tight truncate app-text-muted">{t('dashboard.minutes')}</p>
             <p className="text-lg sm:text-xl font-bold leading-tight" style={{ color: 'var(--brand-dashboard-badge-minutes-ink)' }}>{data.statistics.totalMinutes}</p>
             <p className="hidden sm:block text-xs app-text-muted">{data.statistics.finalizedMinutes} {t('dashboard.finalized')}</p>
           </div>
@@ -271,7 +271,7 @@ export default function DashboardPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
               </svg>
             </div>
-            <p className="text-[10px] sm:text-xs font-medium mb-0.5 leading-tight truncate app-text-muted">{t('dashboard.drafts')}</p>
+            <p className="text-xs font-medium mb-0.5 leading-tight truncate app-text-muted">{t('dashboard.drafts')}</p>
             <p className="text-lg sm:text-xl font-bold leading-tight" style={{ color: 'var(--brand-dashboard-badge-drafts-ink)' }}>{data.statistics.draftMinutes}</p>
             <p className="hidden sm:block text-xs app-text-muted">{t('dashboard.minutes')}</p>
           </div>
@@ -285,7 +285,7 @@ export default function DashboardPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
               </svg>
             </div>
-            <p className="text-[10px] sm:text-xs font-medium mb-0.5 leading-tight truncate app-text-muted">{t('dashboard.tasks')}</p>
+            <p className="text-xs font-medium mb-0.5 leading-tight truncate app-text-muted">{t('dashboard.tasks')}</p>
             <p className="text-lg sm:text-xl font-bold leading-tight" style={{ color: 'var(--brand-dashboard-badge-tasks-ink)' }}>{data.statistics.totalActionItems}</p>
             <p className="hidden sm:block text-xs app-text-muted">{t('dashboard.open')}</p>
           </div>
@@ -299,7 +299,7 @@ export default function DashboardPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <p className="text-[10px] sm:text-xs font-medium mb-0.5 leading-tight truncate app-text-muted">{t('dashboard.overdue')}</p>
+            <p className="text-xs font-medium mb-0.5 leading-tight truncate app-text-muted">{t('dashboard.overdue')}</p>
             <p className="text-lg sm:text-xl font-bold leading-tight" style={{ color: 'var(--brand-dashboard-badge-overdue-ink)' }}>{data.statistics.overdueActionItems}</p>
             <p className="hidden sm:block text-xs app-text-muted">{t('dashboard.tasks')}</p>
           </div>
@@ -313,7 +313,7 @@ export default function DashboardPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <p className="text-[10px] sm:text-xs font-medium mb-0.5 leading-tight truncate app-text-muted">{t('dashboard.upcoming')}</p>
+            <p className="text-xs font-medium mb-0.5 leading-tight truncate app-text-muted">{t('dashboard.upcoming')}</p>
             <p className="text-lg sm:text-xl font-bold leading-tight" style={{ color: 'var(--brand-dashboard-badge-upcoming-ink)' }}>{data.statistics.upcomingActionItems}</p>
             <p className="hidden sm:block text-xs app-text-muted">{t('dashboard.tasks')}</p>
           </div>

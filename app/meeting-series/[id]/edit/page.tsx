@@ -38,6 +38,7 @@ interface MeetingSeries {
   moderators: string[];
   participants: string[];
   defaultTemplateId?: string;
+  defaultPdfTemplateId?: string;
 }
 
 interface FormData {
@@ -45,6 +46,13 @@ interface FormData {
   name: string;
   members: Member[];
   defaultTemplateId: string;
+  defaultPdfTemplateId: string;
+}
+
+interface PdfTemplateOption {
+  _id: string;
+  name: string;
+  isActive?: boolean;
 }
 
 export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id: string }> }) {
@@ -62,11 +70,13 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
     name: '',
     members: [],
     defaultTemplateId: '',
+    defaultPdfTemplateId: '',
   });
 
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [clubFunctions, setClubFunctions] = useState<ClubFunctionEntry[]>([]);
   const [templateOptions, setTemplateOptions] = useState<MinutesTemplateOption[]>([]);
+  const [pdfTemplateOptions, setPdfTemplateOptions] = useState<PdfTemplateOption[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<string>('');
   const [existingProjectNames, setExistingProjectNames] = useState<string[]>([]);
 
@@ -127,6 +137,7 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
         name: seriesData.name || '',
         members: seriesData.members || [],
         defaultTemplateId: seriesData.defaultTemplateId ? String(seriesData.defaultTemplateId) : '',
+        defaultPdfTemplateId: seriesData.defaultPdfTemplateId ? String(seriesData.defaultPdfTemplateId) : '',
       });
     } catch (err) {
       setError(err instanceof Error ? err.message : t('loadingError'));
@@ -152,6 +163,22 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
     }
   }, [seriesId]);
 
+  const fetchPdfTemplateOptions = useCallback(async () => {
+    try {
+      const response = await fetch('/api/pdf-templates', {
+        credentials: 'include',
+      });
+      if (!response.ok) {
+        setPdfTemplateOptions([]);
+        return;
+      }
+      const result = await response.json();
+      setPdfTemplateOptions(Array.isArray(result.data) ? result.data : []);
+    } catch {
+      setPdfTemplateOptions([]);
+    }
+  }, []);
+
   const fetchExistingNames = useCallback(async () => {
     try {
       const response = await fetch('/api/meeting-series', { credentials: 'include' });
@@ -172,8 +199,25 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
       fetchClubFunctions();
       fetchExistingNames();
       fetchTemplateOptions();
+      fetchPdfTemplateOptions();
     }
-  }, [seriesId, fetchSeries, fetchUsers, fetchClubFunctions, fetchExistingNames, fetchTemplateOptions]);
+  }, [seriesId, fetchSeries, fetchUsers, fetchClubFunctions, fetchExistingNames, fetchTemplateOptions, fetchPdfTemplateOptions]);
+
+  useEffect(() => {
+    if (!formData.defaultTemplateId) return;
+    const exists = templateOptions.some((template) => template._id === formData.defaultTemplateId);
+    if (!exists) {
+      setFormData((prev) => ({ ...prev, defaultTemplateId: '' }));
+    }
+  }, [templateOptions, formData.defaultTemplateId]);
+
+  useEffect(() => {
+    if (!formData.defaultPdfTemplateId) return;
+    const exists = pdfTemplateOptions.some((template) => template._id === formData.defaultPdfTemplateId);
+    if (!exists) {
+      setFormData((prev) => ({ ...prev, defaultPdfTemplateId: '' }));
+    }
+  }, [pdfTemplateOptions, formData.defaultPdfTemplateId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -190,6 +234,7 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
         body: JSON.stringify({
           ...formData,
           defaultTemplateId: formData.defaultTemplateId,
+          defaultPdfTemplateId: formData.defaultPdfTemplateId,
         }),
       });
 
@@ -397,6 +442,24 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
                   ))}
                 </select>
                 <p className="mt-1 text-xs text-gray-500">{t('defaultTemplateHint')}</p>
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {t('defaultPdfTemplateLabel')}
+                </label>
+                <select
+                  value={formData.defaultPdfTemplateId}
+                  onChange={(e) => setFormData((prev) => ({ ...prev, defaultPdfTemplateId: e.target.value }))}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent bg-white"
+                >
+                  <option value="">{t('noDefaultPdfTemplate')}</option>
+                  {pdfTemplateOptions.map((template) => (
+                    <option key={template._id} value={template._id}>
+                      {template.name}{template.isActive ? ` (${t('templateActive')})` : ''}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1 text-xs text-gray-500">{t('defaultPdfTemplateHint')}</p>
               </div>
             </div>
           </div>

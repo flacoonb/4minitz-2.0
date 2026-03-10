@@ -199,7 +199,7 @@ export default function TasksPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold" style={{ color: 'var(--brand-text)' }}>{t('tasks.title')}</h1>
+            <h1 className="text-2xl sm:text-3xl font-bold" style={{ color: 'var(--brand-text)' }}>{t('tasks.title')}</h1>
             <p className="mt-1 app-text-muted">{t('tasks.subtitle')}</p>
           </div>
         </div>
@@ -226,19 +226,19 @@ export default function TasksPage() {
 
         {/* Filters */}
         <div className="app-card rounded-xl p-4 shadow-sm">
-          <div className="flex flex-wrap gap-3 items-center">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3 items-center">
             <input
               type="text"
               placeholder={t('tasks.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="px-4 py-2 min-h-11 border rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent flex-1 min-w-0 sm:min-w-[200px]"
+              className="w-full px-4 py-2 min-h-11 border rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent sm:col-span-2 xl:col-span-1"
               style={{ borderColor: 'var(--brand-card-border)', backgroundColor: 'var(--brand-card)', color: 'var(--brand-text)' }}
             />
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-3 py-2 min-h-11 border rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)]"
+              className="w-full px-3 py-2 min-h-11 border rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)]"
               style={{ borderColor: 'var(--brand-card-border)', backgroundColor: 'var(--brand-card)', color: 'var(--brand-text)' }}
             >
               <option value="active">{t('tasks.filterActive')}</option>
@@ -251,7 +251,7 @@ export default function TasksPage() {
             <select
               value={filterPriority}
               onChange={(e) => setFilterPriority(e.target.value)}
-              className="px-3 py-2 min-h-11 border rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)]"
+              className="w-full px-3 py-2 min-h-11 border rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)]"
               style={{ borderColor: 'var(--brand-card-border)', backgroundColor: 'var(--brand-card)', color: 'var(--brand-text)' }}
             >
               <option value="">{t('tasks.allPriorities')}</option>
@@ -259,7 +259,12 @@ export default function TasksPage() {
               <option value="medium">{t('tasks.priorityMedium')}</option>
               <option value="low">{t('tasks.priorityLow')}</option>
             </select>
-            <label className="flex items-center gap-2 cursor-pointer">
+            <label
+              className="w-full min-h-11 px-3 border rounded-lg flex items-center gap-2 cursor-pointer transition-colors"
+              style={filterOverdue
+                ? { borderColor: 'var(--brand-danger-border)', backgroundColor: 'var(--brand-danger-soft)' }
+                : { borderColor: 'var(--brand-card-border)', backgroundColor: 'var(--brand-card)' }}
+            >
               <input
                 type="checkbox"
                 checked={filterOverdue}

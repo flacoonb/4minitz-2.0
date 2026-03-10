@@ -7,11 +7,11 @@ export default function AdminDashboard() {
   const t = useTranslations('admin');
 
   return (
-    <div className="min-h-screen brand-page-gradient brandize-admin py-8">
-      <div className="max-w-6xl mx-auto px-4">
+    <div className="min-h-screen brand-page-gradient brandize-admin py-6 sm:py-8">
+      <div className="max-w-6xl mx-auto px-3 sm:px-4">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">{t('title')}</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 break-words">{t('title')}</h1>
           <p className="text-gray-600 mt-2">
             {t('subtitle')}
           </p>
@@ -22,7 +22,7 @@ export default function AdminDashboard() {
           {/* Email Configuration */}
           <Link
             href="/admin/email-config"
-            className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6 border-l-4 border-[var(--brand-primary)]"
+            className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6 min-h-[44px] border-l-4 border-[var(--brand-primary)]"
           >
             <div className="flex items-start">
               <div className="flex-shrink-0">
@@ -52,7 +52,7 @@ export default function AdminDashboard() {
           {/* User Management */}
           <Link
             href="/admin/users"
-            className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6 border-l-4 border-green-500"
+            className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6 min-h-[44px] border-l-4 border-green-500"
           >
             <div className="flex items-start">
               <div className="flex-shrink-0">
@@ -83,7 +83,7 @@ export default function AdminDashboard() {
           {/* PDF Config */}
           <Link
             href="/admin/pdf-config"
-            className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6 border-l-4 border-[var(--brand-secondary)]"
+            className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6 min-h-[44px] border-l-4 border-[var(--brand-secondary)]"
           >
             <div className="flex items-start">
               <div className="flex-shrink-0">
@@ -113,7 +113,7 @@ export default function AdminDashboard() {
           {/* Settings */}
           <Link
             href="/admin/settings"
-            className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6 border-l-4 border-yellow-500"
+            className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6 min-h-[44px] border-l-4 border-yellow-500"
           >
             <div className="flex items-start">
               <div className="flex-shrink-0">
@@ -149,7 +149,7 @@ export default function AdminDashboard() {
           {/* Templates */}
           <Link
             href="/admin/templates"
-            className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6 border-l-4 border-[var(--brand-primary-strong)]"
+            className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6 min-h-[44px] border-l-4 border-[var(--brand-primary-strong)]"
           >
             <div className="flex items-start">
               <div className="flex-shrink-0">
@@ -179,7 +179,7 @@ export default function AdminDashboard() {
           {/* Club Functions */}
           <Link
             href="/admin/club-functions"
-            className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6 border-l-4 border-emerald-500"
+            className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6 min-h-[44px] border-l-4 border-emerald-500"
           >
             <div className="flex items-start">
               <div className="flex-shrink-0">
@@ -209,7 +209,7 @@ export default function AdminDashboard() {
           {/* Back to Dashboard */}
           <Link
             href="/dashboard"
-            className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6 border-l-4 border-gray-500"
+            className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow p-6 min-h-[44px] border-l-4 border-gray-500"
           >
             <div className="flex items-start">
               <div className="flex-shrink-0">
