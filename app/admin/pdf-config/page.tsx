@@ -1550,7 +1550,7 @@ export default function PdfConfigPage() {
   const topicPaddingPx = Math.max(2, safeNumber(topicPreviewEl?.style?.padding, 2) * 2);
   const topicTextColor = topicPreviewEl?.style?.color || '#111827';
   const topicBorderColor = topicPreviewEl?.style?.borderColor || '#CBD5E1';
-  const itemLabelBackground = itemLabelPreviewEl?.style?.backgroundColor || layoutSettings.labelColors.info;
+  const itemLabelBackground = layoutSettings.labelColors.info || itemLabelPreviewEl?.style?.backgroundColor || '#3B82F6';
   const itemLabelColor = itemLabelPreviewEl?.style?.color || '#FFFFFF';
   const itemLabelFontWeight = itemLabelPreviewEl?.style?.fontWeight === 'normal' ? 500 : 700;
   const itemLabelFontSizePx = Math.max(6, safeNumber(itemLabelPreviewEl?.style?.fontSize, 8) / 1.4);

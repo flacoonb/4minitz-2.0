@@ -1037,10 +1037,9 @@ export async function generateMinutePdf(
         
         // Get colors from layout settings
         const labelBgOverride = itemLabelElement?.style?.backgroundColor;
-        const infoColor = labelBgOverride || layoutSettings?.labelColors?.info || (settings.primaryColor || '#3B82F6');
-        const taskColor = labelBgOverride || layoutSettings?.labelColors?.task || '#F97316';
+        const infoColor = layoutSettings?.labelColors?.info || labelBgOverride || (settings.primaryColor || '#3B82F6');
+        const taskColor = layoutSettings?.labelColors?.task || labelBgOverride || '#F97316';
         const labelTextRgb = parseColor(itemLabelElement?.style?.color, [255, 255, 255]);
-        const labelBorderRgb = parseColor(itemLabelElement?.style?.borderColor, hexToRgb(infoColor));
         const labelBorderWidth = itemLabelElement?.style?.borderWidth ?? 0;
         const labelFontSize = itemLabelElement?.style?.fontSize ?? 8;
         const labelFontStyle = toFontStyle(itemLabelElement?.style?.fontWeight || 'bold');
@@ -1050,6 +1049,8 @@ export async function generateMinutePdf(
         if (itemLabelEnabled) {
           const labelFillHex = item.itemType === 'infoItem' ? infoColor : taskColor;
           const labelFillRgb = hexToRgb(labelFillHex);
+          const labelBorderHex = itemLabelElement?.style?.borderColor || labelFillHex;
+          const labelBorderRgb = hexToRgb(labelBorderHex);
           const labelTopY = yPosition - labelHeight + 2.5;
 
           doc.setFontSize(labelFontSize);
