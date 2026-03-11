@@ -1,5 +1,21 @@
 import React, { useState } from 'react';
 
+function getInitialsFromName(value: string): string {
+  const parts = String(value || '')
+    .replace(/^guest:/i, '')
+    .replace(/[()]/g, ' ')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+  if (parts.length === 0) return '?';
+
+  const first = parts[0].charAt(0).toUpperCase();
+  if (parts.length === 1) return first || '?';
+
+  const last = parts[parts.length - 1].charAt(0).toUpperCase();
+  return `${first}${last}` || '?';
+}
+
 interface AgendaEntryItemProps {
   entry: any;
   entryIndex: number;
@@ -329,7 +345,7 @@ export const AgendaEntryItem: React.FC<AgendaEntryItemProps> = ({
                     <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                     </svg>
-                    {entry.responsibles.join(', ')}
+                    {entry.responsibles.map((value: string) => getInitialsFromName(value)).join(', ')}
                   </span>
                 )}
               </div>

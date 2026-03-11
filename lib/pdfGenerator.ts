@@ -102,11 +102,29 @@ function hexToRgb(hex: string): [number, number, number] {
     : [59, 130, 246]; // Default blue
 }
 
+function getInitialsFromName(value: string, fallback = '?'): string {
+  const parts = value
+    .replace(/^guest:/i, '')
+    .replace(/[()]/g, ' ')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+  if (parts.length === 0) return fallback;
+
+  const first = parts[0].charAt(0).toUpperCase();
+  if (parts.length === 1) return first || fallback;
+
+  const last = parts[parts.length - 1].charAt(0).toUpperCase();
+  return `${first}${last}` || fallback;
+}
+
 // Helper to get user initials
 function getUserInitials(userId: string, allUsers: User[]): string {
   const user = allUsers.find(u => u._id === userId);
   if (user) {
-    return `${user.firstName.charAt(0).toUpperCase()}${user.lastName.charAt(0).toUpperCase()}`;
+    const first = String(user.firstName || '').trim();
+    const last = String(user.lastName || '').trim();
+    return getInitialsFromName(`${first} ${last}`, '?');
   }
 
   if (userId.startsWith('function:')) {
@@ -116,25 +134,13 @@ function getUserInitials(userId: string, allUsers: User[]): string {
       .filter(Boolean)
       .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
       .join(' ');
-    const initials = functionName
-      .split(' ')
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((part) => part.charAt(0).toUpperCase())
-      .join('');
-    return initials || 'F';
+    return getInitialsFromName(functionName, 'F');
   }
   
   // Fallback: If userId is not a MongoID (24 hex chars), assume it's a name
   const isMongoId = /^[0-9a-fA-F]{24}$/.test(userId);
   if (!isMongoId && userId.length > 0) {
-    // Try to extract initials from name
-    const parts = userId.trim().split(/\s+/);
-    if (parts.length >= 2) {
-      return `${parts[0].charAt(0).toUpperCase()}${parts[parts.length - 1].charAt(0).toUpperCase()}`;
-    } else {
-      return userId.substring(0, 2).toUpperCase();
-    }
+    return getInitialsFromName(userId, '?');
   }
   
   return '?';

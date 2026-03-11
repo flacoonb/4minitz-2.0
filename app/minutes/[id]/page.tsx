@@ -409,27 +409,47 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
 
   // Helper function to get user by ID
   const getUserById = (userId: string): User | undefined => {
-    return allUsers.find(u => u._id === userId);
+    return allUsers.find(u => u._id === userId || u.username === userId);
+  };
+
+  const getInitialsFromName = (value: string, fallback = '?'): string => {
+    const parts = value
+      .replace(/^guest:/i, '')
+      .replace(/[()]/g, ' ')
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean);
+    if (parts.length === 0) return fallback;
+
+    const first = parts[0].charAt(0).toUpperCase();
+    if (parts.length === 1) return first || fallback;
+
+    const last = parts[parts.length - 1].charAt(0).toUpperCase();
+    return `${first}${last}` || fallback;
   };
 
   // Helper function to get user initials
   const getUserInitials = (userId: string): string => {
     const user = getUserById(userId);
     if (user) {
-      return `${user.firstName.charAt(0).toUpperCase()}${user.lastName.charAt(0).toUpperCase()}`;
+      return getInitialsFromName(`${user.firstName || ''} ${user.lastName || ''}`, '?');
     }
     const functionSlug = parseFunctionToken(userId);
     if (functionSlug) {
       const functionName =
         clubFunctions.find((entry) => entry.token === userId)?.name || humanizeFunctionToken(userId);
-      const initials = functionName
-        .split(' ')
-        .filter(Boolean)
-        .slice(0, 2)
-        .map((part) => part.charAt(0).toUpperCase())
-        .join('');
-      return initials || 'F';
+      return getInitialsFromName(functionName, 'F');
     }
+
+    if (userId.startsWith('guest:')) {
+      return getInitialsFromName(userId, 'G');
+    }
+
+    const isMongoId = /^[0-9a-fA-F]{24}$/.test(userId);
+    if (!isMongoId && userId.trim().length > 0) {
+      return getInitialsFromName(userId, '?');
+    }
+
     return '?';
   };
 
@@ -696,11 +716,15 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
                     {topic.responsibles && topic.responsibles.length > 0 && (
                       <div className="flex flex-wrap gap-2 mt-3">
                         {topic.responsibles.map((responsible, idx) => (
-                          <span key={idx} className="inline-flex items-center text-sm px-3 py-1.5 bg-[var(--brand-primary-soft)] text-[var(--brand-primary-strong)] rounded-lg border border-[var(--brand-primary-border)] font-medium">
+                          <span
+                            key={idx}
+                            title={responsible}
+                            className="inline-flex items-center text-sm px-3 py-1.5 bg-[var(--brand-primary-soft)] text-[var(--brand-primary-strong)] rounded-lg border border-[var(--brand-primary-border)] font-medium"
+                          >
                             <svg className="w-3 h-3 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
                               <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                             </svg>
-                            {responsible}
+                            {getUserInitials(responsible)}
                           </span>
                         ))}
                       </div>

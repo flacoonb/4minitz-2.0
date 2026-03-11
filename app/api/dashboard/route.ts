@@ -55,8 +55,6 @@ export async function GET(request: NextRequest) {
       status: { $in: ['open', 'in-progress'] }
     }).lean();
 
-    const openActionItems = openTasks;
-
     const upcomingActionItems: any[] = [];
     const overdueActionItems: any[] = [];
     const today = new Date();
@@ -70,6 +68,9 @@ export async function GET(request: NextRequest) {
         return value === userObjectId || value === username;
       })
     );
+
+    // Dashboard task counters should match the user's "My Tasks" list.
+    const openActionItems = userOpenTasks;
 
     userOpenTasks.forEach(task => {
       if (task.dueDate) {

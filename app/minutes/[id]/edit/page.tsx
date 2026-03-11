@@ -288,47 +288,45 @@ function SortableInfoItem({
     return allUsers.find(u => u._id === userId || u.username === userId);
   };
 
+  const getInitialsFromName = (value: string, fallback = '?'): string => {
+    const parts = value
+      .replace(/^guest:/i, '')
+      .replace(/[()]/g, ' ')
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean);
+    if (parts.length === 0) return fallback;
+
+    const first = parts[0].charAt(0).toUpperCase();
+    if (parts.length === 1) return first || fallback;
+
+    const last = parts[parts.length - 1].charAt(0).toUpperCase();
+    return `${first}${last}` || fallback;
+  };
+
   // Helper function to get user initials
   const getUserInitials = (userId: string): string => {
     const functionSlug = parseFunctionToken(userId);
     if (functionSlug) {
       const humanized = humanizeFunctionToken(userId);
-      const initials = humanized
-        .split(' ')
-        .filter(Boolean)
-        .slice(0, 2)
-        .map((part) => part.charAt(0).toUpperCase())
-        .join('');
-      return initials || 'F';
+      return getInitialsFromName(humanized, 'F');
     }
 
     const user = getUserById(userId);
     if (user) {
-      return `${user.firstName.charAt(0).toUpperCase()}${user.lastName.charAt(0).toUpperCase()}`;
+      return getInitialsFromName(`${user.firstName || ''} ${user.lastName || ''}`, '?');
     }
 
     if (userId.startsWith('guest:')) {
       const guestName = userId.replace('guest:', '').trim();
-      if (!guestName) return 'G';
-      const initials = guestName
-        .split(' ')
-        .filter(Boolean)
-        .slice(0, 2)
-        .map((part) => part.charAt(0).toUpperCase())
-        .join('');
-      return initials || 'G';
+      return getInitialsFromName(guestName, 'G');
     }
 
     // Fallback for legacy/non-id values (e.g. plain names/usernames)
-    const fallbackInitials = userId
-      .replace(/^guest:/, '')
-      .trim()
-      .split(' ')
-      .filter(Boolean)
-      .slice(0, 2)
-      .map((part) => part.charAt(0).toUpperCase())
-      .join('');
-    if (fallbackInitials) return fallbackInitials;
+    const isMongoId = /^[0-9a-fA-F]{24}$/.test(userId);
+    if (!isMongoId && userId.trim().length > 0) {
+      return getInitialsFromName(userId, '?');
+    }
 
     return '?';
   };
