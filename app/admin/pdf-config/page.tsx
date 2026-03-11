@@ -60,7 +60,7 @@ interface PdfLayoutSettings {
   pageMargins: { top: number; right: number; bottom: number; left: number };
   itemSpacing: number;
   sectionSpacing: number;
-  labelColors: { info: string; task: string };
+  labelColors: { info: string; task: string; status: string; priority: string };
   metrics: {
     showAttendanceBox: boolean;
     attendanceWidth: number;
@@ -389,7 +389,7 @@ const DEFAULT_LAYOUT_SETTINGS: PdfLayoutSettings = {
   pageMargins: { top: 20, right: 20, bottom: 20, left: 20 },
   itemSpacing: 5,
   sectionSpacing: 5,
-  labelColors: { info: '#3B82F6', task: '#F97316' },
+  labelColors: { info: '#3B82F6', task: '#F97316', status: '#6B7280', priority: '#D97706' },
   metrics: {
     showAttendanceBox: true,
     attendanceWidth: 94,
@@ -567,6 +567,8 @@ function normalizeLayoutSettings(input: unknown): PdfLayoutSettings {
     labelColors: {
       info: sanitizeHexColor(labelColorsSource.info, defaults.labelColors.info),
       task: sanitizeHexColor(labelColorsSource.task, defaults.labelColors.task),
+      status: sanitizeHexColor(labelColorsSource.status, defaults.labelColors.status),
+      priority: sanitizeHexColor(labelColorsSource.priority, defaults.labelColors.priority),
     },
     metrics: {
       showAttendanceBox:
@@ -2365,7 +2367,7 @@ export default function PdfConfigPage() {
                       </label>
                       <div className="space-y-2">
                         <div className="flex items-center gap-2">
-                          <span className="text-sm w-16">{t('layout.globalSettings.infoColor')}</span>
+                          <span className="text-sm w-20">{t('layout.globalSettings.infoColor')}</span>
                           <input
                             type="color"
                             value={layoutSettings.labelColors.info}
@@ -2378,7 +2380,7 @@ export default function PdfConfigPage() {
                           <span className="text-xs text-gray-500">{layoutSettings.labelColors.info}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <span className="text-sm w-16">{t('layout.globalSettings.taskColor')}</span>
+                          <span className="text-sm w-20">{t('layout.globalSettings.taskColor')}</span>
                           <input
                             type="color"
                             value={layoutSettings.labelColors.task}
@@ -2389,6 +2391,32 @@ export default function PdfConfigPage() {
                             className="w-16 h-8 rounded border border-gray-300"
                           />
                           <span className="text-xs text-gray-500">{layoutSettings.labelColors.task}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm w-20">{t('layout.globalSettings.statusColor')}</span>
+                          <input
+                            type="color"
+                            value={layoutSettings.labelColors.status}
+                            onChange={(e) => setLayoutSettings(prev => ({
+                              ...prev,
+                              labelColors: { ...prev.labelColors, status: e.target.value }
+                            }))}
+                            className="w-16 h-8 rounded border border-gray-300"
+                          />
+                          <span className="text-xs text-gray-500">{layoutSettings.labelColors.status}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm w-20">{t('layout.globalSettings.priorityColor')}</span>
+                          <input
+                            type="color"
+                            value={layoutSettings.labelColors.priority}
+                            onChange={(e) => setLayoutSettings(prev => ({
+                              ...prev,
+                              labelColors: { ...prev.labelColors, priority: e.target.value }
+                            }))}
+                            className="w-16 h-8 rounded border border-gray-300"
+                          />
+                          <span className="text-xs text-gray-500">{layoutSettings.labelColors.priority}</span>
                         </div>
                       </div>
                     </div>

@@ -45,6 +45,8 @@ export interface IPdfLayoutSettings extends Document {
   labelColors: {
     info: string;
     task: string;
+    status: string;
+    priority: string;
   };
   metrics?: {
     showAttendanceBox: boolean;
@@ -169,6 +171,8 @@ const PdfLayoutSettingsSchema = new Schema<IPdfLayoutSettings>({
   labelColors: {
     info: { type: String, default: '#3B82F6' },
     task: { type: String, default: '#F97316' },
+    status: { type: String, default: '#6B7280' },
+    priority: { type: String, default: '#D97706' },
   },
   metrics: {
     showAttendanceBox: { type: Boolean, default: true },

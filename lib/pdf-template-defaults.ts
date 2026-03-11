@@ -54,7 +54,7 @@ export interface PdfLayoutSettings {
   pageMargins: { top: number; right: number; bottom: number; left: number };
   itemSpacing: number;
   sectionSpacing: number;
-  labelColors: { info: string; task: string };
+  labelColors: { info: string; task: string; status: string; priority: string };
   metrics: {
     showAttendanceBox: boolean;
     attendanceWidth: number;
@@ -338,7 +338,7 @@ export const DEFAULT_PDF_LAYOUT_SETTINGS: PdfLayoutSettings = {
   pageMargins: { top: 20, right: 20, bottom: 20, left: 20 },
   itemSpacing: 5,
   sectionSpacing: 5,
-  labelColors: { info: '#3B82F6', task: '#F97316' },
+  labelColors: { info: '#3B82F6', task: '#F97316', status: '#6B7280', priority: '#D97706' },
   metrics: {
     showAttendanceBox: true,
     attendanceWidth: 94,
@@ -504,6 +504,8 @@ export function sanitizePdfLayoutSettings(input: unknown): PdfLayoutSettings {
     labelColors: {
       info: sanitizeHexColor(source.labelColors?.info, defaults.labelColors.info),
       task: sanitizeHexColor(source.labelColors?.task, defaults.labelColors.task),
+      status: sanitizeHexColor(source.labelColors?.status, defaults.labelColors.status),
+      priority: sanitizeHexColor(source.labelColors?.priority, defaults.labelColors.priority),
     },
     metrics: {
       showAttendanceBox: sanitizeBoolean(source.metrics?.showAttendanceBox, defaults.metrics.showAttendanceBox),

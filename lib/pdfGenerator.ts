@@ -1145,27 +1145,29 @@ export async function generateMinutePdf(
           yPosition += 1;
         }
 
-        // Task-specific information in gray (status, priority)
+        // Task-specific information (status, priority) with configurable colors
         if (item.itemType === 'actionItem') {
           doc.setFontSize(8);
           doc.setFont(settings.fontFamily, 'normal');
-          doc.setTextColor(120, 120, 120);
-          
-          const taskInfo: string[] = [];
-          
+          const statusColor = hexToRgb(layoutSettings?.labelColors?.status || '#6B7280');
+          const priorityColor = hexToRgb(layoutSettings?.labelColors?.priority || '#D97706');
+          let hasTaskMetaLine = false;
+
           if (settings.includeStatusBadges && item.status) {
-            taskInfo.push(`Status: ${labels.statusLabels[item.status]}`);
+            yPosition += hasTaskMetaLine ? 0 : 1;
+            doc.setTextColor(statusColor[0], statusColor[1], statusColor[2]);
+            doc.text(`Status: ${labels.statusLabels[item.status]}`, contentX, yPosition);
+            yPosition += 4;
+            hasTaskMetaLine = true;
           }
 
           if (settings.includePriorityBadges && item.priority) {
             const prioLabel = locale.startsWith('en') ? 'Priority' : 'Priorität';
-            taskInfo.push(`${prioLabel}: ${labels.priorityLabels[item.priority]}`);
-          }
-          
-          if (taskInfo.length > 0) {
-            yPosition += 1;
-            doc.text(taskInfo.join(' | '), contentX, yPosition);
+            yPosition += hasTaskMetaLine ? 0 : 1;
+            doc.setTextColor(priorityColor[0], priorityColor[1], priorityColor[2]);
+            doc.text(`${prioLabel}: ${labels.priorityLabels[item.priority]}`, contentX, yPosition);
             yPosition += 4;
+            hasTaskMetaLine = true;
           }
         }
 
