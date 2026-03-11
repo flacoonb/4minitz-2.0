@@ -412,6 +412,12 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
     return allUsers.find(u => u._id === userId || u.username === userId);
   };
 
+  const getAssignedUserForFunction = (functionToken: string): User | undefined => {
+    const assignedUserId = clubFunctions.find((entry) => entry.token === functionToken)?.assignedUserId;
+    if (!assignedUserId) return undefined;
+    return getUserById(assignedUserId);
+  };
+
   const getInitialsFromName = (value: string, fallback = '?'): string => {
     const parts = value
       .replace(/^guest:/i, '')
@@ -436,6 +442,10 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
     }
     const functionSlug = parseFunctionToken(userId);
     if (functionSlug) {
+      const assignedUser = getAssignedUserForFunction(userId);
+      if (assignedUser) {
+        return getInitialsFromName(`${assignedUser.firstName || ''} ${assignedUser.lastName || ''}`, '?');
+      }
       const functionName =
         clubFunctions.find((entry) => entry.token === userId)?.name || humanizeFunctionToken(userId);
       return getInitialsFromName(functionName, 'F');

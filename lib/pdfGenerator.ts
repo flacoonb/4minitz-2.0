@@ -221,6 +221,32 @@ function getLabels(locale: string) {
   };
 }
 
+const STATUS_TEXT_COLORS: Record<'open' | 'in-progress' | 'completed' | 'cancelled', string> = {
+  open: '#B45309',
+  'in-progress': '#2563EB',
+  completed: '#15803D',
+  cancelled: '#4B5563',
+};
+
+const PRIORITY_TEXT_COLORS: Record<'high' | 'medium' | 'low', string> = {
+  high: '#DC2626',
+  medium: '#D97706',
+  low: '#6B7280',
+};
+
+function getStatusTextColor(status: InfoItem['status'], primaryColor?: string): [number, number, number] {
+  if (status === 'in-progress' && primaryColor) {
+    return hexToRgb(primaryColor);
+  }
+  const colorHex = STATUS_TEXT_COLORS[status || 'open'] || STATUS_TEXT_COLORS.open;
+  return hexToRgb(colorHex);
+}
+
+function getPriorityTextColor(priority: InfoItem['priority']): [number, number, number] {
+  const colorHex = PRIORITY_TEXT_COLORS[priority || 'medium'] || PRIORITY_TEXT_COLORS.medium;
+  return hexToRgb(colorHex);
+}
+
 function toAlphabetSuffix(index: number): string {
   let n = index + 1;
   let result = '';
@@ -1145,16 +1171,15 @@ export async function generateMinutePdf(
           yPosition += 1;
         }
 
-        // Task-specific information (status, priority) with configurable colors
+        // Task-specific information (status, priority) with value-based colors
         if (item.itemType === 'actionItem') {
           doc.setFontSize(8);
           doc.setFont(settings.fontFamily, 'normal');
-          const statusColor = hexToRgb(layoutSettings?.labelColors?.status || '#6B7280');
-          const priorityColor = hexToRgb(layoutSettings?.labelColors?.priority || '#D97706');
           let hasTaskMetaLine = false;
 
           if (settings.includeStatusBadges && item.status) {
             yPosition += hasTaskMetaLine ? 0 : 1;
+            const statusColor = getStatusTextColor(item.status, settings.primaryColor);
             doc.setTextColor(statusColor[0], statusColor[1], statusColor[2]);
             doc.text(`Status: ${labels.statusLabels[item.status]}`, contentX, yPosition);
             yPosition += 4;
@@ -1164,6 +1189,7 @@ export async function generateMinutePdf(
           if (settings.includePriorityBadges && item.priority) {
             const prioLabel = locale.startsWith('en') ? 'Priority' : 'Priorität';
             yPosition += hasTaskMetaLine ? 0 : 1;
+            const priorityColor = getPriorityTextColor(item.priority);
             doc.setTextColor(priorityColor[0], priorityColor[1], priorityColor[2]);
             doc.text(`${prioLabel}: ${labels.priorityLabels[item.priority]}`, contentX, yPosition);
             yPosition += 4;

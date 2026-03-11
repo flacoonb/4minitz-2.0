@@ -2392,32 +2392,6 @@ export default function PdfConfigPage() {
                           />
                           <span className="text-xs text-gray-500">{layoutSettings.labelColors.task}</span>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm w-20">{t('layout.globalSettings.statusColor')}</span>
-                          <input
-                            type="color"
-                            value={layoutSettings.labelColors.status}
-                            onChange={(e) => setLayoutSettings(prev => ({
-                              ...prev,
-                              labelColors: { ...prev.labelColors, status: e.target.value }
-                            }))}
-                            className="w-16 h-8 rounded border border-gray-300"
-                          />
-                          <span className="text-xs text-gray-500">{layoutSettings.labelColors.status}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-sm w-20">{t('layout.globalSettings.priorityColor')}</span>
-                          <input
-                            type="color"
-                            value={layoutSettings.labelColors.priority}
-                            onChange={(e) => setLayoutSettings(prev => ({
-                              ...prev,
-                              labelColors: { ...prev.labelColors, priority: e.target.value }
-                            }))}
-                            className="w-16 h-8 rounded border border-gray-300"
-                          />
-                          <span className="text-xs text-gray-500">{layoutSettings.labelColors.priority}</span>
-                        </div>
                       </div>
                     </div>
                   </div>

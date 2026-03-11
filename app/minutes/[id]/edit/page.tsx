@@ -288,6 +288,12 @@ function SortableInfoItem({
     return allUsers.find(u => u._id === userId || u.username === userId);
   };
 
+  const getAssignedUserForFunction = (functionToken: string): User | undefined => {
+    const assignedUserId = clubFunctions.find((entry) => entry.token === functionToken)?.assignedUserId;
+    if (!assignedUserId) return undefined;
+    return getUserById(assignedUserId);
+  };
+
   const getInitialsFromName = (value: string, fallback = '?'): string => {
     const parts = value
       .replace(/^guest:/i, '')
@@ -306,15 +312,20 @@ function SortableInfoItem({
 
   // Helper function to get user initials
   const getUserInitials = (userId: string): string => {
-    const functionSlug = parseFunctionToken(userId);
-    if (functionSlug) {
-      const humanized = humanizeFunctionToken(userId);
-      return getInitialsFromName(humanized, 'F');
-    }
-
     const user = getUserById(userId);
     if (user) {
       return getInitialsFromName(`${user.firstName || ''} ${user.lastName || ''}`, '?');
+    }
+
+    const functionSlug = parseFunctionToken(userId);
+    if (functionSlug) {
+      const assignedUser = getAssignedUserForFunction(userId);
+      if (assignedUser) {
+        return getInitialsFromName(`${assignedUser.firstName || ''} ${assignedUser.lastName || ''}`, '?');
+      }
+      const functionLabel =
+        clubFunctions.find((entry) => entry.token === userId)?.name || humanizeFunctionToken(userId);
+      return getInitialsFromName(functionLabel, 'F');
     }
 
     if (userId.startsWith('guest:')) {
