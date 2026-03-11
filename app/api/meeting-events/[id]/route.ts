@@ -67,13 +67,12 @@ async function resolvePdfTemplateId(templateIdRaw: string): Promise<string | nul
 
   const template = await PdfTemplate.findOne({
     _id: templateId,
-    isActive: true,
   })
     .select('_id')
     .lean();
 
   if (!template) {
-    throw new Error('PDF-Vorlage nicht gefunden oder inaktiv');
+    throw new Error('PDF-Vorlage nicht gefunden');
   }
 
   return templateId;

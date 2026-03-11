@@ -181,12 +181,11 @@ export async function POST(request: NextRequest) {
 
       const defaultPdfTemplateExists = await PdfTemplate.exists({
         _id: defaultPdfTemplateIdInput,
-        isActive: true,
       });
 
       if (!defaultPdfTemplateExists) {
         return NextResponse.json(
-          { success: false, error: 'PDF-Vorlage nicht gefunden oder inaktiv' },
+          { success: false, error: 'PDF-Vorlage nicht gefunden' },
           { status: 400 }
         );
       }

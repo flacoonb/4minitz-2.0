@@ -45,7 +45,6 @@ async function isValidDefaultPdfTemplate(defaultPdfTemplateId: unknown): Promise
 
   const existingTemplate = await PdfTemplate.findOne({
     _id: templateId,
-    isActive: true,
   })
     .select('_id')
     .lean();
@@ -269,12 +268,11 @@ export async function PUT(
 
         const defaultPdfTemplateExists = await PdfTemplate.exists({
           _id: rawDefaultPdfTemplateId,
-          isActive: true,
         });
 
         if (!defaultPdfTemplateExists) {
           return NextResponse.json(
-            { success: false, error: 'PDF-Vorlage nicht gefunden oder inaktiv' },
+            { success: false, error: 'PDF-Vorlage nicht gefunden' },
             { status: 400 }
           );
         }

@@ -71,7 +71,6 @@ async function resolvePdfTemplate(event: any, series: any): Promise<any | null> 
 
   return PdfTemplate.findOne({
     _id: effectiveTemplateId,
-    isActive: true,
   }).lean();
 }
 

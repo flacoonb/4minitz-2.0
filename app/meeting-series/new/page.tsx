@@ -37,6 +37,25 @@ interface PdfTemplateOption {
   isActive?: boolean;
 }
 
+function normalizePdfTemplateOptions(rawData: unknown): PdfTemplateOption[] {
+  if (!Array.isArray(rawData)) return [];
+
+  const options: PdfTemplateOption[] = [];
+  for (const entry of rawData) {
+    if (!entry || typeof entry !== 'object') continue;
+    const candidate = entry as { _id?: unknown; name?: unknown; isActive?: unknown };
+    const id = typeof candidate._id === 'string' ? candidate._id.trim() : '';
+    const name = typeof candidate.name === 'string' ? candidate.name.trim() : '';
+    if (!id || !name) continue;
+    options.push({
+      _id: id,
+      name,
+      isActive: candidate.isActive === true,
+    });
+  }
+  return options;
+}
+
 export default function NewMeetingSeriesPage() {
   const t = useTranslations('meetingSeriesNew');
   const router = useRouter();
@@ -152,11 +171,19 @@ export default function NewMeetingSeriesPage() {
       }
 
       const result = await response.json();
-      setPdfTemplateOptions(Array.isArray(result.data) ? result.data : []);
+      setPdfTemplateOptions(normalizePdfTemplateOptions(result.data));
     } catch {
       setPdfTemplateOptions([]);
     }
   };
+
+  useEffect(() => {
+    if (!formData.defaultPdfTemplateId) return;
+    const exists = pdfTemplateOptions.some((template) => template._id === formData.defaultPdfTemplateId);
+    if (!exists) {
+      setFormData((prev) => ({ ...prev, defaultPdfTemplateId: '' }));
+    }
+  }, [pdfTemplateOptions, formData.defaultPdfTemplateId]);
 
   const fetchClubFunctions = async () => {
     try {
