@@ -78,7 +78,7 @@ export default function NewMeetingSeriesPage() {
   // Users list
   const [allUsers, setAllUsers] = useState<User[]>([]);
   const [clubFunctions, setClubFunctions] = useState<ClubFunctionEntry[]>([]);
-  const [selectedUserId, setSelectedUserId] = useState<string>('');
+  const [selectedUserIds, setSelectedUserIds] = useState<string[]>([]);
 
   // Existing session names for autocomplete
   const [existingProjectNames, setExistingProjectNames] = useState<string[]>([]);
@@ -225,14 +225,21 @@ export default function NewMeetingSeriesPage() {
     return fn ? `${fullName} (${fn})` : fullName;
   };
 
-  const addMember = () => {
-    if (selectedUserId && !formData.members.some(m => m.userId === selectedUserId)) {
+  const availableUsers = allUsers.filter(
+    (candidate) => !formData.members.some((member) => member.userId === candidate._id)
+  );
+
+  const addMembers = () => {
+    const userIdsToAdd = selectedUserIds.filter(
+      (userId) => !formData.members.some((member) => member.userId === userId)
+    );
+    if (userIdsToAdd.length > 0) {
       setFormData(prev => ({
         ...prev,
-        members: [...prev.members, { userId: selectedUserId }]
+        members: [...prev.members, ...userIdsToAdd.map((userId) => ({ userId }))]
       }));
-      setSelectedUserId('');
     }
+    setSelectedUserIds([]);
   };
 
   const removeMember = (userId: string) => {
@@ -530,24 +537,30 @@ export default function NewMeetingSeriesPage() {
             <div className="space-y-3">
               <div className="flex flex-col min-[420px]:flex-row items-stretch min-[420px]:items-center gap-2">
                 <select
-                  value={selectedUserId}
-                  onChange={(e) => setSelectedUserId(e.target.value)}
-                  className="w-full flex-1 min-w-0 px-4 py-3 min-h-11 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent transition-all"
+                  multiple
+                  value={selectedUserIds}
+                  onChange={(e) =>
+                    setSelectedUserIds(Array.from(e.target.selectedOptions).map((option) => option.value))
+                  }
+                  size={Math.min(Math.max(availableUsers.length, 4), 8)}
+                  className="w-full flex-1 min-w-0 px-4 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent transition-all"
                 >
-                  <option value="">{t('selectUser')}</option>
-                  {allUsers
-                    .filter(user => !formData.members.some(m => m.userId === user._id))
-                    .map(user => (
+                  {availableUsers.length === 0 ? (
+                    <option value="" disabled>
+                      {t('noUsersAvailable')}
+                    </option>
+                  ) : (
+                    availableUsers.map((user) => (
                       <option key={user._id} value={user._id}>
                         {getUserDisplayName(user)}
                       </option>
                     ))
-                  }
+                  )}
                 </select>
                 <button
                   type="button"
-                  onClick={addMember}
-                  disabled={!selectedUserId}
+                  onClick={addMembers}
+                  disabled={selectedUserIds.length === 0}
                   className="w-full min-[420px]:w-auto px-3 sm:px-4 py-3 min-h-11 min-w-11 bg-[var(--brand-primary)] text-white rounded-xl hover:bg-[var(--brand-primary-strong)] transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center shrink-0"
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -555,6 +568,9 @@ export default function NewMeetingSeriesPage() {
                   </svg>
                 </button>
               </div>
+              <p className="text-xs text-gray-500">
+                {t('membersMultiHint')}
+              </p>
 
               {formData.members.length > 0 && (
                 <div className="space-y-2">

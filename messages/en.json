@@ -1740,6 +1740,8 @@
     "descriptionPlaceholder": "Brief description of the session series...",
     "members": "Members",
     "selectUser": "-- Select user --",
+    "membersMultiHint": "Select multiple users, then click +.",
+    "noUsersAvailable": "No more users available",
     "participants": "Participants",
     "participantsHint": "Active session participants — can edit minutes and be assigned tasks.",
     "participantPlaceholder": "Email or name of participant",

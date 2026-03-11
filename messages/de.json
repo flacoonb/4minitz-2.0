@@ -1740,6 +1740,8 @@
     "descriptionPlaceholder": "Kurze Beschreibung der Sitzungsserie...",
     "members": "Mitglieder",
     "selectUser": "-- Benutzer auswählen --",
+    "membersMultiHint": "Mehrere Benutzer markieren und dann auf + klicken.",
+    "noUsersAvailable": "Keine weiteren Benutzer verfügbar",
     "participants": "Teilnehmer",
     "participantsHint": "Aktive Sitzungsteilnehmer — können Protokolle bearbeiten und Aufgaben zugewiesen bekommen.",
     "participantPlaceholder": "E-Mail oder Name des Teilnehmers",
