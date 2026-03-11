@@ -35,6 +35,7 @@ interface PdfSettings {
 
 interface User {
   _id: string;
+  username?: string;
   firstName: string;
   lastName: string;
 }
@@ -118,9 +119,31 @@ function getInitialsFromName(value: string, fallback = '?'): string {
   return `${first}${last}` || fallback;
 }
 
+function getUserByReference(userRef: string, allUsers: User[]): User | undefined {
+  const normalized = String(userRef || '').trim();
+  if (!normalized) return undefined;
+  return allUsers.find(
+    (entry) =>
+      String(entry._id || '').trim() === normalized ||
+      String(entry.username || '').trim() === normalized
+  );
+}
+
+function getAssignedUserForFunction(
+  functionToken: string,
+  allUsers: User[],
+  clubFunctions: ClubFunctionEntry[] = []
+): User | undefined {
+  const assignedUserRef = String(
+    clubFunctions.find((entry) => entry.token === functionToken)?.assignedUserId || ''
+  ).trim();
+  if (!assignedUserRef) return undefined;
+  return getUserByReference(assignedUserRef, allUsers);
+}
+
 // Helper to get user initials
-function getUserInitials(userId: string, allUsers: User[]): string {
-  const user = allUsers.find(u => u._id === userId);
+function getUserInitials(userId: string, allUsers: User[], clubFunctions: ClubFunctionEntry[] = []): string {
+  const user = getUserByReference(userId, allUsers);
   if (user) {
     const first = String(user.firstName || '').trim();
     const last = String(user.lastName || '').trim();
@@ -128,7 +151,17 @@ function getUserInitials(userId: string, allUsers: User[]): string {
   }
 
   if (userId.startsWith('function:')) {
-    const functionName = userId
+    const assignedUser = getAssignedUserForFunction(userId, allUsers, clubFunctions);
+    if (assignedUser) {
+      const first = String(assignedUser.firstName || '').trim();
+      const last = String(assignedUser.lastName || '').trim();
+      return getInitialsFromName(`${first} ${last}`, '?');
+    }
+
+    const configuredFunctionName = String(
+      clubFunctions.find((entry) => entry.token === userId)?.name || ''
+    ).trim();
+    const functionName = configuredFunctionName || userId
       .replace(/^function:/, '')
       .split('-')
       .filter(Boolean)
@@ -147,8 +180,12 @@ function getUserInitials(userId: string, allUsers: User[]): string {
 }
 
 // Helper to format users as initials
-function formatUsersAsInitials(userIds: string[], allUsers: User[]): string {
-  return userIds.map(id => getUserInitials(id, allUsers)).join(', ');
+function formatUsersAsInitials(
+  userIds: string[],
+  allUsers: User[],
+  clubFunctions: ClubFunctionEntry[] = []
+): string {
+  return userIds.map((id) => getUserInitials(id, allUsers, clubFunctions)).join(', ');
 }
 
 function buildUserFunctionLabelMap(clubFunctions: ClubFunctionEntry[] = []): Map<string, string> {
@@ -175,7 +212,7 @@ function getUserDisplayName(
   allUsers: User[],
   functionLabelsByUserId: Map<string, string>
 ): string {
-  const user = allUsers.find((entry) => entry._id === userId);
+  const user = getUserByReference(userId, allUsers);
   if (!user) return userId;
   const fullName = `${user.firstName} ${user.lastName}`.trim();
   const functionLabel = functionLabelsByUserId.get(userId);
@@ -1147,7 +1184,7 @@ export async function generateMinutePdf(
           doc.setFont(settings.fontFamily, 'normal');
           doc.setTextColor(100, 100, 100);
           
-          const responsiblesText = formatUsersAsInitials(item.responsibles, allUsers);
+          const responsiblesText = formatUsersAsInitials(item.responsibles, allUsers, clubFunctions);
           const responsibleLines = doc.splitTextToSize(responsiblesText, responsibleColumnWidth - 4);
           
           let respY = itemStartY + 1;
