@@ -72,7 +72,9 @@ function getFirstPublicUrl(candidates: string[]): string | null {
 
 async function getConfiguredAppUrl(): Promise<string> {
   try {
-    const settings = await Settings.findOne({}).sort({ updatedAt: -1 }).lean();
+    const settings = await Settings.findOne({
+      'systemSettings.baseUrl': { $exists: true, $nin: ['', null] },
+    }).sort({ updatedAt: -1 }).lean();
     return String((settings as any)?.systemSettings?.baseUrl || '');
   } catch {
     return '';
@@ -98,9 +100,12 @@ export async function getAppUrl() {
 
 export async function getOrgName() {
   try {
-    const settings = await Settings.findOne({}).sort({ updatedAt: -1 });
-    if (settings && settings.systemSettings && settings.systemSettings.organizationName) {
-      return settings.systemSettings.organizationName;
+    const settings = await Settings.findOne({
+      'systemSettings.organizationName': { $exists: true, $nin: ['', null] },
+    }).sort({ updatedAt: -1 }).lean();
+    const settingsObj = settings as any;
+    if (settingsObj?.systemSettings?.organizationName) {
+      return settingsObj.systemSettings.organizationName;
     }
   } catch (_e) { }
   return 'NXTMinutes';
@@ -109,10 +114,12 @@ export async function getOrgName() {
 export async function getTransporter() {
   // Try to get settings from DB first
   try {
-    const settings = await Settings.findOne({}).sort({ updatedAt: -1 });
+    const notificationSettingsDoc = await Settings.findOne({
+      notificationSettings: { $exists: true },
+    }).sort({ updatedAt: -1 }).lean();
 
     // Check if email notifications are enabled globally
-    if (settings?.notificationSettings?.enableEmailNotifications === false) {
+    if ((notificationSettingsDoc as any)?.notificationSettings?.enableEmailNotifications === false) {
       return {
         sendMail: async () => {
           return { messageId: 'skipped-disabled' } as nodemailer.SentMessageInfo;
@@ -121,8 +128,12 @@ export async function getTransporter() {
       } as any;
     }
 
-    if (settings?.smtpSettings?.host) {
-      const { host, port: rawPort, secure, auth } = settings.smtpSettings;
+    const smtpSettingsDoc = await Settings.findOne({
+      'smtpSettings.host': { $exists: true, $nin: ['', null] },
+    }).sort({ updatedAt: -1 }).lean();
+
+    if ((smtpSettingsDoc as any)?.smtpSettings?.host) {
+      const { host, port: rawPort, secure, auth } = (smtpSettingsDoc as any).smtpSettings;
       const port = rawPort || 587;
 
       // Decrypt password if present
@@ -155,9 +166,12 @@ export async function getTransporter() {
 
 export async function getFromEmail() {
   try {
-    const settings = await Settings.findOne({}).sort({ updatedAt: -1 });
-    if (settings && settings.smtpSettings && settings.smtpSettings.from) {
-      return settings.smtpSettings.from;
+    const settings = await Settings.findOne({
+      'smtpSettings.from': { $exists: true, $nin: ['', null] },
+    }).sort({ updatedAt: -1 }).lean();
+    const settingsObj = settings as any;
+    if (settingsObj?.smtpSettings?.from) {
+      return settingsObj.smtpSettings.from;
     }
   } catch (_e) { }
   return FROM_EMAIL;
@@ -291,7 +305,9 @@ type EmailBrandTheme = {
 
 async function getEmailBrandTheme(): Promise<EmailBrandTheme> {
   try {
-    const settings = await Settings.findOne({}).sort({ updatedAt: -1 }).lean();
+    const settings = await Settings.findOne({
+      'systemSettings.brandColors': { $exists: true },
+    }).sort({ updatedAt: -1 }).lean();
     const settingsObj = settings as any;
     const colors = sanitizeBrandColors(settingsObj?.systemSettings?.brandColors);
     return {

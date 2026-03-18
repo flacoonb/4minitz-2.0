@@ -211,8 +211,13 @@ export async function PUT(request: NextRequest) {
 
     if (setData.systemSettings && typeof setData.systemSettings === 'object') {
       const incomingSystem = setData.systemSettings as Record<string, unknown>;
+      const normalizedBaseUrl =
+        typeof incomingSystem.baseUrl === 'string'
+          ? normalizeUrlCandidate(incomingSystem.baseUrl)
+          : incomingSystem.baseUrl;
       setData.systemSettings = {
         ...incomingSystem,
+        baseUrl: normalizedBaseUrl,
         brandColors: sanitizeBrandColors(incomingSystem.brandColors),
       };
     }
