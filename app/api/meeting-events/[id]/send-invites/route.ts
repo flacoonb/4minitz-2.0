@@ -6,7 +6,7 @@ import MeetingSeries from '@/models/MeetingSeries';
 import { verifyToken } from '@/lib/auth';
 import { hasPermission } from '@/lib/permissions';
 import { lookupUsersByIdentifiers, normalizeIdentifier } from '@/lib/user-identifiers';
-import { sendMeetingInvitationEmail, getAppUrl } from '@/lib/email-service';
+import { sendMeetingInvitationEmail, resolvePublicAppUrl } from '@/lib/email-service';
 
 interface RouteContext {
   params: Promise<{ id: string }>;
@@ -41,10 +41,10 @@ function isPublicHttpUrl(value: string): boolean {
 
 async function resolveInvitationBaseUrl(request: NextRequest): Promise<string> {
   const requestBaseUrl = normalizeUrlCandidate(getRequestBaseUrl(request));
-  const configuredBaseUrl = normalizeUrlCandidate(await getAppUrl());
+  const configuredBaseUrl = normalizeUrlCandidate(await resolvePublicAppUrl(requestBaseUrl));
 
-  if (isPublicHttpUrl(requestBaseUrl)) return requestBaseUrl;
   if (isPublicHttpUrl(configuredBaseUrl)) return configuredBaseUrl;
+  if (isPublicHttpUrl(requestBaseUrl)) return requestBaseUrl;
   return configuredBaseUrl || requestBaseUrl;
 }
 
