@@ -53,7 +53,7 @@ export default function MinutesList({ meetingSeriesId }: MinutesListProps) {
     } finally {
       setLoading(false);
     }
-  }, [meetingSeriesId]);
+  }, [meetingSeriesId, t]);
 
   useEffect(() => {
     fetchMinutes();
