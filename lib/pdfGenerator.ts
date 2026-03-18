@@ -1,14 +1,12 @@
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
-import { UserOptions } from 'jspdf-autotable';
 import { IPdfLayoutSettings } from '@/models/PdfLayoutSettings';
 
-// Extend jsPDF type to include autoTable
-declare module 'jspdf' {
-  interface jsPDF {
-    autoTable: (options: UserOptions) => jsPDF;
-    lastAutoTable?: { finalY: number };
-  }
+type JsPdfCtor = new () => any;
+
+async function createJsPdfDocument(): Promise<any> {
+  // Force browser bundle resolution to avoid server-side node.cjs paths during build.
+  const jsPdfModule = (await import('jspdf/dist/jspdf.es.min.js')) as { default: JsPdfCtor };
+  const JsPdf = jsPdfModule.default;
+  return new JsPdf();
 }
 
 interface PdfSettings {
@@ -296,7 +294,7 @@ function toAlphabetSuffix(index: number): string {
 }
 
 // Helper to add draft watermark
-function addDraftWatermark(doc: jsPDF, draftText: string): void {
+function addDraftWatermark(doc: any, draftText: string): void {
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
   
@@ -334,7 +332,7 @@ export async function generateMinutePdf(
   layoutSettings?: IPdfLayoutSettings,
   clubFunctions: ClubFunctionEntry[] = []
 ): Promise<void> {
-  const doc = new jsPDF();
+  const doc = await createJsPdfDocument();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
   const marginTop = layoutSettings?.pageMargins?.top ?? 20;
