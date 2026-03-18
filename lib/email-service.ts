@@ -70,22 +70,30 @@ function getFirstPublicUrl(candidates: string[]): string | null {
   return null;
 }
 
-export async function getAppUrl() {
-  let configuredBaseUrl = '';
+async function getConfiguredAppUrl(): Promise<string> {
   try {
-    const settings = await Settings.findOne({}).sort({ updatedAt: -1 });
-    if (settings && settings.systemSettings && settings.systemSettings.baseUrl) {
-      configuredBaseUrl = String(settings.systemSettings.baseUrl);
-    }
-  } catch (_e) { }
+    const settings = await Settings.findOne({}).sort({ updatedAt: -1 }).lean();
+    return String((settings as any)?.systemSettings?.baseUrl || '');
+  } catch {
+    return '';
+  }
+}
 
+export async function resolvePublicAppUrl(...fallbackCandidates: string[]): Promise<string> {
+  const configuredBaseUrl = await getConfiguredAppUrl();
   const envAppUrl = String(process.env.APP_URL || '');
   const envPublicAppUrl = String(process.env.NEXT_PUBLIC_APP_URL || '');
-  const preferred = getFirstPublicUrl([configuredBaseUrl, envAppUrl, envPublicAppUrl]);
+  const candidates = [configuredBaseUrl, envAppUrl, envPublicAppUrl, ...fallbackCandidates];
+
+  const preferred = getFirstPublicUrl(candidates);
   if (preferred) return preferred;
 
-  const fallback = getFirstValidUrl([configuredBaseUrl, envAppUrl, envPublicAppUrl]);
+  const fallback = getFirstValidUrl(candidates);
   return fallback || 'http://localhost:3000';
+}
+
+export async function getAppUrl() {
+  return resolvePublicAppUrl();
 }
 
 export async function getOrgName() {
@@ -732,10 +740,7 @@ export async function sendVerificationEmail(
   appUrlOverride?: string
 ): Promise<void> {
   const t = translations[locale].verifyEmail;
-  const resolvedAppUrl = await getAppUrl();
-  const preferredAppUrl = getFirstPublicUrl([String(appUrlOverride || ''), resolvedAppUrl]);
-  const fallbackAppUrl = getFirstValidUrl([String(appUrlOverride || ''), resolvedAppUrl]);
-  const appUrl = (preferredAppUrl || fallbackAppUrl || resolvedAppUrl).replace(/\/+$/, '');
+  const appUrl = (await resolvePublicAppUrl(String(appUrlOverride || ''))).replace(/\/+$/, '');
   const emailTheme = await getEmailBrandTheme();
   const primaryButtonStyle = getEmailPrimaryButtonStyle(emailTheme);
   const verifyUrl = `${appUrl}/auth/verify-email?token=${token}`;
