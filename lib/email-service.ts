@@ -70,27 +70,39 @@ function getFirstPublicUrl(candidates: string[]): string | null {
   return null;
 }
 
-export async function getAppUrl() {
-  let configuredBaseUrl = '';
+async function getConfiguredAppUrl(): Promise<string> {
   try {
-    const settings = await Settings.findOne({}).sort({ updatedAt: -1 });
-    if (settings && settings.systemSettings && settings.systemSettings.baseUrl) {
-      configuredBaseUrl = String(settings.systemSettings.baseUrl);
-    }
-  } catch (_e) { }
+    const settings = await Settings.findOne({
+      'systemSettings.baseUrl': { $exists: true, $nin: ['', null] },
+    }).sort({ updatedAt: -1 }).lean();
+    return String((settings as any)?.systemSettings?.baseUrl || '');
+  } catch {
+    return '';
+  }
+}
 
+export async function resolvePublicAppUrl(...fallbackCandidates: string[]): Promise<string> {
+  const configuredBaseUrl = await getConfiguredAppUrl();
   const envAppUrl = String(process.env.APP_URL || '');
   const envPublicAppUrl = String(process.env.NEXT_PUBLIC_APP_URL || '');
-  const preferred = getFirstPublicUrl([configuredBaseUrl, envAppUrl, envPublicAppUrl]);
+  const candidates = [configuredBaseUrl, envAppUrl, envPublicAppUrl, ...fallbackCandidates];
+
+  const preferred = getFirstPublicUrl(candidates);
   if (preferred) return preferred;
 
-  const fallback = getFirstValidUrl([configuredBaseUrl, envAppUrl, envPublicAppUrl]);
+  const fallback = getFirstValidUrl(candidates);
   return fallback || 'http://localhost:3000';
+}
+
+export async function getAppUrl() {
+  return resolvePublicAppUrl();
 }
 
 export async function getOrgName() {
   try {
-    const settings = await Settings.findOne({}).sort({ updatedAt: -1 });
+    const settings = await Settings.findOne({
+      'systemSettings.organizationName': { $exists: true, $nin: ['', null] },
+    }).sort({ updatedAt: -1 }).lean();
     if (settings && settings.systemSettings && settings.systemSettings.organizationName) {
       return settings.systemSettings.organizationName;
     }
@@ -101,10 +113,12 @@ export async function getOrgName() {
 export async function getTransporter() {
   // Try to get settings from DB first
   try {
-    const settings = await Settings.findOne({}).sort({ updatedAt: -1 });
+    const notificationSettingsDoc = await Settings.findOne({
+      notificationSettings: { $exists: true },
+    }).sort({ updatedAt: -1 }).lean();
 
     // Check if email notifications are enabled globally
-    if (settings?.notificationSettings?.enableEmailNotifications === false) {
+    if ((notificationSettingsDoc as any)?.notificationSettings?.enableEmailNotifications === false) {
       return {
         sendMail: async () => {
           return { messageId: 'skipped-disabled' } as nodemailer.SentMessageInfo;
@@ -113,8 +127,12 @@ export async function getTransporter() {
       } as any;
     }
 
-    if (settings?.smtpSettings?.host) {
-      const { host, port: rawPort, secure, auth } = settings.smtpSettings;
+    const smtpSettingsDoc = await Settings.findOne({
+      'smtpSettings.host': { $exists: true, $nin: ['', null] },
+    }).sort({ updatedAt: -1 }).lean();
+
+    if ((smtpSettingsDoc as any)?.smtpSettings?.host) {
+      const { host, port: rawPort, secure, auth } = (smtpSettingsDoc as any).smtpSettings;
       const port = rawPort || 587;
 
       // Decrypt password if present
@@ -147,7 +165,9 @@ export async function getTransporter() {
 
 export async function getFromEmail() {
   try {
-    const settings = await Settings.findOne({}).sort({ updatedAt: -1 });
+    const settings = await Settings.findOne({
+      'smtpSettings.from': { $exists: true, $nin: ['', null] },
+    }).sort({ updatedAt: -1 }).lean();
     if (settings && settings.smtpSettings && settings.smtpSettings.from) {
       return settings.smtpSettings.from;
     }
@@ -283,7 +303,9 @@ type EmailBrandTheme = {
 
 async function getEmailBrandTheme(): Promise<EmailBrandTheme> {
   try {
-    const settings = await Settings.findOne({}).sort({ updatedAt: -1 }).lean();
+    const settings = await Settings.findOne({
+      'systemSettings.brandColors': { $exists: true },
+    }).sort({ updatedAt: -1 }).lean();
     const settingsObj = settings as any;
     const colors = sanitizeBrandColors(settingsObj?.systemSettings?.brandColors);
     return {
@@ -732,10 +754,7 @@ export async function sendVerificationEmail(
   appUrlOverride?: string
 ): Promise<void> {
   const t = translations[locale].verifyEmail;
-  const resolvedAppUrl = await getAppUrl();
-  const preferredAppUrl = getFirstPublicUrl([String(appUrlOverride || ''), resolvedAppUrl]);
-  const fallbackAppUrl = getFirstValidUrl([String(appUrlOverride || ''), resolvedAppUrl]);
-  const appUrl = (preferredAppUrl || fallbackAppUrl || resolvedAppUrl).replace(/\/+$/, '');
+  const appUrl = (await resolvePublicAppUrl(String(appUrlOverride || ''))).replace(/\/+$/, '');
   const emailTheme = await getEmailBrandTheme();
   const primaryButtonStyle = getEmailPrimaryButtonStyle(emailTheme);
   const verifyUrl = `${appUrl}/auth/verify-email?token=${token}`;
