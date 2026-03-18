@@ -4,7 +4,7 @@
  */
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
 import { useAuth } from '@/contexts/AuthContext';
@@ -49,11 +49,7 @@ export default function MeetingSeriesList() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchSeries();
-  }, []);
-
-  const fetchSeries = async () => {
+  const fetchSeries = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch('/api/meeting-series', {
@@ -71,7 +67,11 @@ export default function MeetingSeriesList() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [t]);
+
+  useEffect(() => {
+    fetchSeries();
+  }, [fetchSeries]);
 
   if (loading) {
     return (
