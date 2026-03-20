@@ -1,0 +1,39 @@
+name: DAST (OWASP ZAP Baseline)
+
+on:
+  pull_request:
+    branches: [ main, master ]
+  schedule:
+    - cron: "30 2 * * 6"
+  workflow_dispatch:
+    inputs:
+      target:
+        description: "Target URL for ZAP baseline scan (e.g. https://staging.example.com)"
+        required: false
+        type: string
+      fail_action:
+        description: "Fail workflow if alerts are found"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+  issues: write
+  pull-requests: write
+
+env:
+  DEFAULT_ZAP_TARGET_URL: https://proto.tvsg.ch
+
+jobs:
+  zap-baseline:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Run ZAP Baseline Scan
+        uses: zaproxy/action-baseline@v0.15.0
+        with:
+          target: ${{ github.event_name == 'workflow_dispatch' && inputs.target || env.DEFAULT_ZAP_TARGET_URL }}
+          fail_action: ${{ github.event_name == 'workflow_dispatch' && inputs.fail_action || false }}
+          rules_file_name: .zap/rules.tsv
+          allow_issue_writing: true
+          token: ${{ secrets.GITHUB_TOKEN }}

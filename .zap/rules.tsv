@@ -1,0 +1,5 @@
+# RuleID	ACTION	Comment
+10062	INFO	Potential false positive on Next.js chunk hash-like numbers
+10099	INFO	Potential false positive on UI copy containing SQL keywords
+10063	INFO	Header finding can appear on third-party edge assets
+10021	INFO	Header finding on non-app/static edge-served resources
