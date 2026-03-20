@@ -4,7 +4,7 @@ import path from 'path';
 import { verifyToken } from '@/lib/auth';
 import connectDB from '@/lib/mongodb';
 import Settings from '@/models/Settings';
-import { safePath } from '@/lib/file-security';
+import { isAllowedImageSignature, safePath } from '@/lib/file-security';
 
 export async function POST(request: NextRequest) {
   try {
@@ -46,6 +46,10 @@ export async function POST(request: NextRequest) {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
+    if (!isAllowedImageSignature(buffer)) {
+      return NextResponse.json({ error: 'Dateiinhalt entspricht keinem erlaubten Bildformat' }, { status: 400 });
+    }
+
     // Sanitize filename (strip everything except alphanumeric, hyphen, single dot for extension)
     const ext = path.extname(file.name).replace(/[^a-zA-Z0-9.]/g, '');
     const allowedLogoExtensions = new Set(['.jpg', '.jpeg', '.png', '.gif', '.webp']);

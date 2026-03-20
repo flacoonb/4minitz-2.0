@@ -5,25 +5,10 @@ import MeetingSeries from '@/models/MeetingSeries';
 import Task from '@/models/Task';
 import PushSubscription from '@/models/PushSubscription';
 import { verifyToken, requirePermission } from '@/lib/auth';
-import { sendVerificationEmail, sendWelcomeEmail } from '@/lib/email-service';
+import { sendVerificationEmail, sendWelcomeEmail, resolvePublicAppUrl } from '@/lib/email-service';
+import { getSafeRequestOriginBase } from '@/lib/request-base-url';
 import crypto from 'crypto';
 import { isHexObjectIdLike, isValidEmailAddress } from '@/lib/input-validation';
-
-function getRequestBaseUrl(request: NextRequest): string {
-  const forwardedProto = request.headers.get('x-forwarded-proto')?.split(',')[0]?.trim();
-  const forwardedHost = request.headers.get('x-forwarded-host')?.split(',')[0]?.trim();
-  if (forwardedProto && forwardedHost) {
-    return `${forwardedProto}://${forwardedHost}`;
-  }
-
-  const host = request.headers.get('host')?.trim();
-  if (host) {
-    const proto = request.nextUrl.protocol.replace(/:$/, '') || 'https';
-    return `${proto}://${host}`;
-  }
-
-  return new URL(request.url).origin;
-}
 
 export async function GET(
   request: NextRequest,
@@ -284,7 +269,7 @@ export async function PUT(
     // Send email verification when address changes
     if (emailChanged && emailVerificationToken) {
       try {
-        const appUrlFromRequest = getRequestBaseUrl(request);
+        const appUrlFromRequest = await resolvePublicAppUrl(getSafeRequestOriginBase(request));
         const locale = userToUpdate.preferences?.language === 'en' ? 'en' : 'de';
         await sendVerificationEmail(
           {

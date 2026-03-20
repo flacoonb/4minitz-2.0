@@ -41,6 +41,10 @@ Minutes can be created visually or in Markdown mode, then managed consistently t
 - Tailwind CSS 4
 - JWT-based auth (with secure server-side permission checks)
 
+## Security
+
+See [SECURITY.md](./SECURITY.md) for CSRF protection (`proxy.ts`), recommended production environment flags, and headers (CSP, HSTS).
+
 ## Quick Start
 
 ### Prerequisites

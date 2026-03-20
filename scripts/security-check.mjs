@@ -32,6 +32,22 @@ function mustNotContain(content, blocked, message) {
   }
 }
 
+function listFilesViaRipgrep() {
+  try {
+    const output = execSync('rg --files --hidden -g "!.git"', {
+      cwd: projectRoot,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    });
+    return output
+      .split('\n')
+      .map((line) => line.trim())
+      .filter(Boolean);
+  } catch {
+    return [];
+  }
+}
+
 async function collectCodeFiles(relativeDir, out) {
   const fullDir = path.join(projectRoot, relativeDir);
   let entries = [];
@@ -134,11 +150,20 @@ async function checkAbsoluteLocalhostFetches() {
 function checkTrackedSensitiveFiles() {
   let trackedFiles = [];
   try {
-    const output = execSync('git ls-files', { cwd: projectRoot, encoding: 'utf8' });
+    const output = execSync('git ls-files', {
+      cwd: projectRoot,
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+    });
     trackedFiles = output.split('\n').map((line) => line.trim()).filter(Boolean);
   } catch {
-    addFailure('Could not list tracked files via git ls-files');
-    return;
+    // Some environments cannot run git commands (e.g. safe.directory restrictions).
+    // Fallback to ripgrep file listing so the security check remains usable.
+    trackedFiles = listFilesViaRipgrep();
+    if (trackedFiles.length === 0) {
+      addFailure('Could not list project files via git ls-files or rg --files');
+      return;
+    }
   }
 
   const sensitiveMatches = [];

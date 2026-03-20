@@ -77,6 +77,7 @@ export async function GET(
         'Content-Type': attachment.mimeType,
         'Content-Disposition': `attachment; filename="${encodeURIComponent(attachment.originalName)}"`,
         'Content-Length': attachment.size.toString(),
+        'X-Content-Type-Options': 'nosniff',
       },
     });
   } catch {

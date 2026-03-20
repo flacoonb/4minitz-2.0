@@ -34,6 +34,7 @@ export async function GET(
       headers: {
         'Content-Type': contentType,
         'Cache-Control': 'private, max-age=31536000, immutable',
+        'X-Content-Type-Options': 'nosniff',
       },
     });
   } catch (error) {

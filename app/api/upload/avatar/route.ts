@@ -4,7 +4,7 @@ import path from 'path';
 import { verifyToken } from '@/lib/auth';
 import connectDB from '@/lib/mongodb';
 import Settings from '@/models/Settings';
-import { safePath } from '@/lib/file-security';
+import { isAllowedImageSignature, safePath } from '@/lib/file-security';
 
 const ALLOWED_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/gif', 'image/webp']);
 const ALLOWED_EXTENSIONS = new Set(['.jpg', '.jpeg', '.png', '.gif', '.webp']);
@@ -45,6 +45,10 @@ export async function POST(request: NextRequest) {
     }
 
     const buffer = Buffer.from(await file.arrayBuffer());
+    if (!isAllowedImageSignature(buffer)) {
+      return NextResponse.json({ error: 'Dateiinhalt entspricht keinem erlaubten Bildformat' }, { status: 400 });
+    }
+
     const filename = `avatar-${authResult.user._id}-${Date.now()}${ext}`;
     const uploadDir = path.join(process.cwd(), 'uploads', 'avatars');
     await mkdir(uploadDir, { recursive: true });

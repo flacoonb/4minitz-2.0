@@ -4,6 +4,7 @@ import connectDB from '@/lib/mongodb';
 import MeetingEvent from '@/models/MeetingEvent';
 import { checkRateLimit, checkRateLimitByKey } from '@/lib/rate-limit';
 import { resolvePublicAppUrl } from '@/lib/email-service';
+import { getSafeRequestOriginBase } from '@/lib/request-base-url';
 
 const ALLOWED_RESPONSES = new Set(['accepted', 'tentative', 'declined']);
 
@@ -22,21 +23,8 @@ function isPublicHttpUrl(value: string): boolean {
   }
 }
 
-function getRequestBaseUrl(request: NextRequest): string {
-  const forwardedProto = request.headers.get('x-forwarded-proto')?.split(',')[0]?.trim();
-  const forwardedHost = request.headers.get('x-forwarded-host')?.split(',')[0]?.trim();
-  if (forwardedProto && forwardedHost) return `${forwardedProto}://${forwardedHost}`;
-
-  const host = request.headers.get('host')?.trim();
-  if (host) {
-    const proto = request.nextUrl.protocol.replace(/:$/, '') || 'https';
-    return `${proto}://${host}`;
-  }
-  return new URL(request.url).origin;
-}
-
 async function resolveRedirectBaseUrl(request: NextRequest): Promise<string> {
-  const requestBaseUrl = normalizeUrlCandidate(getRequestBaseUrl(request));
+  const requestBaseUrl = normalizeUrlCandidate(getSafeRequestOriginBase(request));
   const configuredBaseUrl = normalizeUrlCandidate(await resolvePublicAppUrl(requestBaseUrl));
 
   if (isPublicHttpUrl(configuredBaseUrl)) return configuredBaseUrl;

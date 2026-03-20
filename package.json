@@ -64,6 +64,7 @@
   },
   "overrides": {
     "dompurify": "^3.3.2",
-    "fast-xml-parser": "^5.3.8"
+    "fast-xml-parser": "^5.3.8",
+    "flatted": "^3.4.2"
   }
 }

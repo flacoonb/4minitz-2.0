@@ -19,9 +19,14 @@ export interface RoleResult {
 export async function verifyToken(request: NextRequest): Promise<AuthResult> {
   try {
     await connectDB();
-    // Get token from cookie or Authorization header
+    // Cookie is the primary browser auth mechanism. Bearer is optional and disabled in
+    // production unless ALLOW_BEARER_AUTH=true (reduces token leakage via XSS / logs).
     const cookieToken = request.cookies.get('auth-token')?.value;
-    const headerToken = request.headers.get('Authorization')?.replace('Bearer ', '');
+    const bearerAllowed =
+      process.env.NODE_ENV !== 'production' || process.env.ALLOW_BEARER_AUTH === 'true';
+    const headerToken = bearerAllowed
+      ? request.headers.get('Authorization')?.replace(/^Bearer\s+/i, '')?.trim()
+      : undefined;
     const token = cookieToken || headerToken;
 
     if (!token) {
