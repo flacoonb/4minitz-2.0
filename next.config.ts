@@ -5,6 +5,7 @@ const withNextIntl = createNextIntlPlugin('./i18n.ts');
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
+  poweredByHeader: false,
   serverExternalPackages: [],
   experimental: {
     serverActions: {
@@ -14,19 +15,29 @@ const nextConfig: NextConfig = {
   async headers() {
     const strictCspMode = process.env.STRICT_CSP_MODE === 'true';
     const allowInlineScripts = process.env.ALLOW_INLINE_SCRIPTS === 'true';
+    const allowCloudflareInsights = process.env.ALLOW_CLOUDFLARE_INSIGHTS === 'true';
+    const scriptSources = ["'self'"];
+    if (!strictCspMode || allowInlineScripts) {
+      scriptSources.push("'unsafe-inline'");
+    }
+    if (allowCloudflareInsights) {
+      scriptSources.push('https://static.cloudflareinsights.com');
+    }
     const scriptSrc =
       process.env.NODE_ENV === 'production'
-        ? strictCspMode || !allowInlineScripts
-          ? "script-src 'self'"
-          : "script-src 'self' 'unsafe-inline'"
+        ? `script-src ${scriptSources.join(' ')}`
         : "script-src 'self' 'unsafe-inline' 'unsafe-eval'";
+    const connectSources = ["'self'"];
+    if (allowCloudflareInsights) {
+      connectSources.push('https://*.cloudflareinsights.com');
+    }
     const csp = [
       "default-src 'self'",
       scriptSrc,
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https:",
       "font-src 'self' data:",
-      "connect-src 'self'",
+      `connect-src ${connectSources.join(' ')}`,
       "worker-src 'self'",
       "object-src 'none'",
       "base-uri 'self'",
