@@ -26,7 +26,8 @@
 ## CSP (Content-Security-Policy)
 
 - Die **CSP wird in `proxy.ts`** pro Request gesetzt (Next.js 16), **nicht** in `next.config.ts` (keine doppelten Header).
-- **Skripte:** `script-src 'self' 'nonce-…' 'strict-dynamic'` — **kein `unsafe-inline`** für Scripts. In **Development** zusätzlich `'unsafe-eval'` (React/Next DevTools).
+- **Skripte:** `script-src 'self' 'nonce-…'` und standardmäßig **`strict-dynamic`** — **kein `unsafe-inline`** für Scripts. In **Development** zusätzlich `'unsafe-eval'` (React/Next DevTools).
+- **Cloudflare Rocket Loader** injiziert Skripte unter `/cdn-cgi/…` **ohne Nonce**; mit `strict-dynamic` blockiert die CSP das (korrekt). **Empfehlung:** Rocket Loader im Cloudflare-Dashboard deaktivieren (Speed → Optimization). Alternativ (schwächer): `CSP_DISABLE_STRICT_DYNAMIC=true` — dann greift wieder `'self'` für gleich origin eingefügte Skripte.
 - **Styles:** Standard in Production: **`style-src 'self' 'unsafe-inline'` ohne Nonce** — enthält die Policy **gleichzeitig** Nonce und `unsafe-inline`, ignorieren Browser `unsafe-inline` (CSP3). Strikter Test: `CSP_STRICT_STYLES=true` → nur Nonce im `style-src`; das Root-Layout setzt dann das Nonce auf das Brand-`<style>`.
 - **Keine Schemes wie `https:` / `*` in den Standard-Direktiven:** nur `'self'`, `data:`, `blob:` sowie optional explizite Origins über Umgebungsvariablen.
 - **Externe Bilder** (Logos/Avatars mit `https://…`): `CSP_EXTRA_IMG_SRC` (Leerzeichen-/kommaseparierte volle Origins).

@@ -7,7 +7,7 @@ Die aktive CSP wird in **`proxy.ts`** gesetzt (Next.js 16), inkl. **Nonce** und 
 | Direktive   | Production (Standard) |
 |------------|------------------------|
 | `default-src` | `'self'` |
-| `script-src`  | `'self'` + Nonce + `strict-dynamic` (kein `unsafe-inline` für Scripts) |
+| `script-src`  | `'self'` + Nonce + optional `strict-dynamic` (Standard: **an**; kein `unsafe-inline` für Scripts) |
 | `style-src`   | Standard: **`'self' 'unsafe-inline'`** ohne Nonce — sonst würden Browser `unsafe-inline` ignorieren und alle React-`style={{}}` blockieren. Optional `CSP_STRICT_STYLES=true`: nur Nonce (dann kein `unsafe-inline`). |
 | `img-src`     | `'self'` `data:` `blob:` (+ optional `CSP_EXTRA_IMG_SRC`) |
 | `connect-src` | `'self'` (+ optional Cloudflare / `CSP_EXTRA_CONNECT_SRC`) |
@@ -25,6 +25,7 @@ Keine Schemes wie **`https:`** und keine **`*`\-Wildcards** in den Standard-Dire
 | `CSP_EXTRA_CONNECT_SRC` | Zusätzliche `connect-src`\-Origins (z. B. Push) |
 | `CSP_EXTRA_SCRIPT_SRC` | Zusätzliche `script-src`\-Origins |
 | `ALLOW_CLOUDFLARE_INSIGHTS=true` | Feste Cloudflare-Beacon-Hosts (ohne `*.`\-Wildcard) |
+| `CSP_DISABLE_STRICT_DYNAMIC=true` | **`strict-dynamic` weglassen** — nötig nur wenn z. B. **Rocket Loader** gleich origin Skripte ohne Nonce lädt (schwächer; besser Rocket Loader aus) |
 | `CSP_UPGRADE_INSECURE_REQUESTS=true` | `upgrade-insecure-requests` erzwingen |
 
 ## Styles ohne `unsafe-inline` (Ausblick)

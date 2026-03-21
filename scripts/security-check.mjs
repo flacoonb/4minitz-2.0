@@ -138,10 +138,11 @@ async function checkCspGuards() {
   const nextFile = 'next.config.ts';
   const nextContent = await readText(nextFile);
   if (nextContent) {
-    mustNotContain(
+    // HTML CSP = proxy.ts only. Static CSP for robots/sitemap is allowed (ZAP / SEO files).
+    mustContain(
       nextContent,
-      "key: 'Content-Security-Policy'",
-      `${nextFile}: duplicate CSP in next.config headers (use proxy.ts only)`
+      'STATIC_TEXT_CSP',
+      `${nextFile}: missing STATIC_TEXT_CSP for robots.txt / sitemap.xml`
     );
   }
 }

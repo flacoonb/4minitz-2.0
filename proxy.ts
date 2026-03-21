@@ -48,6 +48,7 @@ export function proxy(request: NextRequest) {
     nonce,
     isDev: process.env.NODE_ENV === 'development',
     allowCloudflareInsights: process.env.ALLOW_CLOUDFLARE_INSIGHTS === 'true',
+    strictDynamic: process.env.CSP_DISABLE_STRICT_DYNAMIC !== 'true',
     strictStyles: process.env.CSP_STRICT_STYLES === 'true',
     extraScriptSrc: process.env.CSP_EXTRA_SCRIPT_SRC,
     extraConnectSrc: process.env.CSP_EXTRA_CONNECT_SRC,

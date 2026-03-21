@@ -16,6 +16,14 @@ export type BuildCspOptions = {
   isDev: boolean;
   allowCloudflareInsights: boolean;
   /**
+   * When true (recommended), `script-src` includes `'strict-dynamic'`: host allowlists like `'self'`
+   * are ignored for parser-inserted scripts — they must have a matching nonce/hash.
+   * Set false only if you must run **Cloudflare Rocket Loader** (or similar same-origin injected
+   * scripts without nonces); that weakens CSP against some same-origin script injection vectors.
+   * Prefer disabling Rocket Loader in Cloudflare (Speed → Optimization) instead.
+   */
+  strictDynamic: boolean;
+  /**
    * If true, style-src has no unsafe-inline (breaks many React `style={{}}` props until migrated to CSS).
    * Default false: scripts stay strict; styles allow unsafe-inline for compatibility.
    */
@@ -35,6 +43,7 @@ export function buildContentSecurityPolicyHeader(opts: BuildCspOptions): string 
     nonce,
     isDev,
     allowCloudflareInsights,
+    strictDynamic,
     strictStyles,
     extraScriptSrc,
     extraConnectSrc,
@@ -42,7 +51,8 @@ export function buildContentSecurityPolicyHeader(opts: BuildCspOptions): string 
     upgradeInsecureRequests,
   } = opts;
 
-  const scriptSrc = ["'self'", `'nonce-${nonce}'`, "'strict-dynamic'"];
+  const scriptSrc = ["'self'", `'nonce-${nonce}'`];
+  if (strictDynamic) scriptSrc.push("'strict-dynamic'");
   if (isDev) scriptSrc.push("'unsafe-eval'");
   if (allowCloudflareInsights) {
     scriptSrc.push('https://static.cloudflareinsights.com');

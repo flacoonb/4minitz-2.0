@@ -153,14 +153,15 @@ const ProfilePage = () => {
         });
 
         if (!response.ok) {
-          if (response.status === 401) {
-            router.push('/auth/login');
-            return;
-          }
           throw new Error(t('messages.loadError'));
         }
 
         const userData = await response.json();
+        if (!userData?.data) {
+          router.push('/auth/login');
+          return;
+        }
+
         setUser(userData.data);
         resetProfileData(userData.data);
 

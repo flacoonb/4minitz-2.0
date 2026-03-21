@@ -39,6 +39,12 @@ Kurz, was **unterschiedliche Antworten** (400 / 401 / 403 / 404 / 429) für Angr
 - Liefert absichtlich **200** mit **leerer Liste** (kein 401), damit öffentliche Clients nicht anhand des Statuscodes erkennen, „ob Login Daten brächte“.
 - Das ist ein bewusster **Komfort-/Privacy-Kompromiss**; Einzelabrufe erzwingen dagegen Login (siehe oben).
 
+## `GET /api/auth/me` (Session-Check)
+
+- **Ohne gültige Session:** **200** mit `{ success: true, data: null }` (kein **401**), damit der Browser die Anfrage nicht als „fehlgeschlagen“ in der Konsole markiert. Der Client erkennt „nicht eingeloggt“ am **`data`-Feld**, nicht am Statuscode.
+- **Mit Session:** **200** mit `data: User` und `autoLogout` wie bisher.
+- Antworten nutzen **`Cache-Control: private, no-store`**, damit kein Proxy den Session-Status zwischenspeichert.
+
 ## `GET /api/dashboard`
 
 - Antwort enthält nur noch **Statistikzahlen** und eine **kompakte** `recentMinutes`-Vorschau; volle **Task-Objekte** kommen über **`GET /api/tasks`** (eine Quelle, weniger redundante Daten in der Antwort).

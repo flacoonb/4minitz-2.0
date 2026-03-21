@@ -1,5 +1,11 @@
 # RuleID	ACTION	Comment
 10062	INFO	Potential false positive on Next.js chunk hash-like numbers
 10099	INFO	Potential false positive on UI copy containing SQL keywords
-10063	INFO	Header finding can appear on third-party edge assets
-10021	INFO	Header finding on non-app/static edge-served resources
+10063	INFO	Third-party (e.g. Cloudflare rocket-loader.js) — Permissions-Policy not set by app
+10021	INFO	Third-party or edge-cached assets — X-Content-Type-Options not controlled by app
+90004	INFO	Cross-Origin-Resource-Policy on Cloudflare cdn-cgi/* scripts — not controllable in repo
+10035	INFO	HSTS on responses served only at Cloudflare edge without origin headers
+10096	INFO	Timestamp disclosure in JSON/metadata — common, low risk
+10109	INFO	Modern Web Application — informational fingerprinting
+10049	INFO	Cache / storable content heuristics — often noisy on SPAs
+10015	INFO	Cache-control re-examine — noisy on static edge responses

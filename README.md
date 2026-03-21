@@ -94,7 +94,7 @@ Use `.env.example` as source of truth. Important keys:
 - `ENCRYPTION_SECRET`
 - `APP_URL`
 - `NEXT_PUBLIC_APP_URL`
-- CSP: set in `proxy.ts` (nonces). See [SECURITY.md](./SECURITY.md) and `.env.example` (`DISABLE_CSP`, `CSP_STRICT_STYLES`, `CSP_EXTRA_*`).
+- CSP: set in `proxy.ts` (nonces). See [SECURITY.md](./SECURITY.md) and `.env.example` (`DISABLE_CSP`, `CSP_DISABLE_STRICT_DYNAMIC`, `CSP_STRICT_STYLES`, `CSP_EXTRA_*`).
 - `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `FROM_EMAIL`
 - `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` (for web push)
 - `NEXT_PUBLIC_VAPID_PUBLIC_KEY` (optional fallback for public key)

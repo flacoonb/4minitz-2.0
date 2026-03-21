@@ -110,12 +110,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (response.ok) {
         const data = await response.json();
-        setUser(data.data);
-        if (data.autoLogout) {
+        const nextUser = data?.data ?? null;
+        setUser(nextUser);
+        if (nextUser && data?.autoLogout) {
           setAutoLogoutConfig(data.autoLogout);
+        } else {
+          setAutoLogoutConfig(null);
         }
       } else {
         setUser(null);
+        setAutoLogoutConfig(null);
       }
     } catch (error) {
       console.error('Error fetching current user:', error);
