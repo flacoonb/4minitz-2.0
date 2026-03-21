@@ -6,7 +6,15 @@ import { logAction } from '@/lib/audit';
 import { DEFAULT_BRAND_COLORS, sanitizeBrandColors } from '@/lib/brand-colors';
 
 function normalizeUrlCandidate(value: string): string {
-  return String(value || '').trim().replace(/\/+$/, '');
+  // Avoid /\/+$/ on user-controlled strings (CodeQL js/polynomial-redos): strip trailing slashes in O(n).
+  let s = String(value || '').trim();
+  if (s.length > 4096) {
+    s = s.slice(0, 4096);
+  }
+  while (s.endsWith('/')) {
+    s = s.slice(0, -1);
+  }
+  return s;
 }
 
 function isHttpUrl(value: string): boolean {
