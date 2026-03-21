@@ -3,6 +3,7 @@
 ## Proxy (Next.js 16) & CSRF
 
 - `proxy.ts` wird von Next.js **automatisch** ausgeführt (kein separates `middleware.ts`; beides gleichzeitig ist ungültig). Bei **POST, PUT, PATCH, DELETE** unter `/api/*` wird – falls gesetzt – der **Origin**-Header mit **Host** abgeglichen. So werden klassische **CSRF**-Angriffe gegen die Cookie-Session (`auth-token`) erschwert.
+- **Geschützte App-Pfade** (`/admin`, `/dashboard`, `/profile` inkl. Unterpfade): bei **GET/HEAD** ohne gültiges **`auth-token`** (HS256-Signatur + `exp`, ohne DB) → **307** nach `/auth/login?redirect=…`. Ergänzt die Server-Layouts: In Next.js 16 kann ein Layout-`redirect()` für Document-Requests trotzdem **HTTP 200** liefern; der Proxy erzwingt den erwarteten Redirect für Scanner und konsistentes Verhalten.
 - Aufrufe **ohne** `Origin` (z. B. serverseitiges `fetch`, manche Tools) bleiben erlaubt.
 - Hinter einem Reverse Proxy: **`TRUST_PROXY_HEADERS=true`** nur setzen, wenn der Proxy vertrauenswürdig ist und falsche `X-Forwarded-*` Header nicht durchreicht.
 

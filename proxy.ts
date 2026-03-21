@@ -1,7 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { buildContentSecurityPolicyHeader } from '@/lib/csp-build';
+import { verifyJwtHs256Edge } from '@/lib/verify-jwt-edge';
 
 const MUTATION_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
+
+/** App sections that must not return 200 without a valid session (see server layouts + security smoke tests). */
+function isProtectedAppPath(pathname: string): boolean {
+  if (pathname === '/admin' || pathname.startsWith('/admin/')) return true;
+  if (pathname === '/dashboard' || pathname.startsWith('/dashboard/')) return true;
+  if (pathname === '/profile' || pathname.startsWith('/profile/')) return true;
+  return false;
+}
 
 function createNonce(): string {
   const id = globalThis.crypto.randomUUID();
@@ -11,8 +20,28 @@ function createNonce(): string {
   return btoa(id);
 }
 
-export function proxy(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
+
+  // Next.js 16 can still respond 200 to document requests even when a layout calls redirect().
+  // Enforce HTTP redirects here so scanners and smoke tests see 302/307 (matches server layouts).
+  if (
+    (request.method === 'GET' || request.method === 'HEAD') &&
+    !pathname.startsWith('/api/') &&
+    isProtectedAppPath(pathname)
+  ) {
+    const secret = process.env.JWT_SECRET;
+    const token = request.cookies.get('auth-token')?.value;
+    const ok = Boolean(secret && token && (await verifyJwtHs256Edge(token, secret)));
+    if (!ok) {
+      const url = request.nextUrl.clone();
+      url.pathname = '/auth/login';
+      url.search = '';
+      const back = pathname + (request.nextUrl.search || '');
+      url.searchParams.set('redirect', back.startsWith('/') ? back : `/${back}`);
+      return NextResponse.redirect(url, 307);
+    }
+  }
 
   if (pathname.startsWith('/api/') && MUTATION_METHODS.has(request.method)) {
     const origin = request.headers.get('origin');

@@ -127,6 +127,7 @@ async function checkCspGuards() {
   if (proxyContent) {
     mustContain(proxyContent, 'Content-Security-Policy', `${proxyFile}: missing CSP header`);
     mustContain(proxyContent, 'x-nonce', `${proxyFile}: missing x-nonce forwarding`);
+    mustContain(proxyContent, 'verifyJwtHs256Edge', `${proxyFile}: missing Edge JWT gate for protected paths`);
   }
 
   const cspFile = 'lib/csp-build.ts';
