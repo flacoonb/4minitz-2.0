@@ -13,45 +13,13 @@ const nextConfig: NextConfig = {
     },
   },
   async headers() {
-    const strictCspMode = process.env.STRICT_CSP_MODE === 'true';
-    const allowInlineScripts = process.env.ALLOW_INLINE_SCRIPTS === 'true';
-    const allowCloudflareInsights = process.env.ALLOW_CLOUDFLARE_INSIGHTS === 'true';
-    const scriptSources = ["'self'"];
-    if (!strictCspMode || allowInlineScripts) {
-      scriptSources.push("'unsafe-inline'");
-    }
-    if (allowCloudflareInsights) {
-      scriptSources.push('https://static.cloudflareinsights.com');
-    }
-    const scriptSrc =
-      process.env.NODE_ENV === 'production'
-        ? `script-src ${scriptSources.join(' ')}`
-        : "script-src 'self' 'unsafe-inline' 'unsafe-eval'";
-    const connectSources = ["'self'"];
-    if (allowCloudflareInsights) {
-      connectSources.push('https://*.cloudflareinsights.com');
-    }
-    const csp = [
-      "default-src 'self'",
-      scriptSrc,
-      "style-src 'self' 'unsafe-inline'",
-      "img-src 'self' data: blob: https:",
-      "font-src 'self' data:",
-      `connect-src ${connectSources.join(' ')}`,
-      "worker-src 'self'",
-      "object-src 'none'",
-      "base-uri 'self'",
-      "form-action 'self'",
-      "frame-ancestors 'self'",
-    ].join('; ');
-
+    // CSP: set per request in proxy.ts (nonces). See SECURITY.md / docs/CSP.md.
     const securityHeaders: { key: string; value: string }[] = [
       { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
       { key: 'X-Content-Type-Options', value: 'nosniff' },
       { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
       { key: 'X-DNS-Prefetch-Control', value: 'on' },
       { key: 'Permissions-Policy', value: 'camera=(), microphone=(), geolocation=()' },
-      { key: 'Content-Security-Policy', value: csp },
     ];
 
     // HSTS: only when explicitly enabled or APP_URL is https (avoid sending on plain HTTP installs).

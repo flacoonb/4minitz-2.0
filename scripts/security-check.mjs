@@ -122,12 +122,28 @@ async function checkUsersRouteGuards() {
 }
 
 async function checkCspGuards() {
-  const file = 'next.config.ts';
-  const content = await readText(file);
-  if (!content) return;
+  const proxyFile = 'proxy.ts';
+  const proxyContent = await readText(proxyFile);
+  if (proxyContent) {
+    mustContain(proxyContent, 'Content-Security-Policy', `${proxyFile}: missing CSP header`);
+    mustContain(proxyContent, 'x-nonce', `${proxyFile}: missing x-nonce forwarding`);
+  }
 
-  mustContain(content, 'STRICT_CSP_MODE', `${file}: missing STRICT_CSP_MODE support`);
-  mustContain(content, "script-src 'self'", `${file}: missing base script-src policy`);
+  const cspFile = 'lib/csp-build.ts';
+  const cspContent = await readText(cspFile);
+  if (cspContent) {
+    mustContain(cspContent, "'strict-dynamic'", `${cspFile}: missing strict-dynamic (nonce CSP)`);
+  }
+
+  const nextFile = 'next.config.ts';
+  const nextContent = await readText(nextFile);
+  if (nextContent) {
+    mustNotContain(
+      nextContent,
+      "key: 'Content-Security-Policy'",
+      `${nextFile}: duplicate CSP in next.config headers (use proxy.ts only)`
+    );
+  }
 }
 
 async function checkAbsoluteLocalhostFetches() {

@@ -427,7 +427,7 @@ export default function EmailConfigPage() {
                   value={config.user || ''}
                   onChange={(e) => setConfig({ ...config, user: e.target.value })}
                   className="w-full px-3 py-2.5 min-h-11 border border-gray-300 rounded focus:ring-2 focus:ring-[var(--brand-primary)]"
-                  placeholder="deine-email@example.com"
+                  placeholder="deine-email@example.invalid"
                   autoComplete="username"
                   data-1p-ignore="true"
                   data-lpignore="true"
@@ -515,7 +515,7 @@ export default function EmailConfigPage() {
               type="email"
               value={testEmail}
               onChange={(e) => setTestEmail(e.target.value)}
-              placeholder="test@example.com"
+              placeholder="test@example.invalid"
               className="flex-1 px-3 py-2.5 min-h-11 border border-gray-300 rounded focus:ring-2 focus:ring-[var(--brand-primary)]"
               autoComplete="email"
               data-1p-ignore="true"

@@ -70,6 +70,10 @@
   --foreground: #ededed;
 }
 
+.app-brand-footer-org-name {
+  color: var(--brand-text);
+}
+
 body {
   background: var(--background);
   color: var(--foreground);

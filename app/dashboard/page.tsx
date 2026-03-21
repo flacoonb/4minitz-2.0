@@ -19,10 +19,13 @@ interface DashboardData {
     overdueActionItems: number;
     upcomingActionItems: number;
   };
-  openActionItems: any[];
-  overdueActionItems: any[];
-  upcomingActionItems: any[];
-  recentMinutes: any[];
+  /** Preview list only; full task rows come from GET /api/tasks */
+  recentMinutes: Array<{
+    _id: string;
+    date: string;
+    isFinalized: boolean;
+    meetingSeries_id: { project: string | null; name: string | null } | null;
+  }>;
   lastRemindersSentAt?: string;
 }
 

@@ -10,12 +10,16 @@ async function createDemoUser() {
     await mongoose.connect(MONGODB_URI);
     console.log('✅ Connected to database\n');
 
-    // Check if demo user exists
-    const existingUser = await User.findOne({ email: 'demo@example.com' });
-    
+    const demoEmail = 'demo@example.invalid';
+
+    // Check if demo user exists (legacy demo@example.com still counts as “already seeded”)
+    const existingUser = await User.findOne({
+      email: { $in: [demoEmail, 'demo@example.com'] },
+    });
+
     if (existingUser) {
       console.log('ℹ️  Demo user already exists');
-      console.log('Email: demo@example.com');
+      console.log(`Email: ${existingUser.email}`);
       console.log('Password: demo123');
       await mongoose.disconnect();
       return;
@@ -26,7 +30,7 @@ async function createDemoUser() {
 
     // Create demo user
     await User.create({
-      email: 'demo@example.com',
+      email: demoEmail,
       password: hashedPassword,
       name: 'Demo User',
       role: 'admin',
@@ -34,7 +38,7 @@ async function createDemoUser() {
 
     console.log('✅ Demo user created successfully!\n');
     console.log('============================================================');
-    console.log('📧 Email:    demo@example.com');
+    console.log(`📧 Email:    ${demoEmail}`);
     console.log('🔒 Password: demo123');
     console.log('👤 Name:     Demo User');
     console.log('🎭 Role:     admin');

@@ -9,20 +9,10 @@ import {
   normalizePdfTemplateName,
 } from '@/lib/pdf-template-store';
 import { ensureObjectIdString, sanitizePdfContentSettings, sanitizePdfLayoutSettings } from '@/lib/pdf-template-defaults';
+import { serializePdfTemplateForApi } from '@/lib/pdf-template-serialize';
 
 function canManageTemplates(role: string | undefined): boolean {
   return role === 'admin' || role === 'moderator';
-}
-
-function serializeTemplate(template: any) {
-  const source = template && typeof template.toObject === 'function' ? template.toObject() : template;
-  if (!source) return null;
-  return {
-    ...source,
-    _id: source._id ? String(source._id) : source._id,
-    contentSettings: sanitizePdfContentSettings(source.contentSettings),
-    layoutSettings: sanitizePdfLayoutSettings(source.layoutSettings),
-  };
 }
 
 export async function GET(request: NextRequest) {
@@ -37,8 +27,8 @@ export async function GET(request: NextRequest) {
 
     const templatesRaw = await PdfTemplate.find({}).sort({ updatedAt: -1 }).lean();
     const templates = templatesRaw
-      .map((template) => serializeTemplate(template))
-      .filter((template): template is NonNullable<ReturnType<typeof serializeTemplate>> => Boolean(template));
+      .map((template) => serializePdfTemplateForApi(template))
+      .filter((template): template is NonNullable<ReturnType<typeof serializePdfTemplateForApi>> => Boolean(template));
     const activeTemplate = templates.find((template) => template.isActive) || templates[0] || null;
 
     return NextResponse.json({
@@ -104,7 +94,7 @@ export async function POST(request: NextRequest) {
       await createdTemplate.save();
     }
 
-    return NextResponse.json({ success: true, data: serializeTemplate(createdTemplate) }, { status: 201 });
+    return NextResponse.json({ success: true, data: serializePdfTemplateForApi(createdTemplate) }, { status: 201 });
   } catch (error) {
     console.error('Error creating PDF template:', error);
     return NextResponse.json({ success: false, error: 'Failed to create PDF template' }, { status: 500 });

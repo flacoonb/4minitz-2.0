@@ -4,20 +4,10 @@ import { verifyToken } from '@/lib/auth';
 import PdfTemplate from '@/models/PdfTemplate';
 import { activatePdfTemplate, ensurePdfTemplatesInitialized, normalizePdfTemplateName } from '@/lib/pdf-template-store';
 import { sanitizePdfContentSettings, sanitizePdfLayoutSettings } from '@/lib/pdf-template-defaults';
+import { serializePdfTemplateForApi } from '@/lib/pdf-template-serialize';
 
 function canManageTemplates(role: string | undefined): boolean {
   return role === 'admin' || role === 'moderator';
-}
-
-function serializeTemplate(template: any) {
-  const source = template && typeof template.toObject === 'function' ? template.toObject() : template;
-  if (!source) return null;
-  return {
-    ...source,
-    _id: source._id ? String(source._id) : source._id,
-    contentSettings: sanitizePdfContentSettings(source.contentSettings),
-    layoutSettings: sanitizePdfLayoutSettings(source.layoutSettings),
-  };
 }
 
 export async function GET(
@@ -39,7 +29,7 @@ export async function GET(
       return NextResponse.json({ success: false, error: 'Template not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true, data: serializeTemplate(template) });
+    return NextResponse.json({ success: true, data: serializePdfTemplateForApi(template) });
   } catch (error) {
     console.error('Error loading PDF template:', error);
     return NextResponse.json({ success: false, error: 'Failed to load PDF template' }, { status: 500 });
@@ -87,10 +77,10 @@ export async function PUT(
 
     if (body?.isActive === true || body?.makeActive === true) {
       const activeTemplate = await activatePdfTemplate(String(template._id));
-      return NextResponse.json({ success: true, data: serializeTemplate(activeTemplate) });
+      return NextResponse.json({ success: true, data: serializePdfTemplateForApi(activeTemplate) });
     }
 
-    return NextResponse.json({ success: true, data: serializeTemplate(template) });
+    return NextResponse.json({ success: true, data: serializePdfTemplateForApi(template) });
   } catch (error) {
     console.error('Error updating PDF template:', error);
     return NextResponse.json({ success: false, error: 'Failed to update PDF template' }, { status: 500 });

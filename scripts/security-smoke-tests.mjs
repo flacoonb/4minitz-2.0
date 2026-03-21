@@ -102,6 +102,24 @@ async function testRsvpRedirectTarget() {
   }
 }
 
+async function testProtectedPageRedirectsToLogin() {
+  const paths = ['/admin', '/dashboard', '/profile'];
+  for (const path of paths) {
+    const { response } = await request(path);
+    if (!expectStatus(response.status, [302, 307, 308], `Protected page ${path} without session`)) {
+      continue;
+    }
+    const location = String(response.headers.get('location') || '');
+    if (!/\/auth\/login/i.test(location)) {
+      fail(
+        `Protected page ${path}: expected redirect to /auth/login, got Location "${location}"`
+      );
+    } else {
+      logInfo(`Protected page redirect OK: ${path} -> ${location}`);
+    }
+  }
+}
+
 async function testLoginRateLimit() {
   const email = `rate-limit-${Date.now()}@example.invalid`;
   const payload = { email, password: 'wrong-password' };
@@ -136,6 +154,7 @@ async function run() {
   await testCsrfBlockedByMismatchedOrigin();
   await testCsrfBlockedByInvalidOrigin();
   await testRsvpRedirectTarget();
+  await testProtectedPageRedirectsToLogin();
   await testLoginRateLimit();
 
   if (failures.length > 0) {

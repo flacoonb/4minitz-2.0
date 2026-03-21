@@ -23,10 +23,27 @@
   - `NODE_ENV=production` **und** `APP_URL` mit `https://` beginnt.  
   Abschaltbar mit `DISABLE_HSTS=true` (z. B. gemischte Testumgebungen).
 
-## CSP
+## CSP (Content-Security-Policy)
 
-- Production: standardmäßig **`script-src 'self'`** (ohne `unsafe-inline`).
-- Falls die App Inline-Skripte braucht: `ALLOW_INLINE_SCRIPTS=true` (siehe `next.config.ts`).
+- Die **CSP wird in `proxy.ts`** pro Request gesetzt (Next.js 16), **nicht** in `next.config.ts` (keine doppelten Header).
+- **Skripte:** `script-src 'self' 'nonce-…' 'strict-dynamic'` — **kein `unsafe-inline`** für Scripts. In **Development** zusätzlich `'unsafe-eval'` (React/Next DevTools).
+- **Styles:** Standard in Production: **`style-src 'self' 'unsafe-inline'` ohne Nonce** — enthält die Policy **gleichzeitig** Nonce und `unsafe-inline`, ignorieren Browser `unsafe-inline` (CSP3). Strikter Test: `CSP_STRICT_STYLES=true` → nur Nonce im `style-src`; das Root-Layout setzt dann das Nonce auf das Brand-`<style>`.
+- **Keine Schemes wie `https:` / `*` in den Standard-Direktiven:** nur `'self'`, `data:`, `blob:` sowie optional explizite Origins über Umgebungsvariablen.
+- **Externe Bilder** (Logos/Avatars mit `https://…`): `CSP_EXTRA_IMG_SRC` (Leerzeichen-/kommaseparierte volle Origins).
+- **Web Push / andere APIs:** bei Bedarf `CSP_EXTRA_CONNECT_SRC` setzen.
+- **Cloudflare Web Analytics / Insights:** `ALLOW_CLOUDFLARE_INSIGHTS=true` erlaubt feste Hosts (`static.cloudflareinsights.com`, `cloudflareinsights.com`) — **ohne** `*.…`-Wildcard.
+- **CSP komplett aus:** nur für Debugging `DISABLE_CSP=true`.
+- **HTTPS-Umleitung für Subressourcen:** `upgrade-insecure-requests` wenn `APP_URL` mit `https://` beginnt (Production) oder `CSP_UPGRADE_INSECURE_REQUESTS=true`.
+
+Details: [docs/CSP.md](./docs/CSP.md).
+
+API-Antworten & Datenminimierung: [docs/API_RESPONSES.md](./docs/API_RESPONSES.md).  
+HTTP-Statuscodes / Enumeration / Timing: [docs/API_HTTP_SEMANTICS.md](./docs/API_HTTP_SEMANTICS.md).
+
+## Öffentliche API (`GET /api/settings/public`)
+
+- Liefert nur **Branding und Anzeige-Defaults** (Organisationsname, Logo-URL, Markenfarben, `timeFormat`, `agendaItemLabelMode`, Standardsprache).
+- **Keine** Mitgliedschafts-/Registrierungsflags in der Antwort (Selbstregistrierung und Admin-Freigabe werden nur **serverseitig** in `/api/auth/register` geprüft).
 
 ## Öffentliche Uploads
 

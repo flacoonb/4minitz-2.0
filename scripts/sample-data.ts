@@ -24,10 +24,10 @@ async function createSampleData() {
       {
         project: 'Product Development',
         name: 'Weekly Team Sync',
-        visibleFor: ['demo-user', 'alice@example.com', 'bob@example.com'],
+        visibleFor: ['demo-user', 'alice@example.invalid', 'bob@example.invalid'],
         moderators: ['demo-user'],
-        participants: ['alice@example.com', 'bob@example.com', 'charlie@example.com'],
-        informedUsers: ['manager@example.com'],
+        participants: ['alice@example.invalid', 'bob@example.invalid', 'charlie@example.invalid'],
+        informedUsers: ['manager@example.invalid'],
         availableLabels: [
           { name: 'Important', color: '#FF0000', isDefaultLabel: true },
           { name: 'Decision', color: '#00FF00', isDefaultLabel: true },
@@ -38,9 +38,9 @@ async function createSampleData() {
       {
         project: 'Marketing',
         name: 'Monthly Planning',
-        visibleFor: ['demo-user', 'marketing@example.com'],
-        moderators: ['demo-user', 'marketing@example.com'],
-        participants: ['social@example.com', 'content@example.com'],
+        visibleFor: ['demo-user', 'marketing@example.invalid'],
+        moderators: ['demo-user', 'marketing@example.invalid'],
+        participants: ['social@example.invalid', 'content@example.invalid'],
         availableLabels: [
           { name: 'Campaign', color: '#9C27B0', isDefaultLabel: false },
           { name: 'Budget', color: '#4CAF50', isDefaultLabel: false },
@@ -49,10 +49,10 @@ async function createSampleData() {
       {
         project: 'Engineering',
         name: 'Sprint Retrospective',
-        visibleFor: ['demo-user', 'dev-team@example.com'],
+        visibleFor: ['demo-user', 'dev-team@example.invalid'],
         moderators: ['demo-user'],
-        participants: ['dev1@example.com', 'dev2@example.com', 'dev3@example.com'],
-        informedUsers: ['cto@example.com'],
+        participants: ['dev1@example.invalid', 'dev2@example.invalid', 'dev3@example.invalid'],
+        informedUsers: ['cto@example.invalid'],
         availableLabels: [
           { name: 'Action Item', color: '#FF5722', isDefaultLabel: true },
           { name: 'Improvement', color: '#2196F3', isDefaultLabel: false },
@@ -81,11 +81,11 @@ async function createSampleData() {
         finalizedAt: new Date('2024-11-03T16:00:00Z'),
         finalizedBy: 'demo-user',
         visibleFor: firstSeries.visibleFor,
-        participants: ['alice@example.com', 'bob@example.com'],
+        participants: ['alice@example.invalid', 'bob@example.invalid'],
         topics: [
           {
             subject: 'Sprint Review',
-            responsibles: ['alice@example.com'],
+            responsibles: ['alice@example.invalid'],
             isOpen: false,
             isRecurring: true,
             infoItems: [
@@ -94,13 +94,13 @@ async function createSampleData() {
                 status: 'completed',
                 itemType: 'actionItem' as const,
                 priority: 'high',
-                responsibles: ['alice@example.com'],
+                responsibles: ['alice@example.invalid'],
               },
               {
                 subject: 'Deploy to staging environment',
                 status: 'completed',
                 itemType: 'actionItem' as const,
-                responsibles: ['bob@example.com'],
+                responsibles: ['bob@example.invalid'],
               },
             ],
           },
@@ -116,7 +116,7 @@ async function createSampleData() {
                 itemType: 'actionItem' as const,
                 priority: 'medium',
                 dueDate: new Date('2024-11-10'),
-                responsibles: ['alice@example.com', 'bob@example.com'],
+                responsibles: ['alice@example.invalid', 'bob@example.invalid'],
               },
             ],
           },
@@ -129,11 +129,11 @@ async function createSampleData() {
         date: new Date('2024-11-10'),
         isFinalized: false,
         visibleFor: firstSeries.visibleFor,
-        participants: ['alice@example.com', 'bob@example.com', 'charlie@example.com'],
+        participants: ['alice@example.invalid', 'bob@example.invalid', 'charlie@example.invalid'],
         topics: [
           {
             subject: 'Sprint Review',
-            responsibles: ['alice@example.com'],
+            responsibles: ['alice@example.invalid'],
             isOpen: true,
             isRecurring: true,
             infoItems: [
@@ -143,13 +143,13 @@ async function createSampleData() {
                 itemType: 'actionItem' as const,
                 priority: 'high',
                 dueDate: new Date('2024-11-12'),
-                responsibles: ['charlie@example.com'],
+                responsibles: ['charlie@example.invalid'],
               },
             ],
           },
           {
             subject: 'Bug Triage',
-            responsibles: ['bob@example.com'],
+            responsibles: ['bob@example.invalid'],
             isOpen: true,
             isNew: true,
             infoItems: [
@@ -158,14 +158,14 @@ async function createSampleData() {
                 status: 'open',
                 itemType: 'actionItem' as const,
                 priority: 'high',
-                responsibles: ['alice@example.com'],
+                responsibles: ['alice@example.invalid'],
               },
               {
                 subject: 'Update documentation',
                 status: 'open',
                 itemType: 'actionItem' as const,
                 priority: 'low',
-                responsibles: ['bob@example.com'],
+                responsibles: ['bob@example.invalid'],
               },
             ],
           },

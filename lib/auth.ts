@@ -1,8 +1,8 @@
 import jwt from 'jsonwebtoken';
 import { NextRequest } from 'next/server';
-import User, { IUser } from '@/models/User';
-import connectDB from '@/lib/mongodb';
+import type { IUser } from '@/models/User';
 import { getJwtSecret } from '@/lib/validateEnv';
+import { verifyAuthTokenString } from '@/lib/verify-auth-token-string';
 
 
 export interface AuthResult {
@@ -17,71 +17,16 @@ export interface RoleResult {
 }
 
 export async function verifyToken(request: NextRequest): Promise<AuthResult> {
-  try {
-    await connectDB();
-    // Cookie is the primary browser auth mechanism. Bearer is optional and disabled in
-    // production unless ALLOW_BEARER_AUTH=true (reduces token leakage via XSS / logs).
-    const cookieToken = request.cookies.get('auth-token')?.value;
-    const bearerAllowed =
-      process.env.NODE_ENV !== 'production' || process.env.ALLOW_BEARER_AUTH === 'true';
-    const headerToken = bearerAllowed
-      ? request.headers.get('Authorization')?.replace(/^Bearer\s+/i, '')?.trim()
-      : undefined;
-    const token = cookieToken || headerToken;
-
-    if (!token) {
-      return {
-        success: false,
-        error: 'Nicht authentifiziert'
-      };
-    }
-
-    // Verify token
-    const decoded = jwt.verify(token, getJwtSecret()) as any;
-    
-    // Get user
-    const user = await User.findById(decoded.userId);
-    if (!user || !user.isActive) {
-      return {
-        success: false,
-        error: 'Benutzer nicht gefunden oder deaktiviert'
-      };
-    }
-
-    const decodedTokenVersion = typeof decoded.tokenVersion === 'number' ? decoded.tokenVersion : 0;
-    const currentTokenVersion = typeof (user as any).tokenVersion === 'number' ? (user as any).tokenVersion : 0;
-    if (decodedTokenVersion !== currentTokenVersion) {
-      return {
-        success: false,
-        error: 'Ungültiger Token'
-      };
-    }
-
-    return {
-      success: true,
-      user
-    };
-
-  } catch (error: any) {
-    if (error.name === 'JsonWebTokenError') {
-      return {
-        success: false,
-        error: 'Ungültiger Token'
-      };
-    }
-    
-    if (error.name === 'TokenExpiredError') {
-      return {
-        success: false,
-        error: 'Token abgelaufen'
-      };
-    }
-
-    return {
-      success: false,
-      error: 'Authentifizierungsfehler'
-    };
-  }
+  // Cookie is the primary browser auth mechanism. Bearer is optional and disabled in
+  // production unless ALLOW_BEARER_AUTH=true (reduces token leakage via XSS / logs).
+  const cookieToken = request.cookies.get('auth-token')?.value;
+  const bearerAllowed =
+    process.env.NODE_ENV !== 'production' || process.env.ALLOW_BEARER_AUTH === 'true';
+  const headerToken = bearerAllowed
+    ? request.headers.get('Authorization')?.replace(/^Bearer\s+/i, '')?.trim()
+    : undefined;
+  const token = cookieToken || headerToken;
+  return verifyAuthTokenString(token);
 }
 
 export async function requireRole(user: IUser, requiredRole: 'admin' | 'moderator' | 'user'): Promise<RoleResult> {

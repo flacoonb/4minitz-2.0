@@ -127,19 +127,18 @@ export async function POST(request: NextRequest) {
     await newUser.save();
 
     if (requireEmailVerification && verificationToken) {
-      // Send verification email
-      let emailSent = false;
       try {
-        await sendVerificationEmail({
-          email: newUser.email,
-          firstName: newUser.firstName,
-          lastName: newUser.lastName
-        }, verificationToken);
-        emailSent = true;
+        await sendVerificationEmail(
+          {
+            email: newUser.email,
+            firstName: newUser.firstName,
+            lastName: newUser.lastName,
+          },
+          verificationToken
+        );
       } catch {
         // Continue registration even if email fails
       }
-      (newUser as any)._emailSent = emailSent;
     } else {
       // If verification not required, send welcome email instead
       sendWelcomeEmail({
@@ -166,17 +165,15 @@ export async function POST(request: NextRequest) {
       message = t('registrationSuccess');
     }
 
-    // Return user without password
-    const userResponse = newUser.toJSON();
-
-    return NextResponse.json({
-      success: true,
-      message,
-      data: userResponse,
-      requiresVerification: requireEmailVerification,
-      requiresApproval: requireAdminApproval,
-      emailSent: (newUser as any)._emailSent !== false,
-    }, { status: 201 });
+    // Minimal response: UI only needs message + requiresApproval (no full user object).
+    return NextResponse.json(
+      {
+        success: true,
+        message,
+        requiresApproval: requireAdminApproval,
+      },
+      { status: 201 }
+    );
 
   } catch (error: any) {
     // Handle validation errors

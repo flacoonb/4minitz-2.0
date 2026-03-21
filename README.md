@@ -94,7 +94,7 @@ Use `.env.example` as source of truth. Important keys:
 - `ENCRYPTION_SECRET`
 - `APP_URL`
 - `NEXT_PUBLIC_APP_URL`
-- `STRICT_CSP_MODE` (optional, production CSP toggle)
+- CSP: set in `proxy.ts` (nonces). See [SECURITY.md](./SECURITY.md) and `.env.example` (`DISABLE_CSP`, `CSP_STRICT_STYLES`, `CSP_EXTRA_*`).
 - `SMTP_HOST`, `SMTP_PORT`, `SMTP_SECURE`, `SMTP_USER`, `SMTP_PASS`, `FROM_EMAIL`
 - `VAPID_PUBLIC_KEY`, `VAPID_PRIVATE_KEY`, `VAPID_SUBJECT` (for web push)
 - `NEXT_PUBLIC_VAPID_PUBLIC_KEY` (optional fallback for public key)
@@ -120,14 +120,12 @@ Use `.env.example` as source of truth. Important keys:
 
 ## Initial Access
 
-If demo user creation was enabled in setup:
-- Email: `demo@example.com`
-- Password: `demo123`
+If demo user creation was enabled in setup, use the email and password printed by `npm run create-demo-user`. The default demo account uses the reserved address `demo@example.invalid` (not a real mailbox).
 
 If not, create an admin manually:
 
 ```bash
-npm run create-user -- admin@example.com mySecretPassword Admin User
+npm run create-user -- admin@example.invalid mySecretPassword Admin User
 ```
 
 ## Project Structure (high level)
@@ -145,7 +143,7 @@ scripts/      Setup and data helper scripts
 ## Security Hardening
 
 - Run `npm run security:check` locally and in CI to catch regressions in security-sensitive files.
-- Keep `STRICT_CSP_MODE=false` unless you verified that strict CSP (`script-src 'self'`) works for your deployment.
+- CSP defaults: strict **scripts** (nonce + `strict-dynamic`); **styles** may include `unsafe-inline` until UI is migrated — use `CSP_STRICT_STYLES=true` only to audit violations.
 - Scheduled dependency audit runs weekly via GitHub Actions (`Security Audit` workflow).
 
 ## Notes

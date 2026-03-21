@@ -116,6 +116,19 @@ export function hexToRgba(hex: string, alpha: number): string {
   return `rgba(${r}, ${g}, ${b}, ${safeAlpha})`;
 }
 
+/**
+ * One CSP-nonced &lt;style&gt; block for :root (avoids inline style= on body under strict style-src).
+ */
+export function brandVarsToCssBlock(vars: Record<string, string>): string {
+  const decls = Object.entries(vars)
+    .map(([key, val]) => {
+      const safe = String(val).replace(/[;{}]/g, '');
+      return `${key}: ${safe};`;
+    })
+    .join(' ');
+  return `:root { ${decls} }`;
+}
+
 export function getBrandCssVars(input: unknown): Record<string, string> {
   const colors = sanitizeBrandColors(input);
   const dashboardSeriesBadgeInk = mixHex(colors.dashboardSeriesBadge, '#111827', 0.16);

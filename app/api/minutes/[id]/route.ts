@@ -70,46 +70,41 @@ export async function GET(
 ) {
   try {
     await connectToDatabase();
-    
+
     const { id } = await params;
 
-    // Determine authenticated user (if any)
+    if (!mongoose.isValidObjectId(id)) {
+      return NextResponse.json({ error: 'Invalid minute id' }, { status: 400 });
+    }
+
+    // Auth before DB: avoids leaking existence via 404 vs 401 for anonymous callers.
     const authResult = await verifyToken(request);
-    const username = authResult.success && authResult.user ? authResult.user.username : null;
-    const userId = authResult.success && authResult.user ? authResult.user._id.toString() : null;
+    if (!authResult.success || !authResult.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const username = authResult.user.username;
+    const userId = authResult.user._id.toString();
 
     const minute = await Minutes.findOne({ _id: id })
       .populate({ path: 'meetingSeries_id', model: MeetingSeries })
       .lean();
 
     if (!minute) {
-      return NextResponse.json(
-        { error: 'Minute not found' },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: 'Minute not found' }, { status: 404 });
     }
 
-    // Check permissions via centralized permission system
-    const canViewAll = authResult.user
-      ? await hasPermission(authResult.user, 'canViewAllMinutes')
-      : false;
+    const canViewAll = await hasPermission(authResult.user, 'canViewAllMinutes');
 
-    // Check visibility: public minutes are allowed for unauthenticated users.
     const series = minute.meetingSeries_id as any;
-    
-    // Series-level permissions
+
     const seriesVisibleFor = series?.visibleFor || [];
     const seriesModerators = series?.moderators || [];
     const seriesParticipants = series?.participants || [];
     const seriesMembers = series?.members || [];
-    
-    // Minute-level permissions
+
     const minuteVisibleFor = minute.visibleFor || [];
     const minuteParticipants = minute.participants || [];
-
-    if (!username) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
 
     const isSeriesModerator = seriesModerators.includes(username) || (userId && seriesModerators.includes(userId));
     const isSeriesMember = userId && seriesMembers.some((m: any) => m.userId === userId);

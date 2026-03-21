@@ -5,10 +5,11 @@ import MeetingSeries from '@/models/MeetingSeries';
 import Task from '@/models/Task';
 import Settings from '@/models/Settings';
 import { verifyToken } from '@/lib/auth';
+import { serializeDashboardMinute } from '@/lib/dashboard-response';
 
 /**
  * GET /api/dashboard
- * Get dashboard statistics and open action items
+ * Statistics + recent minutes preview only (task lists come from GET /api/tasks).
  */
 export async function GET(request: NextRequest) {
   try {
@@ -22,7 +23,6 @@ export async function GET(request: NextRequest) {
     const username = authResult.user.username;
     const userObjectId = authResult.user._id.toString();
 
-    // Resolve series access robustly for both legacy (username) and current (userId/member) storage.
     const meetingSeriesQuery =
       authResult.user.role === 'admin'
         ? {}
@@ -37,9 +37,8 @@ export async function GET(request: NextRequest) {
 
     const meetingSeries = await MeetingSeries.find(meetingSeriesQuery).lean();
 
-    const seriesIds = meetingSeries.map(s => s._id);
+    const seriesIds = meetingSeries.map((s) => s._id);
 
-    // Calculate minutes statistics using countDocuments (avoid loading all documents)
     const totalSeries = meetingSeries.length;
     const seriesFilter = { meetingSeries_id: { $in: seriesIds } };
     const [totalMinutes, finalizedMinutes] = await Promise.all([
@@ -48,57 +47,53 @@ export async function GET(request: NextRequest) {
     ]);
     const draftMinutes = totalMinutes - finalizedMinutes;
 
-    // Get open action items from Central Task Registry
-    // We want all open tasks for the visible series
     const openTasks = await Task.find({
-      meetingSeriesId: { $in: seriesIds.map(id => id.toString()) },
-      status: { $in: ['open', 'in-progress'] }
-    }).lean();
+      meetingSeriesId: { $in: seriesIds.map((id) => id.toString()) },
+      status: { $in: ['open', 'in-progress'] },
+    })
+      .select('dueDate responsibles')
+      .lean();
 
-    const upcomingActionItems: any[] = [];
-    const overdueActionItems: any[] = [];
-    const today = new Date();
-
-    // Filter for overdue/upcoming (usually only for tasks assigned to user)
-    // responsibles stores user ObjectIds, not usernames
-    const userOpenTasks = openTasks.filter(t =>
-      Array.isArray(t.responsibles) &&
-      t.responsibles.some((responsible: any) => {
-        const value = String(responsible);
-        return value === userObjectId || value === username;
-      })
+    const userOpenTasks = openTasks.filter(
+      (t) =>
+        Array.isArray(t.responsibles) &&
+        t.responsibles.some((responsible: unknown) => {
+          const value = String(responsible);
+          return value === userObjectId || value === username;
+        })
     );
 
-    // Dashboard task counters should match the user's "My Tasks" list.
-    const openActionItems = userOpenTasks;
+    const today = new Date();
+    let overdueCount = 0;
+    let upcomingCount = 0;
 
-    userOpenTasks.forEach(task => {
-      if (task.dueDate) {
-        const dueDate = new Date(task.dueDate);
-        const daysDiff = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 3600 * 24));
+    for (const task of userOpenTasks) {
+      if (!task.dueDate) continue;
+      const dueDate = new Date(task.dueDate as Date);
+      const daysDiff = Math.ceil((dueDate.getTime() - today.getTime()) / (1000 * 3600 * 24));
+      if (daysDiff < 0) overdueCount += 1;
+      else if (daysDiff <= 7) upcomingCount += 1;
+    }
 
-        if (daysDiff < 0) {
-          overdueActionItems.push(task);
-        } else if (daysDiff <= 7) {
-          upcomingActionItems.push(task);
-        }
-      }
-    });
-
-    // Recent minutes (last 5)
-    const recentMinutes = await Minutes.find({
+    const recentMinutesRaw = await Minutes.find({
       meetingSeries_id: { $in: seriesIds },
     })
       .sort({ date: -1 })
       .limit(5)
       .populate('meetingSeries_id', 'project name')
+      .select('date isFinalized meetingSeries_id')
       .lean();
 
-    // Get system settings for last reminder time
+    const recentMinutes = recentMinutesRaw
+      .map((m) => serializeDashboardMinute(m as Record<string, unknown>))
+      .filter((m): m is Record<string, unknown> => m != null);
+
     let lastRemindersSentAt = null;
     if (authResult.user.role === 'admin' || authResult.user.role === 'moderator') {
-      const settings = await Settings.findOne({}).sort({ updatedAt: -1 }).lean() as any;
-      if (settings && settings.systemSettings) {
+      const settings = (await Settings.findOne({}).sort({ updatedAt: -1 }).lean()) as {
+        systemSettings?: { lastRemindersSentAt?: unknown };
+      } | null;
+      if (settings?.systemSettings) {
         lastRemindersSentAt = settings.systemSettings.lastRemindersSentAt;
       }
     }
@@ -111,22 +106,16 @@ export async function GET(request: NextRequest) {
           totalMinutes,
           finalizedMinutes,
           draftMinutes,
-          totalActionItems: openActionItems.length,
-          overdueActionItems: overdueActionItems.length,
-          upcomingActionItems: upcomingActionItems.length,
+          totalActionItems: userOpenTasks.length,
+          overdueActionItems: overdueCount,
+          upcomingActionItems: upcomingCount,
         },
-        openActionItems: openActionItems.slice(0, 20), // Limit to 20
-        overdueActionItems,
-        upcomingActionItems,
         recentMinutes,
         lastRemindersSentAt,
       },
     });
   } catch (error) {
     console.error('Error fetching dashboard data:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch dashboard data' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Failed to fetch dashboard data' }, { status: 500 });
   }
 }

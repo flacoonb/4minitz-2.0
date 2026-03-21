@@ -18,27 +18,29 @@ export async function GET(_request: NextRequest) {
             organizationName: 'NXTMinutes',
             organizationLogo: null,
             agendaItemLabelMode: 'topic-alpha',
+            timeFormat: '24h',
             brandColors: DEFAULT_BRAND_COLORS,
-          }
-        }
+          },
+          language: {
+            defaultLanguage: 'de',
+          },
+        },
       });
     }
 
-    // Return only public settings (no sensitive data)
+    // Public branding + display prefs only. Do not expose member/auth policy here
+    // (self-registration / admin approval are enforced in /api/auth/register, not advertised).
     const publicSettings = {
       system: {
         organizationName: settings.systemSettings?.organizationName || 'NXTMinutes',
         organizationLogo: settings.systemSettings?.organizationLogo,
-        allowRegistration: settings.memberSettings?.allowSelfRegistration ?? false,
-        requireAdminApproval: settings.memberSettings?.requireAdminApproval ?? true,
         agendaItemLabelMode: settings.memberSettings?.agendaItemLabelMode || 'topic-alpha',
-        dateFormat: settings.systemSettings?.dateFormat || 'DD.MM.YYYY',
         timeFormat: settings.systemSettings?.timeFormat || '24h',
         brandColors: sanitizeBrandColors(settings.systemSettings?.brandColors),
       },
       language: {
-        defaultLanguage: settings.languageSettings?.defaultLanguage || 'de'
-      }
+        defaultLanguage: settings.languageSettings?.defaultLanguage || 'de',
+      },
     };
 
     const response = NextResponse.json({
