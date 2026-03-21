@@ -18,10 +18,15 @@ const nextConfig: NextConfig = {
   },
   async headers() {
     // CSP: HTML from proxy.ts (nonces). See SECURITY.md / docs/CSP.md.
-    const appUrl = String(process.env.APP_URL || '').trim().toLowerCase();
+    const appUrl = String(process.env.APP_URL || process.env.NEXT_PUBLIC_APP_URL || '')
+      .trim()
+      .toLowerCase();
+    // HSTS: production builds targeting HTTPS (ZAP #65). If APP_URL is unset at build, still emit
+    // HSTS (browsers only enforce it on HTTPS responses). Pure-HTTP prod: DISABLE_HSTS=true.
     const enableHsts =
-      process.env.ENABLE_HSTS === 'true' ||
-      (process.env.NODE_ENV === 'production' && appUrl.startsWith('https://'));
+      process.env.DISABLE_HSTS !== 'true' &&
+      (process.env.ENABLE_HSTS === 'true' ||
+        (process.env.NODE_ENV === 'production' && (!appUrl || appUrl.startsWith('https://'))));
 
     const baseHeaders: { key: string; value: string }[] = [
       { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
@@ -33,22 +38,26 @@ const nextConfig: NextConfig = {
       { key: 'Cross-Origin-Resource-Policy', value: 'same-origin' },
     ];
 
-    if (enableHsts && process.env.DISABLE_HSTS !== 'true') {
+    if (enableHsts) {
       baseHeaders.push({
         key: 'Strict-Transport-Security',
         value: 'max-age=31536000; includeSubDomains',
       });
     }
 
-    const robotsSitemapHeaders = [
+    const staticSeoHeaders = [
       ...baseHeaders,
       { key: 'Content-Security-Policy', value: STATIC_TEXT_CSP },
+      // Explicit policy for ZAP 10015 / cache heuristics on text responses
+      { key: 'Cache-Control', value: 'public, max-age=3600, must-revalidate' },
     ];
 
     return [
-      { source: '/robots.txt', headers: robotsSitemapHeaders },
-      { source: '/sitemap.xml', headers: robotsSitemapHeaders },
+      // Next.js: when several sources match, the *last* block wins per header key. Put catch-all
+      // first so /robots.txt and /sitemap.xml keep CSP + Cache-Control (GitHub #65).
       { source: '/(.*)', headers: baseHeaders },
+      { source: '/robots.txt', headers: staticSeoHeaders },
+      { source: '/sitemap.xml', headers: staticSeoHeaders },
     ];
   },
 };

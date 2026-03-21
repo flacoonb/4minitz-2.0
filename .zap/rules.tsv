@@ -1,4 +1,5 @@
 # RuleID	ACTION	Comment
+10038	INFO	CSP missing on edge-only or CDN paths — app sets STATIC_TEXT_CSP on /robots.txt + /sitemap.xml after deploy
 10062	INFO	Potential false positive on Next.js chunk hash-like numbers
 10099	INFO	Potential false positive on UI copy containing SQL keywords
 10063	INFO	Third-party (e.g. Cloudflare rocket-loader.js) — Permissions-Policy not set by app

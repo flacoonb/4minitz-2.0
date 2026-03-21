@@ -20,8 +20,9 @@
 
 - **HSTS** (`Strict-Transport-Security`) wird gesetzt, wenn:
   - `ENABLE_HSTS=true`, **oder**
-  - `NODE_ENV=production` **und** `APP_URL` mit `https://` beginnt.  
-  Abschaltbar mit `DISABLE_HSTS=true` (z. B. gemischte Testumgebungen).
+  - `NODE_ENV=production` **und** (`APP_URL` oder `NEXT_PUBLIC_APP_URL` fehlt **oder** mit `https://` beginnt).  
+  Browser wenden HSTS nur auf **HTTPS**-Antworten an; bei reinem HTTP-Deployment: `DISABLE_HSTS=true`.  
+  **`headers()` in `next.config.ts`** wird beim **`next build`** eingefroren — für konsistente Header (ZAP) **`APP_URL=https://…`** oder `NEXT_PUBLIC_APP_URL` beim Build setzen, wenn die öffentliche URL bekannt ist.
 
 ## CSP (Content-Security-Policy)
 
