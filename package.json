@@ -61,7 +61,7 @@
     "tailwindcss": "^4",
     "ts-node": "^10.9.2",
     "tsx": "^4.21.0",
-    "typescript": "^5"
+    "typescript": "^6"
   },
   "overrides": {
     "dompurify": "^3.3.2",
