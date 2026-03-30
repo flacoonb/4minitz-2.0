@@ -66,6 +66,15 @@
   "overrides": {
     "dompurify": "^3.3.2",
     "fast-xml-parser": "^5.3.8",
-    "flatted": "^3.4.2"
+    "flatted": "^3.4.2",
+    "micromatch": {
+      "picomatch": "^2.3.2"
+    },
+    "@parcel/watcher": {
+      "picomatch": "^4.0.4"
+    },
+    "tinyglobby": {
+      "picomatch": "^4.0.4"
+    }
   }
 }
