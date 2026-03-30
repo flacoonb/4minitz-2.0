@@ -13,6 +13,9 @@ updates:
       - dependency-name: "mongoose"
         update-types:
           - "version-update:semver-major"
+      - dependency-name: "typescript"
+        update-types:
+          - "version-update:semver-major"
 
   # GitHub Actions updates (checkout, setup-node, CodeQL, etc.)
   - package-ecosystem: "github-actions"
