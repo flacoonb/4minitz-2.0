@@ -386,14 +386,28 @@ export async function DELETE(
     const username = userToDelete.username;
     const userId = userToDelete._id.toString();
     await MeetingSeries.updateMany(
-      { $or: [{ visibleFor: username }, { moderators: username }, { participants: username }] },
-      { $pull: { visibleFor: username, moderators: username, participants: username, members: { userId } } }
+      {
+        $or: [
+          { visibleFor: { $in: [username, userId] } },
+          { moderators: { $in: [username, userId] } },
+          { participants: { $in: [username, userId] } },
+          { members: { $elemMatch: { userId } } },
+        ],
+      },
+      {
+        $pull: {
+          visibleFor: { $in: [username, userId] },
+          moderators: { $in: [username, userId] },
+          participants: { $in: [username, userId] },
+          members: { userId },
+        },
+      }
     );
 
     // Remove user from task responsibles
     await Task.updateMany(
-      { responsibles: userId },
-      { $pull: { responsibles: userId } }
+      { responsibles: { $in: [userId, username] } },
+      { $pull: { responsibles: { $in: [userId, username] } } }
     );
 
     // Remove push subscriptions for this user

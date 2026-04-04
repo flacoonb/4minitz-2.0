@@ -295,6 +295,17 @@ export async function PUT(
         }))
       : body.topics;
 
+    const previousActionTaskIds = new Set<string>();
+    const previousTopics = Array.isArray(minute.topics) ? minute.topics : [];
+    for (const topic of previousTopics as any[]) {
+      const items = Array.isArray(topic?.infoItems) ? topic.infoItems : [];
+      for (const item of items) {
+        if (item?.itemType === 'actionItem' && item?.externalTaskId) {
+          previousActionTaskIds.add(String(item.externalTaskId));
+        }
+      }
+    }
+
     let topicsToPersist = topicsToPersistRaw;
     const topicResponsibles = Array.isArray(topicsToPersistRaw)
       ? extractResponsibleValuesFromTopics(topicsToPersistRaw)
@@ -395,6 +406,55 @@ export async function PUT(
                 console.error('Task cleanup failed (non-fatal):', cleanupErr);
               }
             }
+          }
+        }
+      }
+
+      const retainedActionTaskIds = new Set<string>();
+      for (const topic of topicsToPersist) {
+        const items = Array.isArray(topic?.infoItems) ? topic.infoItems : [];
+        for (const item of items) {
+          if (item?.itemType === 'actionItem' && item?.externalTaskId) {
+            retainedActionTaskIds.add(String(item.externalTaskId));
+          }
+        }
+      }
+
+      const staleTaskIds = Array.from(previousActionTaskIds).filter(
+        (taskId) => !retainedActionTaskIds.has(taskId)
+      );
+      if (staleTaskIds.length > 0) {
+        const otherMinutes = await Minutes.find({
+          _id: { $ne: id },
+          'topics.infoItems.externalTaskId': { $in: staleTaskIds },
+        }).select('_id topics.infoItems.externalTaskId').lean();
+
+        const referencedElsewhere = new Set<string>();
+        otherMinutes.forEach((otherMinute: any) => {
+          otherMinute.topics?.forEach((topic: any) => {
+            topic.infoItems?.forEach((item: any) => {
+              if (item.externalTaskId) {
+                referencedElsewhere.add(String(item.externalTaskId));
+              }
+            });
+          });
+        });
+
+        const toDelete = staleTaskIds.filter((taskId) => !referencedElsewhere.has(taskId));
+        const toReassign = staleTaskIds.filter((taskId) => referencedElsewhere.has(taskId));
+
+        if (toDelete.length > 0) {
+          await Task.deleteMany({ _id: { $in: toDelete } });
+        }
+
+        for (const taskId of toReassign) {
+          const referenceMinute = otherMinutes.find((otherMinute: any) =>
+            otherMinute.topics?.some((topic: any) =>
+              topic.infoItems?.some((item: any) => String(item.externalTaskId || '') === taskId)
+            )
+          );
+          if (referenceMinute) {
+            await Task.findByIdAndUpdate(taskId, { minutesId: referenceMinute._id.toString() });
           }
         }
       }

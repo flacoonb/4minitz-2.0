@@ -120,6 +120,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    await connectDB();
+
     // Get settings
     const settings = await Settings.findOne({}).sort({ updatedAt: -1 });
     
@@ -168,8 +170,6 @@ export async function POST(request: NextRequest) {
     }
 
 
-
-    await connectDB();
 
     // Verify minute exists and user has access
     const minute = await Minutes.findById(minuteId).populate('meetingSeries_id');

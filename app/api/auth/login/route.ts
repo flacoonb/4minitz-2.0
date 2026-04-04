@@ -24,7 +24,7 @@ export async function POST(request: NextRequest) {
 
     await connectDB();
 
-    const body = await request.json();
+    const body = await request.json().catch(() => ({}));
     const validation = validateBody(loginSchema, body);
     if (!validation.success) {
       return NextResponse.json(
