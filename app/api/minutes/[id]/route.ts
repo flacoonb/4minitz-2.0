@@ -28,6 +28,12 @@ function mapResponseToAttendance(responseStatus: string): AttendanceStatus {
   return 'excused';
 }
 
+function normalizeAttendance(value: unknown): AttendanceStatus {
+  const status = String(value || '').trim();
+  if (status === 'present' || status === 'absent' || status === 'excused') return status;
+  return 'excused';
+}
+
 function computeEventDeadline(event: any): Date | null {
   if (!event?.scheduledDate || !event?.startTime) return null;
   const date = new Date(event.scheduledDate);
@@ -125,6 +131,7 @@ export async function GET(
       isMinuteDirectlyVisible
     ) {
       // Keep protocol attendance synchronized with RSVP until meeting start time.
+      // Important: never overwrite already persisted attendance decisions.
       const linkedEvent = await MeetingEvent.findOne({ linkedMinutesId: id }).lean();
       const deadline = computeEventDeadline(linkedEvent);
       if (linkedEvent && deadline && new Date() < deadline) {
@@ -136,29 +143,26 @@ export async function GET(
         for (const participant of existingParticipantsWithStatus) {
           const participantId = String(participant?.userId || '').trim();
           if (!participantId) continue;
-          const status = String(participant?.attendance || 'excused') as AttendanceStatus;
+          const status = normalizeAttendance(participant?.attendance);
           existingStatus.set(participantId, status);
         }
 
-        const syncedByUserId = new Map<string, AttendanceStatus>();
+        const syncedByUserId = new Map<string, AttendanceStatus>(existingStatus);
+        const inviteeStatusByUserId = new Map<string, AttendanceStatus>();
         for (const invitee of linkedEvent.invitees || []) {
           const inviteeId = String((invitee as any)?.userId || '').trim();
           if (!inviteeId) continue;
-          syncedByUserId.set(inviteeId, mapResponseToAttendance(String((invitee as any)?.responseStatus || 'pending')));
+          const inviteeStatus = mapResponseToAttendance(String((invitee as any)?.responseStatus || 'pending'));
+          inviteeStatusByUserId.set(inviteeId, inviteeStatus);
+          if (!syncedByUserId.has(inviteeId)) {
+            syncedByUserId.set(inviteeId, inviteeStatus);
+          }
         }
 
         for (const member of seriesMembers) {
           const memberId = String((member as any)?.userId || '').trim();
           if (!memberId || syncedByUserId.has(memberId)) continue;
-          syncedByUserId.set(memberId, existingStatus.get(memberId) || 'excused');
-        }
-
-        // Keep guests or manually added non-series users untouched.
-        for (const [participantId, attendance] of existingStatus.entries()) {
-          if (syncedByUserId.has(participantId)) continue;
-          if (participantId.startsWith('guest:')) {
-            syncedByUserId.set(participantId, attendance);
-          }
+          syncedByUserId.set(memberId, inviteeStatusByUserId.get(memberId) || 'excused');
         }
 
         const participantsWithStatus = Array.from(syncedByUserId.entries()).map(([entryUserId, attendance]) => ({
@@ -168,12 +172,17 @@ export async function GET(
         const participants = participantsWithStatus
           .map((entry) => entry.userId)
           .filter((entryUserId) => !entryUserId.startsWith('guest:'));
+        const shouldPersistSync =
+          JSON.stringify(existingParticipantsWithStatus) !== JSON.stringify(participantsWithStatus) ||
+          JSON.stringify(Array.isArray((minute as any).participants) ? (minute as any).participants : []) !== JSON.stringify(participants);
 
-        await Minutes.findByIdAndUpdate(id, {
-          $set: { participantsWithStatus, participants, updatedAt: new Date() },
-        });
-        (minute as any).participantsWithStatus = participantsWithStatus;
-        (minute as any).participants = participants;
+        if (shouldPersistSync) {
+          await Minutes.findByIdAndUpdate(id, {
+            $set: { participantsWithStatus, participants, updatedAt: new Date() },
+          });
+          (minute as any).participantsWithStatus = participantsWithStatus;
+          (minute as any).participants = participants;
+        }
       }
 
       return NextResponse.json({ success: true, data: minute });
