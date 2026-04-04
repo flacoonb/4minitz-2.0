@@ -120,7 +120,7 @@ function AdminTemplatesPage() {
     setLoading(true);
     setError('');
     try {
-      const response = await fetch('/api/minutes-templates?scope=global&includeInactive=true', {
+      const response = await fetch('/api/minutes-templates?scope=all&includeInactive=true', {
         credentials: 'include',
       });
       const result = await response.json();
@@ -479,10 +479,10 @@ function AdminTemplatesPage() {
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold bg-gradient-to-r from-gray-900 to-gray-700 dark:from-slate-100 dark:to-slate-300 bg-clip-text text-transparent">
-                Globale Protokoll-Vorlagen
+                Protokoll-Vorlagen
               </h1>
               <p className="text-sm sm:text-base text-gray-600 dark:text-slate-400 mt-1">
-                Admins verwalten wiederverwendbare Vorlagen für alle Serien.
+                Admins verwalten globale und serienbezogene Vorlagen zentral.
               </p>
             </div>
             <Link

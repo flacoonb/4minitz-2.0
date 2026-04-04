@@ -116,23 +116,27 @@ export async function GET(request: NextRequest) {
     }
 
     const user = auth.user;
-    const { searchParams } = new URL(request.url);
-    const meetingSeriesId = searchParams.get('meetingSeriesId');
-    const scope = searchParams.get('scope');
-    const includeInactive = searchParams.get('includeInactive') === 'true';
+  const { searchParams } = new URL(request.url);
+  const meetingSeriesId = searchParams.get('meetingSeriesId');
+  const scope = searchParams.get('scope')?.trim().toLowerCase() || '';
+  const includeInactive = searchParams.get('includeInactive') === 'true';
 
     const canUseTemplates = await hasPermission(user, 'canUseTemplates' as any);
     const canManageGlobalTemplates = await hasPermission(user, 'canManageGlobalTemplates' as any);
     const canManageSeriesTemplates = await hasPermission(user, 'canManageSeriesTemplates' as any);
 
-    const isAdmin = user.role === 'admin';
-    if (!isAdmin && !canUseTemplates && !canManageGlobalTemplates && !canManageSeriesTemplates) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
-    }
+  const isAdmin = user.role === 'admin';
+  if (!isAdmin && !canUseTemplates && !canManageGlobalTemplates && !canManageSeriesTemplates) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+  }
 
-    const query: any = {};
-    if (!includeInactive) query.isActive = true;
-    if (scope === 'global' || scope === 'series') query.scope = scope;
+  if (scope && scope !== 'global' && scope !== 'series' && scope !== 'all') {
+    return NextResponse.json({ error: 'Invalid scope' }, { status: 400 });
+  }
+
+  const query: any = {};
+  if (!includeInactive) query.isActive = true;
+  if (scope === 'global' || scope === 'series') query.scope = scope;
 
     if (meetingSeriesId) {
       if (!mongoose.isValidObjectId(meetingSeriesId)) {
@@ -151,6 +155,10 @@ export async function GET(request: NextRequest) {
         ...(isAdmin || canUseTemplates || canManageGlobalTemplates ? [{ scope: 'global' }] : []),
         { scope: 'series', meetingSeriesId: new mongoose.Types.ObjectId(meetingSeriesId) },
       ];
+    } else if (scope === 'all' || scope === 'series') {
+      if (!isAdmin) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
     } else if (!query.scope) {
       // Without series context, default to global templates.
       query.scope = 'global';
