@@ -1466,12 +1466,14 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
     const result: MentionCandidate[] = [];
 
     allUsers.forEach((user) => {
-      const value = (user.username || user._id || '').trim();
+      const rawUsername = String(user.username || '').trim();
+      const mentionToken = rawUsername && !/\s/.test(rawUsername) ? rawUsername : String(user._id || '').trim();
+      const value = mentionToken.trim();
       if (!value || seen.has(value)) return;
       seen.add(value);
       result.push({
         value,
-        label: `${user.firstName} ${user.lastName} (@${value})`,
+        label: `${user.firstName} ${user.lastName} (@${rawUsername || value})`,
       });
     });
 

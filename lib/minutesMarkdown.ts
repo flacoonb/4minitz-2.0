@@ -51,8 +51,8 @@ function parseInlineTags(
   let dueDate: string | undefined;
   let priority: MinutesMarkdownPriority | undefined;
 
-  // @user1,@user2
-  text = text.replace(/(^|\s)@([a-zA-Z0-9:_-]+(?:,[a-zA-Z0-9:_-]+)*)/g, (_match, prefix, users) => {
+  // @user1,@user2 (supports unicode letters/numbers plus . _ : -)
+  text = text.replace(/(^|\s)@([\p{L}\p{N}._:-]+(?:,[\p{L}\p{N}._:-]+)*)/gu, (_match, prefix, users) => {
     users
       .split(',')
       .map((u: string) => u.trim())
