@@ -55,6 +55,41 @@ interface PdfTemplateOption {
   isActive?: boolean;
 }
 
+function normalizeMinutesTemplateOptions(rawData: unknown): MinutesTemplateOption[] {
+  if (!Array.isArray(rawData)) return [];
+
+  const options: MinutesTemplateOption[] = [];
+  for (const entry of rawData) {
+    if (!entry || typeof entry !== 'object') continue;
+    const candidate = entry as { _id?: unknown; name?: unknown; scope?: unknown };
+    const id = typeof candidate._id === 'string' ? candidate._id.trim() : '';
+    const name = typeof candidate.name === 'string' ? candidate.name.trim() : '';
+    const scope = candidate.scope === 'series' ? 'series' : 'global';
+    if (!id || !name) continue;
+    options.push({ _id: id, name, scope });
+  }
+  return options;
+}
+
+function normalizePdfTemplateOptions(rawData: unknown): PdfTemplateOption[] {
+  if (!Array.isArray(rawData)) return [];
+
+  const options: PdfTemplateOption[] = [];
+  for (const entry of rawData) {
+    if (!entry || typeof entry !== 'object') continue;
+    const candidate = entry as { _id?: unknown; name?: unknown; isActive?: unknown };
+    const id = typeof candidate._id === 'string' ? candidate._id.trim() : '';
+    const name = typeof candidate.name === 'string' ? candidate.name.trim() : '';
+    if (!id || !name) continue;
+    options.push({
+      _id: id,
+      name,
+      isActive: candidate.isActive === true,
+    });
+  }
+  return options;
+}
+
 export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const t = useTranslations('meetingSeries');
@@ -157,7 +192,7 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
         return;
       }
       const result = await response.json();
-      setTemplateOptions(Array.isArray(result.data) ? result.data : []);
+      setTemplateOptions(normalizeMinutesTemplateOptions(result.data));
     } catch {
       setTemplateOptions([]);
     }
@@ -173,7 +208,7 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
         return;
       }
       const result = await response.json();
-      setPdfTemplateOptions(Array.isArray(result.data) ? result.data : []);
+      setPdfTemplateOptions(normalizePdfTemplateOptions(result.data));
     } catch {
       setPdfTemplateOptions([]);
     }
@@ -202,22 +237,6 @@ export default function EditMeetingSeriesPage({ params }: { params: Promise<{ id
       fetchPdfTemplateOptions();
     }
   }, [seriesId, fetchSeries, fetchUsers, fetchClubFunctions, fetchExistingNames, fetchTemplateOptions, fetchPdfTemplateOptions]);
-
-  useEffect(() => {
-    if (!formData.defaultTemplateId) return;
-    const exists = templateOptions.some((template) => template._id === formData.defaultTemplateId);
-    if (!exists) {
-      setFormData((prev) => ({ ...prev, defaultTemplateId: '' }));
-    }
-  }, [templateOptions, formData.defaultTemplateId]);
-
-  useEffect(() => {
-    if (!formData.defaultPdfTemplateId) return;
-    const exists = pdfTemplateOptions.some((template) => template._id === formData.defaultPdfTemplateId);
-    if (!exists) {
-      setFormData((prev) => ({ ...prev, defaultPdfTemplateId: '' }));
-    }
-  }, [pdfTemplateOptions, formData.defaultPdfTemplateId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
