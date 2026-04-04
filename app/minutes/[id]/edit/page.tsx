@@ -1246,6 +1246,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
   // Use a ref to track imported task IDs to prevent duplicates
   const importedTaskIdsRef = useRef<Set<string>>(new Set());
   const markdownTextareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const suppressUnsavedTrackingRef = useRef(false);
 
   // Use a ref to track if an import is currently in progress
   const importInProgressRef = useRef<boolean>(false);
@@ -1330,14 +1331,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
                 }
               });
 
-              // B. Filter out deleted users from minute (users not in allUsers), but keep guests
-              if (minuteData.participantsWithStatus) {
-                minuteData.participantsWithStatus = minuteData.participantsWithStatus.filter((p: any) =>
-                  p.userId.startsWith('guest:') || users.some(u => u._id === p.userId)
-                );
-              }
-
-              // C. Update members list for dropdown (ensure all current participants are in the list)
+              // B. Update members list for dropdown (ensure all current participants are in the list)
               if (minuteData.participantsWithStatus) {
                 const existingIds = new Set(members.map((m: any) => m.userId));
                 minuteData.participantsWithStatus.forEach((p: any) => {
@@ -1350,6 +1344,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
 
               setMeetingSeriesMembers(members);
 
+              suppressUnsavedTrackingRef.current = true;
               setFormData({
                 date: minuteData.date?.split('T')[0] || '',
                 time: minuteData.time || '',
@@ -1370,6 +1365,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
           }
 
           // Fallback if no series or series fetch failed
+          suppressUnsavedTrackingRef.current = true;
           setFormData({
             date: minuteData.date?.split('T')[0] || '',
             time: minuteData.time || '',
@@ -1450,6 +1446,10 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
   useEffect(() => {
     if (isInitialLoad.current) {
       isInitialLoad.current = false;
+      return;
+    }
+    if (suppressUnsavedTrackingRef.current) {
+      suppressUnsavedTrackingRef.current = false;
       return;
     }
     setHasUnsavedChanges(true);
@@ -1592,27 +1592,17 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
       return;
     }
 
-    // Add to imported set IMMEDIATELY - this is our PRIMARY guard
-    importedTaskIdsRef.current.add(taskId);
-
     // SECOND GUARD: Check if ANY import is in progress
     if (importInProgressRef.current) {
-      // Don't remove from imported set - we want to keep it marked as imported
+      currentlyProcessingTaskIdRef.current = null;
       return;
     }
 
     // Set import in progress flag
     importInProgressRef.current = true;
 
-    // Also check formData state as backup
-    const existingIds: string[] = [];
-    formData.topics.forEach((topic) => {
-      topic.infoItems?.forEach((item) => {
-        if (item.originalTaskId) {
-          existingIds.push(item.originalTaskId);
-        }
-      });
-    });
+    // Add to imported set after lock acquisition
+    importedTaskIdsRef.current.add(taskId);
 
     const isAlreadyImportedInState = formData.topics.some(topic =>
       topic.infoItems?.some(item => item.originalTaskId === taskId)

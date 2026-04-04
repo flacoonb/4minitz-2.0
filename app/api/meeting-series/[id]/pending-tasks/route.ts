@@ -85,7 +85,8 @@ export async function GET(
     if (lastMinutes) {
       lastMinutes.topics?.forEach((topic: any) => {
         topic.infoItems?.forEach((item: any) => {
-          if (item.itemType === 'actionItem' && item.status !== 'completed') {
+          const status = String(item?.status || 'open');
+          if (item.itemType === 'actionItem' && status !== 'completed' && status !== 'cancelled') {
             const taskId = item._id.toString();
             if (alreadyImportedTaskIds.has(taskId)) return;
 
