@@ -477,6 +477,7 @@
     "additionalNotes": "Additional Notes",
     "additionalNotesPlaceholder": "Further hints, comments or context information...",
     "saveButton": "Save",
+    "saveItemButton": "Save Item",
     "visualMode": "Visual",
     "markdownMode": "Markdown",
     "editorModeHint": "Use visual mode for detailed editing or markdown mode for fast, keyboard-first capture during the meeting.",

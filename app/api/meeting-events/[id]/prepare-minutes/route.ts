@@ -177,10 +177,25 @@ export async function POST(request: NextRequest, context: RouteContext) {
       minute = await Minutes.findById(event.linkedMinutesId);
     }
     if (!minute) {
-      minute = await Minutes.findOne({
+      const latestDraft = await Minutes.findOne({
         meetingSeries_id: event.meetingSeriesId,
         isFinalized: false,
       }).sort({ createdAt: -1 });
+
+      if (latestDraft) {
+        const linkedByOtherEvent = await MeetingEvent.findOne({
+          _id: { $ne: event._id },
+          linkedMinutesId: latestDraft._id.toString(),
+        })
+          .select('_id')
+          .lean();
+
+        // Reuse only unlinked drafts (or the draft already linked to this event via linkedMinutesId above).
+        // This prevents cross-linking different meeting events to the same draft minute.
+        if (!linkedByOtherEvent) {
+          minute = latestDraft;
+        }
+      }
     }
 
     const meetingDate = new Date(event.scheduledDate);

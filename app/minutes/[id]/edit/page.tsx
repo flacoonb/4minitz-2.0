@@ -43,6 +43,8 @@ interface SortableTopicProps {
   deleteInfoItem: (topicIndex: number, itemIndex: number) => void;
   handleDragEndInfoItem: (topicIndex: number) => (event: DragEndEvent) => void;
   agendaItemLabelMode: 'manual' | 'topic-alpha';
+  saveMinuteInPlace: () => Promise<boolean>;
+  isSavingMinute: boolean;
 }
 
 function SortableTopic({
@@ -59,6 +61,8 @@ function SortableTopic({
   deleteInfoItem,
   handleDragEndInfoItem,
   agendaItemLabelMode,
+  saveMinuteInPlace,
+  isSavingMinute,
 }: SortableTopicProps) {
   const t = useTranslations('minutes');
   const tCommon = useTranslations('common');
@@ -132,6 +136,8 @@ function SortableTopic({
         deleteInfoItem={deleteInfoItem}
         handleDragEndInfoItem={handleDragEndInfoItem}
         agendaItemLabelMode={agendaItemLabelMode}
+        saveMinuteInPlace={saveMinuteInPlace}
+        isSavingMinute={isSavingMinute}
       />
     </div>
   );
@@ -148,6 +154,8 @@ interface SortableInfoItemsProps {
   deleteInfoItem: (topicIndex: number, itemIndex: number) => void;
   handleDragEndInfoItem: (topicIndex: number) => (event: DragEndEvent) => void;
   agendaItemLabelMode: 'manual' | 'topic-alpha';
+  saveMinuteInPlace: () => Promise<boolean>;
+  isSavingMinute: boolean;
 }
 
 function SortableInfoItems({
@@ -161,6 +169,8 @@ function SortableInfoItems({
   deleteInfoItem,
   handleDragEndInfoItem,
   agendaItemLabelMode,
+  saveMinuteInPlace,
+  isSavingMinute,
 }: SortableInfoItemsProps) {
   const t = useTranslations('minutes');
   const itemIds = infoItems.map((_, i) => `item-${topicIndex}-${i}`);
@@ -215,6 +225,8 @@ function SortableInfoItems({
                 updateInfoItem={updateInfoItem}
                 deleteInfoItem={deleteInfoItem}
                 agendaItemLabelMode={agendaItemLabelMode}
+                saveMinuteInPlace={saveMinuteInPlace}
+                isSavingMinute={isSavingMinute}
               />
             ))}
             {infoItems.length === 0 && (
@@ -252,6 +264,8 @@ interface SortableInfoItemProps {
   updateInfoItem: (topicIndex: number, itemIndex: number, field: keyof InfoItem, value: any) => void;
   deleteInfoItem: (topicIndex: number, itemIndex: number) => void;
   agendaItemLabelMode: 'manual' | 'topic-alpha';
+  saveMinuteInPlace: () => Promise<boolean>;
+  isSavingMinute: boolean;
 }
 
 function SortableInfoItem({
@@ -265,6 +279,8 @@ function SortableInfoItem({
   updateInfoItem,
   deleteInfoItem,
   agendaItemLabelMode,
+  saveMinuteInPlace,
+  isSavingMinute,
 }: SortableInfoItemProps) {
   const t = useTranslations('minutes');
   const tCommon = useTranslations('common');
@@ -1027,20 +1043,23 @@ function SortableInfoItem({
         <div className="flex justify-center pt-4 border-t border-white/30">
           <button
             type="button"
-            onClick={() => {
+            onClick={async () => {
               const canSave = agendaItemLabelMode === 'topic-alpha' || item.itemType !== 'actionItem' || Boolean(item.subject?.trim());
               if (canSave) {
-                setIsEditing(false);
+                const persisted = await saveMinuteInPlace();
+                if (persisted) {
+                  setIsEditing(false);
+                }
               }
             }}
-            disabled={agendaItemLabelMode !== 'topic-alpha' && item.itemType === 'actionItem' && !item.subject?.trim()}
+            disabled={isSavingMinute || (agendaItemLabelMode !== 'topic-alpha' && item.itemType === 'actionItem' && !item.subject?.trim())}
             className="w-full sm:w-auto px-6 py-2.5 min-h-11 bg-green-500 text-white rounded-lg font-bold hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-sm inline-flex items-center justify-center gap-2 shadow-md"
-            title={t('saveButton')}
+            title={t('saveItemButton')}
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
-            {t('saveButton')}
+            {isSavingMinute ? t('saving') : t('saveItemButton')}
           </button>
         </div>
       </div>
@@ -1787,54 +1806,71 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
     });
   };
 
+  const persistMinute = useCallback(
+    async ({ redirectOnSuccess }: { redirectOnSuccess: boolean }): Promise<boolean> => {
+      if (!minuteId) return false;
+
+      // Keep explicit empty strings so users can clear optional fields.
+      const dataToSave = {
+        ...formData,
+        time: (formData.time || '').trim(),
+        endTime: (formData.endTime || '').trim(),
+        location: (formData.location || '').trim(),
+        title: (formData.title || '').trim(),
+      };
+
+      if (editorMode === 'markdown') {
+        const parsed = parseMinutesMarkdown(markdownText);
+        if (parsed.topics.length === 0) {
+          setError(t('markdownNoTopicsError'));
+          setMarkdownWarnings(parsed.warnings);
+          return false;
+        }
+        dataToSave.topics = parsed.topics as Topic[];
+        setMarkdownWarnings(parsed.warnings);
+      }
+
+      setSaving(true);
+      setError(null);
+      try {
+        const response = await fetch(`/api/minutes/${minuteId}`, {
+          method: 'PUT',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(dataToSave),
+        });
+
+        const result = await response.json();
+
+        if (response.ok) {
+          setHasUnsavedChanges(false);
+          if (redirectOnSuccess) {
+            router.push(`/minutes/${minuteId}`);
+          }
+          return true;
+        }
+
+        setError(result.error || t('saveError'));
+        return false;
+      } catch (_error) {
+        setError(t('saveError'));
+        return false;
+      } finally {
+        setSaving(false);
+      }
+    },
+    [editorMode, formData, markdownText, minuteId, router, t]
+  );
+
+  const saveMinuteInPlace = useCallback(() => {
+    return persistMinute({ redirectOnSuccess: false });
+  }, [persistMinute]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!minuteId) return;
-
-    // Keep explicit empty strings so users can clear optional fields.
-    const dataToSave = {
-      ...formData,
-      time: (formData.time || '').trim(),
-      endTime: (formData.endTime || '').trim(),
-      location: (formData.location || '').trim(),
-      title: (formData.title || '').trim(),
-    };
-
-    if (editorMode === 'markdown') {
-      const parsed = parseMinutesMarkdown(markdownText);
-      if (parsed.topics.length === 0) {
-        setError(t('markdownNoTopicsError'));
-        setMarkdownWarnings(parsed.warnings);
-        return;
-      }
-      dataToSave.topics = parsed.topics as Topic[];
-      setMarkdownWarnings(parsed.warnings);
-    }
-
-    setSaving(true);
-    try {
-      const response = await fetch(`/api/minutes/${minuteId}`, {
-        method: 'PUT',
-        credentials: 'include',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(dataToSave),
-      });
-
-      const result = await response.json();
-
-      if (response.ok) {
-        setHasUnsavedChanges(false); // Reset unsaved changes flag
-        router.push(`/minutes/${minuteId}`);
-      } else {
-        setError(result.error || t('saveError'));
-      }
-    } catch (_error) {
-      setError(t('saveError'));
-    } finally {
-      setSaving(false);
-    }
+    await persistMinute({ redirectOnSuccess: true });
   };
 
   const getUserById = (userId: string): User | undefined => {
@@ -2453,6 +2489,8 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
                         deleteInfoItem={deleteInfoItem}
                         handleDragEndInfoItem={handleDragEndInfoItem}
                         agendaItemLabelMode={agendaItemLabelMode}
+                        saveMinuteInPlace={saveMinuteInPlace}
+                        isSavingMinute={saving}
                       />
                     ))}
                   </SortableContext>

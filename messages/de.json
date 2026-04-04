@@ -486,6 +486,7 @@
     "additionalNotes": "Zusätzliche Notizen",
     "additionalNotesPlaceholder": "Weitere Hinweise, Kommentare oder Kontextinformationen...",
     "saveButton": "Speichern",
+    "saveItemButton": "Eintrag speichern",
     "visualMode": "Visuell",
     "markdownMode": "Markdown",
     "editorModeHint": "Nutzen Sie den visuellen Modus für detaillierte Bearbeitung oder Markdown für schnelle Sitzungserfassung per Tastatur.",
