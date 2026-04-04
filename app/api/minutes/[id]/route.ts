@@ -34,6 +34,27 @@ function normalizeAttendance(value: unknown): AttendanceStatus {
   return 'excused';
 }
 
+function normalizeParticipantsWithStatus(
+  value: unknown
+): Array<{ userId: string; attendance: AttendanceStatus }> {
+  const entries = Array.isArray(value) ? value : [];
+  const normalized: Array<{ userId: string; attendance: AttendanceStatus }> = [];
+  for (const entry of entries) {
+    const userId = String((entry as any)?.userId || '').trim();
+    if (!userId) continue;
+    normalized.push({
+      userId,
+      attendance: normalizeAttendance((entry as any)?.attendance),
+    });
+  }
+  return normalized;
+}
+
+function normalizeParticipants(value: unknown): string[] {
+  const entries = Array.isArray(value) ? value : [];
+  return entries.map((entry) => String(entry || '').trim()).filter(Boolean);
+}
+
 function computeEventDeadline(event: any): Date | null {
   if (!event?.scheduledDate || !event?.startTime) return null;
   const date = new Date(event.scheduledDate);
@@ -136,14 +157,14 @@ export async function GET(
       const deadline = computeEventDeadline(linkedEvent);
       if (linkedEvent && deadline && new Date() < deadline) {
         const existingStatus = new Map<string, AttendanceStatus>();
-        const existingParticipantsWithStatus = Array.isArray((minute as any).participantsWithStatus)
-          ? (minute as any).participantsWithStatus
-          : [];
+        const existingParticipantsWithStatus = normalizeParticipantsWithStatus(
+          (minute as any).participantsWithStatus
+        );
 
         for (const participant of existingParticipantsWithStatus) {
-          const participantId = String(participant?.userId || '').trim();
+          const participantId = String(participant.userId || '').trim();
           if (!participantId) continue;
-          const status = normalizeAttendance(participant?.attendance);
+          const status = normalizeAttendance(participant.attendance);
           existingStatus.set(participantId, status);
         }
 
@@ -174,7 +195,7 @@ export async function GET(
           .filter((entryUserId) => !entryUserId.startsWith('guest:'));
         const shouldPersistSync =
           JSON.stringify(existingParticipantsWithStatus) !== JSON.stringify(participantsWithStatus) ||
-          JSON.stringify(Array.isArray((minute as any).participants) ? (minute as any).participants : []) !== JSON.stringify(participants);
+          JSON.stringify(normalizeParticipants((minute as any).participants)) !== JSON.stringify(participants);
 
         if (shouldPersistSync) {
           await Minutes.findByIdAndUpdate(id, {

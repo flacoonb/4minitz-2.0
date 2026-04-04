@@ -31,6 +31,12 @@ function mapResponseToAttendance(responseStatus: string): AttendanceStatus {
   return 'excused';
 }
 
+function normalizeAttendance(value: unknown): AttendanceStatus {
+  const status = String(value || '').trim();
+  if (status === 'present' || status === 'absent' || status === 'excused') return status;
+  return 'excused';
+}
+
 function normalizeTemplateId(raw: unknown): string {
   return typeof raw === 'string' ? raw.trim() : String(raw || '').trim();
 }
@@ -116,11 +122,11 @@ export async function POST(request: NextRequest, context: RouteContext) {
       }
     }
 
-    const participantsWithStatus = Array.from(byUserId.entries()).map(([memberId, attendance]) => ({
+    let participantsWithStatus = Array.from(byUserId.entries()).map(([memberId, attendance]) => ({
       userId: memberId,
       attendance,
     }));
-    const participants = participantsWithStatus.map((entry) => entry.userId);
+    let participants = participantsWithStatus.map((entry) => entry.userId);
     const visibleFor = Array.from(new Set([...(series.moderators || []), ...(series.participants || [])]));
 
     const resolvedTemplate = await resolveMinutesTemplate(event, series);
@@ -196,6 +202,32 @@ export async function POST(request: NextRequest, context: RouteContext) {
           minute = latestDraft;
         }
       }
+    }
+
+    if (minute) {
+      const mergedByUserId = new Map<string, AttendanceStatus>();
+      const existingParticipantsWithStatus = Array.isArray(minute.participantsWithStatus)
+        ? minute.participantsWithStatus
+        : [];
+
+      for (const participant of existingParticipantsWithStatus) {
+        const participantId = String((participant as any)?.userId || '').trim();
+        if (!participantId) continue;
+        mergedByUserId.set(participantId, normalizeAttendance((participant as any)?.attendance));
+      }
+
+      for (const [memberId, attendance] of byUserId.entries()) {
+        if (mergedByUserId.has(memberId)) continue;
+        mergedByUserId.set(memberId, attendance);
+      }
+
+      participantsWithStatus = Array.from(mergedByUserId.entries()).map(([memberId, attendance]) => ({
+        userId: memberId,
+        attendance,
+      }));
+      participants = participantsWithStatus
+        .map((entry) => entry.userId)
+        .filter((entryUserId) => !entryUserId.startsWith('guest:'));
     }
 
     const meetingDate = new Date(event.scheduledDate);

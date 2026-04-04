@@ -1246,6 +1246,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
   // Use a ref to track imported task IDs to prevent duplicates
   const importedTaskIdsRef = useRef<Set<string>>(new Set());
   const markdownTextareaRef = useRef<HTMLTextAreaElement | null>(null);
+  const markdownSyncTargetRef = useRef<string | null>(null);
   const suppressUnsavedTrackingRef = useRef(false);
 
   // Use a ref to track if an import is currently in progress
@@ -1457,9 +1458,25 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
 
   useEffect(() => {
     if (editorMode !== 'markdown') return;
-    setMarkdownText(serializeTopicsToMarkdown(formData.topics as any));
+    const serialized = serializeTopicsToMarkdown(formData.topics as any);
+    markdownSyncTargetRef.current = serialized;
+    setMarkdownText(serialized);
     closeMentionSuggestions();
   }, [editorMode, formData.topics]);
+
+  useEffect(() => {
+    if (editorMode !== 'markdown') return;
+
+    if (markdownSyncTargetRef.current !== null) {
+      if (markdownText === markdownSyncTargetRef.current) {
+        markdownSyncTargetRef.current = null;
+        return;
+      }
+      markdownSyncTargetRef.current = null;
+    }
+
+    setHasUnsavedChanges(true);
+  }, [editorMode, markdownText]);
 
   const mentionCandidates = useMemo(() => {
     const seen = new Set<string>();
@@ -1557,9 +1574,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
       });
     });
 
-    if (importedIds.size > 0) {
-      importedTaskIdsRef.current = importedIds;
-    }
+    importedTaskIdsRef.current = importedIds;
   }, [formData.topics]); // Re-run when topics change
 
   // Warn on page leave if unsaved changes
