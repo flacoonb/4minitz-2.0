@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import mongoose from 'mongoose';
 import connectDB from '@/lib/mongodb';
 import Task from '@/models/Task';
 import Minutes from '@/models/Minutes';
@@ -31,8 +32,30 @@ export async function PATCH(
     }
 
     const { id: taskId } = await context.params;
+    if (!mongoose.isValidObjectId(taskId)) {
+      return NextResponse.json({ error: 'Invalid task ID' }, { status: 400 });
+    }
+
     const userId = authResult.user._id.toString();
-    const username = authResult.user.username;
+    const username = String(authResult.user.username || '').trim();
+    const rawEmail = String((authResult.user as any).email || '').trim();
+    const userEmail = rawEmail.toLowerCase();
+    const responsibleCandidates = Array.from(
+      new Set([userId, username, rawEmail, userEmail].filter(Boolean))
+    );
+    const normalizedCandidateSet = new Set(responsibleCandidates.map((value) => value.toLowerCase()));
+    const matchesResponsible = (responsibles: unknown[] | undefined): boolean => {
+      if (!Array.isArray(responsibles)) return false;
+      return responsibles.some((responsible) => {
+        const value = String(responsible || '').trim();
+        if (!value) return false;
+        return (
+          responsibleCandidates.includes(value) ||
+          normalizedCandidateSet.has(value.toLowerCase())
+        );
+      });
+    };
+
     const isAdmin = authResult.user.role === 'admin';
     const canModerateAllMeetings = await hasPermission(authResult.user, 'canModerateAllMeetings');
     const body = await request.json();
@@ -47,12 +70,7 @@ export async function PATCH(
     const task = await Task.findById(taskId);
 
     if (task) {
-      const isResponsible = Array.isArray(task.responsibles)
-        ? task.responsibles.some((responsible: string) => {
-            const value = String(responsible);
-            return value === userId || value === username;
-          })
-        : false;
+      const isResponsible = matchesResponsible(task.responsibles as unknown[] | undefined);
 
       let isSeriesModerator = false;
       if (task.meetingSeriesId) {
@@ -126,12 +144,7 @@ export async function PATCH(
     for (const topic of minute.topics) {
       const item = topic.infoItems?.find((i: any) => i._id?.toString() === taskId);
       if (item) {
-        const isResponsible = Array.isArray(item.responsibles)
-          ? item.responsibles.some((responsible: string) => {
-              const value = String(responsible);
-              return value === userId || value === username;
-            })
-          : false;
+        const isResponsible = matchesResponsible(item.responsibles as unknown[] | undefined);
 
         if (!isAdmin && !canModerateAllMeetings && !isSeriesModerator && !isResponsible) {
           return NextResponse.json({ error: 'Forbidden' }, { status: 403 });

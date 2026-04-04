@@ -23,7 +23,12 @@ export async function GET(request: NextRequest) {
     }
 
     const userId = authResult.user._id.toString();
-    const username = authResult.user.username;
+    const username = String(authResult.user.username || '').trim();
+    const rawEmail = String((authResult.user as any).email || '').trim();
+    const userEmail = rawEmail.toLowerCase();
+    const responsibleCandidates = Array.from(
+      new Set([userId, username, rawEmail, userEmail].filter(Boolean))
+    );
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status'); // open, in-progress, completed, cancelled
     const priority = searchParams.get('priority'); // high, medium, low
@@ -31,7 +36,7 @@ export async function GET(request: NextRequest) {
 
     // Build query
     const query: any = {
-      responsibles: { $in: [userId, username] }
+      responsibles: { $in: responsibleCandidates }
     };
 
     const validStatuses = ['open', 'in-progress', 'completed', 'cancelled'];

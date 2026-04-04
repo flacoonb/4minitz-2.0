@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
+import mongoose from 'mongoose';
 import connectDB from '@/lib/mongodb';
 import Task from '@/models/Task';
 import Minutes from '@/models/Minutes';
+import MeetingSeries from '@/models/MeetingSeries';
 import { verifyToken } from '@/lib/auth';
+import { hasPermission } from '@/lib/permissions';
 
 /**
  * PATCH /api/tasks/update/[minutesId]/[topicId]/[itemId]
@@ -26,6 +29,14 @@ export async function PATCH(
 
     // Await params (Next.js 15+)
     const { minutesId, topicId, itemId } = await params;
+    if (
+      !mongoose.isValidObjectId(minutesId) ||
+      !mongoose.isValidObjectId(topicId) ||
+      !mongoose.isValidObjectId(itemId)
+    ) {
+      return NextResponse.json({ error: 'Invalid route parameters' }, { status: 400 });
+    }
+
     const body = await request.json();
     const { status, notes } = body;
 
@@ -69,12 +80,41 @@ export async function PATCH(
       );
     }
 
-    // Check if user is assigned to this task
     const userId = authResult.user._id.toString();
-    const username = authResult.user.username;
-    if (!item.responsibles?.includes(userId) && !item.responsibles?.includes(username)) {
+    const username = String(authResult.user.username || '').trim();
+    const rawEmail = String((authResult.user as any).email || '').trim();
+    const userEmail = rawEmail.toLowerCase();
+    const responsibleCandidates = Array.from(
+      new Set([userId, username, rawEmail, userEmail].filter(Boolean))
+    );
+    const normalizedCandidateSet = new Set(responsibleCandidates.map((value) => value.toLowerCase()));
+    const isResponsible = Array.isArray(item.responsibles)
+      ? item.responsibles.some((responsible: unknown) => {
+          const value = String(responsible || '').trim();
+          if (!value) return false;
+          return (
+            responsibleCandidates.includes(value) ||
+            normalizedCandidateSet.has(value.toLowerCase())
+          );
+        })
+      : false;
+    const isAdmin = authResult.user.role === 'admin';
+    const canModerateAllMeetings = await hasPermission(authResult.user, 'canModerateAllMeetings');
+    let isSeriesModerator = false;
+    if ((minutes as any).meetingSeries_id) {
+      const series = await MeetingSeries.findById((minutes as any).meetingSeries_id)
+        .select('moderators')
+        .lean();
+      isSeriesModerator = Boolean(
+        series &&
+          Array.isArray((series as any).moderators) &&
+          ((series as any).moderators.includes(userId) || (series as any).moderators.includes(username))
+      );
+    }
+
+    if (!isAdmin && !canModerateAllMeetings && !isSeriesModerator && !isResponsible) {
       return NextResponse.json(
-        { error: 'You are not assigned to this task' },
+        { error: 'Forbidden' },
         { status: 403 }
       );
     }

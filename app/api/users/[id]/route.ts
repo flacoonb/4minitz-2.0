@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import mongoose from 'mongoose';
 import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
 import MeetingSeries from '@/models/MeetingSeries';
@@ -27,6 +28,12 @@ export async function GET(
     }
 
     const { id } = await params;
+    if (!mongoose.isValidObjectId(id)) {
+      return NextResponse.json(
+        { error: 'Ungültige Benutzer-ID' },
+        { status: 400 }
+      );
+    }
 
     // Users can view their own profile, admins can view any profile
     if (authResult.user!._id.toString() !== id) {
@@ -78,6 +85,12 @@ export async function PUT(
     }
 
     const { id } = await params;
+    if (!mongoose.isValidObjectId(id)) {
+      return NextResponse.json(
+        { error: 'Ungültige Benutzer-ID' },
+        { status: 400 }
+      );
+    }
     const body = await request.json();
 
     // Users can edit their own profile, admins can edit any profile
@@ -354,6 +367,12 @@ export async function DELETE(
     }
 
     const { id } = await params;
+    if (!mongoose.isValidObjectId(id)) {
+      return NextResponse.json(
+        { error: 'Ungültige Benutzer-ID' },
+        { status: 400 }
+      );
+    }
 
     // Prevent self-deletion
     if (authResult.user!._id.toString() === id) {

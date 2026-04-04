@@ -2,24 +2,15 @@ import { NextRequest, NextResponse } from 'next/server';
 import { readFile } from 'fs/promises';
 import path from 'path';
 import { existsSync } from 'fs';
-import { verifyToken } from '@/lib/auth';
 import { safePath } from '@/lib/file-security';
 
 const ALLOWED_EXTENSIONS = new Set(['.jpg', '.jpeg', '.png', '.gif', '.webp']);
 
 export async function GET(
-  request: NextRequest,
+  _request: NextRequest,
   { params }: { params: Promise<{ filename: string }> }
 ) {
   try {
-    const authResult = await verifyToken(request);
-    if (!authResult.success || !authResult.user) {
-      return NextResponse.json(
-        { error: authResult.error || 'Unauthorized' },
-        { status: 401 }
-      );
-    }
-
     const { filename } = await params;
     const ext = path.extname(filename).toLowerCase();
     if (!ALLOWED_EXTENSIONS.has(ext)) {

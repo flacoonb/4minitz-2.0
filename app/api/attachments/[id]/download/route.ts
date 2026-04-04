@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
+import mongoose from 'mongoose';
 import { readFile } from 'fs/promises';
 import path from 'path';
 import connectDB from '@/lib/mongodb';
@@ -29,6 +30,10 @@ export async function GET(
     await connectDB();
 
     const { id } = await params;
+    if (!mongoose.isValidObjectId(id)) {
+      return NextResponse.json({ error: 'Invalid attachment ID' }, { status: 400 });
+    }
+
     const attachment = await Attachment.findById(id);
     if (!attachment) {
       return NextResponse.json(
