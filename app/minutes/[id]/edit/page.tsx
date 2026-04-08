@@ -582,6 +582,7 @@ function SortableInfoItem({
             onDelete={triggerAttachmentRefresh}
             refreshKey={attachmentsRefreshToken}
             limit={50}
+            hideWhenEmpty
           />
         </>
       )}
