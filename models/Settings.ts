@@ -5,6 +5,9 @@ export interface RolePermissions {
   canModerateAllMeetings: boolean;
   canViewAllMeetings: boolean;
   canViewAllMinutes: boolean;
+  canViewAllDocuments: boolean;
+  canUploadDocuments: boolean;
+  canDeleteAllDocuments: boolean;
   canEditAllMinutes: boolean;
   canDeleteMinutes: boolean;
   canManageUsers: boolean;
@@ -104,6 +107,9 @@ const RolePermissionsSchema = new Schema({
   canModerateAllMeetings: { type: Boolean, default: false },
   canViewAllMeetings: { type: Boolean, default: false },
   canViewAllMinutes: { type: Boolean, default: false },
+  canViewAllDocuments: { type: Boolean, default: false },
+  canUploadDocuments: { type: Boolean, default: false },
+  canDeleteAllDocuments: { type: Boolean, default: false },
   canEditAllMinutes: { type: Boolean, default: false },
   canDeleteMinutes: { type: Boolean, default: false },
   canManageUsers: { type: Boolean, default: false },
@@ -183,7 +189,10 @@ const SettingsSchema = new Schema<ISettings>({
       minutes: { type: Number, default: 480 }
     },
     maxFileUploadSize: { type: Number, default: 10 },
-    allowedFileTypes: { type: [String], default: ['pdf', 'doc', 'docx', 'jpg', 'png'] },
+    allowedFileTypes: {
+      type: [String],
+      default: ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt', 'jpg', 'jpeg', 'png', 'gif', 'webp'],
+    },
     baseUrl: { type: String }
   },
   smtpSettings: {

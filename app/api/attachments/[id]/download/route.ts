@@ -6,6 +6,7 @@ import connectDB from '@/lib/mongodb';
 import Attachment from '@/models/Attachment';
 import Minutes from '@/models/Minutes';
 import { verifyToken } from '@/lib/auth';
+import { hasPermission } from '@/lib/permissions';
 import { safePath } from '@/lib/file-security';
 
 const UPLOAD_DIR = path.join(process.cwd(), 'uploads');
@@ -42,7 +43,10 @@ export async function GET(
       );
     }
 
-    // Verify user has access to the minute's meeting series
+    const canViewAllMinutes = await hasPermission(authResult.user, 'canViewAllMinutes');
+    const canViewAllDocuments = await hasPermission(authResult.user, 'canViewAllDocuments');
+
+    // Verify user has access to the minute's meeting series / minute.
     const minute = await Minutes.findById(attachment.minuteId).populate('meetingSeries_id');
     if (!minute) {
       return NextResponse.json({ error: 'Attachment not found' }, { status: 404 });
@@ -51,7 +55,11 @@ export async function GET(
     const username = authResult.user.username;
     const userId = authResult.user._id.toString();
     const series = minute.meetingSeries_id as any;
+    const minuteVisibleFor = Array.isArray((minute as any)?.visibleFor) ? (minute as any).visibleFor : [];
+    const minuteParticipants = Array.isArray((minute as any)?.participants) ? (minute as any).participants : [];
     const hasAccess =
+      canViewAllDocuments ||
+      canViewAllMinutes ||
       authResult.user.role === 'admin' ||
       series?.visibleFor?.includes(username) ||
       series?.visibleFor?.includes(userId) ||
@@ -59,6 +67,10 @@ export async function GET(
       series?.moderators?.includes(userId) ||
       series?.participants?.includes(username) ||
       series?.participants?.includes(userId) ||
+      minuteVisibleFor.includes(username) ||
+      minuteVisibleFor.includes(userId) ||
+      minuteParticipants.includes(username) ||
+      minuteParticipants.includes(userId) ||
       (Array.isArray(series?.members) && series.members.some((member: any) => member?.userId === userId));
 
     if (!hasAccess) {
@@ -85,7 +97,8 @@ export async function GET(
         'X-Content-Type-Options': 'nosniff',
       },
     });
-  } catch {
+  } catch (error) {
+    console.error('GET /api/attachments/[id]/download failed:', error);
     return NextResponse.json(
       { error: 'Failed to download attachment' },
       { status: 500 }

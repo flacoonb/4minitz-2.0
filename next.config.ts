@@ -15,6 +15,9 @@ const nextConfig: NextConfig = {
     serverActions: {
       bodySizeLimit: '2mb',
     },
+    // Uploads that pass through proxy.ts (/api matcher) would otherwise be truncated at 10MB.
+    // Keep this above common document sizes; API-level limits are still enforced in /api/attachments.
+    proxyClientMaxBodySize: '50mb',
   },
   async headers() {
     // CSP: HTML from proxy.ts (nonces). See SECURITY.md / docs/CSP.md.

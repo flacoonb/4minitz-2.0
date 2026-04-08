@@ -28,6 +28,9 @@ import {
   serializeTopicsToMarkdown,
 } from '@/lib/minutesMarkdown';
 import { humanizeFunctionToken, parseFunctionToken } from '@/lib/club-function-client';
+import { useAuth } from '@/contexts/AuthContext';
+import AttachmentUpload from '@/components/AttachmentUpload';
+import AttachmentList from '@/components/AttachmentList';
 
 const MAX_ENTRY_DURATION_MINUTES = 1440;
 
@@ -66,9 +69,13 @@ interface SortableTopicProps {
   id: string;
   topicIndex: number;
   topic: Topic;
+  minuteId: string | null;
   meetingSeriesMembers: Member[];
   clubFunctions: ClubFunctionEntry[];
   allUsers: User[];
+  canUploadDocuments: boolean;
+  attachmentsRefreshToken: number;
+  triggerAttachmentRefresh: () => void;
   updateTopic: (index: number, field: keyof Topic, value: any) => void;
   deleteTopic: (index: number) => void;
   addInfoItem: (index: number) => void;
@@ -84,9 +91,13 @@ function SortableTopic({
   id,
   topicIndex,
   topic,
+  minuteId,
   meetingSeriesMembers,
   clubFunctions,
   allUsers,
+  canUploadDocuments,
+  attachmentsRefreshToken,
+  triggerAttachmentRefresh,
   updateTopic,
   deleteTopic,
   addInfoItem,
@@ -168,10 +179,15 @@ function SortableTopic({
       {/* Info Items with Drag & Drop */}
       <SortableInfoItems
         topicIndex={topicIndex}
+        topicId={topic._id}
+        minuteId={minuteId}
         infoItems={topic.infoItems || []}
         meetingSeriesMembers={meetingSeriesMembers}
         clubFunctions={clubFunctions}
         allUsers={allUsers}
+        canUploadDocuments={canUploadDocuments}
+        attachmentsRefreshToken={attachmentsRefreshToken}
+        triggerAttachmentRefresh={triggerAttachmentRefresh}
         addInfoItem={addInfoItem}
         updateInfoItem={updateInfoItem}
         deleteInfoItem={deleteInfoItem}
@@ -186,10 +202,15 @@ function SortableTopic({
 
 interface SortableInfoItemsProps {
   topicIndex: number;
+  topicId?: string;
+  minuteId: string | null;
   infoItems: InfoItem[];
   meetingSeriesMembers: Member[];
   clubFunctions: ClubFunctionEntry[];
   allUsers: User[];
+  canUploadDocuments: boolean;
+  attachmentsRefreshToken: number;
+  triggerAttachmentRefresh: () => void;
   addInfoItem: (index: number) => void;
   updateInfoItem: (topicIndex: number, itemIndex: number, field: keyof InfoItem, value: any) => void;
   deleteInfoItem: (topicIndex: number, itemIndex: number) => void;
@@ -201,10 +222,15 @@ interface SortableInfoItemsProps {
 
 function SortableInfoItems({
   topicIndex,
+  topicId,
+  minuteId,
   infoItems,
   meetingSeriesMembers,
   clubFunctions,
   allUsers,
+  canUploadDocuments,
+  attachmentsRefreshToken,
+  triggerAttachmentRefresh,
   addInfoItem,
   updateInfoItem,
   deleteInfoItem,
@@ -260,9 +286,14 @@ function SortableInfoItems({
                 topicIndex={topicIndex}
                 itemIndex={itemIndex}
                 item={item}
+                topicId={topicId}
+                minuteId={minuteId}
                 meetingSeriesMembers={meetingSeriesMembers}
                 clubFunctions={clubFunctions}
                 allUsers={allUsers}
+                canUploadDocuments={canUploadDocuments}
+                attachmentsRefreshToken={attachmentsRefreshToken}
+                triggerAttachmentRefresh={triggerAttachmentRefresh}
                 updateInfoItem={updateInfoItem}
                 deleteInfoItem={deleteInfoItem}
                 agendaItemLabelMode={agendaItemLabelMode}
@@ -299,9 +330,14 @@ interface SortableInfoItemProps {
   topicIndex: number;
   itemIndex: number;
   item: InfoItem;
+  topicId?: string;
+  minuteId: string | null;
   meetingSeriesMembers: Member[];
   clubFunctions: ClubFunctionEntry[];
   allUsers: User[];
+  canUploadDocuments: boolean;
+  attachmentsRefreshToken: number;
+  triggerAttachmentRefresh: () => void;
   updateInfoItem: (topicIndex: number, itemIndex: number, field: keyof InfoItem, value: any) => void;
   deleteInfoItem: (topicIndex: number, itemIndex: number) => void;
   agendaItemLabelMode: 'manual' | 'topic-alpha';
@@ -314,9 +350,14 @@ function SortableInfoItem({
   topicIndex,
   itemIndex,
   item,
+  topicId,
+  minuteId,
   meetingSeriesMembers,
   clubFunctions,
   allUsers,
+  canUploadDocuments,
+  attachmentsRefreshToken,
+  triggerAttachmentRefresh,
   updateInfoItem,
   deleteInfoItem,
   agendaItemLabelMode,
@@ -324,6 +365,7 @@ function SortableInfoItem({
   isSavingMinute,
 }: SortableInfoItemProps) {
   const t = useTranslations('minutes');
+  const tAttachments = useTranslations('attachments');
   const tCommon = useTranslations('common');
   const locale = useLocale();
   const [isEditing, setIsEditing] = React.useState(!item.subject); // Auto-edit if new (no subject)
@@ -497,6 +539,55 @@ function SortableInfoItem({
     return badges[item.priority || 'medium'];
   };
 
+  const hasAttachmentBinding = Boolean(minuteId && topicId && item._id);
+  const canUploadForItem = hasAttachmentBinding && canUploadDocuments;
+
+  const renderAttachmentSection = () => (
+    <div className="mt-3 bg-white/70 backdrop-blur-sm p-3 rounded-lg border border-white/50">
+      <label className="block text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">
+        📎 {tAttachments('title')}
+      </label>
+
+      {!hasAttachmentBinding ? (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-900 space-y-2">
+          <p>{t('attachmentsSaveItemFirst')}</p>
+          <button
+            type="button"
+            onClick={() => { void saveMinuteInPlace(); }}
+            disabled={isSavingMinute}
+            className="inline-flex items-center justify-center gap-2 min-h-10 px-3 py-2 rounded-lg bg-amber-500 text-white font-semibold hover:bg-amber-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {isSavingMinute ? t('saving') : t('saveItemButton')}
+          </button>
+        </div>
+      ) : (
+        <>
+          {canUploadForItem ? (
+            <div className="mb-3">
+              <AttachmentUpload
+                minuteId={minuteId!}
+                topicId={topicId}
+                infoItemId={item._id}
+                onUploadComplete={triggerAttachmentRefresh}
+              />
+            </div>
+          ) : (
+            <p className="text-xs text-gray-600 mb-2">{t('attachmentsNoUploadPermission')}</p>
+          )}
+
+          <AttachmentList
+            minuteId={minuteId!}
+            topicId={topicId}
+            infoItemId={item._id}
+            onDelete={triggerAttachmentRefresh}
+            refreshKey={attachmentsRefreshToken}
+            limit={50}
+          />
+        </>
+      )}
+    </div>
+  );
+
   // Compact view when not editing
   if (!isEditing) {
     const statusBadge = getStatusBadge();
@@ -643,6 +734,8 @@ function SortableInfoItem({
                   </div>
                 </div>
               )}
+
+              {renderAttachmentSection()}
             </div>
           </div>
 
@@ -1140,6 +1233,8 @@ function SortableInfoItem({
           />
         </div>
 
+        {renderAttachmentSection()}
+
         {/* Save Button at the bottom */}
         <div className="flex justify-center pt-4 border-t border-white/30">
           <button
@@ -1169,6 +1264,7 @@ function SortableInfoItem({
 }
 
 interface InfoItem {
+  _id?: string;
   subject: string;
   details?: string;
   itemType: 'actionItem' | 'infoItem';
@@ -1189,6 +1285,7 @@ interface InfoItem {
 }
 
 interface Topic {
+  _id?: string;
   subject: string;
   responsibles?: string[];
   infoItems?: InfoItem[];
@@ -1303,6 +1400,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
   const tNav = useTranslations('nav');
   const locale = useLocale();
   const router = useRouter();
+  const { hasPermission, refreshUser } = useAuth();
   const [minute, setMinute] = useState<Minute | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -1340,10 +1438,16 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
   const [mentionCaretIndex, setMentionCaretIndex] = useState<number | null>(null);
   const [selectedMentionIndex, setSelectedMentionIndex] = useState(0);
   const [mentionMenuPosition, setMentionMenuPosition] = useState<{ top: number; left: number } | null>(null);
+  const [attachmentsRefreshToken, setAttachmentsRefreshToken] = useState(0);
   const [confirmDialog, setConfirmDialog] = useState<{
     message: string;
     onConfirm: () => void;
   } | null>(null);
+
+  const canUploadDocuments = hasPermission('canUploadDocuments');
+  const triggerAttachmentRefresh = useCallback(() => {
+    setAttachmentsRefreshToken((prev) => prev + 1);
+  }, []);
 
   // Use a ref to track imported task IDs to prevent duplicates
   const importedTaskIdsRef = useRef<Set<string>>(new Set());
@@ -1492,6 +1596,10 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
       loadData();
     }
   }, [minuteId, t]);
+
+  useEffect(() => {
+    void refreshUser();
+  }, [refreshUser]);
 
   useEffect(() => {
     const loadPublicSettings = async () => {
@@ -1964,6 +2072,22 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
         const result = await response.json();
 
         if (response.ok) {
+          const savedMinute = result?.data;
+          if (savedMinute) {
+            setMinute(savedMinute);
+            suppressUnsavedTrackingRef.current = true;
+            setFormData({
+              date: savedMinute.date?.split('T')[0] || '',
+              time: savedMinute.time || '',
+              endTime: savedMinute.endTime || '',
+              location: savedMinute.location || '',
+              title: savedMinute.title || '',
+              participants: savedMinute.participants || [],
+              participantsWithStatus: savedMinute.participantsWithStatus || [],
+              topics: savedMinute.topics || [],
+              globalNote: savedMinute.globalNote || '',
+            });
+          }
           setHasUnsavedChanges(false);
           if (redirectOnSuccess) {
             router.push(`/minutes/${minuteId}`);
@@ -2614,9 +2738,13 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
                         id={`topic-${topicIndex}`}
                         topicIndex={topicIndex}
                         topic={topic}
+                        minuteId={minuteId}
                         meetingSeriesMembers={meetingSeriesMembers}
                         clubFunctions={clubFunctions}
                         allUsers={allUsers}
+                        canUploadDocuments={canUploadDocuments}
+                        attachmentsRefreshToken={attachmentsRefreshToken}
+                        triggerAttachmentRefresh={triggerAttachmentRefresh}
                         updateTopic={updateTopic}
                         deleteTopic={deleteTopic}
                         addInfoItem={addInfoItem}

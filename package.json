@@ -16,6 +16,7 @@
     "clean": "rm -rf .next",
     "rebuild": "rm -rf .next && next build",
     "sample-data": "tsx scripts/sample-data.ts",
+    "attachments:backfill-tags": "tsx scripts/backfill-attachment-tags.ts",
     "migrate-identifiers": "tsx scripts/migrate-identifiers-to-user-ids.ts",
     "create-demo-user": "tsx scripts/create-demo-user.ts",
     "create-user": "tsx scripts/create-user.ts",

@@ -91,6 +91,132 @@ function collectInactiveFunctionIdsFromMinute(minute: any): string[] {
   return Array.from(ids);
 }
 
+function normalizeComparableText(value: unknown): string {
+  return String(value || '').replace(/\s+/g, ' ').trim().toLowerCase();
+}
+
+function normalizeComparableDate(value: unknown): string {
+  if (!value) return '';
+  const date = new Date(String(value));
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toISOString().slice(0, 10);
+}
+
+function buildComparableItemKey(item: any): string {
+  const type = String(item?.itemType || '').trim().toLowerCase();
+  const subject = normalizeComparableText(item?.subject);
+  const due = normalizeComparableDate(item?.dueDate);
+  return `${type}|${subject}|${due}`;
+}
+
+function reconcileTopicAndItemIds(incomingTopics: any[], previousTopics: any[]): any[] {
+  const usedTopicIds = new Set<string>();
+  const previousBySubject = new Map<string, any[]>();
+
+  for (const previousTopic of previousTopics) {
+    const key = normalizeComparableText(previousTopic?.subject);
+    if (!key) continue;
+    const existing = previousBySubject.get(key) || [];
+    existing.push(previousTopic);
+    previousBySubject.set(key, existing);
+  }
+
+  return incomingTopics.map((incomingTopic: any, topicIndex: number) => {
+    const incomingTopicId = String(incomingTopic?._id || '').trim();
+    let matchedTopic: any | null = null;
+
+    if (incomingTopicId) {
+      matchedTopic = previousTopics.find((topic: any) => String(topic?._id || '') === incomingTopicId) || null;
+    }
+
+    if (!matchedTopic) {
+      const previousByIndex = previousTopics[topicIndex];
+      if (
+        previousByIndex &&
+        normalizeComparableText(previousByIndex?.subject) === normalizeComparableText(incomingTopic?.subject)
+      ) {
+        matchedTopic = previousByIndex;
+      }
+    }
+
+    if (!matchedTopic) {
+      const key = normalizeComparableText(incomingTopic?.subject);
+      const candidates = (previousBySubject.get(key) || []).filter((topic: any) => {
+        const id = String(topic?._id || '').trim();
+        return id ? !usedTopicIds.has(id) : true;
+      });
+      if (candidates.length > 0) {
+        matchedTopic = candidates[0];
+      }
+    }
+
+    const matchedTopicId = String(matchedTopic?._id || '').trim();
+    if (matchedTopicId) {
+      usedTopicIds.add(matchedTopicId);
+    }
+
+    const previousItems = Array.isArray(matchedTopic?.infoItems) ? matchedTopic.infoItems : [];
+    const incomingItems = Array.isArray(incomingTopic?.infoItems) ? incomingTopic.infoItems : [];
+    const usedItemIds = new Set<string>();
+    const previousItemsByKey = new Map<string, any[]>();
+
+    for (const previousItem of previousItems) {
+      const key = buildComparableItemKey(previousItem);
+      const existing = previousItemsByKey.get(key) || [];
+      existing.push(previousItem);
+      previousItemsByKey.set(key, existing);
+    }
+
+    const reconciledItems = incomingItems.map((incomingItem: any, itemIndex: number) => {
+      const incomingItemId = String(incomingItem?._id || '').trim();
+      let matchedItem: any | null = null;
+
+      if (incomingItemId) {
+        matchedItem = previousItems.find((item: any) => String(item?._id || '') === incomingItemId) || null;
+      }
+
+      if (!matchedItem) {
+        const previousByIndex = previousItems[itemIndex];
+        if (
+          previousByIndex &&
+          String(previousByIndex?.itemType || '') === String(incomingItem?.itemType || '') &&
+          normalizeComparableText(previousByIndex?.subject) === normalizeComparableText(incomingItem?.subject)
+        ) {
+          matchedItem = previousByIndex;
+        }
+      }
+
+      if (!matchedItem) {
+        const key = buildComparableItemKey(incomingItem);
+        const candidates = (previousItemsByKey.get(key) || []).filter((item: any) => {
+          const id = String(item?._id || '').trim();
+          return id ? !usedItemIds.has(id) : true;
+        });
+        if (candidates.length > 0) {
+          matchedItem = candidates[0];
+        }
+      }
+
+      const matchedItemId = String(matchedItem?._id || '').trim();
+      if (matchedItemId) {
+        usedItemIds.add(matchedItemId);
+      }
+
+      return {
+        ...incomingItem,
+        _id: incomingItemId || matchedItemId || undefined,
+        externalTaskId: incomingItem?.externalTaskId || matchedItem?.externalTaskId || undefined,
+      };
+    });
+
+    return {
+      ...incomingTopic,
+      _id: incomingTopicId || matchedTopicId || undefined,
+      infoItems: reconciledItems,
+    };
+  });
+}
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
@@ -310,7 +436,18 @@ export async function PUT(
       return result;
     };
 
-    const topicsToPersistRaw = Array.isArray(body.topics)
+    const previousActionTaskIds = new Set<string>();
+    const previousTopics = Array.isArray(minute.topics) ? minute.topics : [];
+    for (const topic of previousTopics as any[]) {
+      const items = Array.isArray(topic?.infoItems) ? topic.infoItems : [];
+      for (const item of items) {
+        if (item?.itemType === 'actionItem' && item?.externalTaskId) {
+          previousActionTaskIds.add(String(item.externalTaskId));
+        }
+      }
+    }
+
+    const incomingTopicsRaw = Array.isArray(body.topics)
       ? body.topics.map((topic: any, topicIndex: number) => ({
           ...topic,
           infoItems: Array.isArray(topic.infoItems)
@@ -325,20 +462,13 @@ export async function PUT(
         }))
       : body.topics;
 
-    const previousActionTaskIds = new Set<string>();
-    const previousTopics = Array.isArray(minute.topics) ? minute.topics : [];
-    for (const topic of previousTopics as any[]) {
-      const items = Array.isArray(topic?.infoItems) ? topic.infoItems : [];
-      for (const item of items) {
-        if (item?.itemType === 'actionItem' && item?.externalTaskId) {
-          previousActionTaskIds.add(String(item.externalTaskId));
-        }
-      }
-    }
+    const topicsWithReconciledIds = Array.isArray(incomingTopicsRaw)
+      ? reconcileTopicAndItemIds(incomingTopicsRaw, previousTopics as any[])
+      : incomingTopicsRaw;
 
-    let topicsToPersist = topicsToPersistRaw;
-    const topicResponsibles = Array.isArray(topicsToPersistRaw)
-      ? extractResponsibleValuesFromTopics(topicsToPersistRaw)
+    let topicsToPersist = topicsWithReconciledIds;
+    const topicResponsibles = Array.isArray(topicsWithReconciledIds)
+      ? extractResponsibleValuesFromTopics(topicsWithReconciledIds)
       : [];
     const functionSlugs = topicResponsibles
       .filter((value) => value.startsWith('function:'))
@@ -347,9 +477,9 @@ export async function PUT(
       .select('slug assignedUserId')
       .lean();
     const assignmentMap = buildFunctionAssignmentMap(assignedFunctions as any[]);
-    if (Array.isArray(topicsToPersistRaw)) {
+    if (Array.isArray(topicsWithReconciledIds)) {
       const validation = await validateFunctionResponsibles(
-        extractResponsibleValuesFromTopics(topicsToPersistRaw),
+        extractResponsibleValuesFromTopics(topicsWithReconciledIds),
         { allowInactiveIds: collectInactiveFunctionIdsFromMinute(minute) }
       );
       if (!validation.valid) {
@@ -359,7 +489,7 @@ export async function PUT(
         );
       }
       const assignmentValidation = validateAssignmentsForResponsibles(
-        extractResponsibleValuesFromTopics(topicsToPersistRaw),
+        extractResponsibleValuesFromTopics(topicsWithReconciledIds),
         assignmentMap
       );
       if (!assignmentValidation.valid) {
@@ -377,7 +507,7 @@ export async function PUT(
             .lean()
         : [];
       topicsToPersist = await applyResponsibleSnapshotsToTopics(
-        topicsToPersistRaw,
+        topicsWithReconciledIds,
         assignmentUsers as any[]
       );
     }

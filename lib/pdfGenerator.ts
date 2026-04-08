@@ -1,12 +1,15 @@
 import { IPdfLayoutSettings } from '@/models/PdfLayoutSettings';
 
-type JsPdfCtor = new () => any;
+type JsPdfCtor = new (options?: Record<string, unknown>) => any;
 
 async function createJsPdfDocument(): Promise<any> {
   // Force browser bundle resolution to avoid server-side node.cjs paths during build.
   const jsPdfModule = (await import('jspdf/dist/jspdf.es.min.js')) as { default: JsPdfCtor };
   const JsPdf = jsPdfModule.default;
-  return new JsPdf();
+  return new JsPdf({
+    compress: true,
+    putOnlyUsedFonts: true,
+  });
 }
 
 interface PdfSettings {
@@ -91,6 +94,72 @@ interface Minute {
     reopenedBy: string;
     reason: string;
   }>;
+}
+
+type PdfImageFormat = 'PNG' | 'JPEG';
+
+function inferPdfImageFormatFromUrl(url: string): PdfImageFormat {
+  const normalized = String(url || '').toLowerCase();
+  if (/\.(jpe?g)(?:$|[?#])/.test(normalized)) {
+    return 'JPEG';
+  }
+  return 'PNG';
+}
+
+function mmToPx(mm: number, dpi: number): number {
+  return Math.max(1, Math.round((Math.max(0, mm) / 25.4) * dpi));
+}
+
+function buildOptimizedLogoData(
+  img: HTMLImageElement,
+  logoWidthMm: number,
+  logoHeightMm: number,
+  preferredFormat: PdfImageFormat
+): { data: string | HTMLImageElement; format: PdfImageFormat } {
+  if (typeof document === 'undefined') {
+    return { data: img, format: preferredFormat };
+  }
+
+  try {
+    // Use enough pixels for print quality while avoiding oversized binary payloads.
+    const dpi = preferredFormat === 'JPEG' ? 220 : 180;
+    const maxEdgePx = preferredFormat === 'JPEG' ? 1600 : 1400;
+    const targetWidth = Math.min(maxEdgePx, Math.max(96, mmToPx(logoWidthMm, dpi)));
+    const targetHeight = Math.min(maxEdgePx, Math.max(48, mmToPx(logoHeightMm, dpi)));
+
+    const canvas = document.createElement('canvas');
+    canvas.width = targetWidth;
+    canvas.height = targetHeight;
+
+    const ctx = canvas.getContext('2d', { alpha: preferredFormat === 'PNG' });
+    if (!ctx) {
+      return { data: img, format: preferredFormat };
+    }
+
+    if (preferredFormat === 'JPEG') {
+      // JPEG has no alpha channel; keep visual result predictable for transparent logos.
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, targetWidth, targetHeight);
+    }
+
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = 'high';
+    ctx.drawImage(img, 0, 0, targetWidth, targetHeight);
+
+    if (preferredFormat === 'JPEG') {
+      return {
+        data: canvas.toDataURL('image/jpeg', 0.82),
+        format: 'JPEG',
+      };
+    }
+
+    return {
+      data: canvas.toDataURL('image/png'),
+      format: 'PNG',
+    };
+  } catch {
+    return { data: img, format: preferredFormat };
+  }
 }
 
 // Helper to convert hex to RGB
@@ -775,7 +844,19 @@ export async function generateMinutePdf(
           logoX = marginLeft + leftSectionWidth - logoWidth - 5;
         }
 
-        doc.addImage(img, 'PNG', logoX, logoY, logoWidth, logoHeight);
+        const imageFormat = inferPdfImageFormatFromUrl(logoUrlToAdd);
+        const optimizedLogo = buildOptimizedLogoData(img, logoWidth, logoHeight, imageFormat);
+
+        doc.addImage(
+          optimizedLogo.data,
+          optimizedLogo.format,
+          logoX,
+          logoY,
+          logoWidth,
+          logoHeight,
+          'minute-logo',
+          'FAST'
+        );
       } catch (error) {
         console.warn('Could not add logo to PDF:', error);
       }

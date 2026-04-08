@@ -28,9 +28,13 @@ export async function GET(request: NextRequest) {
 
     // Fetch settings to get permissions
     const settings = await Settings.findOne({}).sort({ updatedAt: -1 });
-    const permissions = (settings && settings.roles && settings.roles[user.role])
+    const rolePermissions = (settings && settings.roles && settings.roles[user.role])
       ? settings.roles[user.role]
-      : getDefaultPermissions(user.role);
+      : null;
+    const permissions = {
+      ...getDefaultPermissions(user.role),
+      ...(rolePermissions || {}),
+    };
 
     // Include autoLogout settings for client-side inactivity detection
     const autoLogout = settings?.systemSettings?.autoLogout ?? { enabled: true, minutes: 480 };

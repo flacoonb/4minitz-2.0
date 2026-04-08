@@ -76,6 +76,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         'canModerateAllMeetings',
         'canViewAllMeetings',
         'canViewAllMinutes',
+        'canViewAllDocuments',
+        'canUploadDocuments',
+        'canDeleteAllDocuments',
         'canEditAllMinutes',
         'canDeleteMinutes',
         'canManageUsers',
@@ -89,11 +92,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       moderator: [
         'canCreateMeetings',
         'canViewAllMeetings',
+        'canUploadDocuments',
         'canExportData',
         'canManageSeriesTemplates',
         'canUseTemplates'
       ],
-      user: []
+      user: ['canUploadDocuments']
     };
 
     const userPermissions = defaultPermissions[user.role] || [];
@@ -101,7 +105,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   // Fetch current user
-  const fetchCurrentUser = async () => {
+  const fetchCurrentUser = useCallback(async () => {
     try {
       setLoading(true);
       const response = await fetch('/api/auth/me', {
@@ -127,12 +131,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   // Refresh user data
-  const refreshUser = async () => {
+  const refreshUser = useCallback(async () => {
     await fetchCurrentUser();
-  };
+  }, [fetchCurrentUser]);
 
   // Login function
   const login = async (email: string, password: string) => {
@@ -180,7 +184,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Initialize auth state
   useEffect(() => {
     fetchCurrentUser();
-  }, []);
+  }, [fetchCurrentUser]);
+
+  // Keep permissions in sync after admin settings changes (same browser session)
+  useEffect(() => {
+    const handleSettingsUpdated = () => {
+      void fetchCurrentUser();
+    };
+
+    window.addEventListener('settingsUpdated', handleSettingsUpdated);
+    return () => {
+      window.removeEventListener('settingsUpdated', handleSettingsUpdated);
+    };
+  }, [fetchCurrentUser]);
 
   // Reset inactivity timer on user activity
   const resetInactivityTimer = useCallback(() => {

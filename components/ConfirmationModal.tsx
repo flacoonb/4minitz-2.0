@@ -60,6 +60,7 @@ export default function ConfirmationModal({
         </div>
         <div className="px-6 py-4 flex justify-end gap-3" style={{ backgroundColor: 'var(--brand-surface-soft)' }}>
           <button
+            type="button"
             onClick={onClose}
             disabled={isProcessing}
             className="px-4 py-2 border rounded-lg hover:brightness-95 font-medium transition-all shadow-sm disabled:opacity-50"
@@ -68,6 +69,7 @@ export default function ConfirmationModal({
             {cancelText}
           </button>
           <button
+            type="button"
             onClick={onConfirm}
             disabled={isProcessing}
             className={`px-4 py-2 text-white rounded-lg font-medium transition-all shadow-sm flex items-center gap-2 disabled:opacity-50 ${color.button}`}

@@ -98,6 +98,7 @@ export default function Navigation() {
     { href: '/dashboard', label: t('dashboard'), icon: 'dashboard' },
     { href: '/meeting-series', label: t('meetingSeries'), icon: 'series' },
     { href: '/tasks', label: t('tasks'), icon: 'tasks' },
+    { href: '/documents', label: t('documents'), icon: 'documents' },
     ...(canAccessPlanning ? [{ href: '/planning', label: t('planning'), icon: 'planning' }] : []),
   ];
 

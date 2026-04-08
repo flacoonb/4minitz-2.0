@@ -10,6 +10,11 @@ export interface IAttachment extends mongoose.Document {
   minuteId: mongoose.Types.ObjectId;
   topicId?: mongoose.Types.ObjectId;
   infoItemId?: mongoose.Types.ObjectId;
+  tags?: string[];
+  minuteTitleSnapshot?: string;
+  topicSubjectSnapshot?: string;
+  infoItemSubjectSnapshot?: string;
+  meetingSeriesNameSnapshot?: string;
 }
 
 const AttachmentSchema = new mongoose.Schema<IAttachment>({
@@ -51,11 +56,38 @@ const AttachmentSchema = new mongoose.Schema<IAttachment>({
     type: mongoose.Schema.Types.ObjectId,
     required: false,
   },
+  tags: {
+    type: [String],
+    default: [],
+  },
+  minuteTitleSnapshot: {
+    type: String,
+    trim: true,
+    default: '',
+  },
+  topicSubjectSnapshot: {
+    type: String,
+    trim: true,
+    default: '',
+  },
+  infoItemSubjectSnapshot: {
+    type: String,
+    trim: true,
+    default: '',
+  },
+  meetingSeriesNameSnapshot: {
+    type: String,
+    trim: true,
+    default: '',
+  },
 });
 
 // Indexes for efficient queries
 AttachmentSchema.index({ minuteId: 1, uploadedAt: -1 });
+AttachmentSchema.index({ minuteId: 1, topicId: 1, uploadedAt: -1 });
+AttachmentSchema.index({ minuteId: 1, topicId: 1, infoItemId: 1, uploadedAt: -1 });
 AttachmentSchema.index({ uploadedBy: 1 });
+AttachmentSchema.index({ tags: 1 });
 
 // Virtual for file URL
 AttachmentSchema.virtual('url').get(function() {

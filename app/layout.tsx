@@ -49,6 +49,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   await connectDB();
   const settings = await Settings.findOne({}).sort({ updatedAt: -1 });
   const organizationName = settings?.systemSettings?.organizationName || 'Protokoll-APP';
+  const organizationLogo = settings?.systemSettings?.organizationLogo || undefined;
   const brandColors = sanitizeBrandColors(settings?.systemSettings?.brandColors);
   const brandCssVars = getBrandCssVars(brandColors);
   const brandCssBlock = brandVarsToCssBlock(brandCssVars);
@@ -77,7 +78,10 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   <header className="app-header-shell shadow-lg sticky top-0 z-50 transition-colors duration-300">
                     <div className="max-w-7xl mx-auto px-4 py-2 md:py-4">
                       <div className="flex justify-between items-center mb-2 md:mb-4">
-                        <Header />
+                        <Header
+                          initialOrganizationName={organizationName}
+                          initialOrganizationLogo={organizationLogo}
+                        />
                       </div>
                       <Navigation />
                     </div>

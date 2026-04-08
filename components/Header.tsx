@@ -9,17 +9,24 @@ interface SystemSettings {
   organizationLogo?: string;
 }
 
-export default function Header() {
+interface HeaderProps {
+  initialOrganizationName?: string;
+  initialOrganizationLogo?: string;
+}
+
+export default function Header({ initialOrganizationName, initialOrganizationLogo }: HeaderProps) {
   const [settings, setSettings] = useState<SystemSettings>({
-    organizationName: 'NXTMinutes'
+    organizationName: initialOrganizationName || 'NXTMinutes',
+    organizationLogo: initialOrganizationLogo,
   });
 
   // Fetch system settings
   const fetchSettings = useCallback(async () => {
     try {
       // Try to fetch settings, but don't require admin permissions for public settings
-      const response = await fetch('/api/settings/public', {
-        credentials: 'include'
+      const response = await fetch(`/api/settings/public?ts=${Date.now()}`, {
+        credentials: 'include',
+        cache: 'no-store',
       });
       
       if (response.ok) {
@@ -71,6 +78,12 @@ export default function Header() {
       clearInterval(interval);
     };
   }, [fetchSettings]);
+
+  useEffect(() => {
+    const orgName = String(settings.organizationName || '').trim();
+    if (!orgName) return;
+    document.title = `${orgName} - Sitzungsprotokoll-Verwaltung`;
+  }, [settings.organizationName]);
 
   return (
     <div className="flex items-center gap-3 min-w-0">

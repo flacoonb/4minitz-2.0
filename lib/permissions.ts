@@ -5,6 +5,9 @@ export interface UserPermissions {
   canModerateAllMeetings: boolean;
   canViewAllMeetings: boolean;
   canViewAllMinutes: boolean;
+  canViewAllDocuments: boolean;
+  canUploadDocuments: boolean;
+  canDeleteAllDocuments: boolean;
   canEditAllMinutes: boolean;
   canDeleteMinutes: boolean;
   canManageUsers: boolean;
@@ -109,6 +112,9 @@ export function getDefaultPermissions(role: string): UserPermissions {
       canModerateAllMeetings: true,
       canViewAllMeetings: true,
       canViewAllMinutes: true,
+      canViewAllDocuments: true,
+      canUploadDocuments: true,
+      canDeleteAllDocuments: true,
       canEditAllMinutes: true,
       canDeleteMinutes: true,
       canManageUsers: true,
@@ -124,6 +130,9 @@ export function getDefaultPermissions(role: string): UserPermissions {
       canModerateAllMeetings: false,
       canViewAllMeetings: true,
       canViewAllMinutes: false,
+      canViewAllDocuments: false,
+      canUploadDocuments: true,
+      canDeleteAllDocuments: false,
       canEditAllMinutes: false,
       canDeleteMinutes: false,
       canManageUsers: false,
@@ -139,6 +148,9 @@ export function getDefaultPermissions(role: string): UserPermissions {
       canModerateAllMeetings: false,
       canViewAllMeetings: false,
       canViewAllMinutes: false,
+      canViewAllDocuments: false,
+      canUploadDocuments: true,
+      canDeleteAllDocuments: false,
       canEditAllMinutes: false,
       canDeleteMinutes: false,
       canManageUsers: false,

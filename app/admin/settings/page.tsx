@@ -35,6 +35,9 @@ interface RolePermissions {
   canModerateAllMeetings: boolean;
   canViewAllMeetings: boolean;
   canViewAllMinutes: boolean;
+  canViewAllDocuments: boolean;
+  canUploadDocuments: boolean;
+  canDeleteAllDocuments: boolean;
   canEditAllMinutes: boolean;
   canDeleteMinutes: boolean;
   canManageUsers: boolean;

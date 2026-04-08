@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useTranslations, useLocale } from 'next-intl';
 import { useAuth } from '@/contexts/AuthContext';
 import { humanizeFunctionToken, parseFunctionToken } from '@/lib/club-function-client';
+import AttachmentList from '@/components/AttachmentList';
 
 interface Minute {
   _id: string;
@@ -31,12 +32,14 @@ interface Minute {
 }
 
 interface Topic {
+  _id?: string;
   subject: string;
   responsibles?: string[];
   infoItems?: InfoItem[];
 }
 
 interface InfoItem {
+  _id?: string;
   subject: string;
   details?: string;
   itemType: 'actionItem' | 'infoItem';
@@ -105,7 +108,7 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
   const t = useTranslations();
   const locale = useLocale();
   const router = useRouter();
-  const { user, hasPermission } = useAuth();
+  const { user, hasPermission, refreshUser } = useAuth();
   const [minute, setMinute] = useState<Minute | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -163,6 +166,10 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
     };
     getParams();
   }, [params]);
+
+  useEffect(() => {
+    void refreshUser();
+  }, [refreshUser]);
 
   const fetchSettings = useCallback(async () => {
     try {
@@ -956,6 +963,19 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
                                 </div>
                               </div>
                             </div>
+                          )}
+
+                          {/* Item Documents */}
+                          {minuteId && topic._id && item._id && (
+                            <AttachmentList
+                              minuteId={minuteId}
+                              topicId={topic._id}
+                              infoItemId={item._id}
+                              limit={50}
+                              hideWhenEmpty
+                              linksOnly
+                              showActions={false}
+                            />
                           )}
                         </div>
                       );

@@ -66,6 +66,9 @@ const DEFAULT_SETTINGS = {
       canModerateAllMeetings: true,
       canViewAllMeetings: true,
       canViewAllMinutes: true,
+      canViewAllDocuments: true,
+      canUploadDocuments: true,
+      canDeleteAllDocuments: true,
       canEditAllMinutes: true,
       canDeleteMinutes: true,
       canManageUsers: true,
@@ -81,6 +84,9 @@ const DEFAULT_SETTINGS = {
       canModerateAllMeetings: false,
       canViewAllMeetings: true,
       canViewAllMinutes: false,
+      canViewAllDocuments: false,
+      canUploadDocuments: true,
+      canDeleteAllDocuments: false,
       canEditAllMinutes: false,
       canDeleteMinutes: false,
       canManageUsers: false,
@@ -96,6 +102,9 @@ const DEFAULT_SETTINGS = {
       canModerateAllMeetings: false,
       canViewAllMeetings: false,
       canViewAllMinutes: false,
+      canViewAllDocuments: false,
+      canUploadDocuments: true,
+      canDeleteAllDocuments: false,
       canEditAllMinutes: false,
       canDeleteMinutes: false,
       canManageUsers: false,
@@ -127,7 +136,7 @@ const DEFAULT_SETTINGS = {
     enableAuditLog: true,
     autoLogout: { enabled: true, minutes: 480 },
     maxFileUploadSize: 10,
-    allowedFileTypes: ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png'],
+    allowedFileTypes: ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'txt', 'jpg', 'jpeg', 'png', 'gif', 'webp'],
     baseUrl: resolveDefaultBaseUrl()
   }
 };
@@ -163,6 +172,15 @@ export async function GET(request: NextRequest) {
         if (settings.roles[role]) {
           if (settings.roles[role].canViewAllMinutes === undefined) {
             settings.roles[role].canViewAllMinutes = role === 'admin';
+          }
+          if ((settings.roles[role] as any).canViewAllDocuments === undefined) {
+            (settings.roles[role] as any).canViewAllDocuments = role === 'admin';
+          }
+          if ((settings.roles[role] as any).canUploadDocuments === undefined) {
+            (settings.roles[role] as any).canUploadDocuments = true;
+          }
+          if ((settings.roles[role] as any).canDeleteAllDocuments === undefined) {
+            (settings.roles[role] as any).canDeleteAllDocuments = role === 'admin';
           }
           if ((settings.roles[role] as any).canManageGlobalTemplates === undefined) {
             (settings.roles[role] as any).canManageGlobalTemplates = role === 'admin';
