@@ -43,6 +43,7 @@ interface InfoItem {
   status?: 'open' | 'in-progress' | 'completed' | 'cancelled';
   priority?: 'high' | 'medium' | 'low';
   dueDate?: string;
+  durationMinutes?: number;
   responsibles?: string[];
   estimatedHours?: number;
   actualHours?: number;
@@ -65,6 +66,39 @@ interface ClubFunctionEntry {
   isActive: boolean;
   token: string;
   assignedUserId?: string;
+}
+
+const MAX_ENTRY_DURATION_MINUTES = 1440;
+
+function normalizeDurationMinutes(value: unknown): number {
+  const parsed = typeof value === 'number' ? value : Number(value);
+  if (!Number.isFinite(parsed)) return 0;
+  const rounded = Math.round(parsed);
+  if (rounded <= 0) return 0;
+  return Math.min(rounded, MAX_ENTRY_DURATION_MINUTES);
+}
+
+function sumInfoItemDurations(items: Array<{ durationMinutes?: unknown }> = []): number {
+  return items.reduce((sum, item) => sum + normalizeDurationMinutes(item.durationMinutes), 0);
+}
+
+function addMinutesToClockTime(timeValue: string | undefined, minutesToAdd: number): string | null {
+  const raw = String(timeValue || '').trim();
+  if (!raw) return null;
+  const duration = normalizeDurationMinutes(minutesToAdd);
+  if (duration <= 0) return null;
+
+  const [hoursRaw, minutesRaw] = raw.split(':');
+  const hours = Number(hoursRaw);
+  const minutes = Number(minutesRaw);
+  if (!Number.isInteger(hours) || !Number.isInteger(minutes)) return null;
+  if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) return null;
+
+  const total = (hours * 60) + minutes + duration;
+  const wrappedTotal = ((total % (24 * 60)) + (24 * 60)) % (24 * 60);
+  const outHours = String(Math.floor(wrappedTotal / 60)).padStart(2, '0');
+  const outMinutes = String(wrappedTotal % 60).padStart(2, '0');
+  return `${outHours}:${outMinutes}`;
 }
 
 export default function MinuteDetailPage({ params }: { params: Promise<{ id: string }> }) {
@@ -481,6 +515,16 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
     return `${hours12}:${minutes.toString().padStart(2, '0')} ${period}`;
   };
 
+  const totalPlannedMinutes = minute
+    ? minute.topics.reduce((sum, topic) => sum + sumInfoItemDurations(topic.infoItems || []), 0)
+    : 0;
+
+  const plannedEndTimeRaw =
+    minute && minute.time
+      ? addMinutesToClockTime(minute.time, totalPlannedMinutes)
+      : null;
+  const plannedEndTime = plannedEndTimeRaw ? formatTime(plannedEndTimeRaw) : null;
+
   useEffect(() => {
     if (minuteId) {
       fetchMinute();
@@ -553,6 +597,18 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
                     {minute.endTime && !minute.time && ` • ${t('minutes.to')} ${formatTime(minute.endTime)}`}
                   </span>
                 </div>
+
+                {totalPlannedMinutes > 0 && (
+                  <div className="flex items-center gap-3 text-gray-700">
+                    <svg className="w-5 h-5 text-sky-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span className="font-medium">
+                      {t('minutes.totalPlannedDuration', { minutes: totalPlannedMinutes })}
+                      {plannedEndTime && ` • ${t('minutes.plannedEndTime', { time: plannedEndTime })}`}
+                    </span>
+                  </div>
+                )}
                 
                 {minute.location && (
                   <div className="flex items-center gap-3 text-gray-700">
@@ -721,7 +777,16 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
                       <div className="w-8 h-8 brand-gradient-bg rounded-lg flex items-center justify-center text-white font-bold text-sm shrink-0">
                         {topicIndex + 1}
                       </div>
-                      <h3 className="text-lg sm:text-xl font-bold text-gray-900 leading-tight break-words">{topic.subject}</h3>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h3 className="text-lg sm:text-xl font-bold text-gray-900 leading-tight break-words">{topic.subject}</h3>
+                          {sumInfoItemDurations(topic.infoItems || []) > 0 && (
+                            <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold bg-sky-100 text-sky-800">
+                              {t('minutes.topicPlannedDuration', { minutes: sumInfoItemDurations(topic.infoItems || []) })}
+                            </span>
+                          )}
+                        </div>
+                      </div>
                     </div>
                     {topic.responsibles && topic.responsibles.length > 0 && (
                       <div className="flex flex-wrap gap-2 mt-3">
@@ -767,6 +832,7 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
 
                       const priorityBadge = getPriorityBadge();
                       const statusBadge = getStatusBadge();
+                      const durationMinutes = normalizeDurationMinutes(item.durationMinutes);
 
                       return (
                         <div 
@@ -792,12 +858,22 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
                                 <span className={`px-2 py-1 rounded-md text-[11px] sm:text-xs font-semibold ${statusBadge.bg} ${statusBadge.text}`}>
                                   {statusBadge.icon} {statusBadge.label}
                                 </span>
+                                {durationMinutes > 0 && (
+                                  <span className="px-2 py-1 rounded-md text-[11px] sm:text-xs font-semibold bg-sky-100 text-sky-800">
+                                    {t('minutes.plannedDurationShort', { minutes: durationMinutes })}
+                                  </span>
+                                )}
                               </div>
                             ) : (
-                              <div className="mb-2">
+                              <div className="mb-2 flex flex-wrap items-center gap-2">
                                 <span className="px-2 py-1 rounded-md text-[11px] sm:text-xs font-bold bg-[var(--brand-primary-soft)] text-[var(--brand-primary-strong)] uppercase tracking-wide">
                                   ℹ️ {t('minutes.infoItem')}
                                 </span>
+                                {durationMinutes > 0 && (
+                                  <span className="px-2 py-1 rounded-md text-[11px] sm:text-xs font-semibold bg-sky-100 text-sky-800">
+                                    {t('minutes.plannedDurationShort', { minutes: durationMinutes })}
+                                  </span>
+                                )}
                               </div>
                             )}
                             <h4 className="font-bold text-gray-900 text-base leading-tight break-words">{item.subject}</h4>

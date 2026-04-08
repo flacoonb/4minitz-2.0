@@ -490,7 +490,7 @@
     "visualMode": "Visuell",
     "markdownMode": "Markdown",
     "editorModeHint": "Nutzen Sie den visuellen Modus für detaillierte Bearbeitung oder Markdown für schnelle Sitzungserfassung per Tastatur.",
-    "markdownLegend": "Markdown-Shortcuts:\n## Traktandum\n- [i] Info-Eintrag @userId\n- [ ] Aufgabe (offen)\n- [~] Aufgabe (in Arbeit)\n- [x] Aufgabe (erledigt)\n- [!] Aufgabe (abgebrochen)\nOptionale Tags: !high !medium !low, due:YYYY-MM-DD, @userA,userB\nEingerückte Zeilen werden als Details übernommen.\nMit \"information:\" oder \"beschluss:\" erfassen Sie den Zusatztext zum letzten Eintrag.",
+    "markdownLegend": "Markdown-Shortcuts:\n## Traktandum\n- [i] Info-Eintrag @userId\n- [ ] Aufgabe (offen)\n- [~] Aufgabe (in Arbeit)\n- [x] Aufgabe (erledigt)\n- [!] Aufgabe (abgebrochen)\nOptionale Tags: !high !medium !low, due:YYYY-MM-DD, dur:15, @userA,userB\nEingerückte Zeilen werden als Details übernommen.\nMit \"information:\" oder \"beschluss:\" erfassen Sie den Zusatztext zum letzten Eintrag.",
     "importMarkdown": "Markdown ins Protokoll übernehmen",
     "loadMarkdownTemplate": "Vorlage laden",
     "markdownInsertTopic": "Traktandum",
@@ -513,6 +513,14 @@
     "topic": "Traktandum",
     "infoItems": "Informationen / Aufgaben",
     "noInfoItems": "Noch keine Einträge",
+    "plannedDurationMinutes": "Zeitbedarf (Minuten)",
+    "plannedDurationPlaceholder": "z. B. 15",
+    "plannedDurationHint": "Optional: Zeitaufwand für die Sitzungsplanung pro Eintrag.",
+    "plannedDurationShort": "{minutes} Min.",
+    "topicPlannedDuration": "Thema: {minutes} Min.",
+    "sessionPlan": "Sitzungsplan",
+    "totalPlannedDuration": "Geplante Gesamtdauer: {minutes} Min.",
+    "plannedEndTime": "Geplantes Ende: {time}",
     "finalizeConfirmTitle": "Protokoll finalisieren?",
     "finalizeConfirmText": "Möchten Sie dieses Protokoll finalisieren? Nach der Finalisierung kann es nur von Moderatoren wieder geöffnet werden.",
     "reopenTitle": "Protokoll wieder öffnen",
@@ -1125,6 +1133,7 @@
         "cancel": "Abbrechen",
         "approve": "Freischalten",
         "sendPasswordReset": "Reset-E-Mail senden",
+        "sendingPasswordReset": "Sende Reset-E-Mail…",
         "deleting": "Lösche…"
       },
       "table": {
@@ -1152,6 +1161,12 @@
         "delete": {
           "title": "Benutzer löschen",
           "message": "Möchten Sie den Benutzer <strong>{name}</strong> wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden."
+        },
+        "passwordReset": {
+          "title": "Passwort zurücksetzen",
+          "subtitle": "Bestätigung zum Senden der Reset-E-Mail",
+          "message": "Möchten Sie eine Reset-E-Mail an <strong>{name}</strong> senden?",
+          "targetLabel": "Empfänger"
         }
       },
       "fields": {

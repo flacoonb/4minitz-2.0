@@ -39,6 +39,7 @@ export interface IInfoItem {
   status?: 'open' | 'in-progress' | 'completed' | 'cancelled';
   completedAt?: Date;
   completedBy?: string;
+  durationMinutes?: number;
   estimatedHours?: number;
   actualHours?: number;
   notes?: string; // Additional user comments
@@ -167,6 +168,11 @@ const InfoItemSchema = new Schema<IInfoItem>({
   },
   completedBy: {
     type: String,
+  },
+  durationMinutes: {
+    type: Number,
+    min: 0,
+    max: 1440,
   },
   estimatedHours: {
     type: Number,

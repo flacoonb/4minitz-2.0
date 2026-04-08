@@ -29,6 +29,39 @@ import {
 } from '@/lib/minutesMarkdown';
 import { humanizeFunctionToken, parseFunctionToken } from '@/lib/club-function-client';
 
+const MAX_ENTRY_DURATION_MINUTES = 1440;
+
+function normalizeDurationMinutes(value: unknown): number {
+  const parsed = typeof value === 'number' ? value : Number(value);
+  if (!Number.isFinite(parsed)) return 0;
+  const rounded = Math.round(parsed);
+  if (rounded <= 0) return 0;
+  return Math.min(rounded, MAX_ENTRY_DURATION_MINUTES);
+}
+
+function sumInfoItemDurations(items: Array<{ durationMinutes?: unknown }> = []): number {
+  return items.reduce((sum, item) => sum + normalizeDurationMinutes(item.durationMinutes), 0);
+}
+
+function addMinutesToClockTime(timeValue: string | undefined, minutesToAdd: number): string | null {
+  const raw = String(timeValue || '').trim();
+  if (!raw) return null;
+  const duration = normalizeDurationMinutes(minutesToAdd);
+  if (duration <= 0) return null;
+
+  const [hoursRaw, minutesRaw] = raw.split(':');
+  const hours = Number(hoursRaw);
+  const minutes = Number(minutesRaw);
+  if (!Number.isInteger(hours) || !Number.isInteger(minutes)) return null;
+  if (hours < 0 || hours > 23 || minutes < 0 || minutes > 59) return null;
+
+  const total = (hours * 60) + minutes + duration;
+  const wrappedTotal = ((total % (24 * 60)) + (24 * 60)) % (24 * 60);
+  const outHours = String(Math.floor(wrappedTotal / 60)).padStart(2, '0');
+  const outMinutes = String(wrappedTotal % 60).padStart(2, '0');
+  return `${outHours}:${outMinutes}`;
+}
+
 interface SortableTopicProps {
   id: string;
   topicIndex: number;
@@ -66,6 +99,7 @@ function SortableTopic({
 }: SortableTopicProps) {
   const t = useTranslations('minutes');
   const tCommon = useTranslations('common');
+  const topicPlannedMinutes = sumInfoItemDurations(topic.infoItems || []);
   const {
     attributes,
     listeners,
@@ -97,9 +131,16 @@ function SortableTopic({
           </button>
 
           <div className="flex-1 min-w-0">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              {t('topic')} {topicIndex + 1} *
-            </label>
+            <div className="flex flex-wrap items-center gap-2 mb-2">
+              <label className="block text-sm font-medium text-gray-700">
+                {t('topic')} {topicIndex + 1} *
+              </label>
+              {topicPlannedMinutes > 0 && (
+                <span className="inline-flex items-center rounded-full px-2.5 py-1 text-xs font-semibold bg-sky-100 text-sky-800">
+                  {t('topicPlannedDuration', { minutes: topicPlannedMinutes })}
+                </span>
+              )}
+            </div>
             <input
               type="text"
               value={topic.subject}
@@ -460,6 +501,7 @@ function SortableInfoItem({
   if (!isEditing) {
     const statusBadge = getStatusBadge();
     const priorityBadge = getPriorityBadge();
+    const durationMinutes = normalizeDurationMinutes(item.durationMinutes);
 
     return (
       <div
@@ -500,12 +542,22 @@ function SortableInfoItem({
                     <span className={`px-2.5 py-1 rounded-md text-xs font-semibold ${statusBadge.bg} ${statusBadge.text}`}>
                       {statusBadge.icon} {statusBadge.label}
                     </span>
+                    {durationMinutes > 0 && (
+                      <span className="px-2.5 py-1 rounded-md text-xs font-semibold bg-sky-100 text-sky-800">
+                        {t('plannedDurationShort', { minutes: durationMinutes })}
+                      </span>
+                    )}
                   </div>
                 ) : (
-                  <div className="mb-2">
+                  <div className="mb-2 flex flex-wrap items-center gap-2">
                     <span className="px-2.5 py-1 rounded-md text-xs font-bold bg-[var(--brand-primary-soft)] text-[var(--brand-primary-strong)] uppercase tracking-wide">
                       ℹ️ {t('info')}
                     </span>
+                    {durationMinutes > 0 && (
+                      <span className="px-2.5 py-1 rounded-md text-xs font-semibold bg-sky-100 text-sky-800">
+                        {t('plannedDurationShort', { minutes: durationMinutes })}
+                      </span>
+                    )}
                   </div>
                 )}
                 <h4 className="font-bold text-gray-900 text-base break-words">{displayTitle}</h4>
@@ -622,6 +674,8 @@ function SortableInfoItem({
   }
 
   // Edit mode (full form)
+  const durationMinutes = normalizeDurationMinutes(item.durationMinutes);
+
   return (
     <div
       ref={setNodeRef}
@@ -655,11 +709,23 @@ function SortableInfoItem({
                 <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${getStatusBadge().bg} ${getStatusBadge().text}`}>
                   {getStatusBadge().icon} {getStatusBadge().label}
                 </span>
+                {durationMinutes > 0 && (
+                  <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-sky-100 text-sky-800">
+                    {t('plannedDurationShort', { minutes: durationMinutes })}
+                  </span>
+                )}
               </div>
             ) : (
-              <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-200 text-gray-700">
-                ℹ️ {t('info')}
-              </span>
+              <div className="flex flex-wrap items-center gap-1.5">
+                <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-gray-200 text-gray-700">
+                  ℹ️ {t('info')}
+                </span>
+                {durationMinutes > 0 && (
+                  <span className="px-2.5 py-1 rounded-full text-xs font-semibold bg-sky-100 text-sky-800">
+                    {t('plannedDurationShort', { minutes: durationMinutes })}
+                  </span>
+                )}
+              </div>
             )}
           </div>
 
@@ -806,6 +872,41 @@ function SortableInfoItem({
             className="w-full px-3 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-[var(--brand-primary)] text-sm bg-white resize-none"
             rows={3}
           />
+        </div>
+
+        <div className="bg-white/70 backdrop-blur-sm p-3 rounded-lg border border-white/50">
+          <label className="block text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">
+            🕒 {t('plannedDurationMinutes')}
+          </label>
+          <div className="grid grid-cols-1 min-[460px]:grid-cols-[180px_minmax(0,1fr)] gap-2 items-center">
+            <input
+              type="number"
+              min={0}
+              max={MAX_ENTRY_DURATION_MINUTES}
+              step={5}
+              value={item.durationMinutes ?? ''}
+              onChange={(e) => {
+                const rawValue = e.target.value.trim();
+                if (!rawValue) {
+                  updateInfoItem(topicIndex, itemIndex, 'durationMinutes', undefined);
+                  return;
+                }
+
+                const parsedValue = Number.parseInt(rawValue, 10);
+                if (!Number.isFinite(parsedValue)) return;
+                const normalizedValue = normalizeDurationMinutes(parsedValue);
+                updateInfoItem(
+                  topicIndex,
+                  itemIndex,
+                  'durationMinutes',
+                  normalizedValue > 0 ? normalizedValue : undefined
+                );
+              }}
+              placeholder={t('plannedDurationPlaceholder')}
+              className="w-full px-3 py-2.5 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-[var(--brand-primary)] text-sm bg-white"
+            />
+            <p className="text-xs text-gray-500 break-words">{t('plannedDurationHint')}</p>
+          </div>
         </div>
 
         {/* Step 4: Task-specific fields (only for action items) */}
@@ -1074,6 +1175,7 @@ interface InfoItem {
   status?: 'open' | 'in-progress' | 'completed' | 'cancelled';
   priority?: 'high' | 'medium' | 'low';
   dueDate?: string;
+  durationMinutes?: number;
   responsibles?: string[];
   estimatedHours?: number;
   actualHours?: number;
@@ -1589,6 +1691,16 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [hasUnsavedChanges]);
+
+  const totalPlannedMinutes = useMemo(() => {
+    return formData.topics.reduce((sum, topic) => {
+      return sum + sumInfoItemDurations(topic.infoItems || []);
+    }, 0);
+  }, [formData.topics]);
+
+  const plannedEndTime = useMemo(() => {
+    return addMinutesToClockTime(formData.time, totalPlannedMinutes);
+  }, [formData.time, totalPlannedMinutes]);
 
   const importPendingTask = (e: React.MouseEvent<HTMLButtonElement>, task: any) => {
     const taskId = task._id || task.id;
@@ -2160,6 +2272,22 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
               </div>
             </div>
           </div>
+
+          {totalPlannedMinutes > 0 && (
+            <div className="bg-sky-50/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-sky-200">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <h2 className="text-lg font-bold text-slate-900">{t('sessionPlan')}</h2>
+                <span className="inline-flex items-center rounded-full px-3 py-1 text-sm font-semibold bg-sky-100 text-sky-800">
+                  {t('totalPlannedDuration', { minutes: totalPlannedMinutes })}
+                </span>
+              </div>
+              {plannedEndTime && (
+                <p className="mt-2 text-sm text-slate-700">
+                  {t('plannedEndTime', { time: plannedEndTime })}
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Attendance List */}
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg p-6 border border-gray-100">

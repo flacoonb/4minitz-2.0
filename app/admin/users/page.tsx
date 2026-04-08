@@ -62,7 +62,9 @@ const UserManagement = () => {
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showPasswordResetModal, setShowPasswordResetModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [passwordResetUser, setPasswordResetUser] = useState<User | null>(null);
   const router = useRouter();
 
   const [pagination, setPagination] = useState({
@@ -278,21 +280,27 @@ const UserManagement = () => {
     }
   };
 
-  const handleSendPasswordResetEmail = async (userToReset: User) => {
-    const fullName = `${userToReset.firstName || ''} ${userToReset.lastName || ''}`.trim();
-    const displayName = fullName || userToReset.email;
-    const confirmed = window.confirm(
-      t('messages.passwordResetConfirm', { name: displayName })
-    );
+  const openPasswordResetModal = (userToReset: User) => {
+    setPasswordResetUser(userToReset);
+    setShowPasswordResetModal(true);
+  };
 
-    if (!confirmed) return;
+  const closePasswordResetModal = () => {
+    if (saving) return;
+    setShowPasswordResetModal(false);
+    setPasswordResetUser(null);
+  };
+
+  const handleSendPasswordResetEmail = async () => {
+    if (!passwordResetUser) return;
+    const displayName = getPasswordResetDisplayName(passwordResetUser);
 
     setError('');
     setSuccess('');
     setSaving(true);
 
     try {
-      const response = await fetch(`/api/users/${userToReset._id}/password-reset`, {
+      const response = await fetch(`/api/users/${passwordResetUser._id}/password-reset`, {
         method: 'POST',
         credentials: 'include',
       });
@@ -303,6 +311,8 @@ const UserManagement = () => {
       }
 
       setSuccess(payload.message || t('messages.passwordResetSent', { name: displayName }));
+      setShowPasswordResetModal(false);
+      setPasswordResetUser(null);
     } catch (err: any) {
       setError(err.message || t('messages.passwordResetSendError'));
     } finally {
@@ -339,25 +349,53 @@ const UserManagement = () => {
     return names.join(', ');
   };
 
-  const getUserDisplayName = (entry: User): string => {
+  const getUserFullName = (entry: User): string => {
     const fullName = `${entry.firstName || ''} ${entry.lastName || ''}`.trim();
-    const fn = getFunctionLabel(entry._id);
-    if (!fn) return fullName || entry.email;
-    return `${fullName || entry.email} (${fn})`;
+    return fullName || entry.email;
+  };
+
+  const getPasswordResetDisplayName = (entry: User): string => {
+    return getUserFullName(entry);
+  };
+
+  const getUserInitials = (entry: User): string => {
+    const first = (entry.firstName || '').trim();
+    const last = (entry.lastName || '').trim();
+
+    if (first || last) {
+      const initials = `${first.charAt(0)}${last.charAt(0)}`.replace(/\s+/g, '').toUpperCase();
+      if (initials.length >= 2) return initials.slice(0, 2);
+      if (first.length >= 2) return first.slice(0, 2).toUpperCase();
+      if (last.length >= 2) return last.slice(0, 2).toUpperCase();
+      return initials || entry.email.slice(0, 1).toUpperCase();
+    }
+
+    const emailLocalPart = (entry.email || '').split('@')[0] || '';
+    const parts = emailLocalPart
+      .split(/[\s._-]+/)
+      .map((part) => part.trim())
+      .filter(Boolean);
+
+    if (parts.length >= 2) {
+      return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+    }
+
+    const fallback = (parts[0] || emailLocalPart || entry.username || 'U').replace(/[^a-zA-Z0-9]/g, '');
+    return fallback.slice(0, 2).toUpperCase();
   };
 
   return (
     <div className="min-h-screen brand-page-gradient brandize-admin">
-      <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8">
+      <div className="container mx-auto px-3 sm:px-4 py-4 sm:py-6">
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-5">
           <div className="flex flex-col min-[420px]:flex-row min-[420px]:items-start gap-3 mb-2 min-w-0">
-            <div className="p-3 brand-gradient-bg rounded-xl text-white shadow-lg w-fit shrink-0">
-              <Users className="w-6 h-6" />
+            <div className="p-2.5 brand-gradient-bg rounded-xl text-white shadow-lg w-fit shrink-0">
+              <Users className="w-5 h-5" />
             </div>
             <div className="min-w-0">
-              <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 leading-tight">{t('title')}</h1>
-              <p className="text-slate-600 break-words mt-1">{t('subtitle')}</p>
+              <h1 className="text-xl sm:text-2xl font-bold text-slate-800 leading-tight">{t('title')}</h1>
+              <p className="text-slate-600 text-sm break-words mt-1">{t('subtitle')}</p>
             </div>
           </div>
         </div>
@@ -384,8 +422,8 @@ const UserManagement = () => {
         )}
 
         {/* Controls */}
-        <div className="mb-6 bg-white/70 backdrop-blur-sm border border-white/50 rounded-xl p-6 shadow-lg">
-          <div className="flex flex-col lg:flex-row gap-4 items-stretch lg:items-center">
+        <div className="mb-4 bg-white/70 backdrop-blur-sm border border-white/50 rounded-xl p-4 shadow-lg">
+          <div className="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center">
             {/* Search */}
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 w-4 h-4" />
@@ -394,7 +432,7 @@ const UserManagement = () => {
                 placeholder={t('searchPlaceholder')}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 min-h-11 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2 min-h-10 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
               />
             </div>
 
@@ -403,7 +441,7 @@ const UserManagement = () => {
               <select
                 value={roleFilter}
                 onChange={(e) => setRoleFilter(e.target.value)}
-                className="px-4 py-2 min-h-11 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
+                className="px-4 py-2 min-h-10 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
               >
                 <option value="all">{t('filters.allRoles')}</option>
                 <option value="admin">{t('roles.admin')}</option>
@@ -414,7 +452,7 @@ const UserManagement = () => {
               <select
                 value={statusFilter}
                 onChange={(e) => setStatusFilter(e.target.value)}
-                className="px-4 py-2 min-h-11 border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
+                className="px-4 py-2 min-h-10 text-sm border border-slate-200 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
               >
                 <option value="all">{t('filters.allStatus')}</option>
                 <option value="active">{t('status.active')}</option>
@@ -426,7 +464,7 @@ const UserManagement = () => {
             {/* Create User Button */}
             <button
               onClick={() => setShowCreateModal(true)}
-              className="w-full lg:w-auto px-4 py-2 min-h-11 brand-button-primary rounded-lg transition-all flex items-center justify-center gap-2 shadow-lg"
+              className="w-full lg:w-auto px-3.5 py-2 min-h-10 text-sm brand-button-primary rounded-lg transition-all flex items-center justify-center gap-2 shadow-lg"
             >
               <UserPlus className="w-4 h-4" />
               {t('actions.create')}
@@ -443,45 +481,53 @@ const UserManagement = () => {
             </div>
           ) : (
             <>
-              <div className="md:hidden p-4 space-y-3">
+              <div className="md:hidden p-3 space-y-2">
                 {users.map((user) => (
-                  <div key={`mobile-${user._id}`} className="border border-slate-200 rounded-xl p-3 bg-white">
+                  <div key={`mobile-${user._id}`} className="border border-slate-200 rounded-xl p-2.5 bg-white">
                     <div className="flex items-start gap-3">
                       {user.avatar ? (
                         /* eslint-disable-next-line @next/next/no-img-element */
                         <img
                           src={user.avatar}
-                          alt={`${user.firstName} ${user.lastName}`}
-                          className="w-10 h-10 rounded-full object-cover shrink-0"
+                          alt={getUserFullName(user)}
+                          className="w-8 h-8 rounded-full object-cover shrink-0"
                         />
                       ) : (
-                        <div className="w-10 h-10 brand-gradient-bg rounded-full flex items-center justify-center text-white font-semibold shrink-0">
-                          {user.firstName[0]?.toUpperCase() || user.email[0]?.toUpperCase()}
+                        <div className="w-8 h-8 brand-gradient-bg rounded-full flex items-center justify-center text-white font-semibold text-xs shrink-0">
+                          {getUserInitials(user)}
                         </div>
                       )}
                       <div className="min-w-0 flex-1">
-                        <div className="font-semibold text-slate-800 break-words">{getUserDisplayName(user)}</div>
-                        <div className="text-sm text-slate-800 break-all mt-1">{user.email}</div>
-                        <div className="mt-1 flex items-center gap-1 text-xs text-green-600">
-                          <CheckCircle2 className="w-3 h-3" />
+                        <div className="font-semibold text-sm text-slate-800 break-words">{getUserFullName(user)}</div>
+                        {getFunctionLabel(user._id) && (
+                          <div
+                            className="text-xs text-slate-500 mt-0.5 truncate"
+                            title={getFunctionLabel(user._id)}
+                          >
+                            {getFunctionLabel(user._id)}
+                          </div>
+                        )}
+                        <div className="text-sm text-slate-800 break-all mt-0.5">{user.email}</div>
+                        <div className={`mt-0.5 flex items-center gap-1 text-xs ${user.isEmailVerified ? 'text-green-600' : 'text-orange-600'}`}>
+                          {user.isEmailVerified ? <CheckCircle2 className="w-3 h-3" /> : <AlertCircle className="w-3 h-3" />}
                           {user.isEmailVerified ? t('status.verified') : t('status.unverified')}
                         </div>
                       </div>
                     </div>
-                    <div className="mt-3 flex items-center justify-end gap-2">
+                    <div className="mt-2.5 flex items-center justify-end gap-1.5">
                       {!user.isActive && !user.lastLogin && (
                         <button
                           onClick={() => handleApproveUser(user)}
-                          className="p-2 min-h-11 min-w-11 inline-flex items-center justify-center text-green-700 bg-green-100 rounded-lg hover:bg-green-200 transition-colors"
+                          className="p-2 min-h-10 min-w-10 inline-flex items-center justify-center text-green-700 bg-green-100 rounded-lg hover:bg-green-200 transition-colors"
                           title={t('actions.approve')}
                         >
                           <UserCheck className="w-4 h-4" />
                         </button>
                       )}
                       <button
-                        onClick={() => handleSendPasswordResetEmail(user)}
+                        onClick={() => openPasswordResetModal(user)}
                         disabled={saving || !user.isActive}
-                        className="p-2 min-h-11 min-w-11 inline-flex items-center justify-center text-slate-600 hover:text-sky-700 hover:bg-sky-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="p-2 min-h-10 min-w-10 inline-flex items-center justify-center text-slate-600 hover:text-sky-700 hover:bg-sky-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                         title={t('actions.sendPasswordReset')}
                         aria-label={t('actions.sendPasswordReset')}
                       >
@@ -500,7 +546,7 @@ const UserManagement = () => {
                           });
                           setShowEditModal(true);
                         }}
-                        className="p-2 min-h-11 min-w-11 inline-flex items-center justify-center text-slate-600 hover:text-[var(--brand-primary)] hover:bg-[var(--brand-primary-soft)] rounded-lg transition-colors"
+                        className="p-2 min-h-10 min-w-10 inline-flex items-center justify-center text-slate-600 hover:text-[var(--brand-primary)] hover:bg-[var(--brand-primary-soft)] rounded-lg transition-colors"
                         title={t('actions.edit')}
                       >
                         <Edit3 className="w-4 h-4" />
@@ -510,7 +556,7 @@ const UserManagement = () => {
                           setSelectedUser(user);
                           setShowDeleteModal(true);
                         }}
-                        className="p-2 min-h-11 min-w-11 inline-flex items-center justify-center text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        className="p-2 min-h-10 min-w-10 inline-flex items-center justify-center text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                         title={t('actions.delete')}
                       >
                         <Trash2 className="w-4 h-4" />
@@ -524,94 +570,102 @@ const UserManagement = () => {
                 <table className="w-full table-fixed">
                   <thead className="bg-slate-50 border-b border-slate-200">
                     <tr>
-                      <th className="px-4 sm:px-6 py-4 text-left text-sm font-semibold text-slate-700">{t('table.user')}</th>
-                      <th className="px-4 sm:px-6 py-4 text-left text-sm font-semibold text-slate-700">{t('table.email')}</th>
-                      <th className="hidden lg:table-cell px-6 py-4 text-left text-sm font-semibold text-slate-700">{t('table.role')}</th>
-                      <th className="hidden lg:table-cell px-6 py-4 text-left text-sm font-semibold text-slate-700">{t('table.status')}</th>
-                      <th className="hidden lg:table-cell px-6 py-4 text-left text-sm font-semibold text-slate-700">{t('table.created')}</th>
-                      <th className="px-4 sm:px-6 py-4 text-right text-sm font-semibold text-slate-700">{t('table.actions')}</th>
+                      <th className="px-3 sm:px-4 py-2.5 text-left text-xs font-semibold text-slate-700">{t('table.user')}</th>
+                      <th className="px-3 sm:px-4 py-2.5 text-left text-xs font-semibold text-slate-700">{t('table.email')}</th>
+                      <th className="hidden lg:table-cell px-4 py-2.5 text-left text-xs font-semibold text-slate-700">{t('table.role')}</th>
+                      <th className="hidden lg:table-cell px-4 py-2.5 text-left text-xs font-semibold text-slate-700">{t('table.status')}</th>
+                      <th className="hidden lg:table-cell px-4 py-2.5 text-left text-xs font-semibold text-slate-700">{t('table.created')}</th>
+                      <th className="px-3 sm:px-4 py-2.5 text-right text-xs font-semibold text-slate-700">{t('table.actions')}</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-200">
                     {users.map((user) => (
                       <tr key={user._id} className="hover:bg-slate-50/50 transition-colors">
-                        <td className="px-4 sm:px-6 py-4">
-                          <div className="flex items-center gap-3">
+                        <td className="px-3 sm:px-4 py-2.5">
+                          <div className="flex items-center gap-2.5">
                             {user.avatar ? (
                               /* eslint-disable-next-line @next/next/no-img-element */
                               <img 
                                 src={user.avatar} 
-                                alt={`${user.firstName} ${user.lastName}`}
-                                className="w-10 h-10 rounded-full object-cover"
+                                alt={getUserFullName(user)}
+                                className="w-8 h-8 rounded-full object-cover"
                               />
                             ) : (
-                              <div className="w-10 h-10 brand-gradient-bg rounded-full flex items-center justify-center text-white font-semibold">
-                                {user.firstName[0]?.toUpperCase() || user.email[0]?.toUpperCase()}
+                              <div className="w-8 h-8 brand-gradient-bg rounded-full flex items-center justify-center text-white font-semibold text-xs">
+                                {getUserInitials(user)}
                               </div>
                             )}
                             <div className="min-w-0">
-                              <div className="font-semibold text-slate-800 break-words">
-                                {getUserDisplayName(user)}
+                              <div className="font-semibold text-sm text-slate-800 break-words">
+                                {getUserFullName(user)}
                               </div>
+                              {getFunctionLabel(user._id) && (
+                                <div
+                                  className="text-xs text-slate-500 truncate max-w-[240px]"
+                                  title={getFunctionLabel(user._id)}
+                                >
+                                  {getFunctionLabel(user._id)}
+                                </div>
+                              )}
                             </div>
                           </div>
                         </td>
-                        <td className="px-4 sm:px-6 py-4">
-                          <div className="text-slate-800 break-all">{user.email}</div>
+                        <td className="px-3 sm:px-4 py-2.5">
+                          <div className="text-slate-800 text-sm break-all">{user.email}</div>
                           {user.isEmailVerified ? (
-                            <div className="flex items-center gap-1 text-xs text-green-600 mt-1">
+                            <div className="flex items-center gap-1 text-xs text-green-600 mt-0.5">
                               <CheckCircle2 className="w-3 h-3" />
                               {t('status.verified')}
                             </div>
                           ) : (
-                            <div className="flex items-center gap-1 text-xs text-orange-600 mt-1">
+                            <div className="flex items-center gap-1 text-xs text-orange-600 mt-0.5">
                               <AlertCircle className="w-3 h-3" />
                               {t('status.unverified')}
                             </div>
                           )}
                         </td>
-                        <td className="hidden lg:table-cell px-6 py-4">
-                          <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold ${getRoleBadgeColor(user.role)}`}>
+                        <td className="hidden lg:table-cell px-4 py-2.5">
+                          <div className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold ${getRoleBadgeColor(user.role)}`}>
                             {getRoleIcon(user.role)}
                             {user.role === 'admin' ? t('roles.admin') : 
                              user.role === 'moderator' ? t('roles.moderator') : t('roles.user')}
                           </div>
                         </td>
-                        <td className="hidden lg:table-cell px-6 py-4">
+                        <td className="hidden lg:table-cell px-4 py-2.5">
                           {user.isActive ? (
-                            <div className="inline-flex items-center gap-2 px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs font-semibold">
+                            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-green-100 text-green-800 rounded-full text-xs font-semibold">
                               <UserCheck className="w-3 h-3" />
                               {t('status.active')}
                             </div>
                           ) : !user.lastLogin ? (
-                            <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-100 text-amber-800 rounded-full text-xs font-semibold">
+                            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-amber-100 text-amber-800 rounded-full text-xs font-semibold">
                               <AlertCircle className="w-3 h-3" />
                               {t('status.pending')}
                             </div>
                           ) : (
-                            <div className="inline-flex items-center gap-2 px-3 py-1 bg-red-100 text-red-800 rounded-full text-xs font-semibold">
+                            <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 bg-red-100 text-red-800 rounded-full text-xs font-semibold">
                               <UserX className="w-3 h-3" />
                               {t('status.inactive')}
                             </div>
                           )}
                         </td>
-                        <td className="hidden lg:table-cell px-6 py-4 text-sm text-slate-600">
+                        <td className="hidden lg:table-cell px-4 py-2.5 text-sm text-slate-600">
                           {new Date(user.createdAt).toLocaleDateString()}
                         </td>
-                        <td className="px-4 sm:px-6 py-4 text-right">
-                          <div className="flex items-center gap-2 justify-end flex-wrap">
+                        <td className="px-3 sm:px-4 py-2.5 text-right">
+                          <div className="flex items-center gap-1.5 justify-end flex-wrap">
                             {!user.isActive && !user.lastLogin && (
                               <>
                                 <button
                                   onClick={() => handleApproveUser(user)}
-                                  className="sm:hidden p-2 min-h-11 min-w-11 inline-flex items-center justify-center text-green-700 bg-green-100 rounded-lg hover:bg-green-200 transition-colors"
+                                  className="sm:hidden p-2 min-h-10 min-w-10 inline-flex items-center justify-center text-green-700 bg-green-100 rounded-lg hover:bg-green-200 transition-colors"
                                   title={t('actions.approve')}
                                 >
                                   <UserCheck className="w-4 h-4" />
                                 </button>
                                 <button
                                   onClick={() => handleApproveUser(user)}
-                                  className="hidden sm:inline-flex px-3 py-1.5 text-xs font-semibold bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors items-center gap-1"
+                                  className="hidden sm:inline-flex px-2.5 py-1.5 text-xs font-semibold bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors items-center gap-1"
                                   title={t('actions.approve')}
                                 >
                                   <UserCheck className="w-3.5 h-3.5" />
@@ -620,9 +674,9 @@ const UserManagement = () => {
                               </>
                             )}
                             <button
-                              onClick={() => handleSendPasswordResetEmail(user)}
+                              onClick={() => openPasswordResetModal(user)}
                               disabled={saving || !user.isActive}
-                              className="p-2 min-h-11 min-w-11 inline-flex items-center justify-center text-slate-600 hover:text-sky-700 hover:bg-sky-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="p-2 min-h-10 min-w-10 md:min-h-9 md:min-w-9 inline-flex items-center justify-center text-slate-600 hover:text-sky-700 hover:bg-sky-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                               title={t('actions.sendPasswordReset')}
                               aria-label={t('actions.sendPasswordReset')}
                             >
@@ -641,7 +695,7 @@ const UserManagement = () => {
                                 });
                                 setShowEditModal(true);
                               }}
-                              className="p-2 min-h-11 min-w-11 inline-flex items-center justify-center text-slate-600 hover:text-[var(--brand-primary)] hover:bg-[var(--brand-primary-soft)] rounded-lg transition-colors"
+                              className="p-2 min-h-10 min-w-10 md:min-h-9 md:min-w-9 inline-flex items-center justify-center text-slate-600 hover:text-[var(--brand-primary)] hover:bg-[var(--brand-primary-soft)] rounded-lg transition-colors"
                               title={t('actions.edit')}
                             >
                               <Edit3 className="w-4 h-4" />
@@ -651,7 +705,7 @@ const UserManagement = () => {
                                 setSelectedUser(user);
                                 setShowDeleteModal(true);
                               }}
-                              className="p-2 min-h-11 min-w-11 inline-flex items-center justify-center text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                              className="p-2 min-h-10 min-w-10 md:min-h-9 md:min-w-9 inline-flex items-center justify-center text-slate-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                               title={t('actions.delete')}
                             >
                               <Trash2 className="w-4 h-4" />
@@ -666,7 +720,7 @@ const UserManagement = () => {
 
               {/* Pagination */}
               {pagination.totalPages > 1 && (
-                <div className="px-6 py-4 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                <div className="px-4 py-3 border-t border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                   <div className="text-sm text-slate-600 text-center sm:text-left">
                     {t('pagination.found', { count: pagination.total })}
                   </div>
@@ -674,7 +728,7 @@ const UserManagement = () => {
                     <button
                       onClick={() => fetchUsers(pagination.page - 1)}
                       disabled={pagination.page === 1}
-                      className="px-3 py-1.5 min-h-11 text-sm bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-3 py-1.5 min-h-10 text-sm bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {t('pagination.prev')}
                     </button>
@@ -684,7 +738,7 @@ const UserManagement = () => {
                     <button
                       onClick={() => fetchUsers(pagination.page + 1)}
                       disabled={pagination.page === pagination.totalPages}
-                      className="px-3 py-1.5 min-h-11 text-sm bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="px-3 py-1.5 min-h-10 text-sm bg-white border border-slate-200 rounded-lg hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       {t('pagination.next')}
                     </button>
@@ -900,6 +954,53 @@ const UserManagement = () => {
                     className="w-full sm:flex-1 px-4 py-2 min-h-11 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     {saving ? t('actions.deleting') : t('actions.delete')}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Password Reset Modal */}
+        {showPasswordResetModal && passwordResetUser && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[90vh] overflow-y-auto">
+              <div className="p-6 border-b border-slate-200 flex items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <h2 className="text-xl font-semibold text-slate-800">{t('modals.passwordReset.title')}</h2>
+                  <p className="text-sm text-slate-500 mt-1">{t('modals.passwordReset.subtitle')}</p>
+                </div>
+                <div className="shrink-0 w-10 h-10 rounded-lg bg-sky-100 text-sky-700 inline-flex items-center justify-center">
+                  <KeyRound className="w-5 h-5" />
+                </div>
+              </div>
+              <div className="p-6">
+                <p className="text-slate-600 mb-4">
+                  {t.rich('modals.passwordReset.message', {
+                    name: getPasswordResetDisplayName(passwordResetUser),
+                    strong: (chunks) => <strong>{chunks}</strong>
+                  })}
+                </p>
+                <div className="mb-6 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3">
+                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">{t('modals.passwordReset.targetLabel')}</p>
+                  <p className="text-sm font-semibold text-slate-800 break-words mt-1">{getPasswordResetDisplayName(passwordResetUser)}</p>
+                  <p className="text-sm text-slate-600 break-all">{passwordResetUser.email}</p>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button
+                    onClick={closePasswordResetModal}
+                    disabled={saving}
+                    className="w-full sm:flex-1 px-4 py-2 min-h-11 bg-slate-200 text-slate-700 rounded-lg hover:bg-slate-300 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {t('actions.cancel')}
+                  </button>
+                  <button
+                    onClick={handleSendPasswordResetEmail}
+                    disabled={saving}
+                    className="w-full sm:flex-1 px-4 py-2 min-h-11 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2"
+                  >
+                    <KeyRound className="w-4 h-4" />
+                    {saving ? t('actions.sendingPasswordReset') : t('actions.sendPasswordReset')}
                   </button>
                 </div>
               </div>

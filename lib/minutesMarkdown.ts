@@ -8,6 +8,7 @@ export interface MinutesMarkdownInfoItem {
   status?: MinutesMarkdownStatus;
   priority?: MinutesMarkdownPriority;
   dueDate?: string;
+  durationMinutes?: number;
   responsibles?: string[];
   notes?: string;
 }
@@ -43,12 +44,14 @@ function parseInlineTags(
 ): {
   text: string;
   dueDate?: string;
+  durationMinutes?: number;
   priority?: MinutesMarkdownPriority;
   responsibles?: string[];
 } {
   let text = rawText;
   const responsibles = new Set<string>();
   let dueDate: string | undefined;
+  let durationMinutes: number | undefined;
   let priority: MinutesMarkdownPriority | undefined;
 
   // @user1,@user2 (supports unicode letters/numbers plus . _ : -)
@@ -70,6 +73,15 @@ function parseInlineTags(
     return prefix;
   });
 
+  // dur:15 | duration:15 (minutes)
+  text = text.replace(/(^|\s)(?:dur|duration):(\d{1,4})\b/gi, (_match, prefix, rawMinutes) => {
+    const parsed = Number.parseInt(rawMinutes, 10);
+    if (Number.isFinite(parsed) && parsed > 0) {
+      durationMinutes = Math.min(parsed, 1440);
+    }
+    return prefix;
+  });
+
   // !high | !medium | !low
   text = text.replace(/(^|\s)!(high|medium|low)\b/gi, (_match, prefix, p) => {
     priority = p.toLowerCase() as MinutesMarkdownPriority;
@@ -79,6 +91,7 @@ function parseInlineTags(
   return {
     text: text.replace(/\s{2,}/g, ' ').trim(),
     dueDate,
+    durationMinutes,
     priority,
     responsibles: responsibles.size > 0 ? Array.from(responsibles) : undefined,
   };
@@ -142,6 +155,7 @@ export function parseMinutesMarkdown(markdown: string): ParsedMinutesMarkdown {
         status,
         priority: parsed.priority || 'medium',
         dueDate: parsed.dueDate,
+        durationMinutes: parsed.durationMinutes,
         responsibles: parsed.responsibles || [],
       };
       topic.infoItems.push(item);
@@ -163,6 +177,7 @@ export function parseMinutesMarkdown(markdown: string): ParsedMinutesMarkdown {
         subject: parsed.text,
         status: 'open',
         priority: 'medium',
+        durationMinutes: parsed.durationMinutes,
         responsibles: parsed.responsibles || [],
       };
       topic.infoItems.push(item);
@@ -235,13 +250,23 @@ export function serializeTopicsToMarkdown(topics: MinutesMarkdownTopic[]): strin
         if (item.dueDate) {
           tags.push(`due:${item.dueDate.split('T')[0]}`);
         }
+        if (item.durationMinutes && item.durationMinutes > 0) {
+          tags.push(`dur:${Math.round(item.durationMinutes)}`);
+        }
         if (item.responsibles && item.responsibles.length > 0) {
           tags.push(`@${item.responsibles.join(',')}`);
         }
         const suffix = tags.length > 0 ? ` ${tags.join(' ')}` : '';
         lines.push(`- [${statusToken}] ${item.subject}${suffix}`);
       } else {
-        const tags = item.responsibles?.length ? ` @${item.responsibles.join(',')}` : '';
+        const tagsRaw: string[] = [];
+        if (item.durationMinutes && item.durationMinutes > 0) {
+          tagsRaw.push(`dur:${Math.round(item.durationMinutes)}`);
+        }
+        if (item.responsibles && item.responsibles.length > 0) {
+          tagsRaw.push(`@${item.responsibles.join(',')}`);
+        }
+        const tags = tagsRaw.length > 0 ? ` ${tagsRaw.join(' ')}` : '';
         lines.push(`- [i] ${item.subject}${tags}`);
       }
 
@@ -269,7 +294,7 @@ export function getMinutesMarkdownTemplate(): string {
     '## Traktandum 1',
     '- [i] Information zum Thema @userId',
     '  Weitere Details zur Information',
-    '- [ ] Aufgabe erfassen !high due:2026-03-20 @userId',
+    '- [ ] Aufgabe erfassen !high due:2026-03-20 dur:15 @userId',
     '  Details zur Aufgabe',
     '  beschluss: Optionaler Kommentar',
     '',

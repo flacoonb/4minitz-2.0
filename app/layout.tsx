@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { connection } from 'next/server';
 import { headers } from 'next/headers';
-import { Inter } from "next/font/google";
 import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import Navigation from '@/components/Navigation';
@@ -13,8 +12,6 @@ import connectDB from '@/lib/mongodb';
 import Settings from '@/models/Settings';
 import { brandVarsToCssBlock, getBrandCssVars, sanitizeBrandColors } from '@/lib/brand-colors';
 import "./globals.css";
-
-const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "NXTMinutes - Sitzungsprotokoll-Verwaltung",
@@ -70,7 +67,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <script src="/chunk-recovery.js" defer />
         )}
       </head>
-      <body className={inter.className}>
+      <body>
         <NextIntlClientProvider messages={messages}>
           <AuthProvider>
             <BrandThemeProvider>

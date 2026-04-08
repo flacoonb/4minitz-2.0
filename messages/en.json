@@ -481,7 +481,7 @@
     "visualMode": "Visual",
     "markdownMode": "Markdown",
     "editorModeHint": "Use visual mode for detailed editing or markdown mode for fast, keyboard-first capture during the meeting.",
-    "markdownLegend": "Markdown shortcuts:\n## Topic\n- [i] Info entry @userId\n- [ ] Task (open)\n- [~] Task (in progress)\n- [x] Task (completed)\n- [!] Task (cancelled)\nOptional tags: !high !medium !low, due:YYYY-MM-DD, @userA,userB\nIndented lines are imported as details.\nUse \"information:\" or \"decision:\" (also supports \"note:\") for the last item addition.",
+    "markdownLegend": "Markdown shortcuts:\n## Topic\n- [i] Info entry @userId\n- [ ] Task (open)\n- [~] Task (in progress)\n- [x] Task (completed)\n- [!] Task (cancelled)\nOptional tags: !high !medium !low, due:YYYY-MM-DD, dur:15, @userA,userB\nIndented lines are imported as details.\nUse \"information:\" or \"decision:\" (also supports \"note:\") for the last item addition.",
     "importMarkdown": "Import markdown into minute",
     "loadMarkdownTemplate": "Load template",
     "markdownInsertTopic": "Topic",
@@ -513,6 +513,14 @@
     "topic": "Topic",
     "infoItems": "Info Items",
     "noInfoItems": "No info items yet",
+    "plannedDurationMinutes": "Planned duration (minutes)",
+    "plannedDurationPlaceholder": "e.g. 15",
+    "plannedDurationHint": "Optional: duration per item for session planning.",
+    "plannedDurationShort": "{minutes} min",
+    "topicPlannedDuration": "Topic: {minutes} min",
+    "sessionPlan": "Session plan",
+    "totalPlannedDuration": "Planned total duration: {minutes} min",
+    "plannedEndTime": "Planned end: {time}",
     "participantsLabel": "Participants:",
     "dueOn": "Due on:",
     "confirmDeleteTopic": "Do you really want to delete this topic?",
@@ -1125,6 +1133,7 @@
         "cancel": "Cancel",
         "approve": "Approve",
         "sendPasswordReset": "Send reset email",
+        "sendingPasswordReset": "Sending reset email…",
         "deleting": "Deleting…"
       },
       "table": {
@@ -1152,6 +1161,12 @@
         "delete": {
           "title": "Delete User",
           "message": "Are you sure you want to delete user <strong>{name}</strong>? This action cannot be undone."
+        },
+        "passwordReset": {
+          "title": "Reset password",
+          "subtitle": "Confirm sending the reset email",
+          "message": "Do you want to send a reset email to <strong>{name}</strong>?",
+          "targetLabel": "Recipient"
         }
       },
       "fields": {
