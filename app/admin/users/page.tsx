@@ -17,7 +17,8 @@ import {
   UserX,
   Crown,
   User,
-  UserCog
+  UserCog,
+  KeyRound
 } from 'lucide-react';
 
 // Demo fallback removed; use cookie/JWT auth via credentials
@@ -277,6 +278,38 @@ const UserManagement = () => {
     }
   };
 
+  const handleSendPasswordResetEmail = async (userToReset: User) => {
+    const fullName = `${userToReset.firstName || ''} ${userToReset.lastName || ''}`.trim();
+    const displayName = fullName || userToReset.email;
+    const confirmed = window.confirm(
+      t('messages.passwordResetConfirm', { name: displayName })
+    );
+
+    if (!confirmed) return;
+
+    setError('');
+    setSuccess('');
+    setSaving(true);
+
+    try {
+      const response = await fetch(`/api/users/${userToReset._id}/password-reset`, {
+        method: 'POST',
+        credentials: 'include',
+      });
+
+      const payload = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(payload.error || t('messages.passwordResetSendError'));
+      }
+
+      setSuccess(payload.message || t('messages.passwordResetSent', { name: displayName }));
+    } catch (err: any) {
+      setError(err.message || t('messages.passwordResetSendError'));
+    } finally {
+      setSaving(false);
+    }
+  };
+
   // Role icon and color
   const getRoleIcon = (role: string) => {
     switch (role) {
@@ -446,6 +479,15 @@ const UserManagement = () => {
                         </button>
                       )}
                       <button
+                        onClick={() => handleSendPasswordResetEmail(user)}
+                        disabled={saving || !user.isActive}
+                        className="p-2 min-h-11 min-w-11 inline-flex items-center justify-center text-slate-600 hover:text-sky-700 hover:bg-sky-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                        title={t('actions.sendPasswordReset')}
+                        aria-label={t('actions.sendPasswordReset')}
+                      >
+                        <KeyRound className="w-4 h-4" />
+                      </button>
+                      <button
                         onClick={() => {
                           setSelectedUser(user);
                           setEditUser({
@@ -577,6 +619,15 @@ const UserManagement = () => {
                                 </button>
                               </>
                             )}
+                            <button
+                              onClick={() => handleSendPasswordResetEmail(user)}
+                              disabled={saving || !user.isActive}
+                              className="p-2 min-h-11 min-w-11 inline-flex items-center justify-center text-slate-600 hover:text-sky-700 hover:bg-sky-50 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                              title={t('actions.sendPasswordReset')}
+                              aria-label={t('actions.sendPasswordReset')}
+                            >
+                              <KeyRound className="w-4 h-4" />
+                            </button>
                             <button
                               onClick={() => {
                                 setSelectedUser(user);

@@ -494,7 +494,7 @@
     "markdownInsertResponsible": "Responsible",
     "markdownInsertNote": "Decision/Info",
     "resolutionLabel": "Decision",
-    "informationLabel": "Information",
+    "informationLabel": "Information/Decision",
     "resolutionPlaceholder": "Decision, conclusion, or next step...",
     "informationPlaceholder": "Additional information or context...",
     "markdownImportSuccess": "Imported {topicCount} topic(s) and {entryCount} item(s).",
@@ -1124,6 +1124,7 @@
         "delete": "Delete",
         "cancel": "Cancel",
         "approve": "Approve",
+        "sendPasswordReset": "Send reset email",
         "deleting": "Deleting…"
       },
       "table": {
@@ -1171,7 +1172,10 @@
         "updateError": "Error updating user",
         "updateSuccess": "User updated successfully",
         "deleteError": "Error deleting user",
-        "deleteSuccess": "User deleted successfully"
+        "deleteSuccess": "User deleted successfully",
+        "passwordResetConfirm": "Do you really want to send a reset email to {name}?",
+        "passwordResetSent": "Password reset email sent to {name}.",
+        "passwordResetSendError": "Failed to send password reset email"
       }
     },
     "email": {

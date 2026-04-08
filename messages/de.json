@@ -503,7 +503,7 @@
     "markdownInsertResponsible": "Verantwortlich",
     "markdownInsertNote": "Beschluss/Info",
     "resolutionLabel": "Beschluss",
-    "informationLabel": "Information",
+    "informationLabel": "Informationen/Beschluss",
     "resolutionPlaceholder": "Beschluss, Entscheidung oder nächster Schritt...",
     "informationPlaceholder": "Zusätzliche Information oder Kontext...",
     "markdownImportSuccess": "{topicCount} Traktandum/Traktanden und {entryCount} Eintrag/Einträge übernommen.",
@@ -1124,6 +1124,7 @@
         "delete": "Löschen",
         "cancel": "Abbrechen",
         "approve": "Freischalten",
+        "sendPasswordReset": "Reset-E-Mail senden",
         "deleting": "Lösche…"
       },
       "table": {
@@ -1171,7 +1172,10 @@
         "updateError": "Fehler beim Aktualisieren des Benutzers",
         "updateSuccess": "Benutzer erfolgreich aktualisiert",
         "deleteError": "Fehler beim Löschen des Benutzers",
-        "deleteSuccess": "Benutzer erfolgreich gelöscht"
+        "deleteSuccess": "Benutzer erfolgreich gelöscht",
+        "passwordResetConfirm": "Möchten Sie wirklich eine Reset-E-Mail an {name} senden?",
+        "passwordResetSent": "Reset-E-Mail wurde an {name} gesendet.",
+        "passwordResetSendError": "Fehler beim Senden der Reset-E-Mail"
       }
     },
     "email": {
