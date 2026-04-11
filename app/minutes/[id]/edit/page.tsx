@@ -540,12 +540,12 @@ function SortableInfoItem({
 
   const renderAttachmentSection = () => (
     <div className="mt-2 bg-white/70 backdrop-blur-sm p-2 rounded-lg border border-white/50">
-      <label className="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide">
+      <label className="block text-sm font-semibold text-gray-600 mb-1 uppercase tracking-wide">
         📎 {tAttachments('title')}
       </label>
 
       {!hasAttachmentBinding ? (
-        <div className="rounded-lg border border-amber-200 bg-amber-50 p-2.5 text-xs text-amber-900 flex flex-wrap items-center gap-2">
+        <div className="rounded-lg border border-amber-200 bg-amber-50 p-2.5 text-sm text-amber-900 flex flex-wrap items-center gap-2">
           <p className="flex-1 min-w-0">{t('attachmentsSaveItemFirst')}</p>
           <button
             type="button"
@@ -628,28 +628,28 @@ function SortableInfoItem({
                 <div className="flex flex-wrap items-center gap-1.5 mb-0.5">
                   {item.itemType === 'actionItem' ? (
                     <>
-                      <span className="px-1.5 py-0.5 rounded text-[11px] font-bold bg-gray-100 text-gray-600 uppercase tracking-wide">
+                      <span className="px-1.5 py-0.5 rounded text-xs font-bold bg-gray-100 text-gray-600 uppercase tracking-wide">
                         {t('task')}
                       </span>
-                      <span className={`px-1.5 py-0.5 rounded text-[11px] font-semibold ${priorityBadge.bg} ${priorityBadge.text}`}>
+                      <span className={`px-1.5 py-0.5 rounded text-xs font-semibold ${priorityBadge.bg} ${priorityBadge.text}`}>
                         {priorityBadge.icon} {priorityBadge.label}
                       </span>
-                      <span className={`px-1.5 py-0.5 rounded text-[11px] font-semibold ${statusBadge.bg} ${statusBadge.text}`}>
+                      <span className={`px-1.5 py-0.5 rounded text-xs font-semibold ${statusBadge.bg} ${statusBadge.text}`}>
                         {statusBadge.icon} {statusBadge.label}
                       </span>
                     </>
                   ) : (
-                    <span className="px-1.5 py-0.5 rounded text-[11px] font-bold bg-[var(--brand-primary-soft)] text-[var(--brand-primary-strong)] uppercase tracking-wide">
+                    <span className="px-1.5 py-0.5 rounded text-xs font-bold bg-[var(--brand-primary-soft)] text-[var(--brand-primary-strong)] uppercase tracking-wide">
                       ℹ️ {t('info')}
                     </span>
                   )}
                   {durationMinutes > 0 && (
-                    <span className="px-1.5 py-0.5 rounded text-[11px] font-semibold bg-sky-100 text-sky-800">
+                    <span className="px-1.5 py-0.5 rounded text-xs font-semibold bg-sky-100 text-sky-800">
                       {t('plannedDurationShort', { minutes: durationMinutes })}
                     </span>
                   )}
                 </div>
-                <h4 className="font-bold text-gray-900 text-sm break-words">{displayTitle}</h4>
+                <h4 className="font-bold text-gray-900 text-base break-words">{displayTitle}</h4>
               </div>
               <div className="flex gap-1 flex-shrink-0">
                 <button
@@ -676,11 +676,11 @@ function SortableInfoItem({
             </div>
 
             {item.details && (
-              <p className="text-xs text-gray-700 mt-0.5 whitespace-pre-wrap line-clamp-4">{item.details}</p>
+              <p className="text-sm text-gray-700 mt-0.5 whitespace-pre-wrap line-clamp-4">{item.details}</p>
             )}
 
             {/* Compact metadata row */}
-            <div className="flex flex-wrap items-center gap-2 mt-1.5 text-xs">
+            <div className="flex flex-wrap items-center gap-2 mt-1.5 text-sm">
               {item.itemType === 'infoItem' && item.responsibles && item.responsibles.length > 0 && (
                 <span className="text-[var(--brand-primary-strong)] font-medium">
                   👤 {formatUsersAsInitials(item.responsibles)}
@@ -798,15 +798,15 @@ function SortableInfoItem({
             {/* Type Badge */}
             {item.itemType === 'actionItem' ? (
               <div className="flex items-center gap-1">
-                <span className={`px-1.5 py-0.5 rounded text-[11px] font-semibold ${getPriorityBadge().bg} ${getPriorityBadge().text}`}>
+                <span className={`px-1.5 py-0.5 rounded text-xs font-semibold ${getPriorityBadge().bg} ${getPriorityBadge().text}`}>
                   {getPriorityBadge().icon} {getPriorityBadge().label}
                 </span>
-                <span className={`px-1.5 py-0.5 rounded text-[11px] font-semibold ${getStatusBadge().bg} ${getStatusBadge().text}`}>
+                <span className={`px-1.5 py-0.5 rounded text-xs font-semibold ${getStatusBadge().bg} ${getStatusBadge().text}`}>
                   {getStatusBadge().icon} {getStatusBadge().label}
                 </span>
               </div>
             ) : (
-              <span className="px-1.5 py-0.5 rounded text-[11px] font-semibold bg-gray-200 text-gray-700">
+              <span className="px-1.5 py-0.5 rounded text-xs font-semibold bg-gray-200 text-gray-700">
                 ℹ️ {t('info')}
               </span>
             )}
@@ -825,7 +825,7 @@ function SortableInfoItem({
         </div>
 
         <div className="bg-white/70 backdrop-blur-sm p-2 rounded-lg border border-white/50">
-          <label className="block text-xs font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
+          <label className="block text-sm font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">
             {t('step1SelectType')}
           </label>
           <div className="grid grid-cols-2 gap-1.5">
@@ -854,7 +854,7 @@ function SortableInfoItem({
 
         {agendaItemLabelMode === 'manual' ? (
           <div className="bg-white/70 backdrop-blur-sm p-2 rounded-lg border border-white/50">
-            <label className="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide">
+            <label className="block text-sm font-semibold text-gray-600 mb-1 uppercase tracking-wide">
               {t(item.itemType === 'actionItem' ? 'step2TitleAction' : 'step2TitleInfo')}
             </label>
             <input
@@ -862,17 +862,17 @@ function SortableInfoItem({
               value={item.subject}
               onChange={(e) => updateInfoItem(topicIndex, itemIndex, 'subject', e.target.value)}
               placeholder={t(item.itemType === 'actionItem' ? 'step2PlaceholderAction' : 'step2PlaceholderInfo')}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-[var(--brand-primary)] text-sm font-semibold bg-white"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-[var(--brand-primary)] text-base font-semibold bg-white"
               required={item.itemType === 'actionItem' && agendaItemLabelMode === 'manual'}
             />
           </div>
         ) : (
           <div className="bg-white/70 backdrop-blur-sm p-2 rounded-lg border border-white/50">
-            <label className="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide">
+            <label className="block text-sm font-semibold text-gray-600 mb-1 uppercase tracking-wide">
               {`${t('topic')} ${topicIndex + 1} – ${t('infoItems')}`}
             </label>
             <div className="grid grid-cols-1 min-[520px]:grid-cols-[120px_minmax(0,1fr)] gap-1.5">
-              <div className="w-full px-3 py-2 border-2 border-dashed border-[var(--brand-primary-border)] rounded-lg bg-[var(--brand-primary-soft)] text-[var(--brand-primary-strong)] text-sm font-bold">
+              <div className="w-full px-3 py-2 border-2 border-dashed border-[var(--brand-primary-border)] rounded-lg bg-[var(--brand-primary-soft)] text-[var(--brand-primary-strong)] text-base font-bold">
                 {automaticEntryLabel}
               </div>
               <input
@@ -880,27 +880,27 @@ function SortableInfoItem({
                 value={isAutoGeneratedSubject ? '' : (item.subject || '')}
                 onChange={(e) => updateInfoItem(topicIndex, itemIndex, 'subject', e.target.value)}
                 placeholder={t(item.itemType === 'actionItem' ? 'step2PlaceholderAction' : 'step2PlaceholderInfo')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-[var(--brand-primary)] text-sm font-semibold bg-white"
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-[var(--brand-primary)] text-base font-semibold bg-white"
               />
             </div>
           </div>
         )}
 
         <div className="bg-white/70 backdrop-blur-sm p-2 rounded-lg border border-white/50">
-          <label className="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide">
+          <label className="block text-sm font-semibold text-gray-600 mb-1 uppercase tracking-wide">
             {t(item.itemType === 'actionItem' ? 'step3TitleAction' : 'step3TitleInfo')}
           </label>
           <textarea
             value={item.details || ''}
             onChange={(e) => updateInfoItem(topicIndex, itemIndex, 'details', e.target.value)}
             placeholder={t(item.itemType === 'actionItem' ? 'step3PlaceholderAction' : 'step3PlaceholderInfo')}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-[var(--brand-primary)] text-sm bg-white resize-y whitespace-pre-wrap"
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-[var(--brand-primary)] text-base bg-white resize-y whitespace-pre-wrap"
             rows={4}
           />
         </div>
 
         <div className="bg-white/70 backdrop-blur-sm p-2 rounded-lg border border-white/50">
-          <label className="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide">
+          <label className="block text-sm font-semibold text-gray-600 mb-1 uppercase tracking-wide">
             🕒 {t('plannedDurationMinutes')}
           </label>
           <div className="grid grid-cols-1 min-[460px]:grid-cols-[160px_minmax(0,1fr)] gap-1.5 items-center">
@@ -928,21 +928,21 @@ function SortableInfoItem({
                 );
               }}
               placeholder={t('plannedDurationPlaceholder')}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-[var(--brand-primary)] text-sm bg-white"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-[var(--brand-primary)] text-base bg-white"
             />
-            <p className="text-xs text-gray-500 break-words">{t('plannedDurationHint')}</p>
+            <p className="text-sm text-gray-500 break-words">{t('plannedDurationHint')}</p>
           </div>
         </div>
 
         {/* Step 4: Task-specific fields (only for action items) */}
         {item.itemType === 'actionItem' && (
           <div className="bg-white/70 backdrop-blur-sm p-2 rounded-lg border border-white/50 space-y-2">
-            <label className="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide">
+            <label className="block text-sm font-semibold text-gray-600 mb-1 uppercase tracking-wide">
               {t('step4Title')}
             </label>
 
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">🔥 {t('urgency')}</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">🔥 {t('urgency')}</label>
               <div className="grid grid-cols-3 gap-1.5">
                 {['low', 'medium', 'high'].map((priority) => {
                   const colors = {
@@ -956,7 +956,7 @@ function SortableInfoItem({
                       key={priority}
                       type="button"
                       onClick={() => updateInfoItem(topicIndex, itemIndex, 'priority', priority)}
-                      className={`min-h-[34px] py-1.5 px-2 rounded-md border-2 transition-all text-center text-xs font-semibold ${(item.priority || 'medium') === priority
+                      className={`min-h-[34px] py-1.5 px-2 rounded-md border-2 transition-all text-center text-sm font-semibold ${(item.priority || 'medium') === priority
                         ? `${colors.bg} ${colors.border} shadow-sm ${colors.text}`
                         : 'bg-white border-gray-300 hover:border-gray-400 text-gray-600'
                         }`}
@@ -969,17 +969,17 @@ function SortableInfoItem({
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">📅 {t('dueDate')}</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">📅 {t('dueDate')}</label>
               <input
                 type="date"
                 value={item.dueDate?.split('T')[0] || ''}
                 onChange={(e) => updateInfoItem(topicIndex, itemIndex, 'dueDate', e.target.value)}
-                className="w-full px-3 py-1.5 text-sm min-h-[34px] border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-[var(--brand-primary)] bg-white"
+                className="w-full px-3 py-1.5 text-base min-h-[34px] border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-[var(--brand-primary)] bg-white"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-medium text-gray-700 mb-1">📊 {t('status')}</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">📊 {t('status')}</label>
               <div className="grid grid-cols-4 gap-1">
                 {['open', 'in-progress', 'completed', 'cancelled'].map((status) => {
                   const statusConfig = {
@@ -994,7 +994,7 @@ function SortableInfoItem({
                       key={status}
                       type="button"
                       onClick={() => updateInfoItem(topicIndex, itemIndex, 'status', status)}
-                      className={`min-h-[34px] py-1.5 px-1 rounded-md border-2 transition-all text-center text-[11px] font-semibold leading-tight ${(item.status || 'open') === status
+                      className={`min-h-[34px] py-1.5 px-1 rounded-md border-2 transition-all text-center text-xs font-semibold leading-tight ${(item.status || 'open') === status
                         ? `${statusConfig.bg} ${statusConfig.border} shadow-sm ${statusConfig.text}`
                         : 'bg-white border-gray-300 hover:border-gray-400 text-gray-600'
                         }`}
@@ -1017,7 +1017,7 @@ function SortableInfoItem({
               </svg>
             </div>
             <div className="flex-1 min-w-0">
-              <label className="block text-xs font-bold text-gray-800">
+              <label className="block text-sm font-bold text-gray-800">
                 {t(item.itemType === 'actionItem' ? 'responsiblesTitleAction' : 'responsiblesTitleInfo')}
               </label>
             </div>
@@ -1129,14 +1129,14 @@ function SortableInfoItem({
         </div>
 
         <div className="bg-white/70 backdrop-blur-sm p-2 rounded-lg border border-white/50">
-          <label className="block text-xs font-semibold text-gray-600 mb-1 uppercase tracking-wide">
+          <label className="block text-sm font-semibold text-gray-600 mb-1 uppercase tracking-wide">
             📝 {item.itemType === 'actionItem' ? t('resolutionLabel') : t('informationLabel')}
           </label>
           <textarea
             value={item.notes || ''}
             onChange={(e) => updateInfoItem(topicIndex, itemIndex, 'notes', e.target.value)}
             placeholder={item.itemType === 'actionItem' ? t('resolutionPlaceholder') : t('informationPlaceholder')}
-            className="w-full min-h-[72px] px-3 py-2 text-sm leading-snug border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-[var(--brand-primary)] bg-white resize-y"
+            className="w-full min-h-[72px] px-3 py-2 text-base leading-snug border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-[var(--brand-primary)] bg-white resize-y"
             rows={2}
           />
         </div>
@@ -2300,7 +2300,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
               value={formData.title || ''}
               onChange={(e) => setFormData(prev => ({ ...prev, title: e.target.value }))}
               placeholder={t('minuteTitlePlaceholder')}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
+              className="w-full px-3 py-2 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
             />
           </div>
 
@@ -2313,7 +2313,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
                   type="date"
                   value={formData.date}
                   onChange={(e) => setFormData(prev => ({ ...prev, date: e.target.value }))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
+                  className="w-full px-3 py-2 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
                   required
                 />
               </div>
@@ -2324,7 +2324,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
                   value={formData.time || ''}
                   onChange={(e) => setFormData(prev => ({ ...prev, time: e.target.value }))}
                   placeholder="HH:MM"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
+                  className="w-full px-3 py-2 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
                 />
               </div>
               <div>
@@ -2334,7 +2334,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
                   value={formData.location || ''}
                   onChange={(e) => setFormData(prev => ({ ...prev, location: e.target.value }))}
                   placeholder={t('locationPlaceholder')}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
+                  className="w-full px-3 py-2 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
                 />
               </div>
             </div>
@@ -2841,7 +2841,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
                     }
                   }}
                   placeholder={getMinutesMarkdownTemplate()}
-                  className="w-full min-h-[320px] px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent font-mono text-sm"
+                  className="w-full min-h-[320px] px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent font-mono text-base"
                 />
                 {mentionSuggestions.length > 0 && mentionMenuPosition && (
                   <div
@@ -2938,7 +2938,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
               value={formData.globalNote}
               onChange={(e) => setFormData(prev => ({ ...prev, globalNote: e.target.value }))}
               placeholder={t('globalNotesPlaceholder')}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
+              className="w-full px-3 py-2 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
               rows={3}
             />
           </div>
@@ -2951,7 +2951,7 @@ export default function EditMinutePage({ params }: { params: Promise<{ id: strin
               value={formData.endTime || ''}
               onChange={(e) => setFormData(prev => ({ ...prev, endTime: e.target.value }))}
               placeholder="HH:MM"
-              className="w-full sm:max-w-xs px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
+              className="w-full sm:max-w-xs px-3 py-2 text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
             />
           </div>
         </form>
