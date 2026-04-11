@@ -157,7 +157,7 @@ export default function AttachmentUpload({
   return (
     <div className="w-full">
       <div
-        className={`relative border-2 border-dashed rounded-lg px-3 py-2 min-h-[74px] transition-colors ${
+        className={`relative border-2 border-dashed rounded-md px-2 py-1.5 transition-colors ${
           dragActive 
             ? 'border-[var(--brand-primary)] bg-[var(--brand-primary-soft)]' 
             : 'border-[var(--brand-card-border)] hover:border-[var(--brand-primary-border)]'
@@ -176,37 +176,30 @@ export default function AttachmentUpload({
           accept={acceptValue}
         />
 
-        <div className="flex flex-col justify-center gap-1 text-center h-full">
-          <div className="flex items-center justify-center gap-2">
-            <Upload className={`w-4 h-4 ${uploading ? 'text-[var(--brand-text-muted)]' : 'text-[var(--brand-text)]'}`} />
+        <div className="flex items-center justify-center gap-2 text-center">
+          <Upload className={`w-3.5 h-3.5 flex-shrink-0 ${uploading ? 'text-[var(--brand-text-muted)]' : 'text-[var(--brand-text)]'}`} />
 
-            {uploading ? (
-              <div className="flex items-center gap-2">
-                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-[var(--brand-primary)]"></div>
-                <p className="text-xs app-text-muted">{t('uploading')}</p>
-              </div>
-            ) : (
-              <div className="leading-snug">
-                <button
-                  type="button"
-                  onClick={onButtonClick}
-                  disabled={uploading}
-                  className="text-[var(--brand-primary)] hover:text-[var(--brand-primary-strong)] font-medium text-sm"
-                >
-                  {t('clickToUpload')}
-                </button>
-                <span className="text-sm app-text-muted"> {t('orDragAndDrop')}</span>
-              </div>
-            )}
-          </div>
-
-          {!uploading ? (
-            <p className="text-[11px] app-text-muted leading-tight">
-              {allowedTypesLabel
-                ? `${allowedTypesLabel} • max. ${maxFileSizeMB}MB`
-                : t('allowedTypes')}
-            </p>
-          ) : null}
+          {uploading ? (
+            <div className="flex items-center gap-1.5">
+              <div className="animate-spin rounded-full h-3.5 w-3.5 border-b-2 border-[var(--brand-primary)]"></div>
+              <p className="text-xs app-text-muted">{t('uploading')}</p>
+            </div>
+          ) : (
+            <div className="leading-tight">
+              <button
+                type="button"
+                onClick={onButtonClick}
+                disabled={uploading}
+                className="text-[var(--brand-primary)] hover:text-[var(--brand-primary-strong)] font-medium text-xs"
+              >
+                {t('clickToUpload')}
+              </button>
+              <span className="text-xs app-text-muted"> {t('orDragAndDrop')}</span>
+              {allowedTypesLabel && (
+                <span className="text-[10px] app-text-muted ml-1">({allowedTypesLabel} • max. {maxFileSizeMB}MB)</span>
+              )}
+            </div>
+          )}
         </div>
       </div>
 

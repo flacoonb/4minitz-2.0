@@ -377,45 +377,36 @@ export default function TasksPage() {
 
       {/* Task Edit Modal */}
       {editingTask && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-3 sm:p-4">
-          <div className="bg-white rounded-2xl shadow-2xl max-w-xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-4 sm:p-6 border-b" style={{ borderColor: 'var(--brand-card-border)' }}>
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <h2 className="text-xl sm:text-2xl font-bold" style={{ color: 'var(--brand-text)' }}>{t('dashboard.editTask')}</h2>
-                  <p className="text-sm app-text-muted mt-1 break-words">
-                    {editingTask.meetingSeries?.project || t('dashboard.noSeries')}
-                    {editingTask.meetingSeries?.name ? ` – ${editingTask.meetingSeries.name}` : ''}{editingTask.topicSubject ? ` • ${editingTask.topicSubject}` : ''}
-                  </p>
-                </div>
-                <button
-                  onClick={closeTaskModal}
-                  className="transition-colors min-h-11 min-w-11 inline-flex items-center justify-center rounded-lg app-text-muted hover:text-[var(--brand-text)]"
-                  aria-label="Dialog schliessen"
-                >
-                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                </button>
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-3 sm:p-4">
+          <div className="bg-white rounded-xl shadow-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+            <div className="px-5 py-3.5 border-b border-gray-200 flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <h2 className="text-lg font-bold text-gray-900">{t('dashboard.editTask')}</h2>
+                <p className="text-xs text-gray-500 mt-0.5 break-words">
+                  {editingTask.meetingSeries?.project || t('dashboard.noSeries')}
+                  {editingTask.meetingSeries?.name ? ` – ${editingTask.meetingSeries.name}` : ''}{editingTask.topicSubject ? ` • ${editingTask.topicSubject}` : ''}
+                </p>
               </div>
+              <button
+                onClick={closeTaskModal}
+                className="p-1.5 min-h-[36px] min-w-[36px] inline-flex items-center justify-center rounded-lg text-gray-400 hover:bg-gray-100 transition-colors"
+                aria-label="Dialog schliessen"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
             </div>
 
-            <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-              {/* Original Task Description (Read-only) */}
-              <div className="bg-[var(--brand-primary-soft)] border-2 border-[var(--brand-primary-border)] rounded-lg p-3 sm:p-4">
-                <div className="flex items-start gap-2 mb-2">
-                  <svg className="w-5 h-5 text-[var(--brand-primary)] mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                  </svg>
-                  <div className="flex-1">
-                    <h3 className="text-sm font-bold text-[var(--brand-primary-strong)] mb-1">{t('dashboard.originalTask')}</h3>
-                    <p className="text-sm sm:text-base text-[var(--brand-primary-strong)] font-medium">{editingTask.subject}</p>
-                    {editingTask.details && (
-                      <p className="text-sm text-[var(--brand-primary-strong)] mt-2 whitespace-pre-wrap">{editingTask.details}</p>
-                    )}
-                  </div>
-                </div>
-                <div className="mt-3 pt-3 border-t border-[var(--brand-primary-border)] flex flex-wrap gap-2 text-xs">
+            <div className="px-5 py-4 space-y-4">
+              {/* Original Task */}
+              <div className="bg-[var(--brand-primary-soft)] border border-[var(--brand-primary-border)] rounded-lg p-3">
+                <h3 className="text-xs font-bold text-[var(--brand-primary-strong)] mb-0.5">{t('dashboard.originalTask')}</h3>
+                <p className="text-sm text-[var(--brand-primary-strong)] font-medium">{editingTask.subject}</p>
+                {editingTask.details && (
+                  <p className="text-xs text-[var(--brand-primary-strong)] mt-1 whitespace-pre-wrap line-clamp-3">{editingTask.details}</p>
+                )}
+                <div className="mt-2 pt-2 border-t border-[var(--brand-primary-border)] flex flex-wrap gap-x-2 gap-y-0.5 text-xs">
                   {editingTask.minutesDate && (
                     <span className="text-[var(--brand-primary-strong)]">
                       📅 {t('dashboard.minuteLabel')} {new Date(editingTask.minutesDate).toLocaleDateString(locale)}
@@ -437,99 +428,64 @@ export default function TasksPage() {
 
               {/* Status Selection */}
               <div>
-                <label className="block text-sm font-medium mb-2" style={{ color: 'var(--brand-text)' }}>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
                   {t('dashboard.changeStatus')}
                 </label>
-                <div className="grid grid-cols-2 gap-2 sm:gap-3">
-                  <button
-                    onClick={() => setTaskUpdateStatus('open')}
-                    className={`p-2.5 sm:p-3 rounded-lg border-2 transition-all min-h-[44px] ${taskUpdateStatus === 'open'
-                      ? 'border-[var(--brand-danger-border)] bg-[var(--brand-danger-soft)] text-[var(--brand-danger)]'
-                      : 'border-[var(--brand-card-border)] hover:border-[var(--brand-primary-border)]'
-                      }`}
-                  >
-                    <div className="text-lg sm:text-xl mb-0.5">○</div>
-                    <div className="font-medium text-sm sm:text-base leading-tight">{t('status.open')}</div>
-                  </button>
-
-                  <button
-                    onClick={() => setTaskUpdateStatus('in-progress')}
-                    className={`p-2.5 sm:p-3 rounded-lg border-2 transition-all min-h-[44px] ${taskUpdateStatus === 'in-progress'
-                      ? 'border-[var(--brand-warning-border)] bg-[var(--brand-warning-soft)] text-[var(--brand-warning)]'
-                      : 'border-[var(--brand-card-border)] hover:border-[var(--brand-primary-border)]'
-                      }`}
-                  >
-                    <div className="text-lg sm:text-xl mb-0.5">⏳</div>
-                    <div className="font-medium text-sm sm:text-base leading-tight">{t('status.inProgress')}</div>
-                  </button>
-
-                  <button
-                    onClick={() => setTaskUpdateStatus('completed')}
-                    className={`p-2.5 sm:p-3 rounded-lg border-2 transition-all min-h-[44px] ${taskUpdateStatus === 'completed'
-                      ? 'border-[var(--brand-success-border)] bg-[var(--brand-success-soft)] text-[var(--brand-success)]'
-                      : 'border-[var(--brand-card-border)] hover:border-[var(--brand-primary-border)]'
-                      }`}
-                  >
-                    <div className="text-lg sm:text-xl mb-0.5">✓</div>
-                    <div className="font-medium text-sm sm:text-base leading-tight">{t('status.completed')}</div>
-                  </button>
-
-                  <button
-                    onClick={() => setTaskUpdateStatus('cancelled')}
-                    className={`p-2.5 sm:p-3 rounded-lg border-2 transition-all min-h-[44px] ${taskUpdateStatus === 'cancelled'
-                      ? 'border-[var(--brand-card-border)] bg-[var(--brand-muted-soft)] text-[var(--brand-text)]'
-                      : 'border-[var(--brand-card-border)] hover:border-[var(--brand-primary-border)] text-[var(--brand-text)]'
-                      }`}
-                  >
-                    <div className="text-lg sm:text-xl mb-0.5">✕</div>
-                    <div className="font-medium text-sm sm:text-base leading-tight">{t('status.cancelled')}</div>
-                  </button>
+                <div className="grid grid-cols-4 gap-2">
+                  {([
+                    { key: 'open', icon: '○', border: 'border-[var(--brand-danger-border)]', bg: 'bg-[var(--brand-danger-soft)]', text: 'text-[var(--brand-danger)]' },
+                    { key: 'in-progress', icon: '⏳', border: 'border-[var(--brand-warning-border)]', bg: 'bg-[var(--brand-warning-soft)]', text: 'text-[var(--brand-warning)]' },
+                    { key: 'completed', icon: '✓', border: 'border-[var(--brand-success-border)]', bg: 'bg-[var(--brand-success-soft)]', text: 'text-[var(--brand-success)]' },
+                    { key: 'cancelled', icon: '✕', border: 'border-gray-300', bg: 'bg-gray-50', text: 'text-gray-600' },
+                  ] as const).map(({ key, icon, border, bg, text }) => (
+                    <button
+                      key={key}
+                      onClick={() => setTaskUpdateStatus(key)}
+                      className={`py-2.5 px-1 rounded-lg border-2 transition-all text-center ${taskUpdateStatus === key
+                        ? `${border} ${bg} ${text} shadow-sm`
+                        : 'border-gray-200 hover:border-gray-300 text-gray-600'
+                        }`}
+                    >
+                      <div className="text-lg leading-none mb-0.5">{icon}</div>
+                      <div className="font-medium text-xs leading-tight">{t(`status.${key === 'in-progress' ? 'inProgress' : key}`)}</div>
+                    </button>
+                  ))}
                 </div>
               </div>
 
-              {/* Additional Notes (Editable) */}
+              {/* Comment */}
               <div>
-                <label htmlFor="task-notes" className="block text-sm font-medium mb-2" style={{ color: 'var(--brand-text)' }}>
+                <label htmlFor="task-notes" className="block text-sm font-medium text-gray-700 mb-1.5">
                   💬 {t('dashboard.yourComment')}
                 </label>
                 <textarea
                   id="task-notes"
                   value={taskUpdateNotes}
                   onChange={(e) => setTaskUpdateNotes(e.target.value)}
-                  rows={4}
+                  rows={8}
                   placeholder={t('dashboard.commentPlaceholder')}
-                  className="w-full px-4 py-3 border-2 rounded-lg focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-[var(--brand-primary)] transition-colors"
-                  style={{ borderColor: 'var(--brand-card-border)', backgroundColor: 'var(--brand-card)', color: 'var(--brand-text)' }}
+                  className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-base focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-[var(--brand-primary)] transition-colors bg-white text-gray-900"
                 />
-                <p className="mt-2 text-xs app-text-muted flex items-start gap-1">
-                  <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m-1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                  <span>{t('dashboard.commentHint')}</span>
-                </p>
+                <p className="mt-1.5 text-xs text-gray-500">{t('dashboard.commentHint')}</p>
               </div>
 
-              {/* Action Buttons */}
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3 pt-4 border-t" style={{ borderColor: 'var(--brand-card-border)' }}>
+              {/* Actions */}
+              <div className="flex justify-end gap-2 pt-3 border-t border-gray-200">
                 <button
                   onClick={closeTaskModal}
                   disabled={isUpdating}
-                  className="w-full sm:w-auto px-6 py-2 min-h-11 rounded-lg transition-colors disabled:opacity-50 hover:brightness-95"
-                  style={{ color: 'var(--brand-text)', backgroundColor: 'var(--brand-surface-soft)' }}
+                  className="px-4 py-2 min-h-[38px] rounded-lg text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors disabled:opacity-50"
                 >
                   {t('common.cancel')}
                 </button>
                 <button
                   onClick={updateTaskStatus}
                   disabled={isUpdating}
-                  className="w-full sm:w-auto px-6 py-2 min-h-11 text-white brand-button-solid rounded-lg transition-colors disabled:opacity-50 inline-flex items-center justify-center gap-2"
+                  className="px-5 py-2 min-h-[38px] text-white brand-button-solid rounded-lg text-sm font-medium transition-colors disabled:opacity-50 inline-flex items-center justify-center gap-1.5"
                 >
                   {isUpdating ? (
                     <>
-                      <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                      </svg>
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
                       {t('common.saving')}
                     </>
                   ) : (

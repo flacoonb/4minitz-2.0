@@ -119,6 +119,8 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
   const [showReopenDialog, setShowReopenDialog] = useState(false);
   const [reopenReason, setReopenReason] = useState('');
   const [showFinalizeDialog, setShowFinalizeDialog] = useState(false);
+  const [showEndTimeDialog, setShowEndTimeDialog] = useState(false);
+  const [pendingEndTime, setPendingEndTime] = useState('');
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [timeFormat, setTimeFormat] = useState<'12h' | '24h'>('24h');
@@ -240,14 +242,45 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
   const handleFinalize = async () => {
     if (!minute || !minuteId) return;
     
-    // If reopening a finalized protocol, show dialog
     if (minute.isFinalized) {
       setShowReopenDialog(true);
       return;
     }
     
-    // Show finalize confirmation dialog
+    if (!minute.endTime) {
+      const now = new Date();
+      setPendingEndTime(`${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`);
+      setShowEndTimeDialog(true);
+      return;
+    }
+    
     setShowFinalizeDialog(true);
+  };
+
+  const confirmEndTimeAndFinalize = async () => {
+    if (!minuteId || !pendingEndTime) return;
+
+    try {
+      const response = await fetch(`/api/minutes/${minuteId}`, {
+        method: 'PUT',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ endTime: pendingEndTime }),
+      });
+
+      if (response.ok) {
+        setShowEndTimeDialog(false);
+        await fetchMinute();
+        setShowFinalizeDialog(true);
+      } else {
+        const errorData = await response.json();
+        setErrorMessage(`${t('common.error')}: ${errorData.error || 'Unknown error'}`);
+        setShowEndTimeDialog(false);
+      }
+    } catch {
+      setErrorMessage(t('minutes.finalizeErrorGeneric'));
+      setShowEndTimeDialog(false);
+    }
   };
 
   const confirmFinalize = async () => {
@@ -887,7 +920,7 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
                           </div>
                           
                           {item.details && (
-                            <p className="text-sm text-gray-700 mb-3 leading-relaxed break-words">{item.details}</p>
+                            <p className="text-sm text-gray-700 mb-3 leading-relaxed break-words whitespace-pre-wrap">{item.details}</p>
                           )}
 
                           {/* Info Items - Show responsible persons if available */}
@@ -1060,6 +1093,50 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* End Time Required Dialog */}
+      {showEndTimeDialog && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4 animate-in fade-in">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-sm w-full p-6 animate-in zoom-in-95">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center">
+                <svg className="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">{t('minutes.endTimeRequiredTitle')}</h3>
+                <p className="text-sm text-gray-500">{t('minutes.endTimeRequiredText')}</p>
+              </div>
+            </div>
+            <div className="mb-5">
+              <label className="block text-sm font-medium text-gray-700 mb-1.5">{t('minutes.endTime')}</label>
+              <input
+                type="time"
+                value={pendingEndTime}
+                onChange={(e) => setPendingEndTime(e.target.value)}
+                className="w-full px-3 py-2.5 border border-gray-300 rounded-lg text-lg font-semibold text-center focus:ring-2 focus:ring-[var(--brand-primary)] focus:border-transparent"
+                autoFocus
+              />
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowEndTimeDialog(false)}
+                className="flex-1 px-4 py-2.5 min-h-[40px] bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-xl font-semibold transition-all text-sm"
+              >
+                {t('common.cancel')}
+              </button>
+              <button
+                onClick={confirmEndTimeAndFinalize}
+                disabled={!pendingEndTime}
+                className="flex-1 px-4 py-2.5 min-h-[40px] bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-semibold hover:shadow-lg transition-all text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {t('minutes.setEndTimeAndFinalize')}
+              </button>
+            </div>
           </div>
         </div>
       )}
