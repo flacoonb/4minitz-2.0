@@ -8,6 +8,7 @@ import { sendNewMinutesNotification } from '@/lib/email-service';
 import mongoose from 'mongoose';
 import { verifyToken } from '@/lib/auth';
 import { requirePermission, hasPermission } from '@/lib/permissions';
+import { createMinutesSchema, validateBody } from '@/lib/validations';
 import {
   applyResponsibleSnapshotsToTopics,
   buildFunctionAssignmentMap,
@@ -172,6 +173,12 @@ export async function POST(request: NextRequest) {
 
     const userId = authResult.user._id.toString();
     const body = await request.json();
+
+    const validation = validateBody(createMinutesSchema, body);
+    if (!validation.success) {
+      return NextResponse.json({ error: validation.error }, { status: 400 });
+    }
+
     const {
       meetingSeries_id,
       date,
@@ -184,15 +191,7 @@ export async function POST(request: NextRequest) {
       endTime,
       location,
       templateId,
-    } = body;
-
-    // Validate required fields
-    if (!meetingSeries_id || !date) {
-      return NextResponse.json(
-        { error: 'meetingSeries_id and date are required' },
-        { status: 400 }
-      );
-    }
+    } = validation.data;
 
     // Convert agendaItems to topics format if provided
     let processedTopics = topics || [];

@@ -13,6 +13,7 @@ import MinutesTemplate from '@/models/MinutesTemplate';
 import PdfTemplate from '@/models/PdfTemplate';
 import { verifyToken } from '@/lib/auth';
 import { hasPermission } from '@/lib/permissions';
+import { updateMeetingSeriesSchema, validateBody } from '@/lib/validations';
 import { sanitizeResponsibles, validateFunctionResponsibles } from '@/lib/club-functions';
 
 interface RouteContext {
@@ -161,7 +162,16 @@ export async function PUT(
   try {
     await connectDB();
     const { id } = await context.params;
-    const body = await request.json();
+    const rawBody = await request.json();
+
+    const validation = validateBody(updateMeetingSeriesSchema, rawBody);
+    if (!validation.success) {
+      return NextResponse.json(
+        { success: false, error: validation.error },
+        { status: 400 }
+      );
+    }
+    const body: Record<string, any> = { ...validation.data };
 
     // Verify authentication
     const authResult = await verifyToken(request);

@@ -596,12 +596,12 @@ export default function MeetingSeriesPage() {
   }
 
   return (
-    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-8">
+    <div className="max-w-6xl mx-auto space-y-5">
       {/* Header */}
       <div>
         <Link
           href="/meeting-series"
-          className="inline-flex items-center text-[var(--brand-primary)] hover:text-[var(--brand-primary-strong)] text-sm font-medium mb-6 hover:scale-105 transition-all"
+          className="inline-flex items-center text-[var(--brand-primary)] hover:text-[var(--brand-primary-strong)] text-sm font-medium mb-3 hover:scale-105 transition-all"
         >
           <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -609,11 +609,11 @@ export default function MeetingSeriesPage() {
           {t('backToSeries')}
         </Link>
 
-        <div className="bg-[var(--brand-primary-soft)] rounded-2xl p-5 sm:p-8 border border-[var(--brand-primary-border)]">
-          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
-            <div className="flex items-start sm:items-center gap-3 sm:gap-4 min-w-0">
-              <div className="w-14 h-14 sm:w-20 sm:h-20 shrink-0 brand-gradient-bg rounded-2xl flex items-center justify-center shadow-lg">
-                <svg className="w-7 h-7 sm:w-10 sm:h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="bg-[var(--brand-primary-soft)] rounded-xl p-4 sm:p-5 border border-[var(--brand-primary-border)]">
+          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+            <div className="flex items-start sm:items-center gap-3 min-w-0">
+              <div className="w-10 h-10 sm:w-14 sm:h-14 shrink-0 brand-gradient-bg rounded-xl flex items-center justify-center shadow">
+                <svg className="w-5 h-5 sm:w-7 sm:h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
                 </svg>
               </div>
@@ -622,7 +622,7 @@ export default function MeetingSeriesPage() {
                   {series.project}{series.name ? ` – ${series.name}` : ''}
                 </h1>
                 {series.description && (
-                  <p className="mt-3 max-w-2xl leading-relaxed app-text-muted">
+                  <p className="mt-1.5 max-w-2xl text-sm leading-relaxed app-text-muted">
                     {series.description}
                   </p>
                 )}
@@ -685,10 +685,10 @@ export default function MeetingSeriesPage() {
       </div>
 
       {/* Planner Section */}
-      <div className="app-card rounded-2xl p-6 shadow-lg">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
+      <div className="app-card rounded-xl p-4 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
           <div>
-            <h2 className="text-xl font-bold text-gray-900">{t('planner.title')}</h2>
+            <h2 className="text-lg font-bold text-gray-900">{t('planner.title')}</h2>
             <p className="text-sm text-gray-600">{t('planner.subtitle')}</p>
           </div>
           {canCreateMinute && (
@@ -887,13 +887,13 @@ export default function MeetingSeriesPage() {
       </div>
 
       {/* Protokolle Section */}
-      <div className="app-card rounded-2xl p-6 shadow-lg">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-bold text-gray-900">{t('minutesCount', { count: minutes.length })}</h2>
+      <div className="app-card rounded-xl p-4 shadow-sm">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-bold text-gray-900">{t('minutesCount', { count: minutes.length })}</h2>
         </div>
 
         {minutes.length === 0 ? (
-          <div className="p-8 bg-gradient-to-br from-gray-50 to-[var(--brand-page-to)] rounded-xl text-center">
+          <div className="p-6 bg-gradient-to-br from-gray-50 to-[var(--brand-page-to)] rounded-xl text-center">
             <h3 className="text-lg font-medium text-gray-900 mb-2">{t('noMinutes')}</h3>
             <p className="text-gray-600 mb-4">{t('noMinutesText')}</p>
             <p className="text-sm text-gray-500">{t('noMinutesHint')}</p>
@@ -943,7 +943,7 @@ export default function MeetingSeriesPage() {
             <button
               onClick={openTemplateModal}
               disabled={creating}
-              className="w-full inline-flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-xl shadow-lg hover:shadow-xl hover:scale-[1.02] transition-all font-medium text-lg disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full inline-flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg shadow-md hover:shadow-lg hover:scale-[1.01] transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {creating ? (
                 <>

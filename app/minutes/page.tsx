@@ -83,13 +83,13 @@ export default function MinutesPage() {
 
   return (
     <div className="min-h-screen brand-page-gradient">
-      <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8">
-        <div className="mb-6">
-          <h1 className="text-3xl font-bold" style={{ color: 'var(--brand-text)' }}>{t('minutes.title')}</h1>
+      <div className="container mx-auto px-3 sm:px-4 py-2 sm:py-3">
+        <div className="mb-4">
+          <h1 className="text-2xl sm:text-3xl font-bold" style={{ color: 'var(--brand-text)' }}>{t('minutes.title')}</h1>
           <p className="mt-1 app-text-muted">{t('minutes.subtitle')}</p>
         </div>
 
-        <div className="mb-6 app-card rounded-xl p-4 shadow-sm">
+        <div className="mb-4 app-card rounded-xl p-3 shadow-sm">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             <button
               type="button"

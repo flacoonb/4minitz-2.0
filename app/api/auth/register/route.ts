@@ -4,6 +4,7 @@ import User from '@/models/User';
 import Settings from '@/models/Settings';
 import { checkRateLimit, checkRateLimitByKey } from '@/lib/rate-limit';
 import { registerSchema, validateBody } from '@/lib/validations';
+import { stripTrailingSlashes } from '@/lib/strip-trailing-slashes';
 import { sendWelcomeEmail, sendVerificationEmail, getTransporter, getFromEmail, getAppUrl } from '@/lib/email-service';
 import crypto from 'crypto';
 import { getTranslations } from 'next-intl/server';
@@ -220,7 +221,7 @@ async function notifyAdminsAboutNewUser(newUser: { firstName: string; lastName: 
 
     if (admins.length === 0) return;
 
-    const baseUrl = (await getAppUrl()).replace(/\/+$/, '');
+    const baseUrl = stripTrailingSlashes(await getAppUrl());
 
     const safeName = `${escapeHtml(newUser.firstName)} ${escapeHtml(newUser.lastName)}`;
     const safeEmail = escapeHtml(newUser.email);

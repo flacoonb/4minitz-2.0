@@ -24,8 +24,10 @@ function getRequestBaseUrl(request: NextRequest): string {
   return new URL(request.url).origin;
 }
 
+import { stripTrailingSlashes } from '@/lib/strip-trailing-slashes';
+
 function normalizeUrlCandidate(value: string): string {
-  return String(value || '').trim().replace(/\/+$/, '');
+  return stripTrailingSlashes(String(value || '').trim());
 }
 
 function isPublicHttpUrl(value: string): boolean {

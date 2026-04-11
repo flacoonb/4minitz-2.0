@@ -792,7 +792,7 @@
   },
   "documents": {
     "title": "Documents",
-    "subtitle": "Central overview of all accessible minutes documents",
+    "subtitle": "Central overview of all minutes documents",
     "searchPlaceholder": "Search by file name, topic or minutes...",
     "empty": "No documents found",
     "download": "Download",
@@ -800,7 +800,16 @@
     "topic": "Topic",
     "item": "Item",
     "openMinute": "Open minutes",
-    "loadError": "Failed to load documents"
+    "loadError": "Failed to load documents",
+    "count": "{count, plural, =0 {No documents} one {1 document} other {# documents}}",
+    "noSeries": "Without meeting series",
+    "filterType": {
+      "all": "All",
+      "pdf": "PDF",
+      "image": "Images",
+      "office": "Office / Text",
+      "other": "Other"
+    }
   },
   "enhancedMinutes": {
     "title": "Enhanced Minutes",

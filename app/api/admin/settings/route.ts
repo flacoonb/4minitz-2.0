@@ -4,17 +4,11 @@ import Settings, { ISettings } from '@/models/Settings';
 import { verifyToken } from '@/lib/auth';
 import { logAction } from '@/lib/audit';
 import { DEFAULT_BRAND_COLORS, sanitizeBrandColors } from '@/lib/brand-colors';
+import { stripTrailingSlashes } from '@/lib/strip-trailing-slashes';
 
 function normalizeUrlCandidate(value: string): string {
-  // Avoid /\/+$/ on user-controlled strings (CodeQL js/polynomial-redos): strip trailing slashes in O(n).
-  let s = String(value || '').trim();
-  if (s.length > 4096) {
-    s = s.slice(0, 4096);
-  }
-  while (s.endsWith('/')) {
-    s = s.slice(0, -1);
-  }
-  return s;
+  const s = String(value || '').trim();
+  return stripTrailingSlashes(s.length > 4096 ? s.slice(0, 4096) : s);
 }
 
 function isHttpUrl(value: string): boolean {

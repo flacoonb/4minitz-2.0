@@ -4,6 +4,7 @@ import connectDB from '@/lib/mongodb';
 import User from '@/models/User';
 import Settings from '@/models/Settings';
 import { verifyToken } from '@/lib/auth';
+import { stripTrailingSlashes } from '@/lib/strip-trailing-slashes';
 
 function getRequestBaseUrl(request: NextRequest): string {
   const forwardedProto = request.headers.get('x-forwarded-proto')?.split(',')[0]?.trim();
@@ -26,11 +27,11 @@ function createCalendarToken(): string {
 }
 
 function buildIcalUrl(baseUrl: string, token: string): string {
-  return `${baseUrl.replace(/\/+$/, '')}/api/calendar/ical/${token}`;
+  return `${stripTrailingSlashes(baseUrl)}/api/calendar/ical/${token}`;
 }
 
 function normalizeUrlCandidate(value: string): string {
-  return value.trim().replace(/\/+$/, '');
+  return stripTrailingSlashes(value.trim());
 }
 
 function isLocalhostLike(urlValue: string): boolean {
@@ -64,7 +65,7 @@ async function resolvePublicBaseUrl(request: NextRequest): Promise<string> {
   const refererHeader = String(request.headers.get('referer') || '');
   const envAppUrl = String(process.env.APP_URL || '');
   const envPublicAppUrl = String(process.env.NEXT_PUBLIC_APP_URL || '');
-  const requestDerived = getRequestBaseUrl(request).replace(/\/+$/, '');
+  const requestDerived = stripTrailingSlashes(getRequestBaseUrl(request));
 
   const refererOrigin = (() => {
     try {

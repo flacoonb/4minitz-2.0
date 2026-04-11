@@ -3,6 +3,7 @@ import { IMinutes, ITopic, IInfoItem } from '@/models/Minutes';
 import { IMeetingSeries } from '@/models/MeetingSeries';
 import Settings from '@/models/Settings';
 import PendingNotification from '@/models/PendingNotification';
+import { stripTrailingSlashes } from '@/lib/strip-trailing-slashes';
 import { decrypt } from '@/lib/crypto';
 import { sendPushToUserIds } from '@/lib/push-service';
 import { sanitizeBrandColors, hexToRgba } from '@/lib/brand-colors';
@@ -27,7 +28,7 @@ const FROM_EMAIL = process.env.FROM_EMAIL || 'noreply@nxtminutes.local';
 // APP_URL is now dynamic via getAppUrl()
 
 function normalizeUrlCandidate(value: string): string {
-  return String(value || '').trim().replace(/\/+$/, '');
+  return stripTrailingSlashes(String(value || '').trim());
 }
 
 function isHttpUrl(value: string): boolean {
@@ -756,7 +757,7 @@ export async function sendVerificationEmail(
   appUrlOverride?: string
 ): Promise<void> {
   const t = translations[locale].verifyEmail;
-  const appUrl = (await resolvePublicAppUrl(String(appUrlOverride || ''))).replace(/\/+$/, '');
+  const appUrl = stripTrailingSlashes(await resolvePublicAppUrl(String(appUrlOverride || '')));
   const emailTheme = await getEmailBrandTheme();
   const primaryButtonStyle = getEmailPrimaryButtonStyle(emailTheme);
   const verifyUrl = `${appUrl}/auth/verify-email?token=${token}`;

@@ -32,21 +32,21 @@ export default function MeetingSeriesPage() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 space-y-6 sm:space-y-8">
+    <div className="max-w-7xl mx-auto space-y-4 sm:space-y-5">
       {/* Header Section */}
-      <div className="bg-[var(--brand-primary-soft)] rounded-2xl p-5 sm:p-8 border border-[var(--brand-primary-border)]">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <div className="flex items-start sm:items-center gap-3 sm:gap-4 min-w-0">
-            <div className="w-12 h-12 sm:w-16 sm:h-16 shrink-0 brand-gradient-bg rounded-2xl flex items-center justify-center shadow-lg">
-              <svg className="w-6 h-6 sm:w-8 sm:h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div className="bg-[var(--brand-primary-soft)] rounded-xl p-4 sm:p-5 border border-[var(--brand-primary-border)]">
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+          <div className="flex items-start sm:items-center gap-3 min-w-0">
+            <div className="w-10 h-10 sm:w-12 sm:h-12 shrink-0 brand-gradient-bg rounded-xl flex items-center justify-center shadow">
+              <svg className="w-5 h-5 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
               </svg>
             </div>
             <div className="min-w-0">
-              <h1 className="text-3xl sm:text-4xl font-bold bg-clip-text text-transparent break-words" style={{ backgroundImage: 'linear-gradient(90deg, var(--brand-text), var(--brand-text-muted))' }}>
+              <h1 className="text-2xl sm:text-3xl font-bold bg-clip-text text-transparent break-words" style={{ backgroundImage: 'linear-gradient(90deg, var(--brand-text), var(--brand-text-muted))' }}>
                 {t('title')}
               </h1>
-              <p className="text-base sm:text-lg mt-1.5 sm:mt-2 app-text-muted">
+              <p className="text-sm sm:text-base mt-1 app-text-muted">
                 {t('subtitle')}
               </p>
             </div>
@@ -81,7 +81,7 @@ export default function MeetingSeriesPage() {
       )}
 
       {/* Meeting Series List */}
-      <div className="app-card rounded-2xl p-5 sm:p-8 shadow-lg">
+      <div className="app-card rounded-xl p-4 sm:p-5 shadow-sm">
         <MeetingSeriesList />
       </div>
     </div>

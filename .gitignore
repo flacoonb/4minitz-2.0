@@ -51,3 +51,11 @@ next-env.d.ts
 /tmp/*.log
 docs/
 .setup_token
+
+# IDE / agent config
+.agents/
+.codex/
+.codex.backup.*
+.codex.file-backup.*
+AGENTS.md
+AGENTS.md.backup.*

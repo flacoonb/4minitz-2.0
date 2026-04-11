@@ -20,8 +20,8 @@ export async function POST(_request: NextRequest) {
       value: '',
       httpOnly: true,
       secure: useSecureCookies,
-      sameSite: 'lax',
-      maxAge: 0 // Expire immediately
+      sameSite: 'strict',
+      maxAge: 0
     });
 
     return response;

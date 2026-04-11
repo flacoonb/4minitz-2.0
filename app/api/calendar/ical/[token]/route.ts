@@ -6,6 +6,7 @@ import MeetingSeries from '@/models/MeetingSeries';
 import MeetingEvent from '@/models/MeetingEvent';
 import Minutes from '@/models/Minutes';
 import { hasPermission } from '@/lib/permissions';
+import { stripTrailingSlashes } from '@/lib/strip-trailing-slashes';
 
 interface CalendarEventItem {
   _id: string;
@@ -219,7 +220,7 @@ export async function GET(request: NextRequest, context: RouteContext) {
       }
     }
 
-    const baseUrl = `${request.nextUrl.protocol}//${request.nextUrl.host}`.replace(/\/+$/, '');
+    const baseUrl = stripTrailingSlashes(`${request.nextUrl.protocol}//${request.nextUrl.host}`);
     const now = new Date();
     const lines: string[] = [
       'BEGIN:VCALENDAR',

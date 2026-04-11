@@ -1,3 +1,33 @@
+/**
+ * In-memory, per-process rate limiter.
+ *
+ * ## Multi-Instance / Scaling Considerations
+ *
+ * This implementation stores counters in a process-local `Map`. Each
+ * Next.js server instance maintains its own independent counter set.
+ * Consequences for multi-instance deployments (multiple containers,
+ * workers, or replicas behind a load balancer):
+ *
+ * - An attacker can make `limit × N` requests (N = number of instances)
+ *   before being blocked everywhere.
+ * - Sticky sessions (IP-based affinity) mitigate this partially but
+ *   are not guaranteed.
+ *
+ * ### Migration Path to Shared State
+ *
+ * When scaling beyond a single instance, replace the `Map` with a
+ * shared store. Recommended options (lowest to highest complexity):
+ *
+ * 1. **Redis** (`INCR` + `EXPIRE`) — sub-millisecond, widely supported.
+ * 2. **MongoDB TTL collection** — no extra infrastructure if already
+ *    running Mongo, but higher latency (~5-10ms per check).
+ * 3. **Cloudflare Rate Limiting / AWS WAF** — offload to edge; zero
+ *    application-level state needed.
+ *
+ * The public API (`checkRateLimit`, `checkRateLimitByKey`) is
+ * intentionally storage-agnostic; swap the backing store without
+ * changing call sites.
+ */
 import { NextRequest } from 'next/server';
 import crypto from 'crypto';
 

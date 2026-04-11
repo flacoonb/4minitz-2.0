@@ -564,11 +564,11 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
   }
 
   return (
-    <div className="min-h-screen brand-page-gradient py-6 sm:py-8 px-3 sm:px-4">
-      <div className="max-w-6xl mx-auto space-y-8">
+    <div className="min-h-screen brand-page-gradient py-2 sm:py-3 px-3 sm:px-4">
+      <div className="max-w-6xl mx-auto space-y-5">
         {/* Header */}
-        <div className="app-card rounded-2xl shadow-xl p-5 sm:p-8">
-          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
+        <div className="app-card rounded-xl shadow-md p-4 sm:p-5">
+          <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
             <div className="flex-1 min-w-0">
               {/* Breadcrumb */}
               <nav className="flex items-center gap-2 text-sm text-gray-500 mb-3 flex-wrap">
@@ -590,7 +590,7 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
                   {new Date(minute.date).toLocaleDateString(locale)}
                 </span>
               </nav>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4 break-words">{t('minutes.details')}</h1>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-3 break-words">{t('minutes.details')}</h1>
               
               <div className="space-y-3">
                 <div className="flex items-center gap-3 text-gray-700">
@@ -701,9 +701,9 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
 
         {/* Participants */}
         {((minute.participantsWithStatus && minute.participantsWithStatus.length > 0) || (minute.participants && minute.participants.length > 0)) && (
-          <div className="app-card rounded-2xl shadow-lg p-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">{t('minutes.participants')}</h2>
-            <div className="flex flex-wrap gap-3">
+          <div className="app-card rounded-xl shadow-sm p-4">
+            <h2 className="text-lg font-bold text-gray-900 mb-3">{t('minutes.participants')}</h2>
+            <div className="flex flex-wrap gap-2">
               {minute.participantsWithStatus && minute.participantsWithStatus.length > 0 ? (
                 minute.participantsWithStatus
                   .filter(p => p.attendance === 'present')
@@ -714,8 +714,8 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
                     const displayName = user ? `${user.firstName} ${user.lastName}` : id;
                     
                     return (
-                      <span key={index} className="inline-flex items-center px-4 py-2 rounded-xl text-sm font-medium bg-[var(--brand-primary-soft)] text-[var(--brand-primary-strong)] border border-[var(--brand-primary-border)]">
-                        <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                      <span key={index} className="inline-flex items-center px-2.5 py-1 rounded-lg text-sm font-medium bg-[var(--brand-primary-soft)] text-[var(--brand-primary-strong)] border border-[var(--brand-primary-border)]">
+                        <svg className="w-3.5 h-3.5 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
                           <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                         </svg>
                         {displayName}
@@ -725,8 +725,8 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
                   })
               ) : (
                 minute.participants.map((participant, index) => (
-                  <span key={index} className="inline-flex items-center px-4 py-2 rounded-xl text-sm font-medium bg-[var(--brand-primary-soft)] text-[var(--brand-primary-strong)] border border-[var(--brand-primary-border)]">
-                    <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
+                  <span key={index} className="inline-flex items-center px-2.5 py-1 rounded-lg text-sm font-medium bg-[var(--brand-primary-soft)] text-[var(--brand-primary-strong)] border border-[var(--brand-primary-border)]">
+                    <svg className="w-3.5 h-3.5 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
                       <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
                     </svg>
                     {participant}
@@ -741,23 +741,23 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
 
         {/* Global Note */}
         {minute.globalNote && (
-          <div className="bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 backdrop-blur-sm rounded-2xl shadow-xl p-8 border-2 border-amber-300 hover:shadow-2xl transition-all duration-300">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 bg-gradient-to-br from-amber-500 via-orange-500 to-orange-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 backdrop-blur-sm rounded-xl shadow-md p-4 sm:p-5 border-2 border-amber-300 transition-all duration-300">
+            <div className="flex items-start gap-3">
+              <div className="w-9 h-9 bg-gradient-to-br from-amber-500 via-orange-500 to-orange-600 rounded-lg flex items-center justify-center flex-shrink-0 shadow">
+                <svg className="w-4.5 h-4.5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                 </svg>
               </div>
               <div className="flex-1">
-                <h2 className="text-2xl font-bold text-amber-900 mb-4 flex items-center gap-2">
+                <h2 className="text-lg font-bold text-amber-900 mb-3 flex items-center gap-2">
                   {t('minutes.globalNotes')}
-                  <span className="text-sm font-normal text-amber-700 bg-amber-200 px-3 py-1 rounded-full">
+                  <span className="text-xs font-normal text-amber-700 bg-amber-200 px-2 py-0.5 rounded-full">
                     {minute.globalNote.split('\n\n').length} {t('minutes.entries')}
                   </span>
                 </h2>
-                <div className="space-y-4">
+                <div className="space-y-2.5">
                   {minute.globalNote.split('\n\n').map((note, index) => (
-                    <div key={index} className="bg-white rounded-xl p-5 border-l-4 border-gray-300 shadow-md hover:shadow-lg transition-all">
+                    <div key={index} className="bg-white rounded-lg p-3 border-l-4 border-gray-300 shadow-sm hover:shadow-md transition-all">
                       <p className="text-gray-800 leading-relaxed whitespace-pre-wrap">{note}</p>
                     </div>
                   ))}
@@ -768,17 +768,17 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
         )}
 
         {/* Topics */}
-        <div className="space-y-5">
-          <h2 className="text-2xl font-bold text-gray-900">{t('minutes.topics')}</h2>
+        <div className="space-y-4">
+          <h2 className="text-xl font-bold text-gray-900">{t('minutes.topics')}</h2>
           {minute.topics.length === 0 ? (
-            <div className="app-card rounded-2xl shadow-lg p-8 text-center">
+            <div className="app-card rounded-xl shadow-sm p-6 text-center">
               <h3 className="text-lg font-medium text-gray-900 mb-2">{t('minutes.noTopics')}</h3>
               <p className="app-text-muted">{t('minutes.noTopicsDescription')}</p>
             </div>
           ) : (
             minute.topics.map((topic, topicIndex) => (
-              <div key={topicIndex} className="bg-white/90 backdrop-blur-sm rounded-2xl shadow-xl p-4 sm:p-8 border border-gray-100 hover:shadow-2xl transition-all duration-300">
-                <div className="flex flex-col gap-3 mb-4 sm:mb-6">
+              <div key={topicIndex} className="bg-white/90 backdrop-blur-sm rounded-xl shadow-md p-4 sm:p-5 border border-gray-100 hover:shadow-lg transition-all duration-300">
+                <div className="flex flex-col gap-2.5 mb-3 sm:mb-4">
                   <div className="flex-1">
                     <div className="flex items-start gap-3 mb-3 min-w-0">
                       <div className="w-8 h-8 brand-gradient-bg rounded-lg flex items-center justify-center text-white font-bold text-sm shrink-0">
@@ -995,15 +995,15 @@ export default function MinuteDetailPage({ params }: { params: Promise<{ id: str
 
         {/* Reopening History */}
         {minute.reopeningHistory && minute.reopeningHistory.length > 0 && (
-          <div className="bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 backdrop-blur-sm rounded-2xl shadow-xl p-4 sm:p-8 border-2 border-amber-300 hover:shadow-2xl transition-all duration-300 mb-6">
-            <div className="flex flex-col min-[420px]:flex-row items-start gap-3 sm:gap-4 min-w-0">
-              <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-br from-amber-500 via-orange-500 to-orange-600 rounded-xl flex items-center justify-center flex-shrink-0 shadow-lg">
-                <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <div className="bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50 backdrop-blur-sm rounded-xl shadow-md p-4 sm:p-5 border-2 border-amber-300 transition-all duration-300 mb-4">
+            <div className="flex flex-col min-[420px]:flex-row items-start gap-3 min-w-0">
+              <div className="w-9 h-9 bg-gradient-to-br from-amber-500 via-orange-500 to-orange-600 rounded-lg flex items-center justify-center flex-shrink-0 shadow">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               </div>
               <div className="flex-1 min-w-0">
-                <h2 className="text-xl sm:text-2xl font-bold text-amber-900 mb-3 sm:mb-4 leading-tight break-words">
+                <h2 className="text-lg font-bold text-amber-900 mb-3 leading-tight break-words">
                   {t('minutes.reopeningHistory')}
                 </h2>
                 <div className="space-y-3 sm:space-y-4">

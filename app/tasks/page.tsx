@@ -194,8 +194,8 @@ export default function TasksPage() {
   };
 
   return (
-    <div className="min-h-screen brand-page-gradient py-6 sm:py-8 px-3 sm:px-4">
-      <div className="max-w-6xl mx-auto space-y-6">
+    <div className="min-h-screen brand-page-gradient py-2 sm:py-3 px-3 sm:px-4">
+      <div className="max-w-6xl mx-auto space-y-4">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
@@ -284,8 +284,8 @@ export default function TasksPage() {
               <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-[var(--brand-primary)]"></div>
             </div>
           ) : filteredTasks.length === 0 ? (
-            <div className="app-card rounded-xl p-12 shadow-sm text-center">
-              <div className="text-5xl mb-4 app-text-muted">✓</div>
+            <div className="app-card rounded-xl p-8 shadow-sm text-center">
+              <div className="text-4xl mb-3 app-text-muted">✓</div>
               <h3 className="text-lg font-semibold" style={{ color: 'var(--brand-text)' }}>{t('tasks.noTasks')}</h3>
               <p className="mt-1 app-text-muted">{t('tasks.noTasksHint')}</p>
             </div>
@@ -293,7 +293,7 @@ export default function TasksPage() {
             filteredTasks.map((task) => (
               <div
                 key={task._id}
-                className={`rounded-xl p-5 border shadow-sm transition-all hover:shadow-md ${
+                className={`rounded-xl p-3 sm:p-4 border shadow-sm transition-all hover:shadow-md ${
                   isOverdue(task) ? 'border-[var(--brand-danger-border)] bg-[var(--brand-danger-soft)]' : 'app-card'
                 }`}
               >

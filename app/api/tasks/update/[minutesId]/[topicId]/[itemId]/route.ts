@@ -6,6 +6,7 @@ import Minutes from '@/models/Minutes';
 import MeetingSeries from '@/models/MeetingSeries';
 import { verifyToken } from '@/lib/auth';
 import { hasPermission } from '@/lib/permissions';
+import { updateTaskSchema, validateBody } from '@/lib/validations';
 
 /**
  * PATCH /api/tasks/update/[minutesId]/[topicId]/[itemId]
@@ -37,17 +38,12 @@ export async function PATCH(
       return NextResponse.json({ error: 'Invalid route parameters' }, { status: 400 });
     }
 
-    const body = await request.json();
-    const { status, notes } = body;
-
-    // Validate status
-    const validStatuses = ['open', 'in-progress', 'completed', 'cancelled'];
-    if (status && !validStatuses.includes(status)) {
-      return NextResponse.json(
-        { error: 'Invalid status value' },
-        { status: 400 }
-      );
+    const rawBody = await request.json();
+    const validation = validateBody(updateTaskSchema, rawBody);
+    if (!validation.success) {
+      return NextResponse.json({ error: validation.error }, { status: 400 });
     }
+    const { status, notes } = validation.data;
 
     // Find the minutes document
     const minutes = await Minutes.findById(minutesId);

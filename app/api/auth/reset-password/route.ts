@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
       value: '',
       httpOnly: true,
       secure: useSecureCookies,
-      sameSite: 'lax',
+      sameSite: 'strict',
       maxAge: 0,
     });
 

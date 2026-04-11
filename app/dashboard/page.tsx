@@ -232,9 +232,9 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-2xl sm:text-3xl font-bold mb-2">{t('dashboard.title')}</h1>
-        <p className="app-text-muted">{t('dashboard.overview')}</p>
+      <div className="mb-5">
+        <h1 className="text-2xl sm:text-3xl font-bold mb-1">{t('dashboard.title')}</h1>
+        <p className="text-sm app-text-muted">{t('dashboard.overview')}</p>
       </div>
 
       {/* Statistics Cards with Compact Design */}
@@ -324,26 +324,26 @@ export default function DashboardPage() {
       </div>
 
       {/* Main Content - 2 Columns */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
         {/* Left Column - Tasks */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-4">
           
           {/* Moderator Actions */}
           {(user?.role === 'admin' || user?.role === 'moderator') && (
-            <div className="app-card rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all">
-              <div className="flex items-start justify-between gap-3 mb-4">
+            <div className="app-card rounded-xl shadow-sm p-4 hover:shadow-md transition-all">
+              <div className="flex items-start justify-between gap-3 mb-3">
                 <div className="flex items-center gap-2">
-                  <div className="w-10 h-10 brand-gradient-bg rounded-xl flex items-center justify-center shadow-lg">
-                    <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <div className="w-8 h-8 brand-gradient-bg rounded-lg flex items-center justify-center shadow">
+                    <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
                     </svg>
                   </div>
-                  <h2 className="text-xl font-bold brand-gradient-text">
+                  <h2 className="text-lg font-bold brand-gradient-text">
                     {t('dashboard.moderatorActions')}
                   </h2>
                 </div>
               </div>
-              <p className="app-text-muted mb-4 text-sm">
+              <p className="app-text-muted mb-3 text-sm">
                 {t('dashboard.sendRemindersDesc')}
               </p>
               <div className="flex flex-col sm:flex-row sm:items-center gap-4">
@@ -379,15 +379,15 @@ export default function DashboardPage() {
           )}
 
           {/* My Tasks Section */}
-          <div className="app-card rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+          <div className="app-card rounded-xl shadow-sm p-4 hover:shadow-md transition-all">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
               <div className="flex items-center gap-2">
-                <div className="w-10 h-10 brand-gradient-bg rounded-xl flex items-center justify-center shadow-lg">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="w-8 h-8 brand-gradient-bg rounded-lg flex items-center justify-center shadow">
+                  <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                   </svg>
                 </div>
-                <h2 className="text-xl font-bold brand-gradient-text break-words">
+                <h2 className="text-lg font-bold brand-gradient-text break-words">
                   {t('dashboard.myTasks')} ({tasks.length})
                 </h2>
               </div>
@@ -447,8 +447,8 @@ export default function DashboardPage() {
             {/* Task List */}
             <div className="space-y-3">
               {tasks.length === 0 ? (
-                <div className="text-center py-8">
-                  <svg className="w-16 h-16 mx-auto mb-4" style={{ color: 'var(--brand-text-muted)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <div className="text-center py-6">
+                  <svg className="w-12 h-12 mx-auto mb-3" style={{ color: 'var(--brand-text-muted)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" />
                   </svg>
                   <p className="font-medium app-text-muted">{t('dashboard.noTasksFound')}</p>
@@ -574,14 +574,14 @@ export default function DashboardPage() {
         </div>
 
         {/* Recent Minutes - Sidebar */}
-        <div className="app-card rounded-2xl shadow-lg p-6 hover:shadow-xl transition-all">
-          <div className="flex items-center gap-2 mb-6">
-            <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg" style={{ backgroundColor: 'var(--brand-dashboard-badge-minutes-soft)' }}>
-              <svg className="w-5 h-5" style={{ color: 'var(--brand-dashboard-badge-minutes-ink)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div className="app-card rounded-xl shadow-sm p-4 hover:shadow-md transition-all">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center shadow" style={{ backgroundColor: 'var(--brand-dashboard-badge-minutes-soft)' }}>
+              <svg className="w-4 h-4" style={{ color: 'var(--brand-dashboard-badge-minutes-ink)' }} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
             </div>
-            <h2 className="text-xl font-bold" style={{ color: 'var(--brand-dashboard-badge-minutes-ink)' }}>
+            <h2 className="text-lg font-bold" style={{ color: 'var(--brand-dashboard-badge-minutes-ink)' }}>
               {t('dashboard.recentMinutes')}
             </h2>
           </div>

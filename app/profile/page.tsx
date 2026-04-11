@@ -690,16 +690,16 @@ const ProfilePage = () => {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <div className="container mx-auto px-3 sm:px-4 py-6 sm:py-8">
+      <div className="container mx-auto px-3 sm:px-4 py-2 sm:py-3">
         {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <div className="p-3 brand-gradient-bg rounded-xl text-white shadow-lg">
-              <User className="w-6 h-6" />
+        <div className="mb-5">
+          <div className="flex items-center gap-3 mb-1">
+            <div className="p-2 brand-gradient-bg rounded-lg text-white shadow">
+              <User className="w-5 h-5" />
             </div>
             <div>
-              <h1 className="text-3xl font-bold text-slate-800 dark:text-slate-100">{t('title')}</h1>
-              <p className="text-slate-600 dark:text-slate-400">{t('subtitle')}</p>
+              <h1 className="text-2xl sm:text-3xl font-bold text-slate-800 dark:text-slate-100">{t('title')}</h1>
+              <p className="text-sm text-slate-600 dark:text-slate-400">{t('subtitle')}</p>
             </div>
           </div>
         </div>
@@ -725,10 +725,10 @@ const ProfilePage = () => {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-5">
           {/* Profile Overview Card */}
           <div className="lg:col-span-1">
-            <div className="bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm border border-white/50 dark:border-slate-800 rounded-xl p-6 shadow-lg">
+            <div className="bg-white/70 dark:bg-slate-900/70 backdrop-blur-sm border border-white/50 dark:border-slate-800 rounded-xl p-4 shadow-sm">
               <div className="text-center">
                 {/* Avatar */}
                 <div className="relative inline-block mb-4">
@@ -809,11 +809,11 @@ const ProfilePage = () => {
                 </nav>
               </div>
 
-              <div className="p-6">
+              <div className="p-4">
                 {/* Profile Tab */}
                 {activeTab === 'profile' && (
                   <div>
-                    <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center justify-between mb-4">
                       <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-200">{t('profileTab.title')}</h3>
                       {!editMode && (
                         <button
@@ -826,8 +826,8 @@ const ProfilePage = () => {
                       )}
                     </div>
 
-                    <form onSubmit={handleProfileUpdate} className="space-y-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <form onSubmit={handleProfileUpdate} className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <label htmlFor="profile-firstName" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{t('profileTab.firstName')}</label>
                           <input
@@ -972,7 +972,7 @@ const ProfilePage = () => {
                       <p className="app-text-muted">{t('securityTab.description')}</p>
                     </div>
 
-                    <form onSubmit={handlePasswordUpdate} className="space-y-6">
+                    <form onSubmit={handlePasswordUpdate} className="space-y-4">
                       <div>
                         <label htmlFor="security-currentPassword" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{t('securityTab.currentPassword')}</label>
                         <div className="relative">
@@ -1077,8 +1077,8 @@ const ProfilePage = () => {
                       )}
                     </div>
 
-                    <div className="space-y-6">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                           <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">{t('preferencesTab.language')}</label>
                           <select

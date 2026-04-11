@@ -36,14 +36,31 @@ export const createMeetingSeriesSchema = z.object({
   defaultTemplateId: safeString(50).optional(),
 });
 
+const memberSchema = z.object({
+  userId: safeString(100),
+  role: safeString(50).optional(),
+  displayName: safeString(200).optional(),
+}).passthrough();
+
+const labelSchema = z.object({
+  name: safeString(100),
+  color: safeString(20).optional(),
+}).passthrough();
+
 export const updateMeetingSeriesSchema = z.object({
   project: safeString(200).optional(),
   name: safeString(200).optional(),
   visibleFor: z.array(safeString(100)).optional(),
   moderators: z.array(safeString(100)).optional(),
   participants: z.array(safeString(100)).optional(),
-  defaultTemplateId: safeString(50).optional(),
-});
+  informedUsers: z.array(safeString(100)).optional(),
+  additionalResponsibles: z.array(safeString(200)).optional(),
+  availableLabels: z.array(labelSchema).optional(),
+  members: z.array(memberSchema).optional(),
+  clubFunctions: z.array(safeString(200)).optional(),
+  defaultTemplateId: safeString(50).optional().nullable(),
+  defaultPdfTemplateId: safeString(50).optional().nullable(),
+}).passthrough();
 
 // Minutes schemas
 const infoItemSchema = z.object({
@@ -68,9 +85,12 @@ const topicSchema = z.object({
 
 export const createMinutesSchema = z.object({
   meetingSeries_id: requiredString(50),
-  date: z.string().optional(),
+  date: z.string().min(1),
   time: safeString(20).optional(),
+  endTime: safeString(20).optional(),
   location: safeString(500).optional(),
+  title: safeString(500).optional(),
+  templateId: safeString(50).optional(),
   topics: z.array(topicSchema).optional(),
   participants: z.array(z.string()).optional(),
   participantsWithStatus: z.array(z.object({
@@ -79,6 +99,23 @@ export const createMinutesSchema = z.object({
   }).passthrough()).optional(),
   globalNote: z.string().max(10000).optional(),
   agendaItems: z.array(z.any()).optional(),
+}).passthrough();
+
+export const updateMinutesSchema = z.object({
+  date: z.string().optional(),
+  time: safeString(20).optional(),
+  endTime: safeString(20).optional(),
+  location: safeString(500).optional(),
+  title: safeString(500).optional(),
+  topics: z.array(topicSchema).optional(),
+  participants: z.array(z.string()).optional(),
+  participantsWithStatus: z.array(z.object({
+    userId: safeString(100),
+    attendance: z.enum(['present', 'absent', 'excused', 'guest']).optional(),
+  }).passthrough()).optional(),
+  globalNote: z.string().max(10000).optional(),
+  isFinalized: z.boolean().optional(),
+  reopenReason: safeString(2000).optional(),
 }).passthrough();
 
 // Task schemas

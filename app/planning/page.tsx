@@ -463,9 +463,9 @@ export default function PlanningPage() {
   }
 
   return (
-    <div className="min-h-screen brand-page-gradient py-5 sm:py-6 px-3 sm:px-4">
+    <div className="min-h-screen brand-page-gradient py-2 sm:py-3 px-3 sm:px-4">
       <div className="max-w-6xl mx-auto space-y-4 sm:space-y-5">
-        <div className="bg-[var(--brand-primary-soft)] rounded-2xl p-4 sm:p-5 border border-[var(--brand-primary-border)] shadow-sm">
+        <div className="bg-[var(--brand-primary-soft)] rounded-xl p-3 sm:p-4 border border-[var(--brand-primary-border)] shadow-sm">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div>
               <h1 className="text-2xl sm:text-3xl font-bold bg-clip-text text-transparent" style={{ backgroundImage: 'linear-gradient(90deg, var(--brand-text), var(--brand-text-muted))' }}>
@@ -482,7 +482,7 @@ export default function PlanningPage() {
           </div>
         </div>
 
-        <div className="app-card rounded-2xl shadow-sm overflow-hidden">
+        <div className="app-card rounded-xl shadow-sm overflow-hidden">
           <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 p-4">
             <div className="xl:col-span-2">
               <div className="flex items-center justify-between mb-2 sm:mb-3 gap-2">
@@ -639,7 +639,7 @@ export default function PlanningPage() {
         </div>
 
         {filteredEvents.length === 0 ? (
-          <div className="app-card rounded-xl p-10 text-center app-text-muted shadow-sm">
+          <div className="app-card rounded-xl p-8 text-center app-text-muted shadow-sm">
             {t('empty')}
           </div>
         ) : (
@@ -649,7 +649,7 @@ export default function PlanningPage() {
               return (
                 <div
                   key={event._id}
-                  className="app-card rounded-2xl p-5 shadow-sm hover:shadow-md transition-all"
+                  className="app-card rounded-xl p-4 shadow-sm hover:shadow-md transition-all"
                 >
                   <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
                     <div className="min-w-0">

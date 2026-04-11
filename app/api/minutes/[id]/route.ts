@@ -9,6 +9,7 @@ import User from '@/models/User';
 import ClubFunction from '@/models/ClubFunction';
 import { verifyToken } from '@/lib/auth';
 import { requirePermission, hasPermission } from '@/lib/permissions';
+import { updateMinutesSchema, validateBody } from '@/lib/validations';
 import { logAction } from '@/lib/audit';
 import {
   applyResponsibleSnapshotsToTopics,
@@ -353,7 +354,13 @@ export async function PUT(
     await connectToDatabase();
 
     const { id } = await params;
-    const body = await request.json();
+    const rawBody = await request.json();
+
+    const validation = validateBody(updateMinutesSchema, rawBody);
+    if (!validation.success) {
+      return NextResponse.json({ error: validation.error }, { status: 400 });
+    }
+    const body = validation.data;
 
     // Verify authentication
     const authResult = await verifyToken(request);

@@ -792,7 +792,7 @@
   },
   "documents": {
     "title": "Dokumente",
-    "subtitle": "Zentrale Übersicht aller zugänglichen Protokoll-Dokumente",
+    "subtitle": "Zentrale Übersicht aller Protokoll-Dokumente",
     "searchPlaceholder": "Nach Dateiname, Thema oder Protokoll suchen...",
     "empty": "Keine Dokumente gefunden",
     "download": "Herunterladen",
@@ -800,7 +800,16 @@
     "topic": "Thema",
     "item": "Eintrag",
     "openMinute": "Protokoll öffnen",
-    "loadError": "Dokumente konnten nicht geladen werden"
+    "loadError": "Dokumente konnten nicht geladen werden",
+    "count": "{count, plural, =0 {Keine Dokumente} one {1 Dokument} other {# Dokumente}}",
+    "noSeries": "Ohne Sitzungsserie",
+    "filterType": {
+      "all": "Alle",
+      "pdf": "PDF",
+      "image": "Bilder",
+      "office": "Office / Text",
+      "other": "Sonstige"
+    }
   },
   "enhancedMinutes": {
     "title": "Erweiterte Protokolle",

@@ -8,8 +8,10 @@ import { getSafeRequestOriginBase } from '@/lib/request-base-url';
 
 const ALLOWED_RESPONSES = new Set(['accepted', 'tentative', 'declined']);
 
+import { stripTrailingSlashes } from '@/lib/strip-trailing-slashes';
+
 function normalizeUrlCandidate(value: string): string {
-  return String(value || '').trim().replace(/\/+$/, '');
+  return stripTrailingSlashes(String(value || '').trim());
 }
 
 function isPublicHttpUrl(value: string): boolean {

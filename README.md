@@ -106,7 +106,8 @@ Use `.env.example` as source of truth. Important keys:
 - `npm run build` - production build
 - `npm run start` - start production server
 - `npm run lint` - lint
-- `npm test` - test command placeholder (currently no automated tests)
+- `npm test` - run Vitest unit tests
+- `npm run test:watch` - Vitest in watch mode
 - `npm run type-check` - TypeScript check
 - `npm run security:check` - security regression checks for key hardening rules
 - `npm run security:audit` - dependency audit (`npm audit --omit=dev --audit-level=high`)
@@ -146,10 +147,26 @@ scripts/      Setup and data helper scripts
 - CSP defaults: strict **scripts** (nonce + `strict-dynamic`); **styles** may include `unsafe-inline` until UI is migrated — use `CSP_STRICT_STYLES=true` only to audit violations.
 - Scheduled dependency audit runs weekly via GitHub Actions (`Security Audit` workflow).
 
+## Documentation
+
+| Guide | Beschreibung |
+|-------|-------------|
+| [SECURITY.md](./SECURITY.md) | CSRF, CSP, HSTS, Cookies, Auth-Gates |
+| [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md) | Deployment (systemd, Docker, Vercel) |
+| [docs/DEPLOYMENT_LOCAL.md](./docs/DEPLOYMENT_LOCAL.md) | Systemd-Setup im Detail |
+| [docs/DATABASE.md](./docs/DATABASE.md) | MongoDB-Setup (Docker, Atlas, Migration) |
+| [docs/EMAIL.md](./docs/EMAIL.md) | SMTP-Konfiguration und Email-Templates |
+| [docs/CRON.md](./docs/CRON.md) | Cron-Jobs (Erinnerungen, Digest) |
+| [docs/CSP.md](./docs/CSP.md) | Content Security Policy Details |
+| [docs/I18N.md](./docs/I18N.md) | Internationalisierung (next-intl) |
+| [docs/API_HTTP_SEMANTICS.md](./docs/API_HTTP_SEMANTICS.md) | API-Sicherheit und HTTP-Semantik |
+| [docs/API_RESPONSES.md](./docs/API_RESPONSES.md) | Oeffentliche vs. authentifizierte Routen |
+| [docs/ZAP_BASELINE.md](./docs/ZAP_BASELINE.md) | OWASP ZAP Baseline-Scan Ergebnisse |
+
 ## Notes
 
 - CI runs include lint/type-check/security-check/build.
-- `npm test` is currently a placeholder and exits successfully.
+- Vitest unit tests cover auth, permissions, validations, crypto, and security helpers.
 - CodeQL runs in a separate GitHub Actions workflow.
 - Dependabot PR auto-merge is configured for compatible updates.
 - Username validation supports international letters (e.g., umlauts).
