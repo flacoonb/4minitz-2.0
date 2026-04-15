@@ -55,7 +55,7 @@
     "@types/react-dom": "^19.2.3",
     "@types/web-push": "^3.6.4",
     "babel-plugin-react-compiler": "1.0.0",
-    "baseline-browser-mapping": "^2.10.16",
+    "baseline-browser-mapping": "^2.10.19",
     "eslint": "^9",
     "eslint-config-next": "^16.2.3",
     "tailwindcss": "^4",
